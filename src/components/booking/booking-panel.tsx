@@ -31,7 +31,7 @@ export function BookingPanel({
   );
 
   return (
-    <div className="sticky top-6 flex flex-col gap-5 rounded-md bg-charcoal p-6 text-offwhite">
+    <div className="flex flex-col gap-5 rounded-md bg-charcoal p-6 text-offwhite md:sticky md:top-6">
       <div>
         <span className="text-2xl font-medium">{formatNaira(pricePerSession)}</span>
         <span className="ml-1 text-xs text-offwhite/60">per session</span>

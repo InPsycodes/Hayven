@@ -56,7 +56,7 @@ export function DashboardPreview() {
 
         <div className="order-1 lg:order-2">
           <span className="eyebrow text-terracotta">Progress & support</span>
-          <h2 className="mt-3 font-serif text-4xl leading-tight text-charcoal lg:text-[2.75rem]">
+          <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             One dashboard for every appointment, note and next step.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-soft">

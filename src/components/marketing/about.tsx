@@ -28,7 +28,7 @@ export function About() {
 
         <div>
           <span className="eyebrow text-terracotta">About Hayven</span>
-          <h2 className="mt-3 font-serif text-4xl leading-tight text-charcoal lg:text-[2.75rem]">
+          <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             Built by people who understand the search for the right care.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-soft">
