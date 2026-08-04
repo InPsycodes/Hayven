@@ -3,13 +3,13 @@ import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { ThreadList } from "@/components/messages/thread-list";
 import { getSession } from "@/lib/auth/session";
-import { getMessageThreadsForUser } from "@/data/queries";
+import { getRealMessageThreadsForParent } from "@/lib/messages/queries";
 
 export default async function ParentMessagesPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const threads = await getMessageThreadsForUser(session.userId);
+  const threads = await getRealMessageThreadsForParent(session.userId);
 
   return (
     <div>

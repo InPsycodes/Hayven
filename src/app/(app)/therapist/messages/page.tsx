@@ -2,14 +2,19 @@ import { redirect } from "next/navigation";
 
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { ThreadList } from "@/components/messages/thread-list";
+import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { getSession } from "@/lib/auth/session";
-import { getMessageThreadsForUser } from "@/data/queries";
+import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
+import { getRealMessageThreadsForTherapist } from "@/lib/messages/queries";
 
 export default async function TherapistMessagesPage() {
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const threads = await getMessageThreadsForUser(session.userId);
+  const therapist = await getRealTherapistProfileByUserId(session.userId);
+  if (!therapist) return <IncompleteProfileNotice />;
+
+  const threads = await getRealMessageThreadsForTherapist(therapist.id);
 
   return (
     <div>

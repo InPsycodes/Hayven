@@ -3,12 +3,18 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IconArrowLeft, IconArrowUp, IconPaperclip, IconFileText } from "@tabler/icons-react";
+import { IconArrowLeft, IconArrowUp, IconPaperclip } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
 import { initialsFromName } from "@/data/format";
-import { sendMessage } from "@/data/mutations";
-import type { Message } from "@/data/types";
+import { sendRealMessage } from "@/lib/messages/actions";
+
+export interface ThreadMessage {
+  id: string;
+  senderId: string;
+  sentAt: string;
+  content: string;
+}
 
 function dayLabel(iso: string): string {
   const date = new Date(iso);
@@ -34,7 +40,7 @@ export function MessageThreadView({
   currentUserId: string;
   counterpartName: string;
   counterpartRole: string;
-  messages: Message[];
+  messages: ThreadMessage[];
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState("");
@@ -56,7 +62,7 @@ export function MessageThreadView({
     if (!content.trim()) return;
     setDraft("");
     startTransition(async () => {
-      await sendMessage(bookingId, currentUserId, content);
+      await sendRealMessage(bookingId, content);
       router.refresh();
     });
   }
@@ -95,28 +101,16 @@ export function MessageThreadView({
                   </div>
                 )}
                 <div className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
-                  {message.attachment ? (
-                    <div
-                      className={cn(
-                        "flex max-w-[75%] items-center gap-2 rounded-md border p-3",
-                        isOwn ? "border-charcoal/20 bg-charcoal text-offwhite" : "border-border bg-white"
-                      )}
-                    >
-                      <IconFileText size={18} stroke={1.5} className="shrink-0" />
-                      <span className="truncate text-sm">{message.attachment.fileName}</span>
-                    </div>
-                  ) : (
-                    <div
-                      className={cn(
-                        "max-w-[75%] px-4 py-2.5 text-sm leading-relaxed",
-                        isOwn
-                          ? "rounded-tl-md rounded-tr-md rounded-bl-md rounded-br-[3px] bg-charcoal text-offwhite"
-                          : "rounded-tl-md rounded-tr-md rounded-br-md rounded-bl-[3px] bg-white text-charcoal ring-1 ring-border"
-                      )}
-                    >
-                      {message.content}
-                    </div>
-                  )}
+                  <div
+                    className={cn(
+                      "max-w-[75%] px-4 py-2.5 text-sm leading-relaxed",
+                      isOwn
+                        ? "rounded-tl-md rounded-tr-md rounded-bl-md rounded-br-[3px] bg-charcoal text-offwhite"
+                        : "rounded-tl-md rounded-tr-md rounded-br-md rounded-bl-[3px] bg-white text-charcoal ring-1 ring-border"
+                    )}
+                  >
+                    {message.content}
+                  </div>
                 </div>
               </div>
             );
