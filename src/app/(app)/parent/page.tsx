@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { formatDateTime } from "@/data/format";
 import { ARTICLES } from "@/data/articles";
-import { getLatestProgressUpdateForChild, getMessageThreadsForUser } from "@/data/queries";
+import { getMessageThreadsForUser } from "@/data/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealNextUpcomingBookingForChild } from "@/lib/booking/queries";
+import { getRealLatestProgressUpdateForChild } from "@/lib/session-notes/queries";
 
 const GOAL_STATUS_LABEL: Record<string, { label: string; className: string }> = {
   set: { label: "Just started", className: "bg-paper text-charcoal" },
@@ -39,7 +40,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
 
   const [nextSession, progress, threads] = await Promise.all([
     activeChild ? getRealNextUpcomingBookingForChild(activeChild.id) : null,
-    activeChild ? getLatestProgressUpdateForChild(activeChild.id) : undefined,
+    activeChild ? getRealLatestProgressUpdateForChild(activeChild.id) : null,
     getMessageThreadsForUser(session.userId),
   ]);
 

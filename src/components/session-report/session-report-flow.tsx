@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { submitSessionNote } from "@/data/mutations";
+import { addProgressGoal, submitRealSessionNote } from "@/lib/session-notes/actions";
 import { formatDateTime } from "@/data/format";
 import {
   buildParentSummary,
@@ -50,14 +50,14 @@ const GOAL_STATUS_OPTIONS: { value: GoalStatus; label: string }[] = [
 
 export function SessionReportFlow({
   bookingId,
-  therapistId,
+  childId,
   childName,
   parentName,
   sessionDateTime,
-  goals,
+  goals: initialGoals,
 }: {
   bookingId: string;
-  therapistId: string;
+  childId: string;
   childName: string;
   parentName: string;
   sessionDateTime: string;
@@ -68,7 +68,12 @@ export function SessionReportFlow({
   const [isPending, startTransition] = useTransition();
   const [sent, setSent] = useState(false);
 
-  const [selectedGoalIds, setSelectedGoalIds] = useState<string[]>(goals.map((g) => g.id));
+  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  const [newGoalTitle, setNewGoalTitle] = useState("");
+  const [isAddingGoal, startAddingGoal] = useTransition();
+  const [addGoalError, setAddGoalError] = useState<string | null>(null);
+
+  const [selectedGoalIds, setSelectedGoalIds] = useState<string[]>(initialGoals.map((g) => g.id));
   const [engagement, setEngagement] = useState<EngagementLevel>("high");
   const [cooperation, setCooperation] = useState<CooperationLevel>("cooperative");
   const [goalStatus, setGoalStatus] = useState<Record<string, GoalStatus>>(
@@ -99,11 +104,26 @@ export function SessionReportFlow({
     );
   }
 
+  function handleAddGoal() {
+    const title = newGoalTitle.trim();
+    if (!title) return;
+    setAddGoalError(null);
+    startAddingGoal(async () => {
+      const result = await addProgressGoal(childId, title);
+      if (!result.ok) {
+        setAddGoalError(result.error);
+        return;
+      }
+      setGoals((prev) => [...prev, { id: result.goal.id, title: result.goal.title }]);
+      setSelectedGoalIds((prev) => [...prev, result.goal.id]);
+      setNewGoalTitle("");
+    });
+  }
+
   function handleSend() {
     startTransition(async () => {
-      await submitSessionNote({
+      await submitRealSessionNote({
         bookingId,
-        therapistId,
         summary: clinicalNotes || "No additional clinical notes recorded.",
         goalsAddressed: selectedGoalIds,
         recommendations: finalSummary,
@@ -152,6 +172,30 @@ export function SessionReportFlow({
                 );
               })}
             </div>
+            <div className="flex gap-2">
+              <input
+                value={newGoalTitle}
+                onChange={(e) => setNewGoalTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddGoal();
+                  }
+                }}
+                placeholder="Add a new goal for this child..."
+                className="h-10 flex-1 rounded-sm border border-border bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-terracotta/40"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddGoal}
+                disabled={isAddingGoal || !newGoalTitle.trim()}
+              >
+                {isAddingGoal ? "Adding..." : "Add goal"}
+              </Button>
+            </div>
+            {addGoalError && <p className="text-sm text-error">{addGoalError}</p>}
           </div>
 
           <div className="flex flex-col gap-2">
