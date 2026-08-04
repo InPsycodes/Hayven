@@ -1,0 +1,224 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Hayven design tokens.
+  Brand palette: terracotta (single accent, used sparingly), charcoal (dark
+  surfaces), paper/tan (secondary surface), off-white (page bg), white (cards).
+  Two functional-only additions (success/error) for booking status, calendar
+  cell states, and destructive actions -- muted to stay in-palette, never used
+  decoratively.
+*/
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-serif);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Raw brand tokens, for direct use (bg-terracotta, text-charcoal, etc.) */
+  --color-terracotta: var(--terracotta);
+  --color-rust-dark: var(--rust-dark);
+  --color-rust-light: var(--rust-light);
+  --color-charcoal: var(--charcoal);
+  --color-ink-soft: var(--ink-soft);
+  --color-paper: var(--paper);
+  --color-offwhite: var(--offwhite);
+  --color-canvas-white: var(--canvas-white);
+  --color-canvas-deep: var(--canvas-deep);
+  --color-success: var(--success);
+  --color-error: var(--error);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* Brand palette -- source of truth */
+  --terracotta: #9c5934;
+  --rust-dark: #7c4527; /* primary button hover only */
+  --rust-light: #b8734c; /* accent on dark backgrounds */
+  --charcoal: #1a1a1a;
+  --ink-soft: #4a4744; /* secondary/body copy on light */
+  --paper: #dcd3be;
+  --offwhite: #e4e1df;
+  --canvas-white: #faf8f6; /* card surfaces, text on dark */
+  --canvas-deep: #d6d1cc; /* reserved */
+  --success: #6b7a5e;
+  --error: #b23a2e;
+
+  --background: var(--offwhite);
+  --foreground: var(--charcoal);
+  --card: var(--canvas-white);
+  --card-foreground: var(--charcoal);
+  --popover: var(--canvas-white);
+  --popover-foreground: var(--charcoal);
+  --primary: var(--charcoal);
+  --primary-foreground: var(--canvas-white);
+  --secondary: var(--paper);
+  --secondary-foreground: var(--charcoal);
+  --muted: color-mix(in oklch, var(--paper), white 40%);
+  --muted-foreground: var(--ink-soft);
+  --accent: color-mix(in oklch, var(--paper), white 25%);
+  --accent-foreground: var(--charcoal);
+  --destructive: var(--error);
+  --border: color-mix(in oklch, var(--charcoal), transparent 88%);
+  --input: color-mix(in oklch, var(--charcoal), transparent 82%);
+  --ring: color-mix(in oklch, var(--charcoal), transparent 50%);
+  --chart-1: var(--terracotta);
+  --chart-2: var(--charcoal);
+  --chart-3: var(--success);
+  --chart-4: var(--paper);
+  --chart-5: var(--error);
+
+  /* Sharp corners on desktop (2-4px) */
+  --radius: 0.2rem;
+
+  --sidebar: var(--charcoal);
+  --sidebar-foreground: var(--offwhite);
+  --sidebar-primary: var(--terracotta);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: color-mix(in oklch, var(--charcoal), white 12%);
+  --sidebar-accent-foreground: var(--offwhite);
+  --sidebar-border: color-mix(in oklch, var(--offwhite), transparent 90%);
+  --sidebar-ring: var(--terracotta);
+}
+
+/* Softer corners on mobile (6-10px), per design system spec */
+@media (max-width: 767px) {
+  :root {
+    --radius: 0.5rem;
+  }
+}
+
+.dark {
+  --background: var(--charcoal);
+  --foreground: var(--offwhite);
+  --card: color-mix(in oklch, var(--charcoal), white 8%);
+  --card-foreground: var(--offwhite);
+  --popover: color-mix(in oklch, var(--charcoal), white 8%);
+  --popover-foreground: var(--offwhite);
+  --primary: var(--offwhite);
+  --primary-foreground: var(--charcoal);
+  --secondary: color-mix(in oklch, var(--charcoal), white 16%);
+  --secondary-foreground: var(--offwhite);
+  --muted: color-mix(in oklch, var(--charcoal), white 12%);
+  --muted-foreground: color-mix(in oklch, var(--offwhite), transparent 30%);
+  --accent: color-mix(in oklch, var(--charcoal), white 16%);
+  --accent-foreground: var(--offwhite);
+  --destructive: var(--error);
+  --border: color-mix(in oklch, var(--offwhite), transparent 88%);
+  --input: color-mix(in oklch, var(--offwhite), transparent 82%);
+  --ring: var(--terracotta);
+  --chart-1: var(--terracotta);
+  --chart-2: var(--offwhite);
+  --chart-3: var(--success);
+  --chart-4: var(--paper);
+  --chart-5: var(--error);
+  --sidebar: var(--charcoal);
+  --sidebar-foreground: var(--offwhite);
+  --sidebar-primary: var(--terracotta);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: color-mix(in oklch, var(--charcoal), white 12%);
+  --sidebar-accent-foreground: var(--offwhite);
+  --sidebar-border: color-mix(in oklch, var(--offwhite), transparent 90%);
+  --sidebar-ring: var(--terracotta);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground relative;
+  }
+  html {
+    @apply font-sans scroll-smooth;
+  }
+
+  /* Subtle film-grain texture over the whole app -- decorative, non-interactive. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  ::selection {
+    background: var(--terracotta);
+    color: var(--canvas-white);
+  }
+}
+
+@layer utilities {
+  .label-micro {
+    @apply text-[10px] font-medium tracking-[0.14em] uppercase;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.14em];
+  }
+
+  .photo-treatment {
+    @apply grayscale-[15%] sepia-[8%];
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: rise 0.7s ease-out both;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

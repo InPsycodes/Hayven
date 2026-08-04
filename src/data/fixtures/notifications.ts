@@ -1,0 +1,58 @@
+import type { Notification } from "../types";
+
+export const notifications: Notification[] = [
+  {
+    id: "notif_1",
+    userId: "user_parent_amaka",
+    type: "booking_confirmed",
+    title: "Booking confirmed",
+    body: "Your session with Dr. Amara Chukwu on Aug 4 at 10:00am is confirmed.",
+    read: false,
+    createdAt: "2026-07-30T08:06:00Z",
+  },
+  {
+    id: "notif_2",
+    userId: "user_parent_amaka",
+    type: "note_added",
+    title: "New session note for Zara",
+    body: "Dr. Amara Chukwu shared a progress update after Zara's last session.",
+    read: false,
+    createdAt: "2026-07-20T11:16:00Z",
+  },
+  {
+    id: "notif_3",
+    userId: "user_parent_amaka",
+    type: "new_message",
+    title: "New message from Dr. Amara Chukwu",
+    body: "Yes, 10 minutes a day is perfect...",
+    read: true,
+    createdAt: "2026-08-01T19:03:00Z",
+  },
+  {
+    id: "notif_4",
+    userId: "user_therapist_amara",
+    type: "new_message",
+    title: "New message from Amaka Obi",
+    body: "Will do! She's already asking to \"play the word game\" again...",
+    read: false,
+    createdAt: "2026-08-01T19:07:00Z",
+  },
+  {
+    id: "notif_5",
+    userId: "user_therapist_amara",
+    type: "payment_receipt",
+    title: "Payment received",
+    body: "You received ₦15,000 for your session with Zara O.",
+    read: true,
+    createdAt: "2026-07-30T08:05:00Z",
+  },
+  {
+    id: "notif_6",
+    userId: "user_admin_ngozi",
+    type: "verification_update",
+    title: "New verification request",
+    body: "Grace Nwosu submitted credentials for review.",
+    read: false,
+    createdAt: "2026-07-22T10:15:00Z",
+  },
+];

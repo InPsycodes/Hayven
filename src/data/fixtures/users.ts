@@ -1,0 +1,101 @@
+import type { User } from "../types";
+
+/**
+ * Demo/fixture identities (user_parent_amaka, user_therapist_amara,
+ * user_admin_ngozi) used by the still-mocked parts of the data layer
+ * (bookings, messages, etc). Not tied to real Supabase auth accounts --
+ * real signups get their own UUIDs and won't match these rows until the
+ * corresponding domains are migrated off mock data.
+ */
+export const users: User[] = [
+  {
+    id: "user_parent_amaka",
+    role: "parent",
+    fullName: "Amaka Obi",
+    email: "amaka.obi@example.com",
+    phone: "+234 802 555 0114",
+    status: "active",
+    createdAt: "2026-03-02T09:00:00Z",
+    updatedAt: "2026-03-02T09:00:00Z",
+  },
+  {
+    id: "user_therapist_amara",
+    role: "therapist",
+    fullName: "Dr. Amara Chukwu",
+    email: "amara.chukwu@example.com",
+    phone: "+234 803 555 0177",
+    status: "active",
+    createdAt: "2026-01-14T09:00:00Z",
+    updatedAt: "2026-06-01T09:00:00Z",
+  },
+  {
+    id: "user_admin_ngozi",
+    role: "admin",
+    fullName: "Ngozi Eze",
+    email: "ngozi@hayven.app",
+    phone: "+234 701 555 0100",
+    status: "active",
+    createdAt: "2026-01-01T09:00:00Z",
+    updatedAt: "2026-01-01T09:00:00Z",
+  },
+  {
+    id: "user_therapist_tunde",
+    role: "therapist",
+    fullName: "Dr. Tunde Bakare",
+    email: "tunde.bakare@example.com",
+    phone: "+234 805 555 0122",
+    status: "active",
+    createdAt: "2026-02-01T09:00:00Z",
+    updatedAt: "2026-02-01T09:00:00Z",
+  },
+  {
+    id: "user_therapist_folake",
+    role: "therapist",
+    fullName: "Folake Adeyemi",
+    email: "folake.adeyemi@example.com",
+    phone: "+234 806 555 0133",
+    status: "active",
+    createdAt: "2026-02-10T09:00:00Z",
+    updatedAt: "2026-02-10T09:00:00Z",
+  },
+  {
+    id: "user_therapist_chinedu",
+    role: "therapist",
+    fullName: "Chinedu Okafor",
+    email: "chinedu.okafor@example.com",
+    phone: "+234 807 555 0144",
+    status: "active",
+    createdAt: "2026-02-18T09:00:00Z",
+    updatedAt: "2026-02-18T09:00:00Z",
+  },
+  {
+    id: "user_therapist_bisi",
+    role: "therapist",
+    fullName: "Dr. Bisi Lawal",
+    email: "bisi.lawal@example.com",
+    phone: "+234 808 555 0155",
+    status: "active",
+    createdAt: "2026-03-01T09:00:00Z",
+    updatedAt: "2026-03-01T09:00:00Z",
+  },
+  {
+    id: "user_therapist_grace",
+    role: "therapist",
+    fullName: "Grace Nwosu",
+    email: "grace.nwosu@example.com",
+    phone: "+234 809 555 0166",
+    status: "active",
+    createdAt: "2026-06-20T09:00:00Z",
+    updatedAt: "2026-06-20T09:00:00Z",
+  },
+  {
+    id: "user_therapist_ibrahim",
+    role: "therapist",
+    fullName: "Ibrahim Musa",
+    email: "ibrahim.musa@example.com",
+    phone: "+234 810 555 0177",
+    status: "active",
+    createdAt: "2026-07-10T09:00:00Z",
+    updatedAt: "2026-07-10T09:00:00Z",
+  },
+];

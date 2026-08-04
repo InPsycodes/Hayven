@@ -1,0 +1,147 @@
+import "server-only";
+
+import { createClient } from "@/lib/supabase/server";
+import type { Specialty } from "@/data/types";
+
+/** Real specialties from Supabase (seeded, unlike the rest of the still-mock data layer). */
+export async function getRealSpecialties(): Promise<Specialty[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("specialties").select("id, name, governing_body");
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    name: row.name,
+    governingBody: row.governing_body ?? undefined,
+  }));
+}
+
+export interface RealTherapistProfile {
+  id: string;
+  userId: string;
+  bio: string | null;
+  location: string | null;
+  sessionTypes: string[];
+  pricePerSession: number;
+  yearsPracticing: number | null;
+  verificationStatus: string;
+  verifiedBadgeLabel: string | null;
+}
+
+/** Real therapist_profiles lookup by auth user id -- null if they haven't started/finished onboarding. */
+export async function getRealTherapistProfileByUserId(
+  userId: string
+): Promise<RealTherapistProfile | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("therapist_profiles")
+    .select(
+      "id, user_id, bio, location, session_types, price_per_session, years_practicing, verification_status, verified_badge_label"
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    userId: data.user_id,
+    bio: data.bio,
+    location: data.location,
+    sessionTypes: data.session_types ?? [],
+    pricePerSession: data.price_per_session,
+    yearsPracticing: data.years_practicing,
+    verificationStatus: data.verification_status,
+    verifiedBadgeLabel: data.verified_badge_label,
+  };
+}
+
+export interface RealPublicTherapist {
+  id: string;
+  displayName: string;
+  bio: string | null;
+  location: string | null;
+  sessionTypes: string[];
+  pricePerSession: number;
+  yearsPracticing: number | null;
+  verifiedBadgeLabel: string | null;
+  specialtyNames: string[];
+}
+
+/** Public discovery: verified therapists only, via the therapist_public_profiles view. */
+export async function getRealVerifiedTherapists(): Promise<RealPublicTherapist[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("therapist_public_profiles").select("*");
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    displayName: row.display_name,
+    bio: row.bio,
+    location: row.location,
+    sessionTypes: row.session_types ?? [],
+    pricePerSession: row.price_per_session,
+    yearsPracticing: row.years_practicing,
+    verifiedBadgeLabel: row.verified_badge_label,
+    specialtyNames: row.specialty_names ?? [],
+  }));
+}
+
+export interface RealAvailabilitySlot {
+  id: string;
+  therapistId: string;
+  startTime: string;
+  endTime: string;
+  isBooked: boolean;
+  sessionType: string;
+}
+
+export async function getRealAvailabilityForTherapist(
+  therapistId: string,
+  range?: { from: string; to: string }
+): Promise<RealAvailabilitySlot[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("availability_slots")
+    .select("id, therapist_id, start_time, end_time, is_booked, session_type")
+    .eq("therapist_id", therapistId)
+    .order("start_time", { ascending: true });
+
+  if (range) {
+    query = query.gte("start_time", range.from).lte("start_time", range.to);
+  }
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    therapistId: row.therapist_id,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    isBooked: row.is_booked,
+    sessionType: row.session_type,
+  }));
+}
+
+export async function getRealTherapistById(id: string): Promise<RealPublicTherapist | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("therapist_public_profiles")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    displayName: data.display_name,
+    bio: data.bio,
+    location: data.location,
+    sessionTypes: data.session_types ?? [],
+    pricePerSession: data.price_per_session,
+    yearsPracticing: data.years_practicing,
+    verifiedBadgeLabel: data.verified_badge_label,
+    specialtyNames: data.specialty_names ?? [],
+  };
+}
