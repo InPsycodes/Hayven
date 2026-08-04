@@ -33,6 +33,8 @@ export interface RealThreadPreview {
   bookingId: string;
   counterpartName: string;
   lastMessage: string | null;
+  /** Who sent the last message -- there's no read-tracking column in the schema, so this is the closest honest proxy for "awaiting your reply." */
+  lastMessageSenderId: string | null;
 }
 
 /** One thread per confirmed/completed booking, even before a first message is sent. */
@@ -52,7 +54,7 @@ export async function getRealMessageThreadsForParent(parentId: string): Promise<
         supabase.from("therapist_public_profiles").select("display_name").eq("id", b.therapist_id).maybeSingle(),
         supabase
           .from("messages")
-          .select("content")
+          .select("content, sender_id")
           .eq("booking_id", b.id)
           .order("sent_at", { ascending: false })
           .limit(1)
@@ -62,6 +64,7 @@ export async function getRealMessageThreadsForParent(parentId: string): Promise<
         bookingId: b.id,
         counterpartName: therapistPublic?.display_name ?? "Therapist",
         lastMessage: lastMsg?.content ?? null,
+        lastMessageSenderId: lastMsg?.sender_id ?? null,
       };
     })
   );
@@ -93,7 +96,7 @@ export async function getRealMessageThreadsForTherapist(
         admin.from("users").select("full_name").eq("id", b.parent_id).maybeSingle(),
         supabase
           .from("messages")
-          .select("content")
+          .select("content, sender_id")
           .eq("booking_id", b.id)
           .order("sent_at", { ascending: false })
           .limit(1)
@@ -103,6 +106,7 @@ export async function getRealMessageThreadsForTherapist(
         bookingId: b.id,
         counterpartName: parentUser?.full_name ?? "Parent",
         lastMessage: lastMsg?.content ?? null,
+        lastMessageSenderId: lastMsg?.sender_id ?? null,
       };
     })
   );

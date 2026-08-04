@@ -16,10 +16,12 @@ export function BookingConfirmationContent({
   therapist,
   kids,
   slots,
+  pending = false,
 }: {
   therapist: DiscoveryTherapist;
   kids: BookingChild[];
   slots: AvailabilitySlot[];
+  pending?: boolean;
 }) {
   const router = useRouter();
   const { draft } = useBookingStore();
@@ -34,6 +36,26 @@ export function BookingConfirmationContent({
 
   if (!child || !slot) {
     return <div className="p-8 text-sm text-muted-foreground">Loading...</div>;
+  }
+
+  if (pending) {
+    return (
+      <ConfirmationPanel
+        heading="Finalizing your payment..."
+        subtext="This can take a few seconds. Refresh once you see a confirmation from Paystack."
+        actions={
+          <Button className="flex-1" onClick={() => router.refresh()}>
+            Refresh
+          </Button>
+        }
+      >
+        <div className="mt-2 flex w-full flex-col gap-2 rounded-sm bg-paper p-4 text-left">
+          <Row label="Therapist" value={therapist.displayName} />
+          <Row label="Child" value={child.firstName} />
+          <Row label="Date & time" value={formatDateTime(slot.startTime)} />
+        </div>
+      </ConfirmationPanel>
+    );
   }
 
   return (

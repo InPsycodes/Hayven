@@ -1,11 +1,38 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getAvailabilityForTherapist } from "@/data/queries";
 import { getDiscoveryTherapistById, type DiscoveryTherapist } from "@/lib/therapist/discovery";
 import { getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import type { AvailabilitySlot } from "@/data/types";
+
+/**
+ * Transitions confirmed bookings whose slot has already ended to `completed`.
+ * Runs opportunistically whenever this therapist's bookings are read, rather
+ * than needing a scheduled job -- same pattern as releaseExpiredHolds.
+ */
+async function autoCompletePastBookings(therapistId: string): Promise<void> {
+  const admin = createAdminClient();
+  const { data: confirmedBookings } = await admin
+    .from("bookings")
+    .select("id, availability_slots(end_time)")
+    .eq("therapist_id", therapistId)
+    .eq("status", "confirmed");
+  if (!confirmedBookings || confirmedBookings.length === 0) return;
+
+  const nowMs = Date.now();
+  const pastIds = confirmedBookings
+    .filter((b) => {
+      const slot = b.availability_slots as unknown as { end_time: string } | null;
+      return slot && new Date(slot.end_time).getTime() < nowMs;
+    })
+    .map((b) => b.id);
+  if (pastIds.length === 0) return;
+
+  await admin.from("bookings").update({ status: "completed" }).in("id", pastIds).eq("status", "confirmed");
+}
 
 export interface RealBooking {
   id: string;
@@ -25,6 +52,7 @@ export interface RealBooking {
 }
 
 export async function getRealBookingsForTherapist(therapistId: string): Promise<RealBooking[]> {
+  await autoCompletePastBookings(therapistId);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("bookings")
@@ -118,6 +146,7 @@ export async function getRealTodaysBookingsForTherapist(
   therapistId: string,
   todayISODate: string
 ): Promise<RealTodayBooking[]> {
+  await autoCompletePastBookings(therapistId);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("bookings")
@@ -170,6 +199,47 @@ export async function getRealEarningsForTherapist(therapistUserId: string): Prom
     .gte("created_at", startOfMonth.toISOString());
   if (error || !data) return 0;
   return data.reduce((sum, p) => sum + p.amount, 0);
+}
+
+export interface RealReportDueBooking {
+  id: string;
+  childFirstName: string;
+  slotStartTime: string;
+}
+
+/** Completed sessions with no session note written yet. */
+export async function getRealReportsDueForTherapist(therapistId: string): Promise<RealReportDueBooking[]> {
+  const supabase = await createClient();
+  const [{ data: completedBookings }, { data: notes }] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("id, children(first_name), availability_slots(start_time)")
+      .eq("therapist_id", therapistId)
+      .eq("status", "completed"),
+    supabase.from("session_notes").select("booking_id").eq("therapist_id", therapistId),
+  ]);
+  if (!completedBookings) return [];
+
+  const bookingIdsWithNotes = new Set((notes ?? []).map((n) => n.booking_id));
+
+  return completedBookings
+    .filter((b) => !bookingIdsWithNotes.has(b.id))
+    .map((b) => {
+      const child = b.children as unknown as { first_name: string } | null;
+      const slot = b.availability_slots as unknown as { start_time: string } | null;
+      return {
+        id: b.id,
+        childFirstName: child?.first_name ?? "Unknown",
+        slotStartTime: slot?.start_time ?? "",
+      };
+    });
+}
+
+/** Lightweight status check for the confirmation page -- avoids trusting optimistic client state for whether a payment actually landed. */
+export async function getRealBookingStatus(bookingId: string): Promise<{ status: string } | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("bookings").select("status").eq("id", bookingId).maybeSingle();
+  return data ?? null;
 }
 
 export interface BookingPageContext {

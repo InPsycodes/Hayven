@@ -45,7 +45,7 @@ export async function initiatePaystackPayment(
       email: parentUser.email,
       amountNaira: therapistProfile.price_per_session,
       reference,
-      callbackUrl: `${SITE_URL}/book/${therapistId}/confirmation`,
+      callbackUrl: `${SITE_URL}/book/${therapistId}/confirmation?bookingId=${bookingId}`,
       metadata: { booking_id: bookingId, parent_id: session.userId },
     });
     return { ok: true, authorizationUrl: result.authorizationUrl };

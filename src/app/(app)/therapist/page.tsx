@@ -9,12 +9,13 @@ import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { formatNaira } from "@/data/format";
-import { getMessageThreadsForUser, getReportsDueForTherapist } from "@/data/queries";
 import {
   getRealActiveClientCountForTherapist,
   getRealEarningsForTherapist,
+  getRealReportsDueForTherapist,
   getRealTodaysBookingsForTherapist,
 } from "@/lib/booking/queries";
+import { getRealMessageThreadsForTherapist } from "@/lib/messages/queries";
 
 export default async function TherapistDashboardPage() {
   const session = await getSession();
@@ -29,12 +30,16 @@ export default async function TherapistDashboardPage() {
   const [todaysBookings, activeClients, reportsDue, earnings, threads] = await Promise.all([
     getRealTodaysBookingsForTherapist(therapist.id, todayISODate),
     getRealActiveClientCountForTherapist(therapist.id),
-    getReportsDueForTherapist(therapist.id),
+    getRealReportsDueForTherapist(therapist.id),
     getRealEarningsForTherapist(session.userId),
-    getMessageThreadsForUser(session.userId),
+    getRealMessageThreadsForTherapist(therapist.id),
   ]);
 
-  const unreadThreads = threads.filter((t) => t.unread);
+  // No read-tracking column in the schema -- "awaiting reply" (last message
+  // wasn't from this therapist) is the closest honest proxy for "unread."
+  const awaitingReplyThreads = threads.filter(
+    (t) => t.lastMessage !== null && t.lastMessageSenderId !== session.userId
+  );
   const nextSessionId = todaysBookings[0]?.id;
 
   return (
@@ -80,7 +85,7 @@ export default async function TherapistDashboardPage() {
 
           <div className="flex flex-col gap-3">
             <h2 className="label-micro text-muted-foreground">Needs attention</h2>
-            {reportsDue.length === 0 && unreadThreads.length === 0 ? (
+            {reportsDue.length === 0 && awaitingReplyThreads.length === 0 ? (
               <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground">
                 You&apos;re all caught up.
               </p>
@@ -90,17 +95,17 @@ export default async function TherapistDashboardPage() {
                   <NeedsAttentionItem
                     key={booking.id}
                     icon={IconNotes}
-                    title={`Session report overdue -- ${booking.child.firstName}`}
-                    subtitle={`Session on ${new Date(booking.slot.startTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })} still needs notes`}
+                    title={`Session report overdue -- ${booking.childFirstName}`}
+                    subtitle={`Session on ${new Date(booking.slotStartTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })} still needs notes`}
                     href={`/therapist/sessions/${booking.id}/report`}
                   />
                 ))}
-                {unreadThreads.map((thread) => (
+                {awaitingReplyThreads.map((thread) => (
                   <NeedsAttentionItem
                     key={thread.bookingId}
                     icon={IconMessage}
-                    title={`New message from ${thread.counterpart.fullName}`}
-                    subtitle={thread.lastMessage.content}
+                    title={`New message from ${thread.counterpartName}`}
+                    subtitle={thread.lastMessage ?? ""}
                     href={`/therapist/messages/${thread.bookingId}`}
                   />
                 ))}

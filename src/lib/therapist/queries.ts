@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Specialty } from "@/data/types";
 
 /** Real specialties from Supabase (seeded, unlike the rest of the still-mock data layer). */
@@ -96,10 +97,43 @@ export interface RealAvailabilitySlot {
   sessionType: string;
 }
 
+/**
+ * Releases pending_payment bookings whose 15-minute hold has expired
+ * (abandoned checkout), freeing the slot back to available. Runs opportunistically
+ * whenever this therapist's availability is read, rather than needing a cron job.
+ */
+async function releaseExpiredHolds(therapistId: string): Promise<void> {
+  const admin = createAdminClient();
+  const { data: expired } = await admin
+    .from("bookings")
+    .select("id, availability_slot_id")
+    .eq("therapist_id", therapistId)
+    .eq("status", "pending_payment")
+    .lt("expires_at", new Date().toISOString());
+
+  if (!expired || expired.length === 0) return;
+
+  await Promise.all(
+    expired.map(async (booking) => {
+      const { data: cancelled } = await admin
+        .from("bookings")
+        .update({ status: "cancelled" })
+        .eq("id", booking.id)
+        .eq("status", "pending_payment")
+        .select("id")
+        .maybeSingle();
+      if (cancelled) {
+        await admin.from("availability_slots").update({ is_booked: false }).eq("id", booking.availability_slot_id);
+      }
+    })
+  );
+}
+
 export async function getRealAvailabilityForTherapist(
   therapistId: string,
   range?: { from: string; to: string }
 ): Promise<RealAvailabilitySlot[]> {
+  await releaseExpiredHolds(therapistId);
   const supabase = await createClient();
   let query = supabase
     .from("availability_slots")

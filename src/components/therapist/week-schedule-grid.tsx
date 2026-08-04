@@ -3,7 +3,7 @@ import { formatTime } from "@/data/format";
 
 const HOURS = [9, 10, 11, 12, 13, 14, 15, 16];
 
-type CellState = "next" | "booked" | "blocked" | "open";
+type CellState = "next" | "booked" | "pending" | "blocked" | "open";
 
 /** Purpose-built, minimal shapes -- works for both mock and real data sources. */
 export interface ScheduleSlot {
@@ -53,6 +53,7 @@ export function WeekScheduleGrid({
 
     const booking = bookingBySlotId.get(slot.id);
     if (booking) {
+      if (booking.status === "pending_payment") return { state: "pending", slot, booking };
       return { state: booking.id === nextBooking?.id ? "next" : "booked", slot, booking };
     }
     return { state: "blocked", slot };
@@ -115,13 +116,16 @@ export function WeekScheduleGrid({
                           "flex h-full flex-col justify-center rounded-sm px-2 py-1 text-[11px] leading-tight",
                           state === "next" && "bg-charcoal text-offwhite",
                           state === "booked" && "bg-paper text-charcoal",
+                          state === "pending" && "bg-terracotta/10 text-terracotta ring-1 ring-inset ring-terracotta/30",
                           state === "blocked" && "bg-charcoal/20 text-charcoal/60"
                         )}
                       >
                         {booking ? (
                           <>
                             <span className="font-medium">{booking.childFirstName}</span>
-                            <span className="opacity-70">{formatTime(slot.startTime)}</span>
+                            <span className="opacity-70">
+                              {state === "pending" ? "Awaiting payment" : formatTime(slot.startTime)}
+                            </span>
                           </>
                         ) : (
                           <span>Blocked</span>
@@ -139,6 +143,7 @@ export function WeekScheduleGrid({
       <div className="mt-4 flex flex-wrap gap-4">
         <Legend swatchClassName="bg-charcoal" label="Next session" />
         <Legend swatchClassName="bg-paper" label="Booked" />
+        <Legend swatchClassName="bg-terracotta/10 ring-1 ring-terracotta/30" label="Awaiting payment" />
         <Legend swatchClassName="bg-charcoal/20" label="Blocked/unavailable" />
         <Legend swatchClassName="bg-white ring-1 ring-border" label="Open slot" />
       </div>

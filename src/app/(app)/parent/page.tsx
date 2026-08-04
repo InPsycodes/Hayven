@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { formatDateTime } from "@/data/format";
 import { ARTICLES } from "@/data/articles";
-import { getMessageThreadsForUser } from "@/data/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealNextUpcomingBookingForChild } from "@/lib/booking/queries";
 import { getRealLatestProgressUpdateForChild } from "@/lib/session-notes/queries";
+import { getRealMessageThreadsForParent } from "@/lib/messages/queries";
 
 const GOAL_STATUS_LABEL: Record<string, { label: string; className: string }> = {
   set: { label: "Just started", className: "bg-paper text-charcoal" },
@@ -38,11 +38,15 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
   const allChildren = await getRealChildrenForParent(session.userId);
   const activeChild = allChildren.find((c) => c.id === childParam) ?? allChildren[0];
 
-  const [nextSession, progress, threads] = await Promise.all([
+  const [nextSession, progress, allThreads] = await Promise.all([
     activeChild ? getRealNextUpcomingBookingForChild(activeChild.id) : null,
     activeChild ? getRealLatestProgressUpdateForChild(activeChild.id) : null,
-    getMessageThreadsForUser(session.userId),
+    getRealMessageThreadsForParent(session.userId),
   ]);
+
+  // Only surface threads with an actual message in the dashboard preview --
+  // every confirmed booking has a thread, but most haven't been said hello to yet.
+  const threads = allThreads.filter((t) => t.lastMessage !== null);
 
   const recommendedArticles = ARTICLES.slice(1, 3);
 
@@ -125,12 +129,8 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
                       href={`/parent/messages/${thread.bookingId}`}
                       className="block"
                     >
-                      <p className="text-sm font-medium text-charcoal">
-                        {thread.counterpart.fullName}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {thread.lastMessage.content}
-                      </p>
+                      <p className="text-sm font-medium text-charcoal">{thread.counterpartName}</p>
+                      <p className="truncate text-xs text-muted-foreground">{thread.lastMessage}</p>
                     </Link>
                   ))
                 )}
