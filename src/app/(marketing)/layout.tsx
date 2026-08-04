@@ -53,7 +53,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="mx-auto mt-14 max-w-7xl border-t border-white/10 pt-6 text-center text-xs text-canvas-white/50">
-          © {new Date().getFullYear()} Hayven — Nigeria pilot
+          © {new Date().getFullYear()} Hayven · Nigeria pilot
         </div>
       </footer>
     </div>

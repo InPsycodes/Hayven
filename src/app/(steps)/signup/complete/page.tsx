@@ -9,12 +9,12 @@ export default function SignupCompletePage() {
     <div>
       <StepHeader
         title="Application submitted"
-        subtitle="Step 3 of 3 -- Under review"
+        subtitle="Step 3 of 3: Under review"
         step={3}
         totalSteps={3}
       />
       <ConfirmationPanel
-        heading="Thanks -- we've got your application"
+        heading="Thanks, we've got your application"
         subtext="Hayven will confirm your membership status directly with your professional body. This typically takes 2-5 business days. Your profile stays hidden from parents until then."
         actions={
           <>

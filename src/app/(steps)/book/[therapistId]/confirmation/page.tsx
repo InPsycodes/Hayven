@@ -39,7 +39,7 @@ export default async function BookingConfirmationPage({
     <div>
       <StepHeader
         title="Book a session"
-        subtitle="Step 3 of 3 -- Confirmed"
+        subtitle="Step 3 of 3: Confirmed"
         step={3}
         totalSteps={3}
       />

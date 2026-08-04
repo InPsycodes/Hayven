@@ -274,7 +274,7 @@ export function SessionReportFlow({
               rows={4}
               value={clinicalNotes}
               onChange={(e) => setClinicalNotes(e.target.value)}
-              placeholder="Not shown to the parent -- for your records and other clinicians only."
+              placeholder="Not shown to the parent. For your records and other clinicians only."
             />
             <p className="text-xs text-muted-foreground">Not shown to the parent.</p>
           </div>

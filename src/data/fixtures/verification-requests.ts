@@ -61,7 +61,7 @@ export const verificationRequests: VerificationRequest[] = [
     therapistId: "thp_ibrahim",
     adminId: "user_admin_ngozi",
     status: "needs_more_info",
-    reviewerNotes: "Membership number on file doesn't match NPA's response -- flagged for follow-up, awaiting a second document.",
+    reviewerNotes: "Membership number on file doesn't match NPA's response. Flagged for follow-up, awaiting a second document.",
     submittedAt: "2026-07-10T10:25:00Z",
     reviewedAt: "2026-07-14T09:00:00Z",
   },

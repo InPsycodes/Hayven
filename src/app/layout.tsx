@@ -21,9 +21,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("http://localhost:3000"),
-  title: "Hayven — Verified child therapists you can trust",
+  title: "Hayven: Verified child therapists you can trust",
   description:
-    "Hayven connects parents with credential-verified child therapists — booking, payments, and progress tracking in one place.",
+    "Hayven connects parents with credential-verified child therapists: booking, payments, and progress tracking in one place.",
 };
 
 export const viewport: Viewport = {

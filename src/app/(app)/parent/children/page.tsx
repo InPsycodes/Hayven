@@ -24,7 +24,7 @@ export default async function ParentChildrenPage() {
         <div className="flex flex-col gap-3">
           {children.length === 0 ? (
             <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground ring-1 ring-border">
-              You haven&apos;t added a child yet -- add one below to start booking sessions.
+              You haven&apos;t added a child yet. Add one below to start booking sessions.
             </p>
           ) : (
             children.map((child) => (

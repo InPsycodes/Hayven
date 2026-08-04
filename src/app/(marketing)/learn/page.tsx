@@ -24,7 +24,7 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
             Understand what your child is going through, one clear answer at a time.
           </h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            Plain-language guides written with therapists -- start with what you&apos;re
+            Plain-language guides written with therapists. Start with what you&apos;re
             noticing, not a diagnosis.
           </p>
 

@@ -94,7 +94,7 @@ export default async function TherapistProfilePage({
         <Card className="p-6">
           <h2 className="font-heading text-base text-charcoal">Reviews</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            No reviews yet -- reviews appear after a parent completes a session.
+            No reviews yet. Reviews appear after a parent completes a session.
           </p>
         </Card>
       </div>

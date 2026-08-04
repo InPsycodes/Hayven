@@ -60,7 +60,7 @@ export function DashboardPreview() {
             One dashboard for every appointment, note and next step.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-soft">
-            Parents see exactly what&apos;s coming up and what&apos;s already happened -- no more
+            Parents see exactly what&apos;s coming up and what&apos;s already happened. No more
             piecing it together from messages and memory.
           </p>
 

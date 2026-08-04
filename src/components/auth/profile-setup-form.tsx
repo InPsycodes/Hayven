@@ -82,7 +82,7 @@ export function ProfileSetupForm() {
         <Label>Areas of focus</Label>
         <AreasOfFocusChips initial={["Developmental Psychology", "Speech Therapy"]} />
         <p className="text-xs text-muted-foreground">
-          Shown on your public profile -- fine-tune this anytime after approval.
+          Shown on your public profile. Fine-tune this anytime after approval.
         </p>
       </div>
 

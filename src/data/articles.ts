@@ -25,10 +25,10 @@ export const CATEGORIES = [
 export const FEATURED_ARTICLE: Article = {
   slug: "child-not-talking-as-much",
   category: "Getting started",
-  title: "My child isn't talking as much as others their age -- what should I actually do?",
+  title: "My child isn't talking as much as others their age: what should I actually do?",
   readTime: "6 min read",
   excerpt:
-    "A calm, practical first step for parents noticing a speech gap -- what's worth watching for, and when to talk to a specialist.",
+    "A calm, practical first step for parents noticing a speech gap: what's worth watching for, and when to talk to a specialist.",
   reviewedBy: "Reviewed by a licensed speech-language pathologist",
 };
 

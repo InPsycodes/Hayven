@@ -14,7 +14,7 @@ export default function SignupPage() {
       tagline={
         role === "parent"
           ? "Every family deserves a therapist they can trust, and progress they can see."
-          : "Your caseload, your notes, your practice -- all in one calm place."
+          : "Your caseload, your notes, your practice, all in one calm place."
       }
       subtext={
         role === "therapist"

@@ -10,9 +10,9 @@ import { About } from "@/components/marketing/about";
 import { FinalCta } from "@/components/marketing/final-cta";
 import { Reveal } from "@/components/marketing/reveal";
 
-const TITLE = "Hayven — A calmer path to the right care for your child";
+const TITLE = "Hayven: A calmer path to the right care for your child";
 const DESCRIPTION =
-  "Hayven connects Nigerian families with verified speech, occupational and ABA therapists -- from your first intake form to booking, dashboards and everyday progress.";
+  "Hayven connects Nigerian families with verified speech, occupational and ABA therapists, from your first intake form to booking, dashboards and everyday progress.";
 
 export const metadata: Metadata = {
   title: TITLE,

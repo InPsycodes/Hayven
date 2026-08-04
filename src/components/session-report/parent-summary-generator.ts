@@ -59,7 +59,7 @@ export function buildParentSummary(fields: SessionReportFields): {
     { field: "Engagement", phrase: engagementPhrase },
     { field: "Cooperation", phrase: cooperationPhrase },
     ...fields.goals.map((g) => ({
-      field: `Goal -- ${g.name}`,
+      field: `Goal: ${g.name}`,
       phrase: GOAL_STATUS_PHRASES[g.status](g.name),
     })),
   ];

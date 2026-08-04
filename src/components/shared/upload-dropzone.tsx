@@ -6,7 +6,7 @@ import { IconUpload, IconFileCheck } from "@tabler/icons-react";
 export function UploadDropzone({
   name,
   label = "Drag file here or click to upload",
-  helperText = "PDF, JPG or PNG -- max 10MB",
+  helperText = "PDF, JPG or PNG (max 10MB)",
 }: {
   name?: string;
   label?: string;

@@ -13,5 +13,5 @@ export const CONCERN_OPTIONS = [
   { value: "developmental_delay", label: "Developmental delay or milestones concern", specialtyName: "Developmental Psychology" },
   { value: "trauma", label: "Trauma, grief, or a difficult life event", specialtyName: "Counselling" },
   { value: "autism_sensory", label: "Autism spectrum or sensory-related concerns", specialtyName: "Occupational Therapy" },
-  { value: "unsure", label: "Not sure -- I just know something feels off", specialtyName: "Developmental Psychology" },
+  { value: "unsure", label: "Not sure, I just know something feels off", specialtyName: "Developmental Psychology" },
 ] as const;

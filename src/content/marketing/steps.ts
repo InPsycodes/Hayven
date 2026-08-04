@@ -6,7 +6,7 @@ export interface HowItWorksStep {
 export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
   {
     title: "Create a profile",
-    body: "Tell us about your child and what you're noticing -- no clinical jargon required.",
+    body: "Tell us about your child and what you're noticing. No clinical jargon required.",
   },
   {
     title: "Share the full picture",

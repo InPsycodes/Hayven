@@ -24,7 +24,7 @@ export default async function BookingPaymentPage({
     <div>
       <StepHeader
         title="Book a session"
-        subtitle="Step 2 of 3 -- Payment"
+        subtitle="Step 2 of 3: Payment"
         step={2}
         totalSteps={3}
         closeHref={`/therapists/${therapistId}`}

@@ -36,7 +36,7 @@ export default function NeedsAssessmentPage() {
       <StepHeader
         eyebrow="Matching quiz"
         title="What's going on with your child?"
-        subtitle="A couple of quick questions -- we'll match you with the right kind of specialist."
+        subtitle="A couple of quick questions, we'll match you with the right kind of specialist."
         step={1}
         totalSteps={1}
         closeHref="/"

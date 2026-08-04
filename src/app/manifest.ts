@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Hayven",
     short_name: "Hayven",
     description:
-      "Verified child therapists -- booking, payments, and progress tracking in one place.",
+      "Verified child therapists: booking, payments, and progress tracking in one place.",
     start_url: "/",
     display: "standalone",
     background_color: "#E4E1DF",

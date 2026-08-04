@@ -7,7 +7,7 @@ export const sessionNotes: SessionNote[] = [
     therapistId: "thp_amara",
     summary: "Zara was engaged for the full session and worked on forming 4-5 word sentences using picture prompts.",
     goalsAddressed: ["goal_zara_sentences"],
-    recommendations: "Zara is putting full sentences together on her own now, without me prompting each word -- that's a real shift from last month. Keep reinforcing at home with the exercise sheet.",
+    recommendations: "Zara is putting full sentences together on her own now, without me prompting each word. That's a real shift from last month. Keep reinforcing at home with the exercise sheet.",
     visibleToParent: true,
     createdAt: "2026-07-20T11:15:00Z",
   },

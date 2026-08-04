@@ -14,7 +14,7 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   in_review: { label: "In review", className: "bg-terracotta/10 text-terracotta" },
   approved: { label: "Approved", className: "bg-success/10 text-success" },
   rejected: { label: "Rejected", className: "bg-error/10 text-error" },
-  needs_more_info: { label: "Flagged -- needs more info", className: "bg-terracotta/10 text-terracotta" },
+  needs_more_info: { label: "Flagged: needs more info", className: "bg-terracotta/10 text-terracotta" },
 };
 
 export function VerificationDetailPanel({ request }: { request: RealVerificationRequest }) {
@@ -58,12 +58,12 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
           <div className="mt-3 flex flex-col gap-2.5 text-sm">
             <DetailRow label="Full name" value={request.therapist.displayName} />
             <DetailRow label="Email" value={request.therapist.email} />
-            <DetailRow label="Specialty" value={request.therapist.specialties.join(", ") || "—"} />
-            <DetailRow label="Professional body" value={request.therapist.professionalBody ?? "—"} />
-            <DetailRow label="Membership number" value={request.therapist.membershipNumber ?? "—"} />
+            <DetailRow label="Specialty" value={request.therapist.specialties.join(", ") || "Not provided"} />
+            <DetailRow label="Professional body" value={request.therapist.professionalBody ?? "Not provided"} />
+            <DetailRow label="Membership number" value={request.therapist.membershipNumber ?? "Not provided"} />
             <DetailRow
               label="Years practicing"
-              value={request.therapist.yearsPracticing != null ? String(request.therapist.yearsPracticing) : "—"}
+              value={request.therapist.yearsPracticing != null ? String(request.therapist.yearsPracticing) : "Not provided"}
             />
           </div>
         </div>
@@ -122,7 +122,7 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
         >
           {isPending && pendingAction === "approved"
             ? "Approving..."
-            : "Approve -- issue verified badge"}
+            : "Approve & issue verified badge"}
         </Button>
         <Button
           variant="outline"

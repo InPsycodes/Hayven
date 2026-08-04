@@ -86,7 +86,7 @@ export function MessageThreadView({
         <div className="mx-auto flex max-w-2xl flex-col gap-3">
           {messages.length === 0 && (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              No messages yet -- say hello.
+              No messages yet. Say hello.
             </p>
           )}
           {rows.map(({ message, showDivider, label }) => {

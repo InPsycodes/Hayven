@@ -95,7 +95,7 @@ export default async function TherapistDashboardPage() {
                   <NeedsAttentionItem
                     key={booking.id}
                     icon={IconNotes}
-                    title={`Session report overdue -- ${booking.childFirstName}`}
+                    title={`Session report overdue: ${booking.childFirstName}`}
                     subtitle={`Session on ${new Date(booking.slotStartTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })} still needs notes`}
                     href={`/therapist/sessions/${booking.id}/report`}
                   />

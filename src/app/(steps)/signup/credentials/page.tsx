@@ -18,7 +18,7 @@ export default async function SignupCredentialsPage() {
       <StepHeader
         eyebrow="Hayven for therapists"
         title="Apply to join Hayven"
-        subtitle="Step 2 of 3 -- Credentials & verification"
+        subtitle="Step 2 of 3: Credentials & verification"
         step={2}
         totalSteps={3}
       />

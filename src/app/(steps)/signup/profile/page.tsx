@@ -14,7 +14,7 @@ export default async function SignupProfilePage() {
     <div>
       <StepHeader
         title="Set up your profile"
-        subtitle="Step 3 of 3 -- This is what parents will see."
+        subtitle="Step 3 of 3: This is what parents will see."
         step={3}
         totalSteps={3}
       />

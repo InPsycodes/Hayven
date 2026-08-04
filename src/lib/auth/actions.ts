@@ -58,7 +58,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
     .eq("id", data.user.id)
     .single();
   if (!profile) {
-    return { ok: false, error: "Account setup isn't finished yet -- please try again shortly." };
+    return { ok: false, error: "Account setup isn't finished yet. Please try again shortly." };
   }
 
   return { ok: true, role: profile.role as UserRole };
