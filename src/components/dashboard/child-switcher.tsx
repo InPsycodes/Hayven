@@ -4,9 +4,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { ageFromDob, initialsFromName } from "@/data/format";
-import type { Child } from "@/data/types";
 
-export function ChildSwitcher({ kids, activeId }: { kids: Child[]; activeId: string }) {
+export interface SwitcherChild {
+  id: string;
+  firstName: string;
+  dateOfBirth: string;
+}
+
+export function ChildSwitcher({ kids, activeId }: { kids: SwitcherChild[]; activeId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 

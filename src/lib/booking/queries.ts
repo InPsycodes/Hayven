@@ -57,6 +57,121 @@ export async function getRealBookingsForTherapist(therapistId: string): Promise<
   });
 }
 
+export interface RealNextSession {
+  sessionType: string;
+  location: string | null;
+  slotStartTime: string;
+  therapistDisplayName: string;
+  therapistLocation: string | null;
+}
+
+/** Powers the parent dashboard's "Next session" card for a given child. */
+export async function getRealNextUpcomingBookingForChild(childId: string): Promise<RealNextSession | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("session_type, location, therapist_id, availability_slots(start_time)")
+    .eq("child_id", childId)
+    .eq("status", "confirmed");
+  if (error || !data) return null;
+
+  const nowMs = Date.now();
+  const upcoming = data
+    .map((row) => ({
+      sessionType: row.session_type as string,
+      location: row.location as string | null,
+      therapistId: row.therapist_id as string,
+      slotStartTime:
+        (row.availability_slots as unknown as { start_time: string } | null)?.start_time ?? "",
+    }))
+    .filter((row) => row.slotStartTime && new Date(row.slotStartTime).getTime() >= nowMs)
+    .sort((a, b) => a.slotStartTime.localeCompare(b.slotStartTime));
+
+  const next = upcoming[0];
+  if (!next) return null;
+
+  const { data: therapistPublic } = await supabase
+    .from("therapist_public_profiles")
+    .select("display_name, location")
+    .eq("id", next.therapistId)
+    .maybeSingle();
+
+  return {
+    sessionType: next.sessionType,
+    location: next.location,
+    slotStartTime: next.slotStartTime,
+    therapistDisplayName: therapistPublic?.display_name ?? "Your therapist",
+    therapistLocation: therapistPublic?.location ?? null,
+  };
+}
+
+export interface RealTodayBooking {
+  id: string;
+  sessionType: string;
+  location: string | null;
+  slotStartTime: string;
+  childFirstName: string;
+}
+
+/** Powers the therapist dashboard's "Today's schedule" list. */
+export async function getRealTodaysBookingsForTherapist(
+  therapistId: string,
+  todayISODate: string
+): Promise<RealTodayBooking[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("id, session_type, location, children(first_name), availability_slots(start_time)")
+    .eq("therapist_id", therapistId)
+    .in("status", ["confirmed", "completed"]);
+  if (error || !data) return [];
+
+  return data
+    .map((row) => {
+      const child = row.children as unknown as { first_name: string } | null;
+      const slot = row.availability_slots as unknown as { start_time: string } | null;
+      return {
+        id: row.id,
+        sessionType: row.session_type,
+        location: row.location,
+        slotStartTime: slot?.start_time ?? "",
+        childFirstName: child?.first_name ?? "Unknown",
+      };
+    })
+    .filter((b) => b.slotStartTime.startsWith(todayISODate))
+    .sort((a, b) => a.slotStartTime.localeCompare(b.slotStartTime));
+}
+
+/** Distinct children this therapist has had a non-cancelled booking with. */
+export async function getRealActiveClientCountForTherapist(therapistId: string): Promise<number> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("child_id")
+    .eq("therapist_id", therapistId)
+    .neq("status", "cancelled");
+  if (error || !data) return 0;
+  return new Set(data.map((r) => r.child_id)).size;
+}
+
+/** Sum of successful session-commission payments to this therapist this calendar month. */
+export async function getRealEarningsForTherapist(therapistUserId: string): Promise<number> {
+  const supabase = await createClient();
+  const startOfMonth = new Date();
+  startOfMonth.setUTCDate(1);
+  startOfMonth.setUTCHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from("payments")
+    .select("amount")
+    .eq("payee_id", therapistUserId)
+    .eq("type", "session_commission")
+    .eq("status", "successful")
+    .gte("created_at", startOfMonth.toISOString());
+  if (error || !data) return 0;
+  return data.reduce((sum, p) => sum + p.amount, 0);
+}
+
 export interface BookingPageContext {
   therapist: DiscoveryTherapist;
   slots: AvailabilitySlot[];

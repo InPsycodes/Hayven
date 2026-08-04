@@ -9,13 +9,12 @@ import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { formatNaira } from "@/data/format";
+import { getMessageThreadsForUser, getReportsDueForTherapist } from "@/data/queries";
 import {
-  getActiveClientCountForTherapist,
-  getEarningsForTherapist,
-  getMessageThreadsForUser,
-  getReportsDueForTherapist,
-  getTodaysBookingsForTherapist,
-} from "@/data/queries";
+  getRealActiveClientCountForTherapist,
+  getRealEarningsForTherapist,
+  getRealTodaysBookingsForTherapist,
+} from "@/lib/booking/queries";
 
 export default async function TherapistDashboardPage() {
   const session = await getSession();
@@ -28,10 +27,10 @@ export default async function TherapistDashboardPage() {
   const todayISODate = today.toISOString().slice(0, 10);
 
   const [todaysBookings, activeClients, reportsDue, earnings, threads] = await Promise.all([
-    getTodaysBookingsForTherapist(therapist.id, todayISODate),
-    getActiveClientCountForTherapist(therapist.id),
+    getRealTodaysBookingsForTherapist(therapist.id, todayISODate),
+    getRealActiveClientCountForTherapist(therapist.id),
     getReportsDueForTherapist(therapist.id),
-    getEarningsForTherapist(therapist.id),
+    getRealEarningsForTherapist(session.userId),
     getMessageThreadsForUser(session.userId),
   ]);
 
@@ -69,10 +68,10 @@ export default async function TherapistDashboardPage() {
               todaysBookings.map((booking) => (
                 <ScheduleItem
                   key={booking.id}
-                  clientName={booking.child.firstName}
+                  clientName={booking.childFirstName}
                   sessionType={booking.sessionType.replace("_", " ")}
-                  format={booking.sessionType === "virtual" ? "Google Meet" : booking.location ?? "In-person"}
-                  startTime={booking.slot.startTime}
+                  format={booking.sessionType === "virtual" ? "Google Meet" : (booking.location ?? "In-person")}
+                  startTime={booking.slotStartTime}
                   isNext={booking.id === nextSessionId}
                 />
               ))
