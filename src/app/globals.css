@@ -167,6 +167,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    /* Safety net: a single overflowing element (grid blowout, unwrapped
+       text, etc.) should never be able to shift the whole page sideways. */
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground relative;
   }

@@ -7,7 +7,7 @@ export function DashboardPreview() {
   return (
     <section className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
-        <div className="order-2 lg:order-1">
+        <div className="order-2 min-w-0 lg:order-1">
           <div className="rounded-[1.75rem] border border-charcoal/8 bg-canvas-white p-6 shadow-xl">
             <div className="flex items-center gap-3 border-b border-charcoal/8 pb-5">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-charcoal/10 font-serif text-sm text-charcoal">
@@ -54,7 +54,7 @@ export function DashboardPreview() {
           </div>
         </div>
 
-        <div className="order-1 lg:order-2">
+        <div className="order-1 min-w-0 lg:order-2">
           <span className="eyebrow text-terracotta">Progress & support</span>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             One dashboard for every appointment, note and next step.

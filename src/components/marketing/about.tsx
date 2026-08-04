@@ -18,7 +18,7 @@ export function About() {
     <section id="about" className="bg-canvas-white px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
         <div
-          className="aspect-4/3 rounded-[2rem] shadow-xl"
+          className="aspect-4/3 min-w-0 rounded-[2rem] shadow-xl"
           style={{
             background: "linear-gradient(135deg, #dcd3be 0%, #9c5934 60%, #1a1a1a 100%)",
           }}
@@ -26,7 +26,7 @@ export function About() {
           aria-label="A parent and child laughing together at home"
         />
 
-        <div>
+        <div className="min-w-0">
           <span className="eyebrow text-terracotta">About Hayven</span>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             Built by people who understand the search for the right care.
