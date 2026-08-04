@@ -88,52 +88,55 @@ export async function createPendingBooking(input: {
 }
 
 /**
- * Simulated instant payment success (real Paystack/Flutterwave webhook is
- * Sprint 4 scope). Writes to `payments` are intentionally service-role-only
- * per the RLS design (mirrors what a real payment webhook would do).
+ * Marks a booking confirmed and records the payment, once Paystack has
+ * confirmed the charge (via webhook signature or a direct /verify call --
+ * both happen upstream of this function, which is why it doesn't check a
+ * parent session: by the time it's called, Paystack itself is the authority).
+ *
+ * Idempotent via a conditional update (only transitions pending_payment ->
+ * confirmed) so it's safe to call from both the webhook and the redirect
+ * callback without double-booking a payments row.
  */
-export async function confirmBookingPayment(bookingId: string): Promise<ActionResult<object>> {
-  const session = await getSession();
-  if (!session || session.role !== "parent") {
-    return { ok: false, error: "You must be signed in as a parent to complete this booking." };
-  }
-
+export async function finalizeBookingPayment(
+  bookingId: string,
+  gatewayReference: string,
+  amountKobo: number
+): Promise<ActionResult<object>> {
   const admin = createAdminClient();
 
   const { data: booking } = await admin
     .from("bookings")
-    .select("id, parent_id, therapist_id, session_type, status")
+    .select("id, parent_id, therapist_id, session_type")
     .eq("id", bookingId)
     .maybeSingle();
-  if (!booking || booking.parent_id !== session.userId) {
-    return { ok: false, error: "Booking not found." };
-  }
-  if (booking.status !== "pending_payment") {
-    return { ok: false, error: "This booking has already been processed." };
-  }
+  if (!booking) return { ok: false, error: "Booking not found." };
 
   const meetingLink =
     booking.session_type === "virtual" ? `https://meet.hayven.app/${bookingId}` : null;
 
-  const { error: updateError } = await admin
+  const { data: updated, error: updateError } = await admin
     .from("bookings")
     .update({ status: "confirmed", meeting_link: meetingLink, expires_at: null })
-    .eq("id", bookingId);
+    .eq("id", bookingId)
+    .eq("status", "pending_payment")
+    .select("id")
+    .maybeSingle();
   if (updateError) return { ok: false, error: updateError.message };
+  if (!updated) return { ok: true }; // already finalized by a prior call -- idempotent no-op
 
   const { data: therapistProfile } = await admin
     .from("therapist_profiles")
-    .select("user_id, price_per_session")
+    .select("user_id")
     .eq("id", booking.therapist_id)
     .maybeSingle();
 
   await admin.from("payments").insert({
     booking_id: bookingId,
-    payer_id: session.userId,
+    payer_id: booking.parent_id,
     payee_id: therapistProfile?.user_id ?? null,
-    amount: therapistProfile?.price_per_session ?? 0,
+    amount: Math.round(amountKobo / 100),
     type: "session_commission",
-    gateway_reference: `sim_${bookingId}`,
+    gateway_reference: gatewayReference,
     status: "successful",
   });
 

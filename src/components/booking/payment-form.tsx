@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useBookingStore, type BookingDraft } from "@/lib/booking-store";
 import { formatDateTime, formatNaira } from "@/data/format";
-import { confirmBookingPayment } from "@/lib/booking/actions";
+import { initiatePaystackPayment } from "@/lib/payments/actions";
 import type { DiscoveryTherapist } from "@/lib/therapist/discovery";
 import type { BookingChild } from "@/components/booking/booking-time-form";
 import type { AvailabilitySlot } from "@/data/types";
@@ -47,24 +47,25 @@ export function PaymentForm({
   }, [ready, router, therapist.id]);
 
   const total = therapist.pricePerSession;
+  const isReal = therapist.source === "real";
 
   function handlePay(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setDraft({ paymentMethod: method });
 
-    if (therapist.source !== "real" || !draft.bookingId) {
+    if (!isReal || !draft.bookingId) {
+      setDraft({ paymentMethod: method });
       router.push(`/book/${therapist.id}/confirmation`);
       return;
     }
 
     startTransition(async () => {
-      const result = await confirmBookingPayment(draft.bookingId!);
+      const result = await initiatePaystackPayment(draft.bookingId!, therapist.id);
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      router.push(`/book/${therapist.id}/confirmation`);
+      window.location.href = result.authorizationUrl;
     });
   }
 
@@ -87,50 +88,58 @@ export function PaymentForm({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label>Payment method</Label>
-        <div className="flex flex-col gap-2">
-          {PAYMENT_METHODS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setMethod(option.value)}
-              className={cn(
-                "flex items-center gap-3 rounded-sm border px-4 py-3 text-left text-sm transition-colors",
-                method === option.value
-                  ? "border-terracotta bg-terracotta/5"
-                  : "border-border hover:border-charcoal/30"
-              )}
-            >
-              <span
-                className={cn(
-                  "flex size-4 shrink-0 items-center justify-center rounded-full border",
-                  method === option.value ? "border-terracotta" : "border-border"
-                )}
-              >
-                {method === option.value && <span className="size-2 rounded-full bg-terracotta" />}
-              </span>
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {isReal ? (
+        <p className="text-sm text-muted-foreground">
+          You&apos;ll be taken to Paystack&apos;s secure checkout to pay by card, bank transfer, or USSD.
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-col gap-2">
+            <Label>Payment method</Label>
+            <div className="flex flex-col gap-2">
+              {PAYMENT_METHODS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setMethod(option.value)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-sm border px-4 py-3 text-left text-sm transition-colors",
+                    method === option.value
+                      ? "border-terracotta bg-terracotta/5"
+                      : "border-border hover:border-charcoal/30"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                      method === option.value ? "border-terracotta" : "border-border"
+                    )}
+                  >
+                    {method === option.value && <span className="size-2 rounded-full bg-terracotta" />}
+                  </span>
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {method === "card" && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 flex flex-col gap-2">
-            <Label htmlFor="cardNumber">Card number</Label>
-            <Input id="cardNumber" required placeholder="4242 4242 4242 4242" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="expiry">MM/YY</Label>
-            <Input id="expiry" required placeholder="08/29" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="cvv">CVV</Label>
-            <Input id="cvv" required placeholder="123" />
-          </div>
-        </div>
+          {method === "card" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 flex flex-col gap-2">
+                <Label htmlFor="cardNumber">Card number</Label>
+                <Input id="cardNumber" required placeholder="4242 4242 4242 4242" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="expiry">MM/YY</Label>
+                <Input id="expiry" required placeholder="08/29" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="cvv">CVV</Label>
+                <Input id="cvv" required placeholder="123" />
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -141,7 +150,7 @@ export function PaymentForm({
       {error && <p className="text-sm text-error">{error}</p>}
 
       <Button type="submit" variant="accent" size="lg" className="w-full" disabled={isPending}>
-        {isPending ? "Processing payment..." : `Pay ${formatNaira(total)} & confirm booking`}
+        {isPending ? "Redirecting to Paystack..." : `Pay ${formatNaira(total)} & confirm booking`}
       </Button>
     </form>
   );
