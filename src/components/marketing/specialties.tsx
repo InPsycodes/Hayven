@@ -3,10 +3,10 @@ import Link from "next/link";
 
 import { SPECIALTY_CARDS } from "@/content/marketing/specialties";
 import { Icon } from "@/components/ui/icon";
+import { Reveal } from "@/components/marketing/reveal";
 
-// No real specialty photography exists yet -- each card gets a distinct
-// brand-toned gradient in place of a photo, sized/positioned identically so
-// swapping in real photos later is a one-line change per card.
+// Fallback for cards without real photography yet (see imageSrc on SPECIALTY_CARDS):
+// a distinct brand-toned gradient, sized/positioned identically to a photo.
 const PLACEHOLDER_GRADIENTS = [
   "linear-gradient(135deg, #9c5934 0%, #dcd3be 100%)",
   "linear-gradient(135deg, #1a1a1a 0%, #9c5934 100%)",
@@ -29,34 +29,33 @@ export function Specialties() {
 
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {SPECIALTY_CARDS.map((card, index) => (
-            <div
-              key={card.title}
-              className="group overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-all hover:-translate-y-1 hover:border-terracotta/40"
-            >
-              <div className="relative aspect-4/3 overflow-hidden">
-                {card.imageSrc ? (
-                  <Image
-                    src={card.imageSrc}
-                    alt={`A ${card.title.toLowerCase()} session with a child`}
-                    fill
-                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                    className="photo-treatment size-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div
-                    className="size-full transition-transform duration-500 group-hover:scale-105"
-                    style={{ background: PLACEHOLDER_GRADIENTS[index % PLACEHOLDER_GRADIENTS.length] }}
-                  />
-                )}
-              </div>
-              <div className="p-6">
-                <div className="relative -mt-11 flex size-10 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">
-                  <Icon icon={card.icon} size="md" />
+            <Reveal key={card.title} delayMs={index * 80}>
+              <div className="group overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-all hover:-translate-y-1 hover:border-terracotta/40">
+                <div className="relative aspect-4/3 overflow-hidden">
+                  {card.imageSrc ? (
+                    <Image
+                      src={card.imageSrc}
+                      alt={`A ${card.title.toLowerCase()} session with a child`}
+                      fill
+                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                      className="photo-treatment size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div
+                      className="size-full transition-transform duration-500 group-hover:scale-105"
+                      style={{ background: PLACEHOLDER_GRADIENTS[index % PLACEHOLDER_GRADIENTS.length] }}
+                    />
+                  )}
                 </div>
-                <h3 className="mt-4 font-serif text-xl text-charcoal">{card.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink-soft">{card.description}</p>
+                <div className="p-6">
+                  <div className="relative -mt-11 flex size-10 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">
+                    <Icon icon={card.icon} size="md" />
+                  </div>
+                  <h3 className="mt-4 font-serif text-xl text-charcoal">{card.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-soft">{card.description}</p>
+                </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
 

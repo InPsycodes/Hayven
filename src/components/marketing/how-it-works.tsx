@@ -1,5 +1,6 @@
 import { HOW_IT_WORKS_STEPS } from "@/content/marketing/steps";
 import { cn } from "@/lib/utils";
+import { Reveal } from "@/components/marketing/reveal";
 
 export function HowItWorks() {
   return (
@@ -16,18 +17,20 @@ export function HowItWorks() {
           {HOW_IT_WORKS_STEPS.map((step, index) => {
             const isLast = index === HOW_IT_WORKS_STEPS.length - 1;
             return (
-              <div key={step.title} className="flex flex-col gap-4">
-                <span
-                  className={cn(
-                    "relative z-10 flex size-12 items-center justify-center rounded-full font-serif text-lg",
-                    isLast ? "bg-charcoal text-canvas-white" : "bg-canvas-white text-terracotta"
-                  )}
-                >
-                  {index + 1}
-                </span>
-                <h3 className="font-serif text-lg text-canvas-white">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-canvas-white/75">{step.body}</p>
-              </div>
+              <Reveal key={step.title} delayMs={index * 80}>
+                <div className="flex flex-col gap-4">
+                  <span
+                    className={cn(
+                      "relative z-10 flex size-12 items-center justify-center rounded-full font-serif text-lg",
+                      isLast ? "bg-charcoal text-canvas-white" : "bg-canvas-white text-terracotta"
+                    )}
+                  >
+                    {index + 1}
+                  </span>
+                  <h3 className="font-serif text-lg text-canvas-white">{step.title}</h3>
+                  <p className="text-sm leading-relaxed text-canvas-white/75">{step.body}</p>
+                </div>
+              </Reveal>
             );
           })}
         </div>
