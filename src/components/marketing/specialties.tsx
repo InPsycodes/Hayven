@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { SPECIALTY_CARDS } from "@/content/marketing/specialties";
@@ -32,11 +33,21 @@ export function Specialties() {
               key={card.title}
               className="group overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-all hover:-translate-y-1 hover:border-terracotta/40"
             >
-              <div className="aspect-4/3 overflow-hidden">
-                <div
-                  className="size-full transition-transform duration-500 group-hover:scale-105"
-                  style={{ background: PLACEHOLDER_GRADIENTS[index % PLACEHOLDER_GRADIENTS.length] }}
-                />
+              <div className="relative aspect-4/3 overflow-hidden">
+                {card.imageSrc ? (
+                  <Image
+                    src={card.imageSrc}
+                    alt={`A ${card.title.toLowerCase()} session with a child`}
+                    fill
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                    className="photo-treatment size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div
+                    className="size-full transition-transform duration-500 group-hover:scale-105"
+                    style={{ background: PLACEHOLDER_GRADIENTS[index % PLACEHOLDER_GRADIENTS.length] }}
+                  />
+                )}
               </div>
               <div className="p-6">
                 <div className="relative -mt-11 flex size-10 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">

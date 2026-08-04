@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { IconHeart, IconShieldCheck } from "@tabler/icons-react";
 
 const VALUES = [
@@ -17,14 +18,15 @@ export function About() {
   return (
     <section id="about" className="bg-canvas-white px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
-        <div
-          className="aspect-4/3 min-w-0 rounded-[2rem] shadow-xl"
-          style={{
-            background: "linear-gradient(135deg, #dcd3be 0%, #9c5934 60%, #1a1a1a 100%)",
-          }}
-          role="img"
-          aria-label="A parent and child laughing together at home"
-        />
+        <div className="relative aspect-4/3 min-w-0 overflow-hidden rounded-[2rem] shadow-xl">
+          <Image
+            src="/images/about-family-session.png"
+            alt="A father, mother, and daughter playing together during a therapy session"
+            fill
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="photo-treatment object-cover"
+          />
+        </div>
 
         <div className="min-w-0">
           <span className="eyebrow text-terracotta">About Hayven</span>

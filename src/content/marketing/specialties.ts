@@ -6,6 +6,7 @@ export interface SpecialtyCard {
   icon: ComponentType<IconProps>;
   title: string;
   description: string;
+  imageSrc?: string;
 }
 
 export const SPECIALTY_CARDS: SpecialtyCard[] = [
@@ -13,11 +14,13 @@ export const SPECIALTY_CARDS: SpecialtyCard[] = [
     icon: IconMicrophone,
     title: "Speech Therapy",
     description: "Support for articulation, stuttering, and expressive-language delays.",
+    imageSrc: "/images/specialty-speech-therapy.png",
   },
   {
     icon: IconHandStop,
     title: "Occupational Therapy",
     description: "Sensory processing and fine-motor skill development for everyday independence.",
+    imageSrc: "/images/specialty-occupational-therapy.png",
   },
   {
     icon: IconHeart,
