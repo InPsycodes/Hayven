@@ -21,6 +21,14 @@ export type SignUpResult =
 export type SignInResult = { ok: true; role: UserRole } | { ok: false; error: string };
 
 export async function signUp(input: SignUpInput): Promise<SignUpResult> {
+  // Signup is the only self-service path into this function, and the UI only
+  // ever offers "parent"/"therapist" -- reject anything else outright rather
+  // than trust a caller-supplied role, since that field ends up in auth
+  // metadata a DB trigger uses to set the account's real privilege level.
+  if (input.role !== "parent" && input.role !== "therapist") {
+    return { ok: false, error: "Invalid account type." };
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signUp({

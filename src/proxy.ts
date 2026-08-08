@@ -7,6 +7,7 @@ const ROLE_PREFIXES: { prefix: string; role: UserRole }[] = [
   { prefix: "/parent", role: "parent" },
   { prefix: "/therapist", role: "therapist" },
   { prefix: "/admin", role: "admin" },
+  { prefix: "/supervisor", role: "supervisor" },
 ];
 
 export async function proxy(request: NextRequest) {
@@ -31,5 +32,14 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/parent", "/parent/:path*", "/therapist", "/therapist/:path*", "/admin", "/admin/:path*"],
+  matcher: [
+    "/parent",
+    "/parent/:path*",
+    "/therapist",
+    "/therapist/:path*",
+    "/admin",
+    "/admin/:path*",
+    "/supervisor",
+    "/supervisor/:path*",
+  ],
 };

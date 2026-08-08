@@ -4,17 +4,22 @@ import { useState, useTransition } from "react";
 import { IconFileText, IconCheck } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { StatusBadge, type statusBadgeVariants } from "@/components/ui/status-badge";
+import type { VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { formatDate, initialsFromName } from "@/data/format";
 import { reviewVerificationRequestReal, type VerificationDecision } from "@/lib/admin/actions";
 import type { RealVerificationRequest } from "@/lib/admin/queries";
 
-const STATUS_LABEL: Record<string, { label: string; className: string }> = {
-  submitted: { label: "Pending review", className: "bg-terracotta/10 text-terracotta" },
-  in_review: { label: "In review", className: "bg-terracotta/10 text-terracotta" },
-  approved: { label: "Approved", className: "bg-success/10 text-success" },
-  rejected: { label: "Rejected", className: "bg-error/10 text-error" },
-  needs_more_info: { label: "Flagged: needs more info", className: "bg-terracotta/10 text-terracotta" },
+type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
+
+const STATUS_LABEL: Record<string, { label: string; tone: Tone }> = {
+  submitted: { label: "Pending review", tone: "amber" },
+  in_review: { label: "In review", tone: "amber" },
+  approved: { label: "Approved", tone: "sage" },
+  rejected: { label: "Rejected", tone: "error" },
+  needs_more_info: { label: "Flagged: needs more info", tone: "amber" },
 };
 
 export function VerificationDetailPanel({ request }: { request: RealVerificationRequest }) {
@@ -47,13 +52,13 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
             </p>
           </div>
         </div>
-        <span className={cn("shrink-0 rounded-full px-3 py-1 text-xs font-medium", status.className)}>
+        <StatusBadge tone={status.tone} className="shrink-0 px-3 py-1 text-xs">
           {status.label}
-        </span>
+        </StatusBadge>
       </div>
 
       <div className="grid gap-6 px-6 pb-6 md:grid-cols-2 md:px-8">
-        <div className="rounded-sm bg-white p-5">
+        <Card lift className="p-5">
           <h3 className="label-micro text-muted-foreground">Application details</h3>
           <div className="mt-3 flex flex-col gap-2.5 text-sm">
             <DetailRow label="Full name" value={request.therapist.displayName} />
@@ -66,9 +71,9 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
               value={request.therapist.yearsPracticing != null ? String(request.therapist.yearsPracticing) : "Not provided"}
             />
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-sm bg-white p-5">
+        <Card lift className="p-5">
           <h3 className="label-micro text-muted-foreground">Submitted documents</h3>
           <div className="mt-3 flex flex-col gap-2">
             {request.credentials.length === 0 && (
@@ -98,18 +103,18 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
 
       <div className="px-6 pb-6 md:px-8">
-        <div className="rounded-sm bg-white p-5">
+        <Card lift className="p-5">
           <h3 className="label-micro text-muted-foreground">Verification checklist</h3>
           <div className="mt-3 flex flex-col gap-3">
             <ChecklistRow checked label="Certificate matches claimed credential" />
             <ChecklistRow checked label="Membership number confirmed with the professional body" />
             <ChecklistRow checked={false} label='Membership status confirmed "in good standing"' />
           </div>
-        </div>
+        </Card>
       </div>
 
       {error && <p className="px-6 text-sm text-error md:px-8">{error}</p>}

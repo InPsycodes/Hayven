@@ -1,0 +1,55 @@
+import "server-only";
+
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { AppSession } from "@/lib/auth/session";
+
+export type AuditAction =
+  | "session_note.create"
+  | "goal.create"
+  | "goal.update_status"
+  | "target_behaviour.create"
+  | "target_behaviour.toggle_active"
+  | "skill.create"
+  | "skill.toggle_active"
+  | "report.generate"
+  | "report.save"
+  | "report.publish"
+  | "verification.decide"
+  | "assignment.therapist_child.create"
+  | "assignment.therapist_child.end"
+  | "assignment.supervisor_therapist.create"
+  | "assignment.supervisor_therapist.end"
+  | "account_deletion_request.submit"
+  | "account_deletion_request.review"
+  | "booking.cancel"
+  | "payment.mark_refunded";
+
+/**
+ * Fire-and-forget: a logging failure must never roll back a clinical write
+ * that already succeeded. audit_log has no `authenticated` grant at all, so
+ * this always goes through the service-role client.
+ */
+export async function logAuditEvent(params: {
+  actor: AppSession;
+  action: AuditAction;
+  entityType: string;
+  entityId?: string;
+  childId?: string;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin.from("audit_log").insert({
+      actor_id: params.actor.userId,
+      actor_role: params.actor.role,
+      action: params.action,
+      entity_type: params.entityType,
+      entity_id: params.entityId ?? null,
+      child_id: params.childId ?? null,
+      metadata: params.metadata ?? null,
+    });
+    if (error) console.error("audit log insert failed", params.action, error.message);
+  } catch (err) {
+    console.error("audit log insert threw", params.action, err);
+  }
+}
