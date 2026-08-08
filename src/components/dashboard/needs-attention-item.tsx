@@ -1,23 +1,27 @@
 import Link from "next/link";
-import type { ComponentType } from "react";
-import type { IconProps } from "@tabler/icons-react";
 
-import { Icon } from "@/components/ui/icon";
+import { cn } from "@/lib/utils";
+
+const DOT_TONE = {
+  amber: "bg-amber",
+  rust: "bg-terracotta",
+  sage: "bg-success",
+} as const;
 
 export function NeedsAttentionItem({
-  icon,
+  tone = "rust",
   title,
   subtitle,
   href,
 }: {
-  icon: ComponentType<IconProps>;
+  tone?: keyof typeof DOT_TONE;
   title: string;
   subtitle: string;
   href?: string;
 }) {
   const content = (
-    <div className="flex items-start gap-3 rounded-sm bg-white p-4">
-      <Icon icon={icon} size="sm" className="mt-0.5 shrink-0 text-terracotta" />
+    <div className="flex items-start gap-3 py-3">
+      <span className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", DOT_TONE[tone])} />
       <div className="min-w-0">
         <p className="text-sm font-medium text-charcoal">{title}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>

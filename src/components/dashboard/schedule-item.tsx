@@ -17,17 +17,19 @@ export function ScheduleItem({
   return (
     <div
       className={cn(
-        "flex items-center justify-between rounded-sm border-l-[3px] bg-white p-4",
-        isNext ? "border-l-terracotta" : "border-l-paper"
+        "flex items-center gap-4 py-4",
+        isNext && "-ml-4 border-l-[3px] border-l-terracotta pl-3.5"
       )}
     >
-      <div>
+      <div className="w-16 shrink-0 text-right">
+        <p className="font-heading text-lg font-semibold text-charcoal">{formatTime(startTime)}</p>
+      </div>
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-charcoal">{clientName}</p>
         <p className="text-xs text-muted-foreground capitalize">
           {sessionType} · {format}
         </p>
       </div>
-      <span className="text-sm text-charcoal">{formatTime(startTime)}</span>
     </div>
   );
 }

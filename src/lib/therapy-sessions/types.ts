@@ -1,0 +1,37 @@
+export type BehaviourMeasurement = "frequency" | "duration" | "intensity" | "percent" | "latency";
+export type BehaviourDirection = "increase" | "decrease";
+export type PromptLevel = "independent" | "gestural" | "verbal" | "partial_physical" | "full_physical";
+export type GoalStatus = "active" | "met" | "paused" | "discontinued";
+
+export interface AssignedChild {
+  id: string;
+  firstName: string;
+  dateOfBirth: string;
+}
+
+export interface RealGoal {
+  id: string;
+  title: string;
+  domain: string | null;
+  status: GoalStatus;
+}
+
+export interface RealTargetBehaviour {
+  id: string;
+  label: string;
+  parentLabel: string | null;
+  measurement: BehaviourMeasurement;
+  direction: BehaviourDirection;
+}
+
+export interface RealSkill {
+  id: string;
+  label: string;
+  currentPercent: number | null;
+}
+
+export interface ChildProgramme {
+  goals: RealGoal[];
+  targetBehaviours: RealTargetBehaviour[];
+  skills: RealSkill[];
+}

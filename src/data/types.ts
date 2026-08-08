@@ -7,7 +7,7 @@
  * components never need to change.
  */
 
-export type UserRole = "parent" | "therapist" | "admin";
+export type UserRole = "parent" | "therapist" | "admin" | "supervisor";
 export type UserStatus = "active" | "suspended";
 
 export interface User {
