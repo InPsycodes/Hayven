@@ -1,14 +1,14 @@
-import { IconBell } from "@tabler/icons-react";
-
 import { initialsFromName } from "@/data/format";
 import type { AppSession } from "@/lib/auth/session";
+import { getRealNotificationsForUser } from "@/lib/notifications/queries";
+import { NotificationBell } from "@/components/shared/notification-bell";
 
 /**
  * Dashboard page header: a dark full-width block on mobile (per the PWA home
  * screen spec), the same content rendered as a plain header row on desktop
  * (per the dashboard spec) -- one component, two responsive presentations.
  */
-export function DashboardHeader({
+export async function DashboardHeader({
   session,
   greeting,
   subtext,
@@ -17,6 +17,8 @@ export function DashboardHeader({
   greeting: string;
   subtext: string;
 }) {
+  const notifications = await getRealNotificationsForUser(session.userId);
+
   return (
     <header className="flex items-center justify-between gap-3 bg-charcoal px-5 py-5 text-offwhite md:bg-transparent md:px-10 md:py-9 md:text-charcoal">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -26,7 +28,7 @@ export function DashboardHeader({
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <IconBell size={20} stroke={1.75} className="opacity-80" />
+        <NotificationBell notifications={notifications} />
         <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-terracotta text-[11px] font-medium text-white md:size-9">
           {initialsFromName(session.name)}
         </div>

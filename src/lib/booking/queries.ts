@@ -85,6 +85,63 @@ export async function getRealBookingsForTherapist(therapistId: string): Promise<
   });
 }
 
+export interface RealParentBooking extends RealBooking {
+  therapistDisplayName: string;
+  therapistLocation: string | null;
+}
+
+/** All of a parent's bookings, across every child, newest-scheduled first. */
+export async function getRealBookingsForParent(parentId: string): Promise<RealParentBooking[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(
+      "id, parent_id, child_id, therapist_id, availability_slot_id, status, session_type, meeting_link, location, expires_at, created_at, children(first_name), availability_slots(start_time, end_time)"
+    )
+    .eq("parent_id", parentId);
+
+  if (error || !data) return [];
+
+  const bookings: RealBooking[] = data.map((row) => {
+    const child = row.children as unknown as { first_name: string } | null;
+    const slot = row.availability_slots as unknown as { start_time: string; end_time: string } | null;
+    return {
+      id: row.id,
+      parentId: row.parent_id,
+      childId: row.child_id,
+      childFirstName: child?.first_name ?? "Unknown",
+      therapistId: row.therapist_id,
+      availabilitySlotId: row.availability_slot_id,
+      status: row.status,
+      sessionType: row.session_type,
+      meetingLink: row.meeting_link,
+      location: row.location,
+      expiresAt: row.expires_at,
+      createdAt: row.created_at,
+      slotStartTime: slot?.start_time ?? "",
+      slotEndTime: slot?.end_time ?? "",
+    };
+  });
+
+  const therapistIds = [...new Set(bookings.map((b) => b.therapistId))];
+  const { data: therapistRows } = await supabase
+    .from("therapist_public_profiles")
+    .select("id, display_name, location")
+    .in("id", therapistIds);
+  const therapistById = new Map((therapistRows ?? []).map((t) => [t.id, t]));
+
+  return bookings
+    .map((b) => {
+      const therapist = therapistById.get(b.therapistId);
+      return {
+        ...b,
+        therapistDisplayName: therapist?.display_name ?? "Your therapist",
+        therapistLocation: therapist?.location ?? null,
+      };
+    })
+    .sort((a, b) => b.slotStartTime.localeCompare(a.slotStartTime));
+}
+
 export interface RealNextSession {
   sessionType: string;
   location: string | null;

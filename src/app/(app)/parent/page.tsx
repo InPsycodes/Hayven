@@ -11,20 +11,9 @@ import { formatDateTime } from "@/data/format";
 import { ARTICLES } from "@/data/articles";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealNextUpcomingBookingForChild } from "@/lib/booking/queries";
-import { getRealLatestProgressUpdateForChild } from "@/lib/session-notes/queries";
+import { getPublishedReportsForChild } from "@/lib/reports/queries";
+import { renderReportBody, extractReportSnippet } from "@/lib/reports/generate";
 import { getRealMessageThreadsForParent } from "@/lib/messages/queries";
-
-const GOAL_STATUS_LABEL: Record<string, { label: string; className: string }> = {
-  set: { label: "Just started", className: "bg-paper text-charcoal" },
-  in_progress: { label: "On track", className: "bg-terracotta/10 text-terracotta" },
-  achieved: { label: "Achieved", className: "bg-success/10 text-success" },
-};
-
-const GOAL_PROGRESS_WIDTH: Record<string, string> = {
-  set: "w-[15%]",
-  in_progress: "w-[65%]",
-  achieved: "w-full",
-};
 
 interface ParentDashboardProps {
   searchParams: Promise<{ child?: string }>;
@@ -38,11 +27,16 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
   const allChildren = await getRealChildrenForParent(session.userId);
   const activeChild = allChildren.find((c) => c.id === childParam) ?? allChildren[0];
 
-  const [nextSession, progress, allThreads] = await Promise.all([
+  const [nextSession, reports, allThreads] = await Promise.all([
     activeChild ? getRealNextUpcomingBookingForChild(activeChild.id) : null,
-    activeChild ? getRealLatestProgressUpdateForChild(activeChild.id) : null,
+    activeChild ? getPublishedReportsForChild(activeChild.id) : [],
     getRealMessageThreadsForParent(session.userId),
   ]);
+  const latestReport = reports[0] ?? null;
+  const latestSnippet =
+    latestReport && activeChild
+      ? extractReportSnippet(renderReportBody(latestReport.parentBody, activeChild.firstName))
+      : null;
 
   // Only surface threads with an actual message in the dashboard preview --
   // every confirmed booking has a thread, but most haven't been said hello to yet.
@@ -67,7 +61,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
 
         <div className="mt-6 grid gap-6 px-5 pb-8 md:px-10 lg:grid-cols-[3fr_2fr]">
           <div className="flex flex-col gap-6">
-            <Card className="p-6">
+            <Card lift className="p-6">
               <span className="label-micro text-terracotta">Next session</span>
               {nextSession ? (
                 <>
@@ -80,8 +74,8 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
                       ? "Virtual"
                       : (nextSession.location ?? nextSession.therapistLocation)}
                   </p>
-                  <Button variant="outline" size="sm" className="mt-4">
-                    Reschedule
+                  <Button asChild variant="outline" size="sm" className="mt-4">
+                    <Link href="/parent/sessions">Manage session</Link>
                   </Button>
                 </>
               ) : (
@@ -91,27 +85,31 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
               )}
             </Card>
 
-            {activeChild && progress && (
+            {activeChild && (
               <Card className="p-6">
-                <div className="flex items-center justify-between">
-                  <span className="label-micro text-muted-foreground">
-                    {activeChild.firstName}&apos;s progress
-                  </span>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${GOAL_STATUS_LABEL[progress.goal.status].className}`}
-                  >
-                    {GOAL_STATUS_LABEL[progress.goal.status].label}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm font-medium text-charcoal">{progress.goal.title}</p>
-                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-paper">
-                  <div
-                    className={`h-full rounded-full bg-terracotta ${GOAL_PROGRESS_WIDTH[progress.goal.status]}`}
-                  />
-                </div>
-                <p className="mt-4 font-heading text-sm italic leading-relaxed text-charcoal">
-                  &ldquo;{progress.quote}&rdquo;
-                </p>
+                <span className="label-micro text-muted-foreground">{activeChild.firstName}&apos;s progress</span>
+                {latestReport && latestSnippet ? (
+                  <>
+                    <p className="mt-3 font-heading text-sm italic leading-relaxed text-charcoal">
+                      &ldquo;{latestSnippet}&rdquo;
+                    </p>
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <p className="text-xs text-muted-foreground">
+                        Shared {formatDateTime(latestReport.publishedAt)}
+                      </p>
+                      <Link
+                        href={`/parent/children/${activeChild.id}/reports`}
+                        className="text-xs font-medium text-terracotta hover:underline"
+                      >
+                        View full report
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    No progress reports shared yet. Your child&apos;s therapist will publish one after a session.
+                  </p>
+                )}
               </Card>
             )}
           </div>

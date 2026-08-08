@@ -1,14 +1,27 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import type { VariantProps } from "class-variance-authority";
 
 import { DashboardHeader } from "@/components/shared/dashboard-header";
+import { Card } from "@/components/ui/card";
+import { StatusBadge, type statusBadgeVariants } from "@/components/ui/status-badge";
 import { WeekScheduleGrid } from "@/components/therapist/week-schedule-grid";
 import { AddAvailabilityForm } from "@/components/therapist/add-availability-form";
+import { CancelBookingButton } from "@/components/shared/cancel-booking-button";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId, getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { getRealBookingsForTherapist } from "@/lib/booking/queries";
+import { cancelBookingAsTherapist } from "@/lib/booking/actions";
+import { formatDateTime } from "@/data/format";
+
+type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
+
+const STATUS_LABEL: Record<string, { label: string; tone: Tone }> = {
+  confirmed: { label: "Confirmed", tone: "sage" },
+  pending_payment: { label: "Awaiting payment", tone: "amber" },
+};
 
 function mondayOfWeek(offsetWeeks: number): Date {
   const now = new Date();
@@ -62,6 +75,16 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
       childFirstName: booking.childFirstName,
     }));
 
+  const now = new Date();
+  const upcomingBookings = realBookings
+    .filter(
+      (booking) =>
+        (booking.status === "confirmed" || booking.status === "pending_payment") &&
+        booking.slotStartTime &&
+        new Date(booking.slotStartTime) > now
+    )
+    .sort((a, b) => new Date(a.slotStartTime).getTime() - new Date(b.slotStartTime).getTime());
+
   const weekRangeLabel = `${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} - ${weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`;
 
   return (
@@ -91,7 +114,37 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
           <AddAvailabilityForm />
         </div>
 
-        <WeekScheduleGrid weekStart={weekStart} slots={slots} bookings={bookings} />
+        <Card lift className="p-5">
+          <WeekScheduleGrid weekStart={weekStart} slots={slots} bookings={bookings} />
+        </Card>
+
+        {upcomingBookings.length > 0 && (
+          <Card lift className="p-2">
+            <div className="flex flex-col divide-y divide-border">
+              {upcomingBookings.map((booking) => {
+                const status = STATUS_LABEL[booking.status] ?? { label: booking.status, tone: "grey" as const };
+                return (
+                  <div key={booking.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-charcoal">{booking.childFirstName}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {formatDateTime(booking.slotStartTime)} · {booking.sessionType.replace("_", " ")}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap items-center gap-3">
+                      <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                      <CancelBookingButton
+                        bookingId={booking.id}
+                        wasPaid={booking.status === "confirmed"}
+                        cancelAction={cancelBookingAsTherapist}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );

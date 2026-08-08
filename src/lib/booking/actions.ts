@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logAuditEvent } from "@/lib/audit/log";
+import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
+import { createNotification } from "@/lib/notifications/create";
+import { formatDateTime, formatNaira } from "@/data/format";
 
 type ActionResult<T> = { ok: true } & T | { ok: false; error: string };
 
@@ -106,7 +110,9 @@ export async function finalizeBookingPayment(
 
   const { data: booking } = await admin
     .from("bookings")
-    .select("id, parent_id, therapist_id, session_type")
+    .select(
+      "id, parent_id, therapist_id, session_type, children(first_name), availability_slots(start_time), therapist_profiles(user_id, users(full_name))"
+    )
     .eq("id", bookingId)
     .maybeSingle();
   if (!booking) return { ok: false, error: "Booking not found." };
@@ -124,11 +130,12 @@ export async function finalizeBookingPayment(
   if (updateError) return { ok: false, error: updateError.message };
   if (!updated) return { ok: true }; // already finalized by a prior call -- idempotent no-op
 
-  const { data: therapistProfile } = await admin
-    .from("therapist_profiles")
-    .select("user_id")
-    .eq("id", booking.therapist_id)
-    .maybeSingle();
+  const child = booking.children as unknown as { first_name: string } | null;
+  const slot = booking.availability_slots as unknown as { start_time: string } | null;
+  const therapistProfile = booking.therapist_profiles as unknown as {
+    user_id: string;
+    users: { full_name: string } | null;
+  } | null;
 
   await admin.from("payments").insert({
     booking_id: bookingId,
@@ -140,7 +147,174 @@ export async function finalizeBookingPayment(
     status: "successful",
   });
 
+  const therapistName = therapistProfile?.users?.full_name ?? "your therapist";
+  const sessionLabel = slot ? formatDateTime(slot.start_time) : "your upcoming session";
+
+  if (meetingLink) {
+    await createNotification({
+      userId: booking.parent_id,
+      type: "meeting_link_ready",
+      title: "Meeting link ready",
+      body: `Your virtual session with ${therapistName} on ${sessionLabel} is confirmed. Join from your sessions page when it's time.`,
+    });
+  } else {
+    await createNotification({
+      userId: booking.parent_id,
+      type: "booking_confirmed",
+      title: "Booking confirmed",
+      body: `Your session with ${therapistName} on ${sessionLabel} is confirmed.`,
+    });
+  }
+
+  if (therapistProfile?.user_id) {
+    await createNotification({
+      userId: therapistProfile.user_id,
+      type: "payment_receipt",
+      title: "Payment received",
+      body: `You received ${formatNaira(Math.round(amountKobo / 100))} for your session with ${child?.first_name ?? "a client"}.`,
+    });
+  }
+
   revalidatePath("/parent");
+  revalidatePath("/parent/sessions");
   revalidatePath("/therapist/schedule");
   return { ok: true };
+}
+
+/**
+ * Cancels a parent's own booking and frees the slot. Does NOT process any
+ * refund -- there is no Paystack refund integration in this codebase yet, so
+ * for an already-paid (confirmed) booking this only updates records; the UI
+ * is explicit with the parent that a refund is handled by the team
+ * separately, not automatic.
+ */
+export async function cancelBooking(
+  bookingId: string,
+  reason?: string
+): Promise<ActionResult<{ wasPaid: boolean }>> {
+  const session = await getSession();
+  if (!session || session.role !== "parent") {
+    return { ok: false, error: "You must be signed in as a parent to cancel a session." };
+  }
+
+  const admin = createAdminClient();
+
+  const { data: booking } = await admin
+    .from("bookings")
+    .select("id, parent_id, status, availability_slot_id, availability_slots(start_time)")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking || booking.parent_id !== session.userId) {
+    return { ok: false, error: "Booking not found." };
+  }
+  if (booking.status !== "pending_payment" && booking.status !== "confirmed") {
+    return { ok: false, error: "This session can't be cancelled." };
+  }
+
+  const slot = booking.availability_slots as unknown as { start_time: string } | null;
+  if (slot && new Date(slot.start_time).getTime() < Date.now()) {
+    return { ok: false, error: "This session has already passed." };
+  }
+
+  const wasPaid = booking.status === "confirmed";
+
+  const { data: updated, error: updateError } = await admin
+    .from("bookings")
+    .update({
+      status: "cancelled",
+      cancelled_at: new Date().toISOString(),
+      cancellation_reason: reason && reason.trim() ? reason.trim() : null,
+    })
+    .eq("id", bookingId)
+    .eq("status", booking.status)
+    .select("id")
+    .maybeSingle();
+  if (updateError) return { ok: false, error: updateError.message };
+  if (!updated) return { ok: false, error: "This session can't be cancelled." };
+
+  await admin.from("availability_slots").update({ is_booked: false }).eq("id", booking.availability_slot_id);
+
+  await logAuditEvent({
+    actor: session,
+    action: "booking.cancel",
+    entityType: "booking",
+    entityId: bookingId,
+    metadata: { wasPaid },
+  });
+
+  revalidatePath("/parent");
+  revalidatePath("/parent/sessions");
+  revalidatePath("/therapist/schedule");
+  return { ok: true, wasPaid };
+}
+
+/**
+ * Cancels a booking from the therapist's side (they can't make it, etc.) and
+ * frees the slot. Same no-auto-refund caveat as cancelBooking -- an
+ * already-paid (confirmed) booking just gets flagged for the admin refund
+ * queue, nothing moves automatically.
+ */
+export async function cancelBookingAsTherapist(
+  bookingId: string,
+  reason?: string
+): Promise<ActionResult<{ wasPaid: boolean }>> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") {
+    return { ok: false, error: "You must be signed in as a therapist to cancel a session." };
+  }
+
+  const therapist = await getRealTherapistProfileByUserId(session.userId);
+  if (!therapist) {
+    return { ok: false, error: "Couldn't find your therapist profile." };
+  }
+
+  const admin = createAdminClient();
+
+  const { data: booking } = await admin
+    .from("bookings")
+    .select("id, therapist_id, status, availability_slot_id, availability_slots(start_time)")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking || booking.therapist_id !== therapist.id) {
+    return { ok: false, error: "Booking not found." };
+  }
+  if (booking.status !== "pending_payment" && booking.status !== "confirmed") {
+    return { ok: false, error: "This session can't be cancelled." };
+  }
+
+  const slot = booking.availability_slots as unknown as { start_time: string } | null;
+  if (slot && new Date(slot.start_time).getTime() < Date.now()) {
+    return { ok: false, error: "This session has already passed." };
+  }
+
+  const wasPaid = booking.status === "confirmed";
+
+  const { data: updated, error: updateError } = await admin
+    .from("bookings")
+    .update({
+      status: "cancelled",
+      cancelled_at: new Date().toISOString(),
+      cancellation_reason: reason && reason.trim() ? reason.trim() : null,
+    })
+    .eq("id", bookingId)
+    .eq("status", booking.status)
+    .select("id")
+    .maybeSingle();
+  if (updateError) return { ok: false, error: updateError.message };
+  if (!updated) return { ok: false, error: "This session can't be cancelled." };
+
+  await admin.from("availability_slots").update({ is_booked: false }).eq("id", booking.availability_slot_id);
+
+  await logAuditEvent({
+    actor: session,
+    action: "booking.cancel",
+    entityType: "booking",
+    entityId: bookingId,
+    metadata: { wasPaid },
+  });
+
+  revalidatePath("/parent");
+  revalidatePath("/parent/sessions");
+  revalidatePath("/therapist/schedule");
+  return { ok: true, wasPaid };
 }
