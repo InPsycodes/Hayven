@@ -1,8 +1,8 @@
-import { IconLeaf } from "@tabler/icons-react";
+import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 
-/** Logo mark: terracotta leaf glyph + wordmark, per the PWA mockup spec. */
+/** Logo mark: Hayven H-glyph icon + wordmark. */
 export function BrandMark({
   compact = false,
   dark = true,
@@ -14,9 +14,14 @@ export function BrandMark({
 }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-terracotta text-white">
-        <IconLeaf size={16} stroke={2} />
-      </span>
+      <Image
+        src="/images/logo-icon.png"
+        alt=""
+        width={28}
+        height={28}
+        className="size-7 shrink-0"
+        priority
+      />
       {!compact && (
         <span
           className={cn(

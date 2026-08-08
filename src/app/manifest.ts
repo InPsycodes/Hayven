@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Hayven",
     description:
       "Verified child therapists: booking, payments, and progress tracking in one place.",
-    start_url: "/",
+    start_url: "/?source=pwa",
     display: "standalone",
     background_color: "#E4E1DF",
     theme_color: "#17140F",

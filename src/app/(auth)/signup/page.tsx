@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { SignupForm } from "@/components/auth/signup-form";
 import { SplitAuthPanel } from "@/components/shared/split-auth-panel";
 
-export default function SignupPage() {
-  const [role, setRole] = useState<"parent" | "therapist">("parent");
+type SignupRole = "parent" | "therapist";
+
+function SignupPageInner() {
+  const searchParams = useSearchParams();
+  const requestedRole = searchParams.get("role");
+  const [role, setRole] = useState<SignupRole>(requestedRole === "therapist" ? "therapist" : "parent");
 
   return (
     <SplitAuthPanel
@@ -24,5 +29,13 @@ export default function SignupPage() {
     >
       <SignupForm role={role} onRoleChange={setRole} />
     </SplitAuthPanel>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupPageInner />
+    </Suspense>
   );
 }

@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import { ImageResponse } from "next/og";
 import { NextResponse } from "next/server";
 
@@ -17,6 +20,9 @@ export async function GET(
   // Maskable icons need safe-area padding so platform masks don't clip the glyph.
   const pad = isMaskable ? Math.round(px * 0.16) : 0;
 
+  const logo = await readFile(join(process.cwd(), "public/images/logo-icon.png"));
+  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
@@ -29,28 +35,13 @@ export async function GET(
           background: "#17140F",
         }}
       >
-        <div
-          style={{
-            width: px - pad * 2,
-            height: px - pad * 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#9C5934",
-            borderRadius: px * 0.08,
-          }}
-        >
-          <span
-            style={{
-              color: "#FFFFFF",
-              fontSize: (px - pad * 2) * 0.5,
-              fontWeight: 600,
-              fontFamily: "sans-serif",
-            }}
-          >
-            H
-          </span>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logoSrc}
+          width={px - pad * 2}
+          height={px - pad * 2}
+          alt=""
+        />
       </div>
     ),
     { width: px, height: px }

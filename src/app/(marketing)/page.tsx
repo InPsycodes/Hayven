@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
+import { getSession } from "@/lib/auth/session";
+import { roleHomePath } from "@/lib/auth/role-path";
 import { Hero } from "@/components/marketing/hero";
 import { TrustStrip } from "@/components/marketing/trust-strip";
 import { Specialties } from "@/components/marketing/specialties";
@@ -24,7 +27,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LandingPage() {
+interface LandingPageProps {
+  searchParams: Promise<{ source?: string }>;
+}
+
+export default async function LandingPage({ searchParams }: LandingPageProps) {
+  const { source } = await searchParams;
+  if (source === "pwa") {
+    // Relaunching the installed app should open straight to what you'd
+    // actually use it for, not the marketing pitch you already converted on.
+    const session = await getSession();
+    redirect(session ? roleHomePath(session.role) : "/login");
+  }
+
   return (
     <div className="flex flex-col">
       <Hero />

@@ -16,7 +16,8 @@ export function AvatarUploadDropzone() {
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        name="photo"
+        accept="image/jpeg,image/png"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];

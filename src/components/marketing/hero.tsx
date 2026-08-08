@@ -60,14 +60,14 @@ export function Hero() {
 
             <div className="flex flex-wrap items-center gap-4">
               <Link
-                href="/search"
+                href="/signup?role=parent"
                 className="inline-flex items-center gap-2 rounded-full bg-terracotta px-6 py-3.5 text-sm font-semibold text-canvas-white transition-colors hover:bg-rust-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
               >
                 I&apos;m a parent
                 <IconArrowRight size={16} stroke={2} />
               </Link>
               <Link
-                href="/signup"
+                href="/signup?role=therapist"
                 className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-semibold text-canvas-white backdrop-blur-sm transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 I&apos;m a therapist

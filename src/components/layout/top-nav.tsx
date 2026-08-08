@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { label: "Find a therapist", href: "/search" },
   { label: "Learning Center", href: "/learn" },
-  { label: "For therapists", href: "/signup" },
+  { label: "For therapists", href: "/signup?role=therapist" },
 ];
 
 export function TopNav() {

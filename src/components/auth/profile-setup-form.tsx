@@ -26,6 +26,7 @@ export function ProfileSetupForm() {
         <AvatarUploadDropzone />
         <p className="text-sm text-muted-foreground">
           A clear headshot builds parent trust faster than any bio text.
+          <span className="mt-0.5 block text-xs text-muted-foreground/80">JPG or PNG, up to 10MB.</span>
         </p>
       </div>
 

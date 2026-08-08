@@ -116,7 +116,7 @@ export function WeekScheduleGrid({
                           "flex h-full flex-col justify-center rounded-sm px-2 py-1 text-[11px] leading-tight",
                           state === "next" && "bg-charcoal text-offwhite",
                           state === "booked" && "bg-paper text-charcoal",
-                          state === "pending" && "bg-terracotta/10 text-terracotta ring-1 ring-inset ring-terracotta/30",
+                          state === "pending" && "bg-amber/10 text-amber ring-1 ring-inset ring-amber/30",
                           state === "blocked" && "bg-charcoal/20 text-charcoal/60"
                         )}
                       >
@@ -143,7 +143,7 @@ export function WeekScheduleGrid({
       <div className="mt-4 flex flex-wrap gap-4">
         <Legend swatchClassName="bg-charcoal" label="Next session" />
         <Legend swatchClassName="bg-paper" label="Booked" />
-        <Legend swatchClassName="bg-terracotta/10 ring-1 ring-terracotta/30" label="Awaiting payment" />
+        <Legend swatchClassName="bg-amber/10 ring-1 ring-amber/30" label="Awaiting payment" />
         <Legend swatchClassName="bg-charcoal/20" label="Blocked/unavailable" />
         <Legend swatchClassName="bg-white ring-1 ring-border" label="Open slot" />
       </div>

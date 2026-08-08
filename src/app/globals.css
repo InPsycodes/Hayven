@@ -61,6 +61,7 @@
   --color-canvas-deep: var(--canvas-deep);
   --color-success: var(--success);
   --color-error: var(--error);
+  --color-amber: var(--amber);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -84,6 +85,7 @@
   --canvas-deep: #d6d1cc; /* reserved */
   --success: #6b7a5e;
   --error: #b23a2e;
+  --amber: #a8702a;
 
   --background: var(--offwhite);
   --foreground: var(--charcoal);
