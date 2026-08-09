@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { formatDateTime } from "@/data/format";
-import { ARTICLES } from "@/data/articles";
+import { getArticlesForAudience } from "@/data/articles";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealNextUpcomingBookingForChild } from "@/lib/booking/queries";
 import { getPublishedReportsForChild } from "@/lib/reports/queries";
@@ -42,7 +42,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
   // every confirmed booking has a thread, but most haven't been said hello to yet.
   const threads = allThreads.filter((t) => t.lastMessage !== null);
 
-  const recommendedArticles = ARTICLES.slice(1, 3);
+  const recommendedArticles = getArticlesForAudience("parent").slice(1, 3);
 
   return (
     <div>

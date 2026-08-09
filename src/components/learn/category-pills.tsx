@@ -3,16 +3,15 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { CATEGORIES } from "@/data/articles";
 
-export function CategoryPills() {
+export function CategoryPills({ categories }: { categories: readonly string[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const active = searchParams.get("category") ?? "All";
 
   return (
     <div className="flex flex-wrap gap-2">
-      {CATEGORIES.map((category) => {
+      {categories.map((category) => {
         const isActive = category === active;
         return (
           <button

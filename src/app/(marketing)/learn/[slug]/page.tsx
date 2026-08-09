@@ -24,12 +24,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         {article.readTime}
         {article.reviewedBy ? ` · ${article.reviewedBy}` : ""}
       </p>
-      <p className="mt-8 text-base leading-relaxed text-charcoal">{article.excerpt}</p>
-      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-        This is placeholder editorial content for the Hayven Learning Center demo. In
-        production, this guide would be written and reviewed by a licensed specialist before
-        publishing.
-      </p>
+      <div className="mt-8 flex flex-col gap-4">
+        {article.body.map((paragraph, i) => (
+          <p key={i} className="text-base leading-relaxed text-charcoal">
+            {paragraph}
+          </p>
+        ))}
+      </div>
     </article>
   );
 }
