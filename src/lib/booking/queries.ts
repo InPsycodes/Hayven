@@ -258,40 +258,6 @@ export async function getRealEarningsForTherapist(therapistUserId: string): Prom
   return data.reduce((sum, p) => sum + p.amount, 0);
 }
 
-export interface RealReportDueBooking {
-  id: string;
-  childFirstName: string;
-  slotStartTime: string;
-}
-
-/** Completed sessions with no session note written yet. */
-export async function getRealReportsDueForTherapist(therapistId: string): Promise<RealReportDueBooking[]> {
-  const supabase = await createClient();
-  const [{ data: completedBookings }, { data: notes }] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select("id, children(first_name), availability_slots(start_time)")
-      .eq("therapist_id", therapistId)
-      .eq("status", "completed"),
-    supabase.from("session_notes").select("booking_id").eq("therapist_id", therapistId),
-  ]);
-  if (!completedBookings) return [];
-
-  const bookingIdsWithNotes = new Set((notes ?? []).map((n) => n.booking_id));
-
-  return completedBookings
-    .filter((b) => !bookingIdsWithNotes.has(b.id))
-    .map((b) => {
-      const child = b.children as unknown as { first_name: string } | null;
-      const slot = b.availability_slots as unknown as { start_time: string } | null;
-      return {
-        id: b.id,
-        childFirstName: child?.first_name ?? "Unknown",
-        slotStartTime: slot?.start_time ?? "",
-      };
-    });
-}
-
 /** Lightweight status check for the confirmation page -- avoids trusting optimistic client state for whether a payment actually landed. */
 export async function getRealBookingStatus(bookingId: string): Promise<{ status: string } | null> {
   const supabase = await createClient();

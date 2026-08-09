@@ -5,7 +5,6 @@ import {
   IconCalendar,
   IconUsers,
   IconMessage,
-  IconNotes,
   IconWallet,
   IconBabyCarriage,
   IconSearch,
@@ -37,7 +36,6 @@ export const SIDEBAR_NAV: Record<AppRole, NavItem[]> = {
     { label: "Schedule", href: "/therapist/schedule", icon: IconCalendar },
     { label: "Caseload", href: "/therapist/caseload", icon: IconUsers },
     { label: "Messages", href: "/therapist/messages", icon: IconMessage },
-    { label: "Session notes", href: "/therapist/sessions", icon: IconNotes },
     { label: "Earnings", href: "/therapist/earnings", icon: IconWallet },
   ],
 };
