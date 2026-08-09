@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { IconHeart, IconShieldCheck } from "@tabler/icons-react";
 
 const VALUES = [
@@ -31,13 +32,21 @@ export function About() {
         <div className="min-w-0">
           <span className="eyebrow text-terracotta">About Hayven</span>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
-            Built by people who understand the search for the right care.
+            Helping families understand, connect, and feel supported.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-soft">
-            Hayven started with a simple frustration: there was no reliable way for Nigerian
-            parents to know whether a therapist was actually who they said they were. We built
-            the verification-first platform we wished existed.
+            Hayven was born from a personal experience — seeing firsthand how overwhelming it can
+            be for parents facing a new diagnosis, often without clear information or anyone they
+            can trust. We built the platform we wished existed: one that helps parents understand
+            their child and stay connected to their care, from the first questions through therapy
+            and beyond.
           </p>
+          <Link
+            href="/about"
+            className="mt-3 inline-block text-sm font-medium text-terracotta hover:underline"
+          >
+            Read our story →
+          </Link>
 
           <div className="mt-8 border-t border-charcoal/10 pt-8">
             <div className="grid gap-6 sm:grid-cols-2">

@@ -8,7 +8,7 @@ const EXPLORE_LINKS = [
   { label: "Learning Center", href: "/learn" },
   { label: "For therapists", href: "/signup?role=therapist" },
   { label: "How it works", href: "/#how-it-works" },
-  { label: "About", href: "/#about" },
+  { label: "About", href: "/about" },
 ];
 
 const GET_STARTED_LINKS = [

@@ -11,8 +11,10 @@ import { useScrolled } from "@/components/marketing/use-scrolled";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
+  { label: "Home", href: "/" },
   { label: "Find a therapist", href: "/search" },
   { label: "Learning Center", href: "/learn" },
+  { label: "About Us", href: "/about" },
   { label: "For therapists", href: "/signup?role=therapist" },
 ];
 
