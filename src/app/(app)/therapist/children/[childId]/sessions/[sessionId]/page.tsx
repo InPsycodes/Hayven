@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { getReportForSession } from "@/lib/reports/queries";
 import { renderReportBody } from "@/lib/reports/generate";
+import { detectFlaggedPhrases, extractDomainFreeText } from "@/lib/reports/safety";
 import { getConfidentialNote } from "@/lib/therapy-sessions/confidential";
 import { formatDate } from "@/data/format";
 
@@ -28,7 +29,9 @@ export default async function TherapySessionPage({
   const supabase = await createClient();
   const { data: therapySession } = await supabase
     .from("therapy_sessions")
-    .select("id, session_date, duration_minutes, setting, therapist_notes, children(first_name)")
+    .select(
+      "id, session_date, duration_minutes, setting, therapist_notes, attendance, general_presentation, children(first_name)"
+    )
     .eq("id", sessionId)
     .eq("therapist_id", therapist.id)
     .maybeSingle();
@@ -39,6 +42,28 @@ export default async function TherapySessionPage({
 
   const report = await getReportForSession(sessionId, therapist.id);
   const confidentialNote = await getConfidentialNote(sessionId, therapist.id);
+
+  // The same free-text sub-fields the parent-friendly filter covers in
+  // domainSkillParentSentence (generate.ts) also need a flagged-phrase
+  // check here, not just the two session-level fields -- otherwise a
+  // therapist gets no warning before something risky in e.g. "Instruction"
+  // or "Concept" reaches the published parent report.
+  const { data: skillEntries } = await supabase
+    .from("session_skill_entries")
+    .select("structured_data, skills(domain_type)")
+    .eq("session_id", sessionId);
+  const domainFreeText = (skillEntries ?? []).flatMap((entry) => {
+    const domainType = (entry.skills as unknown as { domain_type: string | null } | null)?.domain_type ?? null;
+    return extractDomainFreeText(domainType, entry.structured_data as Record<string, unknown> | null);
+  });
+
+  const flaggedPhrases = [
+    ...new Set([
+      ...detectFlaggedPhrases(therapySession.therapist_notes),
+      ...detectFlaggedPhrases(therapySession.general_presentation),
+      ...domainFreeText.flatMap((text) => detectFlaggedPhrases(text)),
+    ]),
+  ];
 
   return (
     <div>
@@ -51,7 +76,16 @@ export default async function TherapySessionPage({
         <div className="rounded-sm bg-white p-5 ring-1 ring-border">
           <p className="text-sm text-charcoal">
             {therapySession.duration_minutes ?? "?"} min, {therapySession.setting?.replace("_", " ")}
+            {therapySession.attendance && therapySession.attendance !== "present"
+              ? ` · ${therapySession.attendance}`
+              : ""}
           </p>
+          {therapySession.general_presentation && (
+            <p className="mt-2 text-sm text-charcoal">
+              <span className="text-muted-foreground">General presentation: </span>
+              {therapySession.general_presentation}
+            </p>
+          )}
           {therapySession.therapist_notes && (
             <p className="mt-2 text-sm text-muted-foreground">{therapySession.therapist_notes}</p>
           )}
@@ -86,6 +120,7 @@ export default async function TherapySessionPage({
                   body={renderReportBody(report.parentBody, childName)}
                   status={report.status}
                   publishedAt={report.publishedAt}
+                  flaggedPhrases={flaggedPhrases}
                 />
               </div>
             )}

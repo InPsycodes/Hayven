@@ -13,11 +13,13 @@ export function ParentPreviewPanel({
   body,
   status,
   publishedAt,
+  flaggedPhrases = [],
 }: {
   reportId: string;
   body: ReportBody;
   status: string;
   publishedAt: string | null;
+  flaggedPhrases?: string[];
 }) {
   const [isPending, startTransition] = useTransition();
   const [currentStatus, setCurrentStatus] = useState(status);
@@ -45,6 +47,16 @@ export function ParentPreviewPanel({
         This is what the parent will see. No clinical numbers, session mechanics, or antecedent/consequence detail are
         included.
       </p>
+      {flaggedPhrases.length > 0 && (
+        <div className="rounded-sm border border-error/30 bg-error/5 px-3 py-2.5 text-xs text-charcoal">
+          <p className="font-medium text-error">Your session notes mention something worth a second look:</p>
+          <p className="mt-1">
+            &quot;{flaggedPhrases.join('", "')}&quot; {flaggedPhrases.length === 1 ? "was" : "were"} found in your
+            session notes, which are shown to the parent above. If this is sensitive or internal, consider moving it
+            to the confidential note instead before publishing.
+          </p>
+        </div>
+      )}
       <ReportView body={body} />
       {needsRepublish && (
         <p className="rounded-sm bg-terracotta/10 px-3 py-2 text-xs text-charcoal">

@@ -27,7 +27,11 @@ export async function getChildProgramme(childId: string): Promise<ChildProgramme
       .select("id, label, parent_label, measurement, direction")
       .eq("child_id", childId)
       .eq("is_active", true),
-    supabase.from("skills").select("id, label, current_percent").eq("child_id", childId).eq("is_active", true),
+    supabase
+      .from("skills")
+      .select("id, label, current_percent, domain_type")
+      .eq("child_id", childId)
+      .eq("is_active", true),
   ]);
 
   return {
@@ -48,6 +52,7 @@ export async function getChildProgramme(childId: string): Promise<ChildProgramme
       id: s.id,
       label: s.label,
       currentPercent: s.current_percent,
+      domainType: s.domain_type as ChildProgramme["skills"][number]["domainType"],
     })),
   };
 }

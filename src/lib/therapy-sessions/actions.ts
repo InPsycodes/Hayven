@@ -14,6 +14,30 @@ export interface FormState {
 
 const REINFORCER_SLOTS = 3;
 
+/** Same fix as generate.ts's stripTrailingPeriod -- duplicated locally since it's a one-liner and this module has no reason to depend on lib/reports. */
+function cleanSentence(text: string): string {
+  return text.trim().replace(/\.+$/, "");
+}
+
+/**
+ * Stitches the four guided session-notes prompts into one paragraph, in the
+ * therapist's-own-shorthand register the "In the therapist's words" quote
+ * already reads in (no repeated child name -- the wrapping report sentence
+ * already names the child). Replaces one big free-text box specifically
+ * because a rushed "good session" gives the generator nothing to work with;
+ * guided prompts guarantee a complete paragraph every time. Empty prompts
+ * are simply omitted, so an entirely-blank set still yields null, same as
+ * today's "no notes recorded" fallback.
+ */
+function stitchSessionNotes(arrival: string | null, win: string | null, homework: string | null, other: string | null): string | null {
+  const parts: string[] = [];
+  if (arrival) parts.push(`Arrived: ${cleanSentence(arrival)}.`);
+  if (win) parts.push(`Biggest win: ${cleanSentence(win)}.`);
+  if (homework) parts.push(`Home practice focus: ${cleanSentence(homework)}.`);
+  if (other) parts.push(`${cleanSentence(other)}.`);
+  return parts.length > 0 ? parts.join(" ") : null;
+}
+
 export async function createTherapySession(
   childId: string,
   _prevState: FormState,
@@ -46,8 +70,19 @@ export async function createTherapySession(
   const sessionDate = formData.get("sessionDate");
   const durationMinutes = Number(formData.get("durationMinutes"));
   const setting = formData.get("setting");
-  const therapistNotes = formData.get("therapistNotes");
+  const noteArrival = formData.get("noteArrival");
+  const noteWin = formData.get("noteWin");
+  const noteHomework = formData.get("noteHomework");
+  const noteOther = formData.get("noteOther");
+  const therapistNotes = stitchSessionNotes(
+    typeof noteArrival === "string" && noteArrival.trim() ? noteArrival.trim() : null,
+    typeof noteWin === "string" && noteWin.trim() ? noteWin.trim() : null,
+    typeof noteHomework === "string" && noteHomework.trim() ? noteHomework.trim() : null,
+    typeof noteOther === "string" && noteOther.trim() ? noteOther.trim() : null
+  );
   const confidentialNote = formData.get("confidentialNote");
+  const attendance = formData.get("attendance");
+  const generalPresentation = formData.get("generalPresentation");
 
   if (typeof sessionDate !== "string" || !sessionDate) {
     return { error: "Please pick a session date." };
@@ -68,9 +103,12 @@ export async function createTherapySession(
       duration_minutes: Number.isFinite(durationMinutes) && durationMinutes > 0 ? Math.round(durationMinutes) : null,
       setting,
       status: "complete",
-      therapist_notes: typeof therapistNotes === "string" && therapistNotes.trim() ? therapistNotes.trim() : null,
+      therapist_notes: therapistNotes,
       confidential_note:
         typeof confidentialNote === "string" && confidentialNote.trim() ? confidentialNote.trim() : null,
+      attendance: typeof attendance === "string" && attendance ? attendance : null,
+      general_presentation:
+        typeof generalPresentation === "string" && generalPresentation.trim() ? generalPresentation.trim() : null,
     })
     .select("id")
     .single();
@@ -115,22 +153,145 @@ export async function createTherapySession(
     })
     .filter((row): row is NonNullable<typeof row> => row !== null);
 
+  function textField(name: string): string | null {
+    const value = formData.get(name);
+    return typeof value === "string" && value.trim() ? value.trim() : null;
+  }
+
+  function numberField(name: string): number | null {
+    const value = textField(name);
+    if (value === null) return null;
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function buildStructuredData(skillId: string, domainType: string | null): Record<string, unknown> | null {
+    if (domainType === "name_response") {
+      const orientation = numberField(`skill_${skillId}_nr_orientation`);
+      const approach = numberField(`skill_${skillId}_nr_approach`);
+      if (orientation === null && approach === null) return null;
+      return { orientationPercent: orientation, approachPercent: approach };
+    }
+    if (domainType === "speech_approximation") {
+      const wordOrSound = textField(`skill_${skillId}_sa_word`);
+      const approximation = textField(`skill_${skillId}_sa_approximation`);
+      if (wordOrSound === null && approximation === null) return null;
+      return { wordOrSound, approximation };
+    }
+    if (domainType === "functional_communication") {
+      const requests = textField(`skill_${skillId}_fc_requests`);
+      if (requests === null) return null;
+      return { requestsObserved: requests.split(",").map((r) => r.trim()).filter(Boolean) };
+    }
+    if (domainType === "communicative_initiation") {
+      const gaze = numberField(`skill_${skillId}_ci_gaze`);
+      const vocalization = numberField(`skill_${skillId}_ci_vocalization`);
+      const gesture = numberField(`skill_${skillId}_ci_gesture`);
+      if (gaze === null && vocalization === null && gesture === null) return null;
+      return { gazePercent: gaze, vocalizationPercent: vocalization, gesturePercent: gesture };
+    }
+    if (domainType === "receptive_instructions") {
+      const instruction = textField(`skill_${skillId}_ri_instruction`);
+      const accuracy = numberField(`skill_${skillId}_ri_accuracy`);
+      if (instruction === null && accuracy === null) return null;
+      return { instruction, accuracyPercent: accuracy };
+    }
+    if (domainType === "object_identification") {
+      const items = textField(`skill_${skillId}_oi_items`);
+      const accuracy = numberField(`skill_${skillId}_oi_accuracy`);
+      if (items === null && accuracy === null) return null;
+      return { itemsCorrectlyIdentified: items, accuracyPercent: accuracy };
+    }
+    if (domainType === "concept_understanding") {
+      const concept = textField(`skill_${skillId}_cu_concept`);
+      const accuracy = numberField(`skill_${skillId}_cu_accuracy`);
+      if (concept === null && accuracy === null) return null;
+      return { concept, accuracyPercent: accuracy };
+    }
+    if (domainType === "tacting_naming") {
+      const items = textField(`skill_${skillId}_tn_items`);
+      const accuracy = numberField(`skill_${skillId}_tn_accuracy`);
+      if (items === null && accuracy === null) return null;
+      return {
+        itemsLabelled: items ? items.split(",").map((i) => i.trim()).filter(Boolean) : [],
+        accuracyPercent: accuracy,
+      };
+    }
+    if (domainType === "mand_diversity") {
+      const words = textField(`skill_${skillId}_md_words`);
+      if (words === null) return null;
+      return { newRequestWords: words.split(",").map((w) => w.trim()).filter(Boolean) };
+    }
+    if (domainType === "motor_speech_dttc") {
+      const practised = textField(`skill_${skillId}_ms_practised`);
+      const performance = textField(`skill_${skillId}_ms_performance`);
+      if (practised === null && performance === null) return null;
+      return {
+        soundsWordsPractised: practised ? practised.split(",").map((s) => s.trim()).filter(Boolean) : [],
+        performance,
+      };
+    }
+    if (domainType === "functional_independence") {
+      const activity = textField(`skill_${skillId}_fi_activity`);
+      const communicationUsed = formData.getAll(`skill_${skillId}_fi_communication`).filter(
+        (v): v is string => typeof v === "string"
+      );
+      const independenceLevel = textField(`skill_${skillId}_fi_independence`);
+      if (!activity && communicationUsed.length === 0 && !independenceLevel) return null;
+      return { activity, communicationUsed, independenceLevel };
+    }
+    return null;
+  }
+
   const skillRows = programme.skills
     .map((skill) => {
-      const total = formData.get(`skill_${skill.id}_total`);
-      const correct = formData.get(`skill_${skill.id}_correct`);
-      const prompt = formData.get(`skill_${skill.id}_prompt`);
-      const totalNum = typeof total === "string" && total.trim() ? Number(total) : null;
-      const correctNum = typeof correct === "string" && correct.trim() ? Number(correct) : null;
-      if (totalNum === null || correctNum === null || !Number.isFinite(totalNum) || !Number.isFinite(correctNum)) {
-        return null;
+      const notes = textField(`skill_${skill.id}_notes`);
+
+      if (skill.domainType) {
+        const structuredData = buildStructuredData(skill.id, skill.domainType);
+        const prompt = formData.get(`skill_${skill.id}_prompt`);
+        if (structuredData === null && notes === null) return null;
+        return {
+          session_id: sessionId,
+          skill_id: skill.id,
+          trials_total: null,
+          trials_correct: null,
+          prompt_level: typeof prompt === "string" && prompt ? prompt : null,
+          structured_data: structuredData,
+          notes,
+        };
       }
+
+      const totalNum = numberField(`skill_${skill.id}_total`);
+      const correctNum = numberField(`skill_${skill.id}_correct`);
+      const prompt = formData.get(`skill_${skill.id}_prompt`);
+      if (totalNum === null || correctNum === null) return null;
       return {
         session_id: sessionId,
         skill_id: skill.id,
         trials_total: Math.round(totalNum),
         trials_correct: Math.min(Math.round(correctNum), Math.round(totalNum)),
         prompt_level: typeof prompt === "string" && prompt ? prompt : null,
+        structured_data: null,
+        notes,
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => row !== null);
+
+  const abcCount = Number(formData.get("abcCount")) || 0;
+  const abcRows = Array.from({ length: abcCount })
+    .map((_, i) => {
+      const behaviourLabel = textField(`abc_${i}_behaviourLabel`);
+      if (!behaviourLabel) return null;
+      const antecedentCategory = textField(`abc_${i}_antecedentCategory`);
+      return {
+        session_id: sessionId,
+        behaviour_label: behaviourLabel,
+        antecedent: textField(`abc_${i}_antecedent`),
+        antecedent_category: antecedentCategory,
+        behaviour_observed: textField(`abc_${i}_behaviourObserved`),
+        consequence: textField(`abc_${i}_consequence`),
+        outcome: textField(`abc_${i}_outcome`),
       };
     })
     .filter((row): row is NonNullable<typeof row> => row !== null);
@@ -167,6 +328,7 @@ export async function createTherapySession(
     skillRows.length ? supabase.from("session_skill_entries").insert(skillRows) : null,
     goalRows.length ? supabase.from("session_goal_progress").insert(goalRows) : null,
     reinforcerRows.length ? supabase.from("session_reinforcers").insert(reinforcerRows) : null,
+    abcRows.length ? supabase.from("session_abc_observations").insert(abcRows) : null,
     ...parentLabelUpdates.map((row) =>
       supabase.from("target_behaviours").update({ parent_label: row.parentLabel }).eq("id", row.id)
     ),
@@ -176,14 +338,16 @@ export async function createTherapySession(
     return { error: `Session saved, but some entries failed: ${firstError.error.message}` };
   }
 
-  // Keep skills.current_percent in sync with the latest entry for it.
+  // Keep skills.current_percent in sync with the latest generic (non-domain-typed) entry for it.
   await Promise.all(
-    skillRows.map((row) =>
-      supabase
-        .from("skills")
-        .update({ current_percent: Math.round((row.trials_correct / row.trials_total) * 1000) / 10 })
-        .eq("id", row.skill_id)
-    )
+    skillRows
+      .filter((row) => row.trials_total !== null && row.trials_correct !== null)
+      .map((row) =>
+        supabase
+          .from("skills")
+          .update({ current_percent: Math.round((row.trials_correct! / row.trials_total!) * 1000) / 10 })
+          .eq("id", row.skill_id)
+      )
   );
 
   await logAuditEvent({

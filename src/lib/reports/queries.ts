@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { GenerationInput, ReportBody } from "./types";
+import type { GenerationInput, GenerationSkillInput, ReportBody } from "./types";
 
 export interface RealReport {
   id: string;
@@ -177,10 +177,17 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
 
   const { data: therapySession } = await supabase
     .from("therapy_sessions")
-    .select("id, child_id, session_date, duration_minutes, setting, therapist_notes")
+    .select(
+      "id, child_id, session_date, duration_minutes, setting, therapist_notes, attendance, general_presentation, therapist_profiles(location, users(full_name))"
+    )
     .eq("id", sessionId)
     .maybeSingle();
   if (!therapySession) return null;
+
+  const therapistProfile = therapySession.therapist_profiles as unknown as {
+    location: string | null;
+    users: { full_name: string } | null;
+  } | null;
 
   const { data: priorSession } = await supabase
     .from("therapy_sessions")
@@ -203,10 +210,11 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
     { data: skillEntries },
     { data: priorSkillEntries },
     { data: reinforcers },
+    { data: abcObservations },
   ] = await Promise.all([
     supabase.from("goals").select("id, title, domain").eq("child_id", therapySession.child_id),
     supabase.from("target_behaviours").select("id, label, parent_label, measurement, direction").eq("child_id", therapySession.child_id),
-    supabase.from("skills").select("id, label, mastery_criteria").eq("child_id", therapySession.child_id),
+    supabase.from("skills").select("id, label, mastery_criteria, domain_type").eq("child_id", therapySession.child_id),
     supabase.from("session_goal_progress").select("goal_id, percent_complete, note").eq("session_id", sessionId),
     priorSession
       ? supabase.from("session_goal_progress").select("goal_id, percent_complete").eq("session_id", priorSession.id)
@@ -223,11 +231,18 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
       : Promise.resolve({
           data: [] as { target_behaviour_id: string; count: number | null; duration_seconds: number | null; intensity: number | null }[],
         }),
-    supabase.from("session_skill_entries").select("skill_id, trials_total, trials_correct, prompt_level").eq("session_id", sessionId),
+    supabase
+      .from("session_skill_entries")
+      .select("skill_id, trials_total, trials_correct, prompt_level, structured_data, notes")
+      .eq("session_id", sessionId),
     priorSession
       ? supabase.from("session_skill_entries").select("skill_id, trials_total, trials_correct").eq("session_id", priorSession.id)
       : Promise.resolve({ data: [] as { skill_id: string; trials_total: number | null; trials_correct: number | null }[] }),
     supabase.from("session_reinforcers").select("label, effectiveness").eq("session_id", sessionId),
+    supabase
+      .from("session_abc_observations")
+      .select("behaviour_label, antecedent, antecedent_category, behaviour_observed, consequence, outcome")
+      .eq("session_id", sessionId),
   ]);
 
   const goalRows = (goals ?? []).map((goal) => {
@@ -273,6 +288,9 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
       percentThisSession: skillPercent(entry),
       previousPercent: skillPercent(priorEntry),
       promptLevel: entry?.prompt_level ?? null,
+      domainType: skill.domain_type as GenerationSkillInput["domainType"],
+      structuredData: (entry?.structured_data as Record<string, unknown> | null) ?? null,
+      notes: entry?.notes ?? null,
     };
   });
 
@@ -282,10 +300,22 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
       durationMinutes: therapySession.duration_minutes,
       setting: therapySession.setting,
       therapistNotes: therapySession.therapist_notes,
+      attendance: therapySession.attendance,
+      generalPresentation: therapySession.general_presentation,
+      therapistName: therapistProfile?.users?.full_name ?? null,
+      location: therapySession.setting === "in_person" ? (therapistProfile?.location ?? null) : null,
     },
     goals: goalRows,
     behaviours: behaviourRows,
     skills: skillRows,
     reinforcers: (reinforcers ?? []).map((r) => ({ label: r.label, effectiveness: r.effectiveness })),
+    abcObservations: (abcObservations ?? []).map((o) => ({
+      behaviourLabel: o.behaviour_label,
+      antecedent: o.antecedent,
+      antecedentCategory: o.antecedent_category,
+      behaviourObserved: o.behaviour_observed,
+      consequence: o.consequence,
+      outcome: o.outcome,
+    })),
   };
 }

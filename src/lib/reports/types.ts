@@ -15,12 +15,12 @@ export interface ReportBlock {
 export type ReportSectionKey =
   | "session_summary"
   | "clinical_observations"
+  | "abc_observations"
   | "data_summary"
   | "clinical_interpretation"
   | "recommendations"
   | "greeting"
-  | "highlights"
-  | "focus_areas"
+  | "domain_progress"
   | "next_steps";
 
 export interface ReportSection {
@@ -57,6 +57,19 @@ export interface GenerationBehaviourInput {
   consequence: string | null;
 }
 
+export type SkillDomainType =
+  | "name_response"
+  | "functional_communication"
+  | "functional_independence"
+  | "speech_approximation"
+  | "communicative_initiation"
+  | "receptive_instructions"
+  | "object_identification"
+  | "concept_understanding"
+  | "tacting_naming"
+  | "mand_diversity"
+  | "motor_speech_dttc";
+
 export interface GenerationSkillInput {
   id: string;
   label: string;
@@ -64,6 +77,18 @@ export interface GenerationSkillInput {
   percentThisSession: number | null;
   previousPercent: number | null;
   promptLevel: string | null;
+  domainType: SkillDomainType | null;
+  structuredData: Record<string, unknown> | null;
+  notes: string | null;
+}
+
+export interface GenerationAbcObservation {
+  behaviourLabel: string;
+  antecedent: string | null;
+  antecedentCategory: string | null;
+  behaviourObserved: string | null;
+  consequence: string | null;
+  outcome: string | null;
 }
 
 export interface GenerationInput {
@@ -72,9 +97,14 @@ export interface GenerationInput {
     durationMinutes: number | null;
     setting: string | null;
     therapistNotes: string | null;
+    attendance: string | null;
+    generalPresentation: string | null;
+    therapistName: string | null;
+    location: string | null;
   };
   goals: GenerationGoalInput[];
   behaviours: GenerationBehaviourInput[];
   skills: GenerationSkillInput[];
   reinforcers: { label: string; effectiveness: number | null }[];
+  abcObservations: GenerationAbcObservation[];
 }

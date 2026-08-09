@@ -24,10 +24,24 @@ export interface RealTargetBehaviour {
   direction: BehaviourDirection;
 }
 
+export type SkillDomainType =
+  | "name_response"
+  | "functional_communication"
+  | "functional_independence"
+  | "speech_approximation"
+  | "communicative_initiation"
+  | "receptive_instructions"
+  | "object_identification"
+  | "concept_understanding"
+  | "tacting_naming"
+  | "mand_diversity"
+  | "motor_speech_dttc";
+
 export interface RealSkill {
   id: string;
   label: string;
   currentPercent: number | null;
+  domainType: SkillDomainType | null;
 }
 
 export interface ChildProgramme {

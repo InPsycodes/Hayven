@@ -1,4 +1,5 @@
 import type {
+  GenerationAbcObservation,
   GenerationBehaviourInput,
   GenerationGoalInput,
   GenerationInput,
@@ -7,6 +8,94 @@ import type {
   ReportBody,
   ReportSection,
 } from "./types";
+import { applyParentFriendlyLanguage } from "./safety";
+
+// ---------------------------------------------------------------------------
+// domain-typed skill helpers -- shared between the clinical and parent
+// interpretations of a domain-typed skill entry.
+// ---------------------------------------------------------------------------
+
+interface NameResponseData {
+  orientationPercent: number | null;
+  approachPercent: number | null;
+}
+interface FunctionalCommunicationData {
+  requestsObserved: string[];
+}
+interface FunctionalIndependenceData {
+  activity: string | null;
+  communicationUsed: string[];
+  independenceLevel: string | null;
+}
+interface SpeechApproximationData {
+  wordOrSound: string | null;
+  approximation: string | null;
+}
+interface CommunicativeInitiationData {
+  gazePercent: number | null;
+  vocalizationPercent: number | null;
+  gesturePercent: number | null;
+}
+interface ReceptiveInstructionsData {
+  instruction: string | null;
+  accuracyPercent: number | null;
+}
+interface ObjectIdentificationData {
+  itemsCorrectlyIdentified: string | null;
+  accuracyPercent: number | null;
+}
+interface ConceptUnderstandingData {
+  concept: string | null;
+  accuracyPercent: number | null;
+}
+interface TactingNamingData {
+  itemsLabelled: string[];
+  accuracyPercent: number | null;
+}
+interface MandDiversityData {
+  newRequestWords: string[];
+}
+interface MotorSpeechDttcData {
+  soundsWordsPractised: string[];
+  performance: string | null;
+}
+
+/** Threshold bands shared by every domain's parent-facing percent-based sentence -- same bands proven for Name Response, never a per-domain invented scale. */
+function percentBand(percent: number, high: string, mid: string, low: string): string {
+  if (percent >= 70) return high;
+  if (percent >= 40) return mid;
+  return low;
+}
+
+/** Strips trailing periods (and trailing whitespace) off free text before a template appends its own -- otherwise a therapist ending their own sentence with "." produces a visible ".." wherever that text is quoted mid-sentence. */
+function stripTrailingPeriod(text: string): string {
+  return text.trim().replace(/\.+$/, "");
+}
+
+const ACTIVITY_LABEL: Record<string, string> = {
+  toileting: "Toileting",
+  feeding: "Feeding",
+  dressing: "Dressing",
+  hand_washing: "Hand washing",
+  personal_hygiene: "Personal hygiene",
+  transitioning: "Transitioning",
+  other: "Daily living",
+};
+
+const MODALITY_LABEL: Record<string, string> = {
+  vocalization: "vocalization",
+  gesture: "gesture",
+  sign: "sign",
+  aac: "AAC",
+  eye_gaze: "eye gaze",
+  other: "another modality",
+};
+
+function joinList(items: string[]): string {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
 
 const CHILD = "{{CHILD}}";
 
@@ -20,18 +109,34 @@ function formatSetting(setting: string | null): string {
 // session_summary
 // ---------------------------------------------------------------------------
 
+const ATTENDANCE_LABEL: Record<string, string> = {
+  late: "Attendance: arrived late.",
+  partial: "Attendance: partial attendance.",
+};
+
 function buildSessionSummary(input: GenerationInput): ReportSection {
   const { session } = input;
   const duration = session.durationMinutes ? `${session.durationMinutes}-minute` : "";
+  const therapistPhrase = session.therapistName ? ` with ${session.therapistName}` : "";
   const blocks: ReportBlock[] = [
     {
       type: "paragraph",
-      text: `${CHILD} attended a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session on ${session.date}.`.replace(
+      text: `${CHILD} attended a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session${therapistPhrase} on ${session.date}.`.replace(
         "  ",
         " "
       ),
     },
   ];
+
+  if (session.location && session.location.trim()) {
+    blocks.push({ type: "paragraph", text: `Location: ${stripTrailingPeriod(session.location)}.` });
+  }
+  if (session.attendance && ATTENDANCE_LABEL[session.attendance]) {
+    blocks.push({ type: "paragraph", text: ATTENDANCE_LABEL[session.attendance] });
+  }
+  if (session.generalPresentation && session.generalPresentation.trim()) {
+    blocks.push({ type: "paragraph", text: `General presentation: ${stripTrailingPeriod(session.generalPresentation)}.` });
+  }
 
   if (session.therapistNotes && session.therapistNotes.trim()) {
     blocks.push({ type: "quote", label: "Therapist's session note", text: session.therapistNotes.trim() });
@@ -63,8 +168,8 @@ function rawDeltaPhrase(raw: number, previousRaw: number | null): string {
 function behaviourObservation(b: GenerationBehaviourInput): string {
   const phrase = MEASURE_PHRASE[b.measurement] ?? ((raw: number) => `was recorded at ${raw}`);
   let sentence = `${b.label} ${phrase(b.rawValue as number)} this session${rawDeltaPhrase(b.rawValue as number, b.previousRawValue)}.`;
-  if (b.antecedent) sentence += ` Antecedent: ${b.antecedent}.`;
-  if (b.consequence) sentence += ` Consequence: ${b.consequence}.`;
+  if (b.antecedent) sentence += ` Antecedent: ${stripTrailingPeriod(b.antecedent)}.`;
+  if (b.consequence) sentence += ` Consequence: ${stripTrailingPeriod(b.consequence)}.`;
   return sentence;
 }
 
@@ -88,6 +193,105 @@ function buildClinicalObservations(input: GenerationInput): ReportSection {
   }
 
   return { key: "clinical_observations", heading: "Clinical observations", blocks };
+}
+
+// ---------------------------------------------------------------------------
+// abc_observations
+// ---------------------------------------------------------------------------
+
+// Same vocabulary as the ABC builder's dropdown (src/components/therapy-session/abc-observation-builder.tsx) -- keeping these in sync is what makes exact pattern grouping possible below.
+const ANTECEDENT_CATEGORY_LABEL: Record<string, string> = {
+  transition: "transition between activities",
+  denied: "denied access / told no",
+  non_preferred: "non-preferred task demand",
+  attention: "attention removed or withdrawn",
+  peer: "peer interaction",
+  wait: "being asked to wait",
+  other: "an unclear or other trigger",
+};
+
+function abcObservationParagraph(o: GenerationAbcObservation): string {
+  const parts = [`Behaviour: ${stripTrailingPeriod(o.behaviourLabel)}.`];
+  const categoryLabel = o.antecedentCategory ? ANTECEDENT_CATEGORY_LABEL[o.antecedentCategory] : null;
+  if (categoryLabel) {
+    const detail = o.antecedent ? ` (${stripTrailingPeriod(o.antecedent)})` : "";
+    parts.push(`Antecedent: ${categoryLabel}${detail}.`);
+  } else if (o.antecedent) {
+    parts.push(`Antecedent: ${stripTrailingPeriod(o.antecedent)}.`);
+  }
+  if (o.behaviourObserved) parts.push(`Behaviour observed: ${stripTrailingPeriod(o.behaviourObserved)}.`);
+  if (o.consequence) parts.push(`Consequence: ${stripTrailingPeriod(o.consequence)}.`);
+  if (o.outcome) parts.push(`Outcome: ${stripTrailingPeriod(o.outcome)}.`);
+  return parts.join(" ");
+}
+
+// Fallback for entries with no antecedent_category set (older data, or a
+// therapist who skipped the dropdown) -- simple substring keywords, not
+// exact grouping, so it only catches repeated *wording*, not full
+// paraphrases with zero literal overlap. Once a category is picked, the
+// exact GROUP BY below is used instead and this never runs for that entry.
+const ANTECEDENT_PATTERN_KEYWORDS = ["transition", "denied", "non-preferred", "attention", "peer", "wait"];
+
+/** Groups this session's ABC observations by behaviour, then flags antecedent triggers shared by 2+ instances of the same behaviour -- exact match on antecedent_category where it's set (paraphrase-proof), keyword-substring fallback on the free-text antecedent where it isn't. Only fires within a single session's repeatable ABC rows -- session_behaviour_entries carries at most one antecedent per behaviour per session, so it can't represent "multiple instances, each with their own antecedent" the way the ABC builder can. */
+function buildAntecedentPatterns(observations: GenerationAbcObservation[]): string[] {
+  const byBehaviour = new Map<string, GenerationAbcObservation[]>();
+  for (const o of observations) {
+    if (!o.antecedent && !o.antecedentCategory) continue;
+    const key = o.behaviourLabel.toLowerCase();
+    byBehaviour.set(key, [...(byBehaviour.get(key) ?? []), o]);
+  }
+
+  const patterns: string[] = [];
+  for (const entries of byBehaviour.values()) {
+    if (entries.length < 2) continue;
+    const behaviourLabel = entries[0].behaviourLabel;
+
+    const categorized = entries.filter((e) => e.antecedentCategory);
+    const byCategory = new Map<string, GenerationAbcObservation[]>();
+    for (const e of categorized) {
+      byCategory.set(e.antecedentCategory!, [...(byCategory.get(e.antecedentCategory!) ?? []), e]);
+    }
+    let matchedCategory = false;
+    for (const [category, matches] of byCategory) {
+      if (matches.length >= 2) {
+        const label = ANTECEDENT_CATEGORY_LABEL[category] ?? category;
+        patterns.push(
+          `A pattern was noted: ${matches.length} of ${entries.length} "${behaviourLabel}" instances this session were associated with ${label}. Continued use of proactive strategies for these situations is recommended.`
+        );
+        matchedCategory = true;
+      }
+    }
+    if (matchedCategory) continue;
+
+    const uncategorized = entries.filter((e) => !e.antecedentCategory && e.antecedent);
+    if (uncategorized.length < 2) continue;
+    for (const keyword of ANTECEDENT_PATTERN_KEYWORDS) {
+      const matches = uncategorized.filter((e) => e.antecedent!.toLowerCase().includes(keyword));
+      if (matches.length >= 2) {
+        patterns.push(
+          `A pattern was noted: ${matches.length} of ${entries.length} "${behaviourLabel}" instances this session were associated with ${keyword}-related antecedents. Continued use of proactive strategies for these situations is recommended.`
+        );
+        break; // one pattern sentence per behaviour group is enough signal
+      }
+    }
+  }
+  return patterns;
+}
+
+function buildAbcObservations(input: GenerationInput): ReportSection | null {
+  if (input.abcObservations.length === 0) return null;
+  const blocks: ReportBlock[] = input.abcObservations.map((o) => ({
+    type: "paragraph",
+    text: abcObservationParagraph(o),
+  }));
+  for (const pattern of buildAntecedentPatterns(input.abcObservations)) {
+    blocks.push({ type: "paragraph", label: "Pattern noted", text: pattern });
+  }
+  return {
+    key: "abc_observations",
+    heading: "Behavioural observations (ABC)",
+    blocks,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -184,12 +388,17 @@ function buildDataSummary(input: GenerationInput): ReportSection {
 // number already present in the input.
 // ---------------------------------------------------------------------------
 
+const EMERGING_THRESHOLD = 60;
+
 function goalInterpretation(goal: GenerationGoalInput): string | null {
   if (goal.percentComplete === null) return null;
   const delta = goal.previousPercentComplete === null ? null : goal.percentComplete - goal.previousPercentComplete;
+  const emerging = goal.percentComplete < EMERGING_THRESHOLD;
 
   if (delta === null) {
-    return `${goal.title}: first recorded data point at ${goal.percentComplete}% complete. No trend is available yet.`;
+    return emerging
+      ? `${goal.title}: this goal is currently emerging, at ${goal.percentComplete}% complete. No trend is available yet -- will continue to be targeted.`
+      : `${goal.title}: first recorded data point at ${goal.percentComplete}% complete. No trend is available yet.`;
   }
   if (delta >= 15) {
     return `${goal.title}: ${CHILD} showed meaningful progress this session, up ${delta} points to ${goal.percentComplete}% complete.`;
@@ -198,24 +407,134 @@ function goalInterpretation(goal: GenerationGoalInput): string | null {
     return `${goal.title}: steady progress, up ${delta} points to ${goal.percentComplete}% complete.`;
   }
   if (delta > -5) {
-    return `${goal.title}: holding at ${goal.percentComplete}% complete, no meaningful change since the last session.`;
+    return emerging
+      ? `${goal.title}: this goal is still emerging, holding at ${goal.percentComplete}% complete. Continued targeting is recommended.`
+      : `${goal.title}: holding at ${goal.percentComplete}% complete, no meaningful change since the last session.`;
   }
   return `${goal.title}: down ${Math.abs(delta)} points to ${goal.percentComplete}% complete since the last session. Worth reviewing what changed.`;
 }
 
+/** Clinical-register sentence for a domain-typed skill, reading only its recorded structured_data -- no comparison/trend claim, since prior structured_data isn't tracked. Returns null if this domain's fields weren't recorded this session, so it never invents a data point. */
+function domainSkillInterpretation(skill: GenerationSkillInput): string | null {
+  const notesSuffix = skill.notes ? ` Notes: ${stripTrailingPeriod(skill.notes)}.` : "";
+
+  if (skill.domainType === "name_response") {
+    const d = skill.structuredData as unknown as NameResponseData | null;
+    if (!d || (d.orientationPercent === null && d.approachPercent === null)) return null;
+    const parts: string[] = [];
+    if (d.orientationPercent !== null) parts.push(`${d.orientationPercent}% orientation`);
+    if (d.approachPercent !== null) parts.push(`${d.approachPercent}% approach`);
+    return `${skill.label}: ${CHILD} demonstrated ${joinList(parts)} response${parts.length > 1 ? "s" : ""} following name presentation.${notesSuffix}`;
+  }
+
+  if (skill.domainType === "functional_communication") {
+    const d = skill.structuredData as unknown as FunctionalCommunicationData | null;
+    const requests = d?.requestsObserved?.filter(Boolean) ?? [];
+    if (requests.length === 0) return null;
+    const promptPhrase = skill.promptLevel ? `, ${skill.promptLevel.replace("_", " ")}` : "";
+    return `${skill.label}: ${CHILD} used functional communication to request ${joinList(requests)}${promptPhrase}.${notesSuffix}`;
+  }
+
+  if (skill.domainType === "speech_approximation") {
+    const d = skill.structuredData as unknown as SpeechApproximationData | null;
+    if (!d?.wordOrSound && !d?.approximation) return null;
+    const promptPhrase = skill.promptLevel ? `, ${skill.promptLevel.replace("_", " ")}` : "";
+    return `${skill.label}: ${CHILD} attempted "${d?.wordOrSound ?? "target"}" with an approximation of "${d?.approximation ?? "recorded"}"${promptPhrase}.${notesSuffix}`;
+  }
+
+  if (skill.domainType === "communicative_initiation") {
+    const d = skill.structuredData as unknown as CommunicativeInitiationData | null;
+    const parts: string[] = [];
+    if (d?.gazePercent !== null && d?.gazePercent !== undefined) parts.push(`gaze (${d.gazePercent}%)`);
+    if (d?.vocalizationPercent !== null && d?.vocalizationPercent !== undefined) parts.push(`vocalization (${d.vocalizationPercent}%)`);
+    if (d?.gesturePercent !== null && d?.gesturePercent !== undefined) parts.push(`gesture (${d.gesturePercent}%)`);
+    if (parts.length === 0) return null;
+    return `${skill.label}: ${CHILD} initiated communication via ${joinList(parts)}.${notesSuffix}`;
+  }
+
+  if (skill.domainType === "receptive_instructions") {
+    const d = skill.structuredData as unknown as ReceptiveInstructionsData | null;
+    if (!d?.instruction && d?.accuracyPercent === null) return null;
+    const promptPhrase = skill.promptLevel ? `, ${skill.promptLevel.replace("_", " ")}` : "";
+    const accuracyPhrase = d?.accuracyPercent !== null && d?.accuracyPercent !== undefined ? `: ${d.accuracyPercent}% accuracy` : "";
+    return `${d?.instruction ?? skill.label}${accuracyPhrase}${promptPhrase}.${notesSuffix}`;
+  }
+
+  if (skill.domainType === "object_identification") {
+    const d = skill.structuredData as unknown as ObjectIdentificationData | null;
+    if (!d?.itemsCorrectlyIdentified && d?.accuracyPercent === null) return null;
+    const accuracyPhrase = d?.accuracyPercent !== null && d?.accuracyPercent !== undefined ? ` (${d.accuracyPercent}% accuracy)` : "";
+    return `${skill.label}: ${CHILD} correctly identified ${d?.itemsCorrectlyIdentified ?? "the target items"}${accuracyPhrase}.${notesSuffix}`;
+  }
+
+  if (skill.domainType === "concept_understanding") {
+    const d = skill.structuredData as unknown as ConceptUnderstandingData | null;
+    if (!d?.concept && d?.accuracyPercent === null) return null;
+    const accuracyPhrase = d?.accuracyPercent !== null && d?.accuracyPercent !== undefined ? `: ${d.accuracyPercent}% accuracy` : "";
+    return `${d?.concept ?? skill.label}${accuracyPhrase}.${notesSuffix}`;
+  }
+
+  if (skill.domainType === "tacting_naming") {
+    const d = skill.structuredData as unknown as TactingNamingData | null;
+    const items = d?.itemsLabelled?.filter(Boolean) ?? [];
+    if (items.length === 0 && d?.accuracyPercent === null) return null;
+    const promptPhrase = skill.promptLevel ? `, ${skill.promptLevel.replace("_", " ")}` : "";
+    const accuracyPhrase = d?.accuracyPercent !== null && d?.accuracyPercent !== undefined ? ` (${d.accuracyPercent}% accuracy)` : "";
+    return `${skill.label}: ${CHILD} labelled ${items.length ? joinList(items) : "the target items"}${accuracyPhrase}${promptPhrase}.${notesSuffix}`;
+  }
+
+  if (skill.domainType === "mand_diversity") {
+    const d = skill.structuredData as unknown as MandDiversityData | null;
+    const words = d?.newRequestWords?.filter(Boolean) ?? [];
+    if (words.length === 0) return null;
+    const promptPhrase = skill.promptLevel ? `, ${skill.promptLevel.replace("_", " ")}` : "";
+    return `${skill.label}: ${CHILD} used ${words.length} distinct request word${words.length === 1 ? "" : "s"} this session (${joinList(words)})${promptPhrase}.${notesSuffix}`;
+  }
+
+  if (skill.domainType === "motor_speech_dttc") {
+    const d = skill.structuredData as unknown as MotorSpeechDttcData | null;
+    const practised = d?.soundsWordsPractised?.filter(Boolean) ?? [];
+    if (practised.length === 0 && !d?.performance) return null;
+    const promptPhrase = skill.promptLevel ? `, ${skill.promptLevel.replace("_", " ")}` : "";
+    const performancePhrase = d?.performance ? ` Performance: ${stripTrailingPeriod(d.performance)}.` : "";
+    return `${skill.label}: practised ${practised.length ? joinList(practised) : "target sounds/words"}${promptPhrase}.${performancePhrase}${notesSuffix}`;
+  }
+
+  if (skill.domainType === "functional_independence") {
+    const d = skill.structuredData as unknown as FunctionalIndependenceData | null;
+    if (!d?.activity) return null;
+    const activityLabel = ACTIVITY_LABEL[d.activity] ?? d.activity;
+    const modalityPhrase = d.communicationUsed?.length
+      ? ` Communication used: ${joinList(d.communicationUsed.map((m) => MODALITY_LABEL[m] ?? m))}.`
+      : "";
+    const independencePhrase = d.independenceLevel
+      ? ` Level of independence: ${d.independenceLevel.replace("_", " ")}.`
+      : "";
+    return `${activityLabel}: ${skill.label}.${modalityPhrase}${independencePhrase}${notesSuffix}`;
+  }
+
+  return null;
+}
+
 function skillInterpretation(skill: GenerationSkillInput): string | null {
+  if (skill.domainType) return domainSkillInterpretation(skill);
   if (skill.percentThisSession === null) return null;
   const delta = skill.previousPercent === null ? null : skill.percentThisSession - skill.previousPercent;
   const masteryNote = skill.percentThisSession >= 90 ? " -- consistently demonstrating this skill." : skill.percentThisSession >= 80 ? " -- trending toward the mastery criterion." : "";
+  const emerging = skill.percentThisSession < EMERGING_THRESHOLD;
 
   if (delta === null) {
-    return `${skill.label}: first recorded data point at ${skill.percentThisSession}% independent.${masteryNote}`;
+    return emerging
+      ? `${skill.label}: this skill is currently emerging, at ${skill.percentThisSession}% independent. Will continue to be targeted.`
+      : `${skill.label}: first recorded data point at ${skill.percentThisSession}% independent.${masteryNote}`;
   }
   if (delta >= 10) {
     return `${skill.label}: clear improvement, up ${delta} points to ${skill.percentThisSession}% independent.${masteryNote}`;
   }
   if (delta > -10) {
-    return `${skill.label}: stable at ${skill.percentThisSession}% independent.${masteryNote}`;
+    return emerging
+      ? `${skill.label}: this skill is still emerging, holding at ${skill.percentThisSession}% independent. Continued targeting is recommended.`
+      : `${skill.label}: stable at ${skill.percentThisSession}% independent.${masteryNote}`;
   }
   return `${skill.label}: down ${Math.abs(delta)} points to ${skill.percentThisSession}% independent since the last session.`;
 }
@@ -323,8 +642,7 @@ function buildRecommendations(input: GenerationInput): ReportSection {
 // Parent-facing report -- same rule-based approach and the same computed
 // numbers as the therapist report, but no raw counts, no antecedent/
 // consequence detail, and no percentages: everything is translated into a
-// small set of warm, plain-language phrases. This mirrors the tone already
-// established in components/session-report/parent-summary-generator.ts.
+// small set of warm, plain-language phrases.
 // ---------------------------------------------------------------------------
 
 /** Deterministic variant selection: same id always yields the same phrasing, but different goals/skills/behaviours (and different children) don't all read identically. */
@@ -343,12 +661,21 @@ function goalHighlight(goal: GenerationGoalInput): string | null {
   if (goal.percentComplete === null) return null;
   const delta = goal.previousPercentComplete === null ? null : goal.percentComplete - goal.previousPercentComplete;
   const name = goal.title.toLowerCase();
+  const emerging = goal.percentComplete < EMERGING_THRESHOLD;
 
   if (delta === null) {
-    return pickVariant(
-      [`We started working on ${name} this session.`, `This session introduced ${name} as a focus area.`],
-      goal.id
-    );
+    return emerging
+      ? pickVariant(
+          [
+            `This is an early step for ${name} -- we'll keep building on it together.`,
+            `We're just getting started on ${name}. It's early days, and that's exactly where we'd expect to be.`,
+          ],
+          goal.id
+        )
+      : pickVariant(
+          [`We started working on ${name} this session.`, `This session introduced ${name} as a focus area.`],
+          goal.id
+        );
   }
   if (delta >= 15) {
     return pickVariant(
@@ -370,13 +697,21 @@ function goalHighlight(goal: GenerationGoalInput): string | null {
     );
   }
   if (delta > -5) {
-    return pickVariant(
-      [
-        `${CHILD} kept steady with ${name}, no big change either way.`,
-        `${name.charAt(0).toUpperCase()}${name.slice(1)} held about the same as last time, which is normal between bigger jumps.`,
-      ],
-      goal.id
-    );
+    return emerging
+      ? pickVariant(
+          [
+            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early goal for ${CHILD} -- we're continuing to build toward it step by step.`,
+            `We're staying consistent with ${name}. This is still early progress, and that's expected at this stage.`,
+          ],
+          goal.id
+        )
+      : pickVariant(
+          [
+            `${CHILD} kept steady with ${name}, no big change either way.`,
+            `${name.charAt(0).toUpperCase()}${name.slice(1)} held about the same as last time, which is normal between bigger jumps.`,
+          ],
+          goal.id
+        );
   }
   return pickVariant(
     [
@@ -391,12 +726,21 @@ function skillHighlight(skill: GenerationSkillInput): string | null {
   if (skill.percentThisSession === null) return null;
   const delta = skill.previousPercent === null ? null : skill.percentThisSession - skill.previousPercent;
   const name = skill.label.toLowerCase();
+  const emerging = skill.percentThisSession < EMERGING_THRESHOLD;
 
   if (delta === null) {
-    return pickVariant(
-      [`We started practising ${name} this session.`, `This session, we introduced practice on ${name}.`],
-      skill.id
-    );
+    return emerging
+      ? pickVariant(
+          [
+            `This is an early stage for ${name} -- we'll keep practising and building on it.`,
+            `We're just introducing ${name}. It's early days, which is exactly where we'd expect to be.`,
+          ],
+          skill.id
+        )
+      : pickVariant(
+          [`We started practising ${name} this session.`, `This session, we introduced practice on ${name}.`],
+          skill.id
+        );
   }
   if (delta >= 10) {
     return pickVariant(
@@ -408,13 +752,21 @@ function skillHighlight(skill: GenerationSkillInput): string | null {
     );
   }
   if (delta > -10) {
-    return pickVariant(
-      [
-        `${CHILD} continued practising ${name} at a steady pace.`,
-        `${name.charAt(0).toUpperCase()}${name.slice(1)} is progressing steadily, nothing dramatic, just consistent practice.`,
-      ],
-      skill.id
-    );
+    return emerging
+      ? pickVariant(
+          [
+            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early skill for ${CHILD} -- we're continuing to build on it with consistent practice.`,
+            `We're staying consistent with ${name}. This is still early progress, and that's expected at this stage.`,
+          ],
+          skill.id
+        )
+      : pickVariant(
+          [
+            `${CHILD} continued practising ${name} at a steady pace.`,
+            `${name.charAt(0).toUpperCase()}${name.slice(1)} is progressing steadily, nothing dramatic, just consistent practice.`,
+          ],
+          skill.id
+        );
   }
   return pickVariant(
     [
@@ -467,48 +819,239 @@ function behaviourFocusNote(b: GenerationBehaviourInput): string | null {
   return pickVariant([`We're continuing to work on ${name}.`], b.id);
 }
 
+const ATTENDANCE_PARENT_PHRASE: Record<string, string> = {
+  late: `${CHILD} joined a little later than usual today.`,
+  partial: `${CHILD} was able to join for part of today's session.`,
+};
+
 function buildGreeting(input: GenerationInput): ReportSection {
   const { session } = input;
   const duration = session.durationMinutes ? `${session.durationMinutes}-minute` : "";
+  const therapistPhrase = session.therapistName ? ` with ${session.therapistName}` : "";
   const blocks: ReportBlock[] = [
     {
       type: "paragraph",
-      text: `${CHILD} had a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session on ${session.date}.`.replace(
+      text: `${CHILD} had a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session${therapistPhrase} on ${session.date}.`.replace(
         "  ",
         " "
       ),
     },
   ];
+  if (session.location && session.location.trim()) {
+    blocks.push({ type: "paragraph", text: `Location: ${stripTrailingPeriod(session.location)}.` });
+  }
+  if (session.attendance && ATTENDANCE_PARENT_PHRASE[session.attendance]) {
+    blocks.push({ type: "paragraph", text: ATTENDANCE_PARENT_PHRASE[session.attendance] });
+  }
+  if (session.generalPresentation && session.generalPresentation.trim()) {
+    blocks.push({
+      type: "paragraph",
+      text: applyParentFriendlyLanguage(session.generalPresentation.trim(), input.behaviours),
+    });
+  }
   if (session.therapistNotes && session.therapistNotes.trim()) {
-    blocks.push({ type: "quote", label: "In the therapist's words", text: session.therapistNotes.trim() });
+    const parentFriendly = applyParentFriendlyLanguage(session.therapistNotes.trim(), input.behaviours);
+    blocks.push({ type: "quote", label: "In the therapist's words", text: parentFriendly });
   }
   return { key: "greeting", heading: "This session", blocks };
 }
 
-function buildHighlights(input: GenerationInput): ReportSection {
-  const items = [...input.goals.map(goalHighlight), ...input.skills.map(skillHighlight)].filter(
-    (item): item is string => item !== null
-  );
-  if (items.length === 0) {
-    return {
-      key: "highlights",
-      heading: "Progress highlights",
-      blocks: [{ type: "paragraph", text: "No specific goals or skills were tracked in this session." }],
-    };
+/** Plain-language, non-clinical translation of a domain-typed skill for a parent -- same "never claim what the data doesn't support" discipline as the clinical side, just warmer wording and no raw percentages. */
+/**
+ * Every raw structured_data free-text value quoted here MUST go through
+ * applyParentFriendlyLanguage first -- these are plain <Input> text boxes a
+ * therapist can type anything into (unlike name_response/
+ * communicative_initiation/functional_independence, which only ever surface
+ * percentages or fixed enum labels). This is the same filter buildGreeting
+ * already applies to therapistNotes/generalPresentation; skipping it here
+ * was the exact gap the security sweep found.
+ */
+function domainSkillParentSentence(
+  skill: GenerationSkillInput,
+  behaviours: GenerationBehaviourInput[]
+): string | null {
+  const clean = (text: string) => applyParentFriendlyLanguage(text, behaviours);
+  const cleanList = (items: string[]) => items.map(clean);
+
+  if (skill.domainType === "name_response") {
+    const d = skill.structuredData as unknown as NameResponseData | null;
+    const best = Math.max(d?.orientationPercent ?? -1, d?.approachPercent ?? -1);
+    if (best < 0) return null;
+    if (best >= 70) {
+      return `${CHILD} responded well to ${CHILD}'s name today, looking and moving toward the therapist during most opportunities.`;
+    }
+    if (best >= 40) {
+      return `${CHILD} responded to ${CHILD}'s name several times today. We're continuing to build on this.`;
+    }
+    return `We're still working on ${CHILD}'s response to ${CHILD}'s name -- this is an early stage for this skill, and that's completely normal.`;
   }
-  return { key: "highlights", heading: "Progress highlights", blocks: [{ type: "bullets", items }] };
+
+  if (skill.domainType === "functional_communication") {
+    const d = skill.structuredData as unknown as FunctionalCommunicationData | null;
+    const requests = d?.requestsObserved?.filter(Boolean) ?? [];
+    if (requests.length === 0) return null;
+    const promptPhrase = skill.promptLevel === "independent" ? "independently " : "";
+    return `${CHILD} did well using sounds, words, and gestures to communicate what ${CHILD} wanted. ${CHILD} ${promptPhrase}requested ${joinList(cleanList(requests))} during the session.`;
+  }
+
+  if (skill.domainType === "speech_approximation") {
+    const d = skill.structuredData as unknown as SpeechApproximationData | null;
+    if (!d?.wordOrSound) return null;
+    const approximationPhrase = d.approximation ? `, and said something close to "${clean(d.approximation)}"` : "";
+    return `${CHILD} practised saying "${clean(d.wordOrSound)}" today${approximationPhrase}. Every attempt like this builds toward clearer speech.`;
+  }
+
+  if (skill.domainType === "communicative_initiation") {
+    const d = skill.structuredData as unknown as CommunicativeInitiationData | null;
+    const modalities: string[] = [];
+    if (d?.gazePercent) modalities.push("looking");
+    if (d?.vocalizationPercent) modalities.push("sounds");
+    if (d?.gesturePercent) modalities.push("gestures");
+    if (modalities.length === 0) return null;
+    return `${CHILD} reached out to start communication today using ${joinList(modalities)}.`;
+  }
+
+  if (skill.domainType === "receptive_instructions") {
+    const d = skill.structuredData as unknown as ReceptiveInstructionsData | null;
+    if (d?.accuracyPercent === null || d?.accuracyPercent === undefined) return null;
+    const instructionPhrase = d.instruction ? `, including "${clean(d.instruction)}"` : "";
+    return percentBand(
+      d.accuracyPercent,
+      `${CHILD} followed instructions very well today${instructionPhrase}.`,
+      `${CHILD} followed instructions several times today${instructionPhrase}. We're continuing to build on this.`,
+      `We're still working on ${CHILD} following instructions consistently -- this is an early stage, and that's completely normal.`
+    );
+  }
+
+  if (skill.domainType === "object_identification") {
+    const d = skill.structuredData as unknown as ObjectIdentificationData | null;
+    if (!d?.itemsCorrectlyIdentified) return null;
+    return `${CHILD} did well identifying ${clean(d.itemsCorrectlyIdentified)} today.`;
+  }
+
+  if (skill.domainType === "concept_understanding") {
+    const d = skill.structuredData as unknown as ConceptUnderstandingData | null;
+    if (d?.accuracyPercent === null || d?.accuracyPercent === undefined) return null;
+    const conceptName = d.concept ? clean(d.concept) : "this concept";
+    return percentBand(
+      d.accuracyPercent,
+      `${CHILD} showed a strong understanding of ${conceptName} today.`,
+      `${CHILD} is building an understanding of ${conceptName}, with several correct responses today.`,
+      `We're just starting to introduce ${conceptName} -- this is an early stage for it.`
+    );
+  }
+
+  if (skill.domainType === "tacting_naming") {
+    const d = skill.structuredData as unknown as TactingNamingData | null;
+    const items = d?.itemsLabelled?.filter(Boolean) ?? [];
+    if (items.length === 0) return null;
+    return `${CHILD} did well naming ${joinList(cleanList(items))} today.`;
+  }
+
+  if (skill.domainType === "mand_diversity") {
+    const d = skill.structuredData as unknown as MandDiversityData | null;
+    const words = d?.newRequestWords?.filter(Boolean) ?? [];
+    if (words.length === 0) return null;
+    return `${CHILD} used several different words to ask for things today, including ${joinList(cleanList(words))}.`;
+  }
+
+  if (skill.domainType === "motor_speech_dttc") {
+    const d = skill.structuredData as unknown as MotorSpeechDttcData | null;
+    const practised = d?.soundsWordsPractised?.filter(Boolean) ?? [];
+    if (practised.length === 0) return null;
+    return `${CHILD} practised saying ${joinList(cleanList(practised))} today.`;
+  }
+
+  if (skill.domainType === "functional_independence") {
+    const d = skill.structuredData as unknown as FunctionalIndependenceData | null;
+    if (!d?.activity) return null;
+    const modalityPhrase = d.communicationUsed?.length
+      ? ` ${CHILD} communicated this using ${joinList(d.communicationUsed.map((m) => MODALITY_LABEL[m] ?? m))}.`
+      : "";
+    const independencePhrase =
+      d.independenceLevel === "independent"
+        ? ` This was a great example of ${CHILD}'s developing ability to do this independently.`
+        : d.independenceLevel
+          ? ` ${CHILD} needed some support with this today, which is a normal part of learning.`
+          : "";
+    return `One of the highlights of today's session was ${CHILD}'s progress with ${(ACTIVITY_LABEL[d.activity] ?? d.activity).toLowerCase()}.${modalityPhrase}${independencePhrase}`;
+  }
+
+  return null;
 }
 
-function buildFocusAreas(input: GenerationInput): ReportSection {
-  const items = input.behaviours.map(behaviourFocusNote).filter((item): item is string => item !== null);
-  if (items.length === 0) {
-    return {
-      key: "focus_areas",
-      heading: "What we're focusing on",
-      blocks: [{ type: "paragraph", text: "Nothing specific to flag from this session." }],
-    };
+/** Domain-headed parent sections: one named section per domain actually touched this session (goal domains, skill domain types -- functional-independence further split by activity, e.g. "Toileting" -- and behaviours), instead of the old cross-domain highlights/focus-areas split. Skills/goals with no domain type fall into "General progress" so nothing silently disappears. */
+function buildDomainProgressSections(input: GenerationInput): ReportSection[] {
+  const order: string[] = [];
+  const buckets = new Map<string, { heading: string; sentences: string[] }>();
+
+  function push(key: string, heading: string, sentence: string | null) {
+    if (!sentence) return;
+    if (!buckets.has(key)) {
+      buckets.set(key, { heading, sentences: [] });
+      order.push(key);
+    }
+    buckets.get(key)!.sentences.push(sentence);
   }
-  return { key: "focus_areas", heading: "What we're focusing on", blocks: [{ type: "bullets", items }] };
+
+  for (const goal of input.goals) {
+    const label = goalDomainLabel(goal.domain);
+    push(`goal_${label}`, label, goalHighlight(goal));
+  }
+
+  for (const skill of input.skills) {
+    if (skill.domainType === "name_response") {
+      push("name_response", "Responding to Name", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "functional_communication") {
+      push("functional_communication", "Communication", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "speech_approximation") {
+      push("speech_practice", "Speech Practice", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "communicative_initiation") {
+      push("communicative_initiation", "Initiating Communication", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "receptive_instructions") {
+      push("receptive_instructions", "Following Instructions", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "object_identification") {
+      push("object_identification", "Identifying Objects", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "concept_understanding") {
+      push("concept_understanding", "Understanding Concepts", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "tacting_naming") {
+      push("tacting_naming", "Naming Things", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "mand_diversity") {
+      push("mand_diversity", "Asking for Things", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "motor_speech_dttc") {
+      push("speech_practice", "Speech Practice", domainSkillParentSentence(skill, input.behaviours));
+    } else if (skill.domainType === "functional_independence") {
+      const structured = skill.structuredData as unknown as FunctionalIndependenceData | null;
+      const activity = structured?.activity ?? "other";
+      const heading = ACTIVITY_LABEL[activity] ?? "Daily living";
+      push(`fi_${activity}`, heading, domainSkillParentSentence(skill, input.behaviours));
+    } else {
+      push("general_skill", "General progress", skillHighlight(skill));
+    }
+  }
+
+  for (const behaviour of input.behaviours) {
+    push("behaviour", "Behaviour", behaviourFocusNote(behaviour));
+  }
+
+  if (order.length === 0) {
+    return [
+      {
+        key: "domain_progress",
+        heading: "Progress",
+        blocks: [{ type: "paragraph", text: "No specific goals or skills were tracked in this session." }],
+      },
+    ];
+  }
+
+  return order.map((key) => {
+    const bucket = buckets.get(key)!;
+    return {
+      key: "domain_progress" as const,
+      heading: bucket.heading,
+      blocks: [{ type: "paragraph" as const, text: bucket.sentences.join(" ") }],
+    };
+  });
 }
 
 const PRACTICE_TIP_VARIANTS: ((name: string) => string)[] = [
@@ -591,20 +1134,41 @@ function buildNextSteps(input: GenerationInput): ReportSection {
 }
 
 /** Same computed inputs as the therapist report, translated into a warm, plain-language, non-clinical voice. No raw counts, percentages, or antecedent/consequence detail. */
+/**
+ * Goal titles and skill labels are therapist-authored free text too (set
+ * once at creation, not per-session) -- lower risk than session narrative
+ * text, but the same built-in jargon dictionary applies to them before they
+ * reach any parent-facing sentence, one transformation point instead of
+ * threading the filter through every function that touches a title/label.
+ * Clinical report intentionally does NOT use this -- it keeps the
+ * therapist's own clinical terminology untouched.
+ */
+function toParentSafeInput(input: GenerationInput): GenerationInput {
+  const clean = (text: string) => applyParentFriendlyLanguage(text, input.behaviours);
+  return {
+    ...input,
+    goals: input.goals.map((g) => ({ ...g, title: clean(g.title) })),
+    skills: input.skills.map((s) => ({ ...s, label: clean(s.label) })),
+  };
+}
+
 export function generateParentReport(input: GenerationInput): ReportBody {
+  const parentInput = toParentSafeInput(input);
   return {
     schemaVersion: 1,
-    sections: [buildGreeting(input), buildHighlights(input), buildFocusAreas(input), buildNextSteps(input)],
+    sections: [buildGreeting(parentInput), ...buildDomainProgressSections(parentInput), buildNextSteps(parentInput)],
   };
 }
 
 /** Pure, deterministic report generation -- no AI involved. Every value cited is one the caller already computed. */
 export function generateTherapistReport(input: GenerationInput): ReportBody {
+  const abcSection = buildAbcObservations(input);
   return {
     schemaVersion: 1,
     sections: [
       buildSessionSummary(input),
       buildClinicalObservations(input),
+      ...(abcSection ? [abcSection] : []),
       buildDataSummary(input),
       buildClinicalInterpretation(input),
       buildRecommendations(input),
@@ -631,9 +1195,9 @@ export function renderReportBody(body: ReportBody, childFirstName: string): Repo
 
 /** A short quotable line for a compact preview (e.g. the parent dashboard card) -- the first progress highlight, or the session greeting if there's nothing to highlight. Call after renderReportBody so {{CHILD}} is already substituted. */
 export function extractReportSnippet(body: ReportBody): string | null {
-  const highlights = body.sections.find((s) => s.key === "highlights");
-  const highlightItems = highlights?.blocks.find((b) => b.type === "bullets")?.items;
-  if (highlightItems?.[0]) return highlightItems[0];
+  const domainSection = body.sections.find((s) => s.key === "domain_progress");
+  const domainText = domainSection?.blocks.find((b) => b.type === "paragraph")?.text;
+  if (domainText) return domainText;
 
   const greeting = body.sections.find((s) => s.key === "greeting");
   const greetingText = greeting?.blocks.find((b) => b.type === "paragraph")?.text;

@@ -64,8 +64,14 @@ export async function generateReport(
   if (!input) return { ok: false, error: "Couldn't load session data." };
 
   const startedAt = Date.now();
-  const therapistBody = generateTherapistReport(input);
-  const parentBody = generateParentReport(input);
+  let therapistBody, parentBody;
+  try {
+    therapistBody = generateTherapistReport(input);
+    parentBody = generateParentReport(input);
+  } catch (err) {
+    console.error("report generation threw", sessionId, err);
+    return { ok: false, error: "Couldn't generate the report from this session's data. Please try again." };
+  }
   const generationMs = Date.now() - startedAt;
 
   const { data: report, error } = await supabase

@@ -215,6 +215,22 @@ export async function createSkill(
   if (typeof label !== "string" || !label.trim()) return { error: "Please enter a skill label." };
 
   const masteryCriteria = formData.get("masteryCriteria");
+  const domainType = formData.get("domainType");
+  const validDomainTypes = [
+    "name_response",
+    "functional_communication",
+    "functional_independence",
+    "speech_approximation",
+    "communicative_initiation",
+    "receptive_instructions",
+    "object_identification",
+    "concept_understanding",
+    "tacting_naming",
+    "mand_diversity",
+    "motor_speech_dttc",
+  ];
+  const resolvedDomainType =
+    typeof domainType === "string" && validDomainTypes.includes(domainType) ? domainType : null;
 
   const supabase = await createClient();
   if (!(await assertAssigned(supabase, therapist.id, childId))) {
@@ -228,6 +244,7 @@ export async function createSkill(
       label: label.trim(),
       mastery_criteria:
         typeof masteryCriteria === "string" && masteryCriteria.trim() ? masteryCriteria.trim() : null,
+      domain_type: resolvedDomainType,
     })
     .select("id")
     .single();

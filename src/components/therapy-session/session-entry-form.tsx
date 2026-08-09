@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createTherapySession, type FormState } from "@/lib/therapy-sessions/actions";
 import type { ChildProgramme } from "@/lib/therapy-sessions/types";
+import { SkillDomainFields } from "@/components/therapy-session/skill-domain-fields";
+import { AbcObservationBuilder } from "@/components/therapy-session/abc-observation-builder";
 
 const MEASUREMENT_LABEL: Record<string, string> = {
   frequency: "Count this session",
@@ -72,6 +74,27 @@ export function SessionEntryForm({
               </label>
             </div>
           </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="attendance">Attendance</Label>
+            <select
+              id="attendance"
+              name="attendance"
+              className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
+              defaultValue="present"
+            >
+              <option value="present">Present</option>
+              <option value="late">Late</option>
+              <option value="partial">Partial</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="generalPresentation">General presentation (optional)</Label>
+          <Input
+            id="generalPresentation"
+            name="generalPresentation"
+            placeholder="e.g. Regulated and engaged throughout"
+          />
         </div>
       </div>
 
@@ -120,44 +143,50 @@ export function SessionEntryForm({
         </div>
       )}
 
+      <AbcObservationBuilder />
+
       {programme.skills.length > 0 && (
         <div className="flex flex-col gap-3">
           <Label>Skills</Label>
           {programme.skills.map((skill) => (
             <div key={skill.id} className="flex flex-col gap-3 rounded-sm bg-white p-4 ring-1 ring-border">
               <p className="text-sm font-medium text-charcoal">{skill.label}</p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`skill_${skill.id}_total`} className="text-xs">
-                    Trials total
-                  </Label>
-                  <Input id={`skill_${skill.id}_total`} name={`skill_${skill.id}_total`} type="number" min={0} />
+              {skill.domainType ? (
+                <SkillDomainFields skillId={skill.id} domainType={skill.domainType} />
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor={`skill_${skill.id}_total`} className="text-xs">
+                      Trials total
+                    </Label>
+                    <Input id={`skill_${skill.id}_total`} name={`skill_${skill.id}_total`} type="number" min={0} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor={`skill_${skill.id}_correct`} className="text-xs">
+                      Trials correct
+                    </Label>
+                    <Input id={`skill_${skill.id}_correct`} name={`skill_${skill.id}_correct`} type="number" min={0} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor={`skill_${skill.id}_prompt`} className="text-xs">
+                      Prompt level
+                    </Label>
+                    <select
+                      id={`skill_${skill.id}_prompt`}
+                      name={`skill_${skill.id}_prompt`}
+                      className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
+                      defaultValue=""
+                    >
+                      <option value="">Not recorded</option>
+                      {PROMPT_LEVELS.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`skill_${skill.id}_correct`} className="text-xs">
-                    Trials correct
-                  </Label>
-                  <Input id={`skill_${skill.id}_correct`} name={`skill_${skill.id}_correct`} type="number" min={0} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`skill_${skill.id}_prompt`} className="text-xs">
-                    Prompt level
-                  </Label>
-                  <select
-                    id={`skill_${skill.id}_prompt`}
-                    name={`skill_${skill.id}_prompt`}
-                    className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
-                    defaultValue=""
-                  >
-                    <option value="">Not recorded</option>
-                    {PROMPT_LEVELS.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
@@ -207,14 +236,33 @@ export function SessionEntryForm({
         ))}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="therapistNotes">Session notes</Label>
-        <Textarea
-          id="therapistNotes"
-          name="therapistNotes"
-          rows={4}
-          placeholder={`How did the session with ${childName} go? This feeds the generated report.`}
-        />
+      <div className="flex flex-col gap-3">
+        <Label>Session notes</Label>
+        <p className="-mt-1 text-xs text-muted-foreground">These feed the generated report -- a few short answers here go a lot further than one rushed paragraph.</p>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="noteArrival" className="text-xs">
+            How did {childName} arrive?
+          </Label>
+          <Textarea id="noteArrival" name="noteArrival" rows={2} placeholder="Calm and ready to work" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="noteWin" className="text-xs">
+            What was the biggest win today?
+          </Label>
+          <Textarea id="noteWin" name="noteWin" rows={2} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="noteHomework" className="text-xs">
+            What should we practice at home?
+          </Label>
+          <Textarea id="noteHomework" name="noteHomework" rows={2} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="noteOther" className="text-xs">
+            Anything else? (optional)
+          </Label>
+          <Textarea id="noteOther" name="noteOther" rows={2} />
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">
