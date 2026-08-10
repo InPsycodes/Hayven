@@ -1,15 +1,28 @@
-// No quote-band photograph exists yet -- a dark gradient wash stands in for
-// the photo + scrim treatment in the reference, keeping the same mood/depth.
+import Image from "next/image";
+
+// The photo IS the section background (no boxed frame) -- a warm scrim,
+// using the same gradient this section always had, sits over it and fades
+// out toward the right so the photo takes over everywhere the quote isn't.
 export function QuoteBreather() {
   return (
-    <section
-      className="relative flex min-h-[60vh] items-center overflow-hidden px-6 lg:px-10"
-      style={{
-        background:
-          "linear-gradient(100deg, #1a1a1a 0%, #2a2118 45%, #3a2a1c 70%, #4a3222 100%)",
-      }}
-    >
-      <div className="relative z-10 mx-auto w-full max-w-7xl">
+    <section className="relative overflow-hidden py-20 lg:min-h-[65vh] lg:py-0">
+      <Image
+        src="/images/quote-breather-mother-child.png"
+        alt="A mother and her son sitting on the floor together, building a tower out of wooden blocks"
+        fill
+        sizes="100vw"
+        className="photo-treatment object-cover object-[58%_40%] lg:object-[72%_38%]"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(90deg, #1a1a1a 0%, #1a1a1a 36%, #2a2118 48%, rgba(42,33,24,0.75) 58%, rgba(58,42,28,0.35) 70%, rgba(74,50,34,0) 84%)",
+        }}
+      />
+
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl items-center px-6 lg:min-h-[65vh] lg:px-10">
         <div className="max-w-2xl">
           <span
             aria-hidden
