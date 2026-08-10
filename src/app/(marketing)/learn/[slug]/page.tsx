@@ -13,7 +13,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     <article className="mx-auto max-w-2xl px-6 py-12 md:px-10">
       <Link
         href="/learn"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        className="mb-6 flex w-fit items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <IconArrowLeft size={16} />
         Learning Center
