@@ -29,7 +29,15 @@ export function BehaviourFrequencyChart({
             <ReferenceLine y={baselineValue} stroke="var(--chart-4)" strokeDasharray="4 4" />
           )}
           <ChartTooltip content={<ChartTooltipContent labelFormatter={(d) => formatShortDate(String(d))} />} />
-          <Line dataKey="value" stroke="var(--color-value)" strokeWidth={2} dot connectNulls={false} />
+          <Line
+            dataKey="value"
+            stroke="var(--color-value)"
+            strokeWidth={2}
+            dot
+            connectNulls={false}
+            animationDuration={800}
+            animationEasing="ease-out"
+          />
         </LineChart>
       </ChartContainer>
       <p className="mt-1 text-[11px] text-muted-foreground">

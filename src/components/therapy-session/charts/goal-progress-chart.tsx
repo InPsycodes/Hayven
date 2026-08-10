@@ -34,6 +34,8 @@ export function GoalProgressChart({
             strokeWidth={2}
             dot
             connectNulls={false}
+            animationDuration={800}
+            animationEasing="ease-out"
           />
         ))}
       </LineChart>

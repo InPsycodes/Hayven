@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 
+import { Reveal } from "@/components/marketing/reveal";
 import type { ReportBlock, ReportBody, ReportSection } from "@/lib/reports/types";
 
 const TREND_STYLE: Record<"positive" | "negative" | "neutral", { symbol: string; className: string }> = {
@@ -118,8 +119,10 @@ function SectionCard({ section }: { section: ReportSection }) {
 export function ReportView({ body }: { body: ReportBody }) {
   return (
     <div className="flex flex-col gap-4">
-      {body.sections.map((section) => (
-        <SectionCard key={section.key} section={section} />
+      {body.sections.map((section, i) => (
+        <Reveal key={`${section.key}-${i}`} delayMs={i * 100}>
+          <SectionCard section={section} />
+        </Reveal>
       ))}
     </div>
   );

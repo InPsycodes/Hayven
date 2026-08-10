@@ -7,6 +7,7 @@ import { ReportWorkflowCard } from "@/components/dashboard/report-workflow-card"
 import { ScheduleItem } from "@/components/dashboard/schedule-item";
 import { NeedsAttentionItem } from "@/components/dashboard/needs-attention-item";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
+import { Reveal } from "@/components/marketing/reveal";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { formatNaira, formatDate } from "@/data/format";
@@ -53,13 +54,22 @@ export default async function TherapistDashboardPage() {
 
       <div className="flex flex-col gap-8 px-5 py-6 md:px-10 md:py-8">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <StatCard label="Active clients" value={String(activeClients)} />
-          <StatCard label="Today's sessions" value={String(todaysBookings.length)} />
-          <ReportWorkflowCard summary={reportSummary} />
-          <StatCard label="This month's earnings" value={formatNaira(earnings)} emphasis />
+          <Reveal delayMs={0}>
+            <StatCard label="Active clients" value={String(activeClients)} />
+          </Reveal>
+          <Reveal delayMs={60}>
+            <StatCard label="Today's sessions" value={String(todaysBookings.length)} />
+          </Reveal>
+          <Reveal delayMs={120}>
+            <ReportWorkflowCard summary={reportSummary} />
+          </Reveal>
+          <Reveal delayMs={180}>
+            <StatCard label="This month's earnings" value={formatNaira(earnings)} emphasis />
+          </Reveal>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+          <Reveal delayMs={240}>
           <Card lift className="p-5">
             <h2 className="mb-1 label-micro text-muted-foreground">Today&apos;s schedule</h2>
             {todaysBookings.length === 0 ? (
@@ -79,7 +89,9 @@ export default async function TherapistDashboardPage() {
               </div>
             )}
           </Card>
+          </Reveal>
 
+          <Reveal delayMs={300}>
           <Card className="p-5">
             <h2 className="mb-1 label-micro text-muted-foreground">Needs attention</h2>
             {reportSummary.needsReportCount === 0 && awaitingReplyThreads.length === 0 ? (
@@ -107,6 +119,7 @@ export default async function TherapistDashboardPage() {
               </div>
             )}
           </Card>
+          </Reveal>
         </div>
       </div>
     </div>

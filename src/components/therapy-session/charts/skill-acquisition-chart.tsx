@@ -26,7 +26,15 @@ export function SkillAcquisitionChart({
           <ReferenceLine y={masteryThreshold} stroke="var(--chart-3)" strokeDasharray="4 4" />
         )}
         <ChartTooltip content={<ChartTooltipContent labelFormatter={(d) => formatShortDate(String(d))} />} />
-        <Line dataKey="percent" stroke="var(--color-percent)" strokeWidth={2} dot connectNulls={false} />
+        <Line
+          dataKey="percent"
+          stroke="var(--color-percent)"
+          strokeWidth={2}
+          dot
+          connectNulls={false}
+          animationDuration={800}
+          animationEasing="ease-out"
+        />
       </LineChart>
     </ChartContainer>
   );

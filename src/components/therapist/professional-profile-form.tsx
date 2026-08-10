@@ -74,7 +74,7 @@ export function ProfessionalProfileForm({
       </div>
 
       {state.error && <p className="text-sm text-error">{state.error}</p>}
-      {!state.error && state !== initialState && <p className="text-sm text-success">Saved.</p>}
+      {!state.error && state !== initialState && <p className="fade-in text-sm text-success">Saved.</p>}
 
       <Button type="submit" disabled={isPending} className="w-fit">
         {isPending ? "Saving..." : "Save changes"}

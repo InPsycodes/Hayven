@@ -40,7 +40,7 @@ export function RefundRow({ refund }: { refund: RealRefundOwed }) {
       <div className="flex shrink-0 items-center gap-3">
         <span className="text-sm font-medium text-charcoal">{formatNaira(refund.amount)}</span>
         {done ? (
-          <span className="text-xs text-success">Refunded.</span>
+          <span className="fade-in text-xs text-success">Refunded.</span>
         ) : (
           <Button variant="outline" size="sm" disabled={isPending} onClick={act}>
             {isPending ? "..." : "Mark refunded"}

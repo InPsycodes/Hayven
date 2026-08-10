@@ -35,7 +35,7 @@ export function CancelBookingButton({
   }
 
   if (cancelled) {
-    return <span className="shrink-0 text-xs text-muted-foreground">Cancelled.</span>;
+    return <span className="fade-in shrink-0 text-xs text-muted-foreground">Cancelled.</span>;
   }
 
   if (!expanded) {

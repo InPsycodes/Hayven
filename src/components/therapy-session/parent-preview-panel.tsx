@@ -67,7 +67,7 @@ export function ParentPreviewPanel({
       {error && <p className="text-sm text-error">{error}</p>}
       <div className="flex items-center gap-3">
         {published && !needsRepublish ? (
-          <StatusBadge tone="sage" className="w-fit">
+          <StatusBadge tone="sage" className="fade-in w-fit">
             Published to parent
           </StatusBadge>
         ) : (

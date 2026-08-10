@@ -22,8 +22,24 @@ export function BehaviourTrendChart({
         <XAxis dataKey="date" tickFormatter={(d) => formatShortDate(d)} tickLine={false} axisLine={false} />
         <YAxis tickLine={false} axisLine={false} width={30} />
         <ChartTooltip content={<ChartTooltipContent labelFormatter={(d) => formatShortDate(String(d))} />} />
-        <Line dataKey="value" stroke="var(--color-value)" strokeWidth={1} dot={false} connectNulls={false} />
-        <Line dataKey="rollingAverage" stroke="var(--color-rollingAverage)" strokeWidth={2} dot connectNulls={false} />
+        <Line
+          dataKey="value"
+          stroke="var(--color-value)"
+          strokeWidth={1}
+          dot={false}
+          connectNulls={false}
+          animationDuration={800}
+          animationEasing="ease-out"
+        />
+        <Line
+          dataKey="rollingAverage"
+          stroke="var(--color-rollingAverage)"
+          strokeWidth={2}
+          dot
+          connectNulls={false}
+          animationDuration={800}
+          animationEasing="ease-out"
+        />
       </LineChart>
     </ChartContainer>
   );
