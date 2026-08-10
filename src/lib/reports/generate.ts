@@ -454,7 +454,7 @@ function domainSkillInterpretation(skill: GenerationSkillInput): string | null {
 
   if (skill.domainType === "receptive_instructions") {
     const d = skill.structuredData as unknown as ReceptiveInstructionsData | null;
-    if (!d?.instruction && d?.accuracyPercent === null) return null;
+    if (!d || (!d.instruction && d.accuracyPercent === null)) return null;
     const promptPhrase = skill.promptLevel ? `, ${skill.promptLevel.replace("_", " ")}` : "";
     const accuracyPhrase = d?.accuracyPercent !== null && d?.accuracyPercent !== undefined ? `: ${d.accuracyPercent}% accuracy` : "";
     return `${d?.instruction ?? skill.label}${accuracyPhrase}${promptPhrase}.${notesSuffix}`;
@@ -462,14 +462,14 @@ function domainSkillInterpretation(skill: GenerationSkillInput): string | null {
 
   if (skill.domainType === "object_identification") {
     const d = skill.structuredData as unknown as ObjectIdentificationData | null;
-    if (!d?.itemsCorrectlyIdentified && d?.accuracyPercent === null) return null;
+    if (!d || (!d.itemsCorrectlyIdentified && d.accuracyPercent === null)) return null;
     const accuracyPhrase = d?.accuracyPercent !== null && d?.accuracyPercent !== undefined ? ` (${d.accuracyPercent}% accuracy)` : "";
     return `${skill.label}: ${CHILD} correctly identified ${d?.itemsCorrectlyIdentified ?? "the target items"}${accuracyPhrase}.${notesSuffix}`;
   }
 
   if (skill.domainType === "concept_understanding") {
     const d = skill.structuredData as unknown as ConceptUnderstandingData | null;
-    if (!d?.concept && d?.accuracyPercent === null) return null;
+    if (!d || (!d.concept && d.accuracyPercent === null)) return null;
     const accuracyPhrase = d?.accuracyPercent !== null && d?.accuracyPercent !== undefined ? `: ${d.accuracyPercent}% accuracy` : "";
     return `${d?.concept ?? skill.label}${accuracyPhrase}.${notesSuffix}`;
   }
@@ -477,7 +477,7 @@ function domainSkillInterpretation(skill: GenerationSkillInput): string | null {
   if (skill.domainType === "tacting_naming") {
     const d = skill.structuredData as unknown as TactingNamingData | null;
     const items = d?.itemsLabelled?.filter(Boolean) ?? [];
-    if (items.length === 0 && d?.accuracyPercent === null) return null;
+    if (!d || (items.length === 0 && d.accuracyPercent === null)) return null;
     const promptPhrase = skill.promptLevel ? `, ${skill.promptLevel.replace("_", " ")}` : "";
     const accuracyPhrase = d?.accuracyPercent !== null && d?.accuracyPercent !== undefined ? ` (${d.accuracyPercent}% accuracy)` : "";
     return `${skill.label}: ${CHILD} labelled ${items.length ? joinList(items) : "the target items"}${accuracyPhrase}${promptPhrase}.${notesSuffix}`;

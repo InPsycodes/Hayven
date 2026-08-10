@@ -7,36 +7,32 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { saveReport } from "@/lib/reports/actions";
-import type { ReportBlock, ReportBody, ReportSection } from "@/lib/reports/types";
+import type { ReportBlock, ReportBody } from "@/lib/reports/types";
 
 const READ_ONLY_SECTIONS = new Set(["data_summary"]);
 
-function sectionToText(section: ReportSection): string {
-  return section.blocks
-    .map((block) => {
-      if (block.type === "paragraph" || block.type === "quote") return block.text ?? "";
-      if (block.type === "bullets") return (block.items ?? []).map((i) => `- ${i}`).join("\n");
-      return "";
-    })
-    .join("\n\n");
+function blockToText(block: ReportBlock): string {
+  if (block.type === "paragraph" || block.type === "quote") return block.text ?? "";
+  if (block.type === "bullets") return (block.items ?? []).map((i) => `- ${i}`).join("\n");
+  return "";
 }
 
-/** Round-trips a bulleted section back into bullets instead of flattening it into one paragraph, so editing "Recommendations" doesn't lose its list structure. */
-function textToBlocks(section: ReportSection, text: string): ReportBlock[] {
-  const wasBullets = section.blocks.some((b) => b.type === "bullets");
-  if (!wasBullets) return [{ type: "paragraph", text }];
-
-  const items = text
-    .split("\n")
-    .map((line) => line.trim().replace(/^-\s*/, ""))
-    .filter((line) => line.length > 0);
-  return [{ type: "bullets", items }];
+/** Edits each block's own text/items in place, preserving its type and label (e.g. a clinical_interpretation section's per-domain headings), instead of flattening the whole section into one paragraph. */
+function textToBlock(block: ReportBlock, text: string): ReportBlock {
+  if (block.type === "bullets") {
+    const items = text
+      .split("\n")
+      .map((line) => line.trim().replace(/^-\s*/, ""))
+      .filter((line) => line.length > 0);
+    return { ...block, items };
+  }
+  return { ...block, text };
 }
 
 export function ReportEditor({ reportId, body }: { reportId: string; body: ReportBody }) {
-  const [texts, setTexts] = useState<Record<string, string>>(
+  const [texts, setTexts] = useState<Record<string, string[]>>(
     Object.fromEntries(
-      body.sections.filter((s) => !READ_ONLY_SECTIONS.has(s.key)).map((s) => [s.key, sectionToText(s)])
+      body.sections.filter((s) => !READ_ONLY_SECTIONS.has(s.key)).map((s) => [s.key, s.blocks.map(blockToText)])
     )
   );
   const [isPending, startTransition] = useTransition();
@@ -55,7 +51,7 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
             : {
                 key: section.key,
                 heading: section.heading,
-                blocks: textToBlocks(section, texts[section.key] ?? ""),
+                blocks: section.blocks.map((block, i) => textToBlock(block, texts[section.key]?.[i] ?? "")),
               }
         ),
       };
@@ -83,17 +79,30 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
             </div>
           </div>
         ) : (
-          <div key={section.key} className="flex flex-col gap-2 rounded-sm bg-white p-4 ring-1 ring-border">
-            <Label htmlFor={`section-${section.key}`}>{section.heading}</Label>
-            <Textarea
-              id={`section-${section.key}`}
-              rows={5}
-              value={texts[section.key] ?? ""}
-              onChange={(e) => {
-                setTexts((prev) => ({ ...prev, [section.key]: e.target.value }));
-                setStatus("idle");
-              }}
-            />
+          <div key={section.key} className="flex flex-col gap-3 rounded-sm bg-white p-4 ring-1 ring-border">
+            <Label>{section.heading}</Label>
+            {section.blocks.map((block, i) => (
+              <div key={i} className="flex flex-col gap-1">
+                {block.label && (
+                  <Label htmlFor={`section-${section.key}-${i}`} className="text-xs text-muted-foreground">
+                    {block.label}
+                  </Label>
+                )}
+                <Textarea
+                  id={`section-${section.key}-${i}`}
+                  rows={block.type === "bullets" ? Math.max(3, (block.items?.length ?? 1) + 1) : 5}
+                  value={texts[section.key]?.[i] ?? ""}
+                  onChange={(e) => {
+                    setTexts((prev) => {
+                      const next = [...(prev[section.key] ?? [])];
+                      next[i] = e.target.value;
+                      return { ...prev, [section.key]: next };
+                    });
+                    setStatus("idle");
+                  }}
+                />
+              </div>
+            ))}
           </div>
         )
       )}
@@ -104,7 +113,7 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
         <Button onClick={handleSave} disabled={isPending}>
           {isPending ? "Saving..." : "Save report"}
         </Button>
-        {status === "saved" && <span className="text-sm text-success">Saved.</span>}
+        {status === "saved" && <span className="fade-in text-sm text-success">Saved.</span>}
       </div>
     </div>
   );
