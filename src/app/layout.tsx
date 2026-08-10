@@ -46,7 +46,10 @@ export default function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>
+        {/* suppressHydrationWarning: only silences attribute mismatches on
+            this element (e.g. Grammarly injecting data-gr-ext-installed
+            before React hydrates), not real hydration bugs in children. */}
         {/* Disabled in dev: an installed service worker can keep serving a
             stale cached page indefinitely, even after a hard refresh, which
             makes live-testing bug fixes on a phone unreliable. Real PWA
