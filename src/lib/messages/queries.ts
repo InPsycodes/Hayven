@@ -37,7 +37,9 @@ export interface RealThreadPreview {
   lastMessageSenderId: string | null;
 }
 
-/** One thread per confirmed/completed booking, even before a first message is sent. */
+const THREAD_LIST_LIMIT = 50;
+
+/** One thread per confirmed/completed booking, even before a first message is sent. Runs on every page load via the nav sidebar's unread badge, so it's bounded and batches the counterpart-name lookup into one query instead of one per booking. */
 export async function getRealMessageThreadsForParent(parentId: string): Promise<RealThreadPreview[]> {
   const supabase = await createClient();
   const { data: bookingsData } = await supabase
@@ -45,24 +47,29 @@ export async function getRealMessageThreadsForParent(parentId: string): Promise<
     .select("id, therapist_id, created_at")
     .eq("parent_id", parentId)
     .in("status", ["confirmed", "completed"])
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(THREAD_LIST_LIMIT);
   if (!bookingsData || bookingsData.length === 0) return [];
+
+  const therapistIds = [...new Set(bookingsData.map((b) => b.therapist_id))];
+  const { data: therapistRows } = await supabase
+    .from("therapist_public_profiles")
+    .select("id, display_name")
+    .in("id", therapistIds);
+  const therapistNameById = new Map((therapistRows ?? []).map((t) => [t.id, t.display_name]));
 
   return Promise.all(
     bookingsData.map(async (b) => {
-      const [{ data: therapistPublic }, { data: lastMsg }] = await Promise.all([
-        supabase.from("therapist_public_profiles").select("display_name").eq("id", b.therapist_id).maybeSingle(),
-        supabase
-          .from("messages")
-          .select("content, sender_id")
-          .eq("booking_id", b.id)
-          .order("sent_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
+      const { data: lastMsg } = await supabase
+        .from("messages")
+        .select("content, sender_id")
+        .eq("booking_id", b.id)
+        .order("sent_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       return {
         bookingId: b.id,
-        counterpartName: therapistPublic?.display_name ?? "Therapist",
+        counterpartName: therapistNameById.get(b.therapist_id) ?? "Therapist",
         lastMessage: lastMsg?.content ?? null,
         lastMessageSenderId: lastMsg?.sender_id ?? null,
       };
@@ -87,24 +94,26 @@ export async function getRealMessageThreadsForTherapist(
     .select("id, parent_id, created_at")
     .eq("therapist_id", therapistProfileId)
     .in("status", ["confirmed", "completed"])
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(THREAD_LIST_LIMIT);
   if (!bookingsData || bookingsData.length === 0) return [];
+
+  const parentIds = [...new Set(bookingsData.map((b) => b.parent_id))];
+  const { data: parentRows } = await admin.from("users").select("id, full_name").in("id", parentIds);
+  const parentNameById = new Map((parentRows ?? []).map((u) => [u.id, u.full_name]));
 
   return Promise.all(
     bookingsData.map(async (b) => {
-      const [{ data: parentUser }, { data: lastMsg }] = await Promise.all([
-        admin.from("users").select("full_name").eq("id", b.parent_id).maybeSingle(),
-        supabase
-          .from("messages")
-          .select("content, sender_id")
-          .eq("booking_id", b.id)
-          .order("sent_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
+      const { data: lastMsg } = await supabase
+        .from("messages")
+        .select("content, sender_id")
+        .eq("booking_id", b.id)
+        .order("sent_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       return {
         bookingId: b.id,
-        counterpartName: parentUser?.full_name ?? "Parent",
+        counterpartName: parentNameById.get(b.parent_id) ?? "Parent",
         lastMessage: lastMsg?.content ?? null,
         lastMessageSenderId: lastMsg?.sender_id ?? null,
       };

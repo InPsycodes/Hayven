@@ -161,10 +161,16 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
     .filter((r): r is RealRefundOwed => r !== null);
 }
 
-/** Cheap-enough count for a sidebar badge -- reuses the full query since the filter happens in JS (see above). */
+/** Cheap count-only query for a sidebar badge -- filters on the joined booking status at the DB level via an inner join, instead of pulling every successful payment's full row (parent/child/therapist joins) just to count them. */
 export async function getPendingRefundCount(): Promise<number> {
-  const refunds = await getBookingsNeedingRefund();
-  return refunds.length;
+  const supabase = createAdminClient();
+  const { count } = await supabase
+    .from("payments")
+    .select("id, bookings!inner(status)", { count: "exact", head: true })
+    .eq("status", "successful")
+    .eq("type", "session_commission")
+    .eq("bookings.status", "cancelled");
+  return count ?? 0;
 }
 
 export async function getRealVerificationRequests(
