@@ -15,7 +15,7 @@ const STORY = [
   "I began to imagine a different experience.",
   "What if parents could start understanding their child even before they walked through the clinic doors? What if they could access clear, trustworthy information, understand what their child was experiencing, know what to expect, and feel involved throughout the care journey?",
   "That vision became Hayven.",
-  "Hayven exists to create a personal connection between a mother, her child, and the support they both need. We help parents and caregivers better understand their children and stay connected to their care — from the first questions they have, through assessment and therapy, and along the journey that follows.",
+  "Hayven exists to create a personal connection between a mother, her child, and the support they both need. We help parents and caregivers better understand their children and stay connected to their care, from the first questions they have, through assessment and therapy, and along the journey that follows.",
   "Because parents shouldn't feel like they are standing outside their child's care, trying to figure everything out alone.",
   "We believe that when parents understand more, they can support their children with greater confidence, connection, and compassion.",
   "That is why we built Hayven.",
@@ -40,7 +40,7 @@ export default function AboutPage() {
           </div>
 
           <p className="mt-10 border-t border-charcoal/10 pt-6 text-sm font-medium text-charcoal">
-            — Ademola, Founder of Hayven
+            Ademola, Founder of Hayven
           </p>
         </div>
       </section>

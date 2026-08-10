@@ -27,7 +27,7 @@ export function DeleteAccountSection({
       <div>
         <h2 className="font-heading text-base text-charcoal">Delete my account</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          This isn&apos;t instant — a member of our team reviews every request and follows up by email
+          This isn&apos;t instant; a member of our team reviews every request and follows up by email
           before anything is deleted, since records tied to your account may still be in active use.
         </p>
       </div>

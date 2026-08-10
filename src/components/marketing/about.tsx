@@ -35,7 +35,7 @@ export function About() {
             Helping families understand, connect, and feel supported.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-soft">
-            Hayven was born from a personal experience — seeing firsthand how overwhelming it can
+            Hayven was born from a personal experience: seeing firsthand how overwhelming it can
             be for parents facing a new diagnosis, often without clear information or anyone they
             can trust. We built the platform we wished existed: one that helps parents understand
             their child and stay connected to their care, from the first questions through therapy

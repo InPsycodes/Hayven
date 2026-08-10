@@ -24,14 +24,14 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
           "Search for a therapist, pick an available time slot, and pay to confirm. You'll get a confirmation once payment goes through.",
       },
       {
-        question: "Virtual or in-person — how do I choose?",
+        question: "Virtual or in-person: how do I choose?",
         answer:
           "Each therapist lists which formats they offer; you pick when you book. Virtual sessions get a meeting link once confirmed.",
       },
       {
         question: "Can I cancel a session?",
         answer:
-          "Yes, from Sessions, up until the session's start time. Cancelling a session you've already paid for doesn't refund automatically — Hayven's team follows up separately to process it.",
+          "Yes, from Sessions, up until the session's start time. Cancelling a session you've already paid for doesn't refund automatically. Hayven's team follows up separately to process it.",
         role: "parent",
       },
       {
@@ -107,7 +107,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
       {
         question: "How do I delete my account?",
         answer:
-          "Request it from Profile. It isn't instant — Hayven's team reviews every request and follows up by email before anything is deleted, since records tied to your account may still be in active use.",
+          "Request it from Profile. It isn't instant; Hayven's team reviews every request and follows up by email before anything is deleted, since records tied to your account may still be in active use.",
       },
     ],
   },
