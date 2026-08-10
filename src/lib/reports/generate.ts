@@ -60,11 +60,11 @@ interface MotorSpeechDttcData {
   performance: string | null;
 }
 
-/** Threshold bands shared by every domain's parent-facing percent-based sentence -- same bands proven for Name Response, never a per-domain invented scale. */
-function percentBand(percent: number, high: string, mid: string, low: string): string {
-  if (percent >= 70) return high;
-  if (percent >= 40) return mid;
-  return low;
+/** Threshold bands shared by every domain's parent-facing percent-based sentence -- same bands proven for Name Response, never a per-domain invented scale. Each band offers a few therapist-voiced phrasings (drawn from real approved reports) so the same skill at the same performance level doesn't read identically in every report. */
+function percentBand(percent: number, seed: string, high: string[], mid: string[], low: string[]): string {
+  if (percent >= 70) return pickVariant(high, seed);
+  if (percent >= 40) return pickVariant(mid, seed);
+  return pickVariant(low, seed);
 }
 
 /** Strips trailing periods (and trailing whitespace) off free text before a template appends its own -- otherwise a therapist ending their own sentence with "." produces a visible ".." wherever that text is quoted mid-sentence. */
@@ -877,13 +877,22 @@ function domainSkillParentSentence(
     const d = skill.structuredData as unknown as NameResponseData | null;
     const best = Math.max(d?.orientationPercent ?? -1, d?.approachPercent ?? -1);
     if (best < 0) return null;
-    if (best >= 70) {
-      return `${CHILD} responded well to ${CHILD}'s name today, looking and moving toward the therapist during most opportunities.`;
-    }
-    if (best >= 40) {
-      return `${CHILD} responded to ${CHILD}'s name several times today. We're continuing to build on this.`;
-    }
-    return `We're still working on ${CHILD}'s response to ${CHILD}'s name -- this is an early stage for this skill, and that's completely normal.`;
+    return percentBand(
+      best,
+      skill.id,
+      [
+        `${CHILD} responded well to ${CHILD}'s name today, looking and moving toward the therapist during most opportunities.`,
+        `${CHILD} did a great job responding to ${CHILD}'s name today, looking over and coming when called most of the time.`,
+      ],
+      [
+        `${CHILD} responded to ${CHILD}'s name several times today. We're continuing to build on this.`,
+        `${CHILD} is getting better at responding when we call ${CHILD}'s name -- it happened several times today.`,
+      ],
+      [
+        `We're still working on ${CHILD}'s response to ${CHILD}'s name -- this is an early stage for this skill, and that's completely normal.`,
+        `Responding to ${CHILD}'s name is still an early skill we're building -- ${CHILD} is just starting to notice and turn toward us when called.`,
+      ]
+    );
   }
 
   if (skill.domainType === "functional_communication") {
@@ -891,14 +900,26 @@ function domainSkillParentSentence(
     const requests = d?.requestsObserved?.filter(Boolean) ?? [];
     if (requests.length === 0) return null;
     const promptPhrase = skill.promptLevel === "independent" ? "independently " : "";
-    return `${CHILD} did well using sounds, words, and gestures to communicate what ${CHILD} wanted. ${CHILD} ${promptPhrase}requested ${joinList(cleanList(requests))} during the session.`;
+    return pickVariant(
+      [
+        `${CHILD} did well using sounds, words, and gestures to communicate what ${CHILD} wanted. ${CHILD} ${promptPhrase}requested ${joinList(cleanList(requests))} during the session.`,
+        `${CHILD} did a great job asking for what ${CHILD} wanted today, using sounds, words, and gestures. ${CHILD} ${promptPhrase}asked for ${joinList(cleanList(requests))} during the session.`,
+      ],
+      skill.id
+    );
   }
 
   if (skill.domainType === "speech_approximation") {
     const d = skill.structuredData as unknown as SpeechApproximationData | null;
     if (!d?.wordOrSound) return null;
     const approximationPhrase = d.approximation ? `, and said something close to "${clean(d.approximation)}"` : "";
-    return `${CHILD} practised saying "${clean(d.wordOrSound)}" today${approximationPhrase}. Every attempt like this builds toward clearer speech.`;
+    return pickVariant(
+      [
+        `${CHILD} practised saying "${clean(d.wordOrSound)}" today${approximationPhrase}. Every attempt like this builds toward clearer speech.`,
+        `${CHILD} gave "${clean(d.wordOrSound)}" a try today${approximationPhrase} -- every attempt like this is a real step toward clearer speech.`,
+      ],
+      skill.id
+    );
   }
 
   if (skill.domainType === "communicative_initiation") {
@@ -908,7 +929,13 @@ function domainSkillParentSentence(
     if (d?.vocalizationPercent) modalities.push("sounds");
     if (d?.gesturePercent) modalities.push("gestures");
     if (modalities.length === 0) return null;
-    return `${CHILD} reached out to start communication today using ${joinList(modalities)}.`;
+    return pickVariant(
+      [
+        `${CHILD} reached out to start communication today using ${joinList(modalities)}.`,
+        `${CHILD} reached out to communicate today using ${joinList(modalities)} -- using more than one way at once like this is a great sign.`,
+      ],
+      skill.id
+    );
   }
 
   if (skill.domainType === "receptive_instructions") {
@@ -917,16 +944,32 @@ function domainSkillParentSentence(
     const instructionPhrase = d.instruction ? `, including "${clean(d.instruction)}"` : "";
     return percentBand(
       d.accuracyPercent,
-      `${CHILD} followed instructions very well today${instructionPhrase}.`,
-      `${CHILD} followed instructions several times today${instructionPhrase}. We're continuing to build on this.`,
-      `We're still working on ${CHILD} following instructions consistently -- this is an early stage, and that's completely normal.`
+      skill.id,
+      [
+        `${CHILD} followed instructions very well today${instructionPhrase}.`,
+        `${CHILD} did a fantastic job following instructions today${instructionPhrase}.`,
+      ],
+      [
+        `${CHILD} followed instructions several times today${instructionPhrase}. We're continuing to build on this.`,
+        `${CHILD} followed instructions well several times today${instructionPhrase} -- we're keeping up the practice.`,
+      ],
+      [
+        `We're still working on ${CHILD} following instructions consistently -- this is an early stage, and that's completely normal.`,
+        `${CHILD} is just starting to follow this kind of instruction${instructionPhrase} -- that's completely normal at this stage.`,
+      ]
     );
   }
 
   if (skill.domainType === "object_identification") {
     const d = skill.structuredData as unknown as ObjectIdentificationData | null;
     if (!d?.itemsCorrectlyIdentified) return null;
-    return `${CHILD} did well identifying ${clean(d.itemsCorrectlyIdentified)} today.`;
+    return pickVariant(
+      [
+        `${CHILD} did well identifying ${clean(d.itemsCorrectlyIdentified)} today.`,
+        `${CHILD} did a great job finding ${clean(d.itemsCorrectlyIdentified)} today.`,
+      ],
+      skill.id
+    );
   }
 
   if (skill.domainType === "concept_understanding") {
@@ -935,9 +978,19 @@ function domainSkillParentSentence(
     const conceptName = d.concept ? clean(d.concept) : "this concept";
     return percentBand(
       d.accuracyPercent,
-      `${CHILD} showed a strong understanding of ${conceptName} today.`,
-      `${CHILD} is building an understanding of ${conceptName}, with several correct responses today.`,
-      `We're just starting to introduce ${conceptName} -- this is an early stage for it.`
+      skill.id,
+      [
+        `${CHILD} showed a strong understanding of ${conceptName} today.`,
+        `${CHILD} really understood ${conceptName} today -- great work.`,
+      ],
+      [
+        `${CHILD} is building an understanding of ${conceptName}, with several correct responses today.`,
+        `${CHILD} is starting to get the hang of ${conceptName}, getting it right several times today.`,
+      ],
+      [
+        `We're just starting to introduce ${conceptName} -- this is an early stage for it.`,
+        `We're just starting to introduce ${conceptName} -- we'll go at ${CHILD}'s pace.`,
+      ]
     );
   }
 
@@ -945,21 +998,39 @@ function domainSkillParentSentence(
     const d = skill.structuredData as unknown as TactingNamingData | null;
     const items = d?.itemsLabelled?.filter(Boolean) ?? [];
     if (items.length === 0) return null;
-    return `${CHILD} did well naming ${joinList(cleanList(items))} today.`;
+    return pickVariant(
+      [
+        `${CHILD} did well naming ${joinList(cleanList(items))} today.`,
+        `${CHILD} did a nice job naming ${joinList(cleanList(items))} today.`,
+      ],
+      skill.id
+    );
   }
 
   if (skill.domainType === "mand_diversity") {
     const d = skill.structuredData as unknown as MandDiversityData | null;
     const words = d?.newRequestWords?.filter(Boolean) ?? [];
     if (words.length === 0) return null;
-    return `${CHILD} used several different words to ask for things today, including ${joinList(cleanList(words))}.`;
+    return pickVariant(
+      [
+        `${CHILD} used several different words to ask for things today, including ${joinList(cleanList(words))}.`,
+        `${CHILD} is expanding the words ${CHILD} uses to ask for things -- today that included ${joinList(cleanList(words))}.`,
+      ],
+      skill.id
+    );
   }
 
   if (skill.domainType === "motor_speech_dttc") {
     const d = skill.structuredData as unknown as MotorSpeechDttcData | null;
     const practised = d?.soundsWordsPractised?.filter(Boolean) ?? [];
     if (practised.length === 0) return null;
-    return `${CHILD} practised saying ${joinList(cleanList(practised))} today.`;
+    return pickVariant(
+      [
+        `${CHILD} practised saying ${joinList(cleanList(practised))} today.`,
+        `${CHILD} worked on saying ${joinList(cleanList(practised))} today -- steady practice like this builds toward clearer speech over time.`,
+      ],
+      skill.id
+    );
   }
 
   if (skill.domainType === "functional_independence") {
@@ -970,11 +1041,30 @@ function domainSkillParentSentence(
       : "";
     const independencePhrase =
       d.independenceLevel === "independent"
-        ? ` This was a great example of ${CHILD}'s developing ability to do this independently.`
+        ? pickVariant(
+            [
+              ` This was a great example of ${CHILD}'s developing ability to do this independently.`,
+              ` ${CHILD} handled this completely independently today -- a real step forward.`,
+            ],
+            skill.id
+          )
         : d.independenceLevel
-          ? ` ${CHILD} needed some support with this today, which is a normal part of learning.`
+          ? pickVariant(
+              [
+                ` ${CHILD} needed some support with this today, which is a normal part of learning.`,
+                ` ${CHILD} needed a bit of help with this today -- that's a normal part of the process.`,
+              ],
+              skill.id
+            )
           : "";
-    return `One of the highlights of today's session was ${CHILD}'s progress with ${(ACTIVITY_LABEL[d.activity] ?? d.activity).toLowerCase()}.${modalityPhrase}${independencePhrase}`;
+    const leadSentence = pickVariant(
+      [
+        `One of the highlights of today's session was ${CHILD}'s progress with ${(ACTIVITY_LABEL[d.activity] ?? d.activity).toLowerCase()}.`,
+        `A real highlight today was ${CHILD}'s progress with ${(ACTIVITY_LABEL[d.activity] ?? d.activity).toLowerCase()}.`,
+      ],
+      skill.id
+    );
+    return `${leadSentence}${modalityPhrase}${independencePhrase}`;
   }
 
   return null;
