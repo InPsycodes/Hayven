@@ -207,7 +207,12 @@ export async function getRealVerificationRequests(
           supabase
             .from("credentials")
             .select("id, document_type, file_url, issuing_body, membership_number, uploaded_at")
-            .eq("therapist_id", request.therapist_id),
+            .eq("therapist_id", request.therapist_id)
+            // Resubmission after "needs more info" inserts a new row rather
+            // than replacing the old one (no link to a specific verification
+            // request to scope by), so without this order credentials[0]
+            // below is an arbitrary row, not necessarily the current one.
+            .order("uploaded_at", { ascending: false }),
         ]);
 
       const user = profile?.users as unknown as { full_name: string; email: string } | null;
