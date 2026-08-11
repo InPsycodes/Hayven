@@ -14,7 +14,7 @@ import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId, getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { getRealBookingsForTherapist } from "@/lib/booking/queries";
 import { cancelBookingAsTherapist } from "@/lib/booking/actions";
-import { formatDateTime } from "@/data/format";
+import { formatDateTime, toLagosWallClock, fromLagosWallClock } from "@/data/format";
 
 type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
 
@@ -23,11 +23,12 @@ const STATUS_LABEL: Record<string, { label: string; tone: Tone }> = {
   pending_payment: { label: "Awaiting payment", tone: "amber" },
 };
 
+/** Returns a Lagos wall-clock proxy Date (see toLagosWallClock) for the Monday of the given week offset, so "this week" is determined by the Lagos calendar day, not the server/UTC one. */
 function mondayOfWeek(offsetWeeks: number): Date {
-  const now = new Date();
-  const day = now.getUTCDay();
+  const nowLagos = toLagosWallClock(new Date());
+  const day = nowLagos.getUTCDay();
   const diffToMonday = (day + 6) % 7;
-  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const monday = new Date(Date.UTC(nowLagos.getUTCFullYear(), nowLagos.getUTCMonth(), nowLagos.getUTCDate()));
   monday.setUTCDate(monday.getUTCDate() - diffToMonday + offsetWeeks * 7);
   return monday;
 }
@@ -45,14 +46,18 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
 
   const { offset } = await searchParams;
   const offsetWeeks = Number(offset ?? 0) || 0;
+  // weekStart/weekEnd are Lagos wall-clock proxies (see toLagosWallClock) --
+  // convert to true UTC instants before querying stored timestamptz data.
   const weekStart = mondayOfWeek(offsetWeeks);
   const weekEnd = new Date(weekStart);
   weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+  const weekEndOfDay = new Date(weekEnd);
+  weekEndOfDay.setUTCHours(23, 59, 59, 999);
 
   const [realSlots, realBookings] = await Promise.all([
     getRealAvailabilityForTherapist(therapist.id, {
-      from: `${weekStart.toISOString().slice(0, 10)}T00:00:00Z`,
-      to: `${weekEnd.toISOString().slice(0, 10)}T23:59:59Z`,
+      from: fromLagosWallClock(weekStart).toISOString(),
+      to: fromLagosWallClock(weekEndOfDay).toISOString(),
     }),
     getRealBookingsForTherapist(therapist.id),
   ]);

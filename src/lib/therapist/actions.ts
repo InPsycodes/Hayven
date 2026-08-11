@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/session";
+import { lagosWallClockToUtcIso } from "@/data/format";
 import { professionalBodyLabel } from "./professional-bodies";
 
 export interface FormState {
@@ -288,8 +289,8 @@ export async function addAvailabilitySlot(
     return { error: "Please choose a session type." };
   }
 
-  const startIso = new Date(`${date}T${startTime}:00Z`).toISOString();
-  const endIso = new Date(`${date}T${endTime}:00Z`).toISOString();
+  const startIso = lagosWallClockToUtcIso(date, startTime);
+  const endIso = lagosWallClockToUtcIso(date, endTime);
   if (new Date(endIso) <= new Date(startIso)) {
     return { error: "End time must be after start time." };
   }

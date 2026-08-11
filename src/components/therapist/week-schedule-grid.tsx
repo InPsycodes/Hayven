@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { formatTime } from "@/data/format";
+import { formatTime, toLagosWallClock } from "@/data/format";
 
 const HOURS = [9, 10, 11, 12, 13, 14, 15, 16];
 
@@ -27,7 +27,7 @@ export function WeekScheduleGrid({
   slots,
   bookings,
 }: {
-  weekStart: Date; // Monday, UTC midnight
+  weekStart: Date; // Monday, Lagos wall-clock proxy (see toLagosWallClock)
   slots: ScheduleSlot[];
   bookings: ScheduleBooking[];
 }) {
@@ -37,17 +37,21 @@ export function WeekScheduleGrid({
     return d;
   });
 
-  const todayISO = new Date().toISOString().slice(0, 10);
+  const todayISO = toLagosWallClock(new Date()).toISOString().slice(0, 10);
 
   const bookingBySlotId = new Map(bookings.map((b) => [b.availabilitySlotId, b]));
   const nextBooking = bookings
     .filter((b) => b.status === "confirmed")
     .sort((a, b) => a.startTime.localeCompare(b.startTime))[0];
 
+  // slot.startTime/booking.startTime are true UTC from the database --
+  // convert to the same Lagos wall-clock proxy space as weekStart/dateISO
+  // before comparing, so an evening slot doesn't land on the wrong day/hour.
   function stateFor(dateISO: string, hour: number): { state: CellState; slot?: ScheduleSlot; booking?: ScheduleBooking } {
-    const slot = slots.find(
-      (s) => s.startTime.startsWith(dateISO) && new Date(s.startTime).getUTCHours() === hour
-    );
+    const slot = slots.find((s) => {
+      const proxy = toLagosWallClock(new Date(s.startTime));
+      return proxy.toISOString().startsWith(dateISO) && proxy.getUTCHours() === hour;
+    });
     if (!slot) return { state: "open" };
     if (!slot.isBooked) return { state: "open", slot };
 

@@ -16,9 +16,8 @@ async function getTherapistSidebarCounts(session: AppSession): Promise<Record<st
   const therapist = await getRealTherapistProfileByUserId(session.userId);
   if (!therapist) return {};
 
-  const todayISODate = new Date().toISOString().slice(0, 10);
   const [todaysBookings, caseloadCount, threads] = await Promise.all([
-    getRealTodaysBookingsForTherapist(therapist.id, todayISODate),
+    getRealTodaysBookingsForTherapist(therapist.id),
     getRealActiveClientCountForTherapist(therapist.id),
     getRealMessageThreadsForTherapist(therapist.id),
   ]);

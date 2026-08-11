@@ -1,19 +1,26 @@
 import type { AvailabilitySlot, SessionType } from "../types";
 
+// Africa/Lagos is UTC+1 year-round (no DST), so an hour typed as Lagos wall
+// clock time converts to true UTC by subtracting 1 -- matches the real
+// conversion in src/lib/therapist/actions.ts's addAvailabilitySlot.
+const LAGOS_OFFSET_HOURS = 1;
+
 function mkSlot(
   id: string,
   therapistId: string,
   date: string,
-  startHour: number,
+  startHourLagos: number,
   sessionType: SessionType,
   isBooked = false
 ): AvailabilitySlot {
   const pad = (n: number) => n.toString().padStart(2, "0");
+  const startUtcHour = startHourLagos - LAGOS_OFFSET_HOURS;
+  const endUtcHour = startHourLagos + 1 - LAGOS_OFFSET_HOURS;
   return {
     id,
     therapistId,
-    startTime: `${date}T${pad(startHour)}:00:00Z`,
-    endTime: `${date}T${pad(startHour + 1)}:00:00Z`,
+    startTime: `${date}T${pad(startUtcHour)}:00:00Z`,
+    endTime: `${date}T${pad(endUtcHour)}:00:00Z`,
     isBooked,
     sessionType,
   };

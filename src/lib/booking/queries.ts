@@ -6,6 +6,7 @@ import { getAvailabilityForTherapist } from "@/data/queries";
 import { getDiscoveryTherapistById, type DiscoveryTherapist } from "@/lib/therapist/discovery";
 import { getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
+import { toLagosWallClock } from "@/data/format";
 import type { AvailabilitySlot } from "@/data/types";
 
 /**
@@ -199,9 +200,9 @@ export interface RealTodayBooking {
 }
 
 /** Powers the therapist dashboard's "Today's schedule" list. */
+/** "Today" is always the Lagos calendar day, not the server's -- computed here rather than passed in, so callers can't each get the boundary wrong near midnight. */
 export async function getRealTodaysBookingsForTherapist(
-  therapistId: string,
-  todayISODate: string
+  therapistId: string
 ): Promise<RealTodayBooking[]> {
   await autoCompletePastBookings(therapistId);
   const supabase = await createClient();
@@ -211,6 +212,8 @@ export async function getRealTodaysBookingsForTherapist(
     .eq("therapist_id", therapistId)
     .in("status", ["confirmed", "completed"]);
   if (error || !data) return [];
+
+  const todayISODate = toLagosWallClock(new Date()).toISOString().slice(0, 10);
 
   return data
     .map((row) => {
@@ -224,7 +227,7 @@ export async function getRealTodaysBookingsForTherapist(
         childFirstName: child?.first_name ?? "Unknown",
       };
     })
-    .filter((b) => b.slotStartTime.startsWith(todayISODate))
+    .filter((b) => b.slotStartTime && toLagosWallClock(new Date(b.slotStartTime)).toISOString().startsWith(todayISODate))
     .sort((a, b) => a.slotStartTime.localeCompare(b.slotStartTime));
 }
 

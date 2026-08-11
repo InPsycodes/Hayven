@@ -10,7 +10,7 @@ import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-
 import { Reveal } from "@/components/marketing/reveal";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
-import { formatNaira, formatDate } from "@/data/format";
+import { formatNaira, formatDate, LAGOS_TZ } from "@/data/format";
 import {
   getRealActiveClientCountForTherapist,
   getRealEarningsForTherapist,
@@ -27,10 +27,9 @@ export default async function TherapistDashboardPage() {
   if (!therapist) return <IncompleteProfileNotice />;
 
   const today = new Date();
-  const todayISODate = today.toISOString().slice(0, 10);
 
   const [todaysBookings, activeClients, reportSummary, earnings, threads] = await Promise.all([
-    getRealTodaysBookingsForTherapist(therapist.id, todayISODate),
+    getRealTodaysBookingsForTherapist(therapist.id),
     getRealActiveClientCountForTherapist(therapist.id),
     getReportWorkflowSummary(therapist.id),
     getRealEarningsForTherapist(session.userId),
@@ -49,7 +48,7 @@ export default async function TherapistDashboardPage() {
       <DashboardHeader
         session={session}
         greeting={`Good morning, ${session.name.replace("Dr. ", "Dr. ")}`}
-        subtext={`${today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} · ${todaysBookings.length} session${todaysBookings.length === 1 ? "" : "s"} today`}
+        subtext={`${today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: LAGOS_TZ })} · ${todaysBookings.length} session${todaysBookings.length === 1 ? "" : "s"} today`}
       />
 
       <div className="flex flex-col gap-8 px-5 py-6 md:px-10 md:py-8">
