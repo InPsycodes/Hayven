@@ -62,6 +62,7 @@ export default async function TherapistProfilePage() {
           initialLocation={therapist.location}
           initialSessionTypes={therapist.sessionTypes}
           initialYearsPracticing={therapist.yearsPracticing}
+          initialReportTone={therapist.reportTone}
         />
 
         <Card className="p-5">

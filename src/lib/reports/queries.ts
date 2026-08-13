@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { GenerationInput, GenerationSkillInput, ReportBody } from "./types";
+import type { ToneContext } from "./generate";
 
 export interface RealReport {
   id: string;
@@ -149,6 +150,24 @@ export async function getReportWorkflowSummary(therapistId: string): Promise<Rep
     draftCount,
     publishedCount,
   };
+}
+
+/** Admin-added phrase variants for the given tone, grouped for direct use as a `ToneContext.extra` map. Runs under the caller's own session (RLS), not the service-role client -- report generation is a therapist action, and the table's select policy allows any authenticated read. */
+export async function getPhraseVariants(tone: "warm" | "direct"): Promise<ToneContext["extra"]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("report_phrase_variants")
+    .select("domain_key, band, phrase")
+    .eq("tone", tone);
+
+  const grouped = new Map<string, string[]>();
+  for (const row of data ?? []) {
+    const key = `${row.domain_key}:${row.band ?? "none"}`;
+    const existing = grouped.get(key);
+    if (existing) existing.push(row.phrase);
+    else grouped.set(key, [row.phrase]);
+  }
+  return grouped;
 }
 
 function rawBehaviourValue(

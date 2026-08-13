@@ -27,6 +27,7 @@ export interface RealTherapistProfile {
   yearsPracticing: number | null;
   verificationStatus: string;
   verifiedBadgeLabel: string | null;
+  reportTone: "warm" | "direct";
 }
 
 /** Real therapist_profiles lookup by auth user id -- null if they haven't started/finished onboarding. */
@@ -37,7 +38,7 @@ export async function getRealTherapistProfileByUserId(
   const { data, error } = await supabase
     .from("therapist_profiles")
     .select(
-      "id, user_id, bio, location, session_types, price_per_session, years_practicing, verification_status, verified_badge_label"
+      "id, user_id, bio, location, session_types, price_per_session, years_practicing, verification_status, verified_badge_label, report_tone"
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -54,6 +55,7 @@ export async function getRealTherapistProfileByUserId(
     yearsPracticing: data.years_practicing,
     verificationStatus: data.verification_status,
     verifiedBadgeLabel: data.verified_badge_label,
+    reportTone: data.report_tone === "direct" ? "direct" : "warm",
   };
 }
 

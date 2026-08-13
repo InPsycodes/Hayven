@@ -105,7 +105,7 @@ export default async function TherapySessionPage({
         )}
 
         {!report ? (
-          <GenerateReportButton sessionId={sessionId} />
+          <GenerateReportButton sessionId={sessionId} defaultTone={therapist.reportTone} />
         ) : report.therapistBody ? (
           <>
             <div className="flex flex-col gap-3">

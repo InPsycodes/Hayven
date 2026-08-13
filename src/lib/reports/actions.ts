@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { logAuditEvent } from "@/lib/audit/log";
-import { getGenerationInput } from "./queries";
+import { getGenerationInput, getPhraseVariants } from "./queries";
 import { generateParentReport, generateTherapistReport } from "./generate";
 import type { ReportBody } from "./types";
 
@@ -28,7 +28,8 @@ async function reportBelongsToTherapist(
 }
 
 export async function generateReport(
-  sessionId: string
+  sessionId: string,
+  toneOverride?: "warm" | "direct"
 ): Promise<{ ok: true; reportId: string } | { ok: false; error: string }> {
   const session = await getSession();
   if (!session || session.role !== "therapist") {
@@ -63,11 +64,14 @@ export async function generateReport(
   const input = await getGenerationInput(sessionId);
   if (!input) return { ok: false, error: "Couldn't load session data." };
 
+  const tone = toneOverride ?? therapist.reportTone;
+  const extra = await getPhraseVariants(tone);
+
   const startedAt = Date.now();
   let therapistBody, parentBody;
   try {
     therapistBody = generateTherapistReport(input);
-    parentBody = generateParentReport(input);
+    parentBody = generateParentReport(input, { tone, extra });
   } catch (err) {
     console.error("report generation threw", sessionId, err);
     return { ok: false, error: "Couldn't generate the report from this session's data. Please try again." };

@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
 import { createNotification } from "@/lib/notifications/create";
+import { isValidDomainBand } from "@/lib/reports/phrase-domains";
 
 export type VerificationDecision = "approved" | "rejected" | "needs_more_info";
 
@@ -335,5 +336,67 @@ export async function endSupervisorAssignment(assignmentId: string): Promise<{ o
   });
 
   revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+export async function addReportPhraseVariant(
+  domainKey: string,
+  band: string | null,
+  tone: "warm" | "direct",
+  phrase: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+
+  if (!isValidDomainBand(domainKey, band)) {
+    return { ok: false, error: "Choose a valid domain and band." };
+  }
+  if (!phrase.trim()) {
+    return { ok: false, error: "Enter a phrase." };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("report_phrase_variants")
+    .insert({ domain_key: domainKey, band, tone, phrase: phrase.trim(), created_by: session.userId })
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+
+  await logAuditEvent({
+    actor: session,
+    action: "report_phrase.add",
+    entityType: "report_phrase_variant",
+    entityId: data.id,
+    metadata: { domainKey, band, tone },
+  });
+
+  revalidatePath("/admin/report-phrases");
+  return { ok: true };
+}
+
+export async function deleteReportPhraseVariant(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("report_phrase_variants")
+    .delete()
+    .eq("id", id)
+    .select("id, domain_key, band, tone")
+    .maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "Phrase not found." };
+
+  await logAuditEvent({
+    actor: session,
+    action: "report_phrase.delete",
+    entityType: "report_phrase_variant",
+    entityId: id,
+    metadata: { domainKey: data.domain_key, band: data.band, tone: data.tone },
+  });
+
+  revalidatePath("/admin/report-phrases");
   return { ok: true };
 }

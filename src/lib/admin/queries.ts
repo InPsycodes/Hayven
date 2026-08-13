@@ -477,3 +477,31 @@ export async function getActiveSupervisorAssignments(): Promise<RealSupervisorAs
     startedOn: row.started_on,
   }));
 }
+
+export interface RealReportPhraseVariant {
+  id: string;
+  domainKey: string;
+  band: string | null;
+  tone: "warm" | "direct";
+  phrase: string;
+  createdAt: string;
+}
+
+export async function getReportPhraseVariants(): Promise<RealReportPhraseVariant[]> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("report_phrase_variants")
+    .select("id, domain_key, band, tone, phrase, created_at")
+    .order("domain_key", { ascending: true })
+    .order("band", { ascending: true })
+    .order("tone", { ascending: true });
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    domainKey: row.domain_key,
+    band: row.band,
+    tone: row.tone === "direct" ? "direct" : "warm",
+    phrase: row.phrase,
+    createdAt: row.created_at,
+  }));
+}

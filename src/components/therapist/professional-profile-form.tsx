@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { updateTherapistProfile } from "@/lib/therapist/actions";
 import type { FormState } from "@/lib/therapist/actions";
 
@@ -18,12 +19,14 @@ export function ProfessionalProfileForm({
   initialLocation,
   initialSessionTypes,
   initialYearsPracticing,
+  initialReportTone,
 }: {
   initialBio: string | null;
   initialPrice: number;
   initialLocation: string | null;
   initialSessionTypes: string[];
   initialYearsPracticing: number | null;
+  initialReportTone: "warm" | "direct";
 }) {
   const [state, formAction, isPending] = useActionState(updateTherapistProfile, initialState);
 
@@ -71,6 +74,24 @@ export function ProfessionalProfileForm({
             Virtual
           </label>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>Report tone</Label>
+        <p className="text-xs text-muted-foreground">
+          The default voice for parent-facing report sentences. You can still change this per report when you
+          generate one.
+        </p>
+        <RadioGroup name="reportTone" defaultValue={initialReportTone} className="flex gap-6">
+          <label className="flex items-center gap-2 text-sm text-charcoal">
+            <RadioGroupItem value="warm" />
+            Warm
+          </label>
+          <label className="flex items-center gap-2 text-sm text-charcoal">
+            <RadioGroupItem value="direct" />
+            Direct
+          </label>
+        </RadioGroup>
       </div>
 
       {state.error && <p className="text-sm text-error">{state.error}</p>}

@@ -231,6 +231,8 @@ export async function updateTherapistProfile(_prevState: FormState, formData: Fo
   const yearsPracticing = formData.get("yearsPracticing");
   const inPerson = formData.get("inPerson") === "on";
   const virtual = formData.get("virtual") === "on";
+  const reportToneRaw = formData.get("reportTone");
+  const reportTone = reportToneRaw === "direct" ? "direct" : "warm";
 
   if (typeof bio !== "string" || !bio.trim()) {
     return { error: "Please add a short bio." };
@@ -257,6 +259,7 @@ export async function updateTherapistProfile(_prevState: FormState, formData: Fo
       location: typeof location === "string" && location.trim() ? location.trim() : null,
       session_types: sessionTypes,
       years_practicing: Number.isFinite(parsedYears) && parsedYears >= 0 ? parsedYears : null,
+      report_tone: reportTone,
     })
     .eq("user_id", session.userId);
 

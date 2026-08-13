@@ -10,6 +10,7 @@ import {
   IconHistory,
   IconUserX,
   IconReceiptRefund,
+  IconMessage2,
 } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
@@ -23,6 +24,7 @@ const ADMIN_NAV = [
   { label: "Verification", href: "/admin/verification", icon: IconShieldCheck },
   { label: "Assignments", href: "/admin/users", icon: IconUsers },
   { label: "Reports", href: "/admin/reports", icon: IconReportAnalytics },
+  { label: "Report phrases", href: "/admin/report-phrases", icon: IconMessage2 },
   { label: "Metrics", href: "/admin/metrics", icon: IconChartBar },
   { label: "Audit log", href: "/admin/audit-log", icon: IconHistory },
   { label: "Deletions", href: "/admin/deletion-requests", icon: IconUserX },
