@@ -42,6 +42,26 @@ export async function createPendingBooking(input: {
 
   const admin = createAdminClient();
 
+  // Caps how many slots a single parent account can hold unpaid at once --
+  // without this, a script could cycle through holding and re-holding every
+  // open slot on a therapist's calendar (each hold blocks it for 15 minutes,
+  // never actually paying), keeping it permanently unbookable by real
+  // parents. Scoped to active (not-yet-expired) holds so it doesn't punish
+  // someone for holds that are stale but haven't been cleaned up yet.
+  const MAX_CONCURRENT_HOLDS = 3;
+  const { count: activeHoldCount } = await admin
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("parent_id", session.userId)
+    .eq("status", "pending_payment")
+    .gt("expires_at", new Date().toISOString());
+  if ((activeHoldCount ?? 0) >= MAX_CONCURRENT_HOLDS) {
+    return {
+      ok: false,
+      error: "You have too many sessions waiting on payment right now. Complete or let one expire before holding another.",
+    };
+  }
+
   const { data: slot } = await admin
     .from("availability_slots")
     .select("id, is_booked, therapist_id")
