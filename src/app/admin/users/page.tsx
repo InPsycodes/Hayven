@@ -44,7 +44,7 @@ export default async function AdminUsersPage() {
               rightLabel="Child"
               rightOptions={children}
               submitLabel="Assign"
-              onSubmit={(therapistId, childId) => assignTherapistToChild(therapistId, childId)}
+              onSubmit={assignTherapistToChild}
             />
           </div>
 
@@ -78,7 +78,7 @@ export default async function AdminUsersPage() {
               rightLabel="Therapist"
               rightOptions={therapists}
               submitLabel="Assign"
-              onSubmit={(supervisorId, therapistId) => assignSupervisorToTherapist(supervisorId, therapistId)}
+              onSubmit={assignSupervisorToTherapist}
             />
           </div>
 

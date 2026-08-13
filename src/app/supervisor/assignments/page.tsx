@@ -38,7 +38,7 @@ export default async function SupervisorAssignmentsPage() {
               rightLabel="Child"
               rightOptions={children}
               submitLabel="Assign"
-              onSubmit={(therapistId, childId) => assignChildToTherapist(therapistId, childId)}
+              onSubmit={assignChildToTherapist}
             />
 
             <div className="mt-5 flex flex-col gap-2">
