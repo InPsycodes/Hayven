@@ -26,10 +26,12 @@ export const SPECIALTY_CARDS: SpecialtyCard[] = [
     icon: IconHeart,
     title: "ABA Therapy",
     description: "Structured, evidence-based support for behavioral and social-skill goals.",
+    imageSrc: "/images/specialty-aba-therapy.jpg",
   },
   {
     icon: IconClockHour4,
     title: "Developmental Psychology",
     description: "Early-childhood milestone assessment and school-readiness support.",
+    imageSrc: "/images/specialty-developmental-psychology.jpg",
   },
 ];
