@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { IconArrowRight } from "@tabler/icons-react";
 
 import { SPECIALTY_CARDS } from "@/content/marketing/specialties";
 import { Icon } from "@/components/ui/icon";
@@ -14,7 +15,29 @@ const PLACEHOLDER_GRADIENTS = [
   "linear-gradient(135deg, #6b7a5e 0%, #dcd3be 100%)",
 ];
 
+function specialtyImage(card: (typeof SPECIALTY_CARDS)[number], index: number, sizes: string) {
+  return card.imageSrc ? (
+    <Image
+      src={card.imageSrc}
+      alt={`A ${card.title.toLowerCase()} session with a child`}
+      fill
+      sizes={sizes}
+      className="photo-treatment size-full object-cover transition-transform duration-500 group-hover:scale-105"
+    />
+  ) : (
+    <div
+      className="size-full transition-transform duration-500 group-hover:scale-105"
+      style={{ background: PLACEHOLDER_GRADIENTS[index % PLACEHOLDER_GRADIENTS.length] }}
+    />
+  );
+}
+
 export function Specialties() {
+  // Speech Therapy is the specialty families ask for most, so it anchors the
+  // section as a dominant card -- the other three read as supporting options
+  // rather than four visually identical choices with no sense of priority.
+  const [dominant, ...rest] = SPECIALTY_CARDS;
+
   return (
     <section id="specialties" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
@@ -29,36 +52,47 @@ export function Specialties() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {SPECIALTY_CARDS.map((card, index) => (
-            <Reveal key={card.title} delayMs={index * 80}>
-              <div className="group overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-all hover:-translate-y-1 hover:border-terracotta/40">
-                <div className="relative aspect-4/3 overflow-hidden">
-                  {card.imageSrc ? (
-                    <Image
-                      src={card.imageSrc}
-                      alt={`A ${card.title.toLowerCase()} session with a child`}
-                      fill
-                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                      className="photo-treatment size-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div
-                      className="size-full transition-transform duration-500 group-hover:scale-105"
-                      style={{ background: PLACEHOLDER_GRADIENTS[index % PLACEHOLDER_GRADIENTS.length] }}
-                    />
-                  )}
-                </div>
-                <div className="p-6">
-                  <div className="relative -mt-11 flex size-10 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">
-                    <Icon icon={card.icon} size="md" />
-                  </div>
-                  <h3 className="mt-4 font-serif text-xl text-charcoal">{card.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ink-soft">{card.description}</p>
-                </div>
+        <div className="mt-14 flex flex-col gap-5">
+          <Reveal>
+            <Link
+              href={`/search?specialty=${encodeURIComponent(dominant.title)}`}
+              className="group grid overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-colors hover:border-terracotta/40 md:grid-cols-2"
+            >
+              <div className="relative aspect-4/3 overflow-hidden md:aspect-auto">
+                {specialtyImage(dominant, 0, "(min-width: 768px) 50vw, 100vw")}
               </div>
-            </Reveal>
-          ))}
+              <div className="flex flex-col justify-center p-8 lg:p-11">
+                <div className="flex size-11 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">
+                  <Icon icon={dominant.icon} size="md" />
+                </div>
+                <h3 className="mt-5 font-serif text-2xl text-charcoal lg:text-[1.85rem]">{dominant.title}</h3>
+                <p className="mt-3 max-w-sm text-base leading-relaxed text-ink-soft">{dominant.description}</p>
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-terracotta transition-[gap] group-hover:gap-3">
+                  Explore
+                  <IconArrowRight size={16} stroke={2} />
+                </span>
+              </div>
+            </Link>
+          </Reveal>
+
+          <div className="grid gap-5 sm:grid-cols-3">
+            {rest.map((card, index) => (
+              <Reveal key={card.title} delayMs={(index + 1) * 80}>
+                <Link
+                  href={`/search?specialty=${encodeURIComponent(card.title)}`}
+                  className="group block overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-colors hover:border-terracotta/40"
+                >
+                  <div className="relative aspect-video overflow-hidden">
+                    {specialtyImage(card, index + 1, "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw")}
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-serif text-lg text-charcoal">{card.title}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{card.description}</p>
+                  </div>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
         </div>
 
         <Link
