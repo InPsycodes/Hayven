@@ -17,12 +17,26 @@ export async function getSession(): Promise<AppSession | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // A password-only (AAL1) session for an account with an enrolled MFA
+  // factor is not a completed login. Every server action in this app starts
+  // with `getSession()`, so enforcing the step-up here -- the one place
+  // everything already checks -- makes MFA a real boundary everywhere at
+  // once, instead of a login-form prompt someone could skip by calling an
+  // action directly with just the password-stage session cookie.
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") return null;
+
   const { data: profile } = await supabase
     .from("users")
-    .select("role, full_name")
+    .select("role, full_name, status")
     .eq("id", user.id)
     .single();
   if (!profile) return null;
+
+  // `status` exists on every account specifically for incident containment
+  // (suspending a compromised or abusive account) -- it's meaningless if
+  // nothing actually checks it. Same choke point as the MFA/AAL check above.
+  if (profile.status === "suspended") return null;
 
   return {
     userId: user.id,

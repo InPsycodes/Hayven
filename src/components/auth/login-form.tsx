@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn } from "@/lib/auth/actions";
+import { verifyMfaLogin } from "@/lib/auth/mfa-actions";
 import { roleHomePath } from "@/lib/auth/role-path";
+import type { UserRole } from "@/data/types";
 
 export function LoginForm() {
   const router = useRouter();
@@ -16,6 +18,14 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
+
+  function goHome(role: UserRole) {
+    router.push(roleHomePath(role));
+    router.refresh();
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,9 +36,72 @@ export function LoginForm() {
         setError(result.error);
         return;
       }
-      router.push(roleHomePath(result.role));
-      router.refresh();
+      if ("mfaRequired" in result) {
+        setMfaFactorId(result.factorId);
+        return;
+      }
+      goHome(result.role);
     });
+  }
+
+  function handleVerifyMfa(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mfaFactorId) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await verifyMfaLogin(mfaFactorId, mfaCode);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      goHome(result.role as UserRole);
+    });
+  }
+
+  if (mfaFactorId) {
+    return (
+      <form onSubmit={handleVerifyMfa} className="flex flex-col gap-5">
+        <div>
+          <h2 className="font-heading text-xl text-charcoal">Enter your code</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Open your authenticator app and enter the 6-digit code for Hayven.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="mfaCode">Verification code</Label>
+          <Input
+            id="mfaCode"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+            autoFocus
+            maxLength={6}
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
+            placeholder="123456"
+          />
+        </div>
+
+        {error && <p className="text-sm text-error">{error}</p>}
+
+        <Button type="submit" size="lg" disabled={isPending || mfaCode.length !== 6} className="w-full">
+          {isPending ? "Verifying..." : "Verify"}
+        </Button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setMfaFactorId(null);
+            setMfaCode("");
+            setError(null);
+          }}
+          className="text-center text-sm text-muted-foreground hover:underline"
+        >
+          Back to log in
+        </button>
+      </form>
+    );
   }
 
   return (

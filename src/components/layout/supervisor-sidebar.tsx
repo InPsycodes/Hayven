@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconUsers, IconUserCheck } from "@tabler/icons-react";
+import { IconUsers, IconUserCheck, IconShieldLock } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
 import { BrandMark } from "@/components/shared/brand-mark";
@@ -14,6 +14,7 @@ import type { AppSession } from "@/lib/auth/session";
 const SUPERVISOR_NAV = [
   { label: "Team", href: "/supervisor", icon: IconUsers },
   { label: "Assignments", href: "/supervisor/assignments", icon: IconUserCheck },
+  { label: "Settings", href: "/supervisor/settings", icon: IconShieldLock },
 ];
 
 export function SupervisorSidebar({

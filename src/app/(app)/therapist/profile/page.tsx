@@ -10,9 +10,11 @@ import { ProfileForm } from "@/components/shared/profile-form";
 import { ProfessionalProfileForm } from "@/components/therapist/professional-profile-form";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
+import { MfaSection } from "@/components/shared/mfa-section";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { getRealAccountInfo, getRealPendingDeletionRequest } from "@/lib/account/queries";
+import { getMfaStatus } from "@/lib/auth/mfa-actions";
 
 type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
 
@@ -30,9 +32,10 @@ export default async function TherapistProfilePage() {
   const therapist = await getRealTherapistProfileByUserId(session.userId);
   if (!therapist) return <IncompleteProfileNotice />;
 
-  const [account, pendingDeletionRequest] = await Promise.all([
+  const [account, pendingDeletionRequest, mfaStatus] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealPendingDeletionRequest(session.userId),
+    getMfaStatus(),
   ]);
 
   const verification = VERIFICATION_LABEL[therapist.verificationStatus] ?? {
@@ -85,6 +88,8 @@ export default async function TherapistProfilePage() {
             </Link>
           </div>
         </Card>
+
+        <MfaSection initialStatus={mfaStatus} />
 
         <DeleteAccountSection pendingRequest={pendingDeletionRequest} />
 

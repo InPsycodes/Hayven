@@ -12,6 +12,7 @@ import {
   IconReceiptRefund,
   IconMessage2,
   IconLifebuoy,
+  IconShieldLock,
 } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
@@ -31,6 +32,7 @@ const ADMIN_NAV = [
   { label: "Deletions", href: "/admin/deletion-requests", icon: IconUserX },
   { label: "Refunds", href: "/admin/refunds", icon: IconReceiptRefund },
   { label: "Support", href: "/admin/support", icon: IconLifebuoy },
+  { label: "Settings", href: "/admin/settings", icon: IconShieldLock },
 ];
 
 export function AdminSidebar({

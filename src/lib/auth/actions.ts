@@ -21,7 +21,10 @@ export type SignUpResult =
   | { ok: true; needsEmailConfirmation: true }
   | { ok: false; error: string };
 
-export type SignInResult = { ok: true; role: UserRole } | { ok: false; error: string };
+export type SignInResult =
+  | { ok: true; role: UserRole }
+  | { ok: true; mfaRequired: true; factorId: string }
+  | { ok: false; error: string };
 
 export async function signUp(input: SignUpInput): Promise<SignUpResult> {
   // Signup is the only self-service path into this function, and the UI only
@@ -49,7 +52,19 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
     },
   });
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    // Supabase's own wording ("User already registered") doesn't tell
+    // someone what to actually do about it -- point them at the sign-in
+    // link already on this page instead of leaving them stuck retrying
+    // signup with the same email.
+    if (error.code === "user_already_exists") {
+      return {
+        ok: false,
+        error: "You already have an account with this email. Log in below to continue where you left off.",
+      };
+    }
+    return { ok: false, error: error.message };
+  }
   if (!data.user) return { ok: false, error: "Something went wrong creating your account. Please try again." };
 
   // Service-role, not the session-scoped client above: when email
@@ -90,11 +105,35 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 
   const { data: profile } = await supabase
     .from("users")
-    .select("role")
+    .select("role, status")
     .eq("id", data.user.id)
     .single();
   if (!profile) {
     return { ok: false, error: "Account setup isn't finished yet. Please try again shortly." };
+  }
+
+  // Checked before MFA, with an explicit message -- getSession() also
+  // enforces this everywhere else, but silently failing here would leave
+  // someone stuck in a confusing "password worked, then nothing loads" loop
+  // instead of a clear explanation. This is the actual mechanism the
+  // incident response plan's "suspend a compromised account" step relies on.
+  if (profile.status === "suspended") {
+    return { ok: false, error: "This account has been suspended. Contact support for help." };
+  }
+
+  // Password verified is only AAL1 -- an account with an enrolled MFA
+  // factor needs the second-factor step before it's a completed login.
+  // getSession() enforces this same check everywhere else in the app; this
+  // is what turns it into an explicit "enter your code" prompt instead of a
+  // confusing bounce back to /login on the very next page load.
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    const factorId = factors?.totp.find((f) => f.status === "verified")?.id;
+    if (!factorId) {
+      return { ok: false, error: "Couldn't complete two-factor sign-in. Please try again." };
+    }
+    return { ok: true, mfaRequired: true, factorId };
   }
 
   return { ok: true, role: profile.role as UserRole };

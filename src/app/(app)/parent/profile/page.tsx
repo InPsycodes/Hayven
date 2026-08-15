@@ -6,19 +6,22 @@ import { LogoutButton } from "@/components/shared/logout-button";
 import { Card } from "@/components/ui/card";
 import { ProfileForm } from "@/components/shared/profile-form";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
+import { MfaSection } from "@/components/shared/mfa-section";
 import { getSession } from "@/lib/auth/session";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealAccountInfo, getRealPendingDeletionRequest } from "@/lib/account/queries";
+import { getMfaStatus } from "@/lib/auth/mfa-actions";
 import { ageFromDob } from "@/data/format";
 
 export default async function ParentProfilePage() {
   const session = await getSession();
   if (!session || session.role !== "parent") redirect("/login");
 
-  const [account, children, pendingDeletionRequest] = await Promise.all([
+  const [account, children, pendingDeletionRequest, mfaStatus] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealChildrenForParent(session.userId),
     getRealPendingDeletionRequest(session.userId),
+    getMfaStatus(),
   ]);
 
   return (
@@ -70,6 +73,8 @@ export default async function ParentProfilePage() {
             </Link>
           </div>
         </Card>
+
+        <MfaSection initialStatus={mfaStatus} />
 
         <DeleteAccountSection pendingRequest={pendingDeletionRequest} />
 
