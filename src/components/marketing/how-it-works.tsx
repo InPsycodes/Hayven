@@ -11,24 +11,22 @@ export function HowItWorks() {
           Four calm steps, start to finish.
         </h2>
 
-        <div className="relative mt-16 grid gap-10 md:grid-cols-4">
-          <div className="absolute top-6 left-[12.5%] right-[12.5%] hidden h-px bg-white/25 md:block" />
-
+        <div className="mt-16 grid gap-x-10 gap-y-14 md:grid-cols-4">
           {HOW_IT_WORKS_STEPS.map((step, index) => {
             const isLast = index === HOW_IT_WORKS_STEPS.length - 1;
             return (
               <Reveal key={step.title} delayMs={index * 80}>
-                <div className="flex flex-col gap-4">
-                  <span
-                    className={cn(
-                      "relative z-10 flex size-12 items-center justify-center rounded-full font-serif text-lg",
-                      isLast ? "bg-charcoal text-canvas-white" : "bg-canvas-white text-terracotta"
-                    )}
-                  >
-                    {index + 1}
+                <div className={cn("flex flex-col gap-3", isLast && "md:-m-5 md:rounded-lg md:border md:border-white/20 md:p-5")}>
+                  <span className="font-serif text-4xl leading-none text-canvas-white/45">
+                    {String(index + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="font-serif text-lg text-canvas-white">{step.title}</h3>
+                  <h3 className="mt-1 font-serif text-lg text-canvas-white">{step.title}</h3>
                   <p className="text-sm leading-relaxed text-canvas-white/75">{step.body}</p>
+                  {isLast && (
+                    <span className="mt-1 text-xs font-medium tracking-wide text-canvas-white/60">
+                      Where you&apos;ll spend most of your time
+                    </span>
+                  )}
                 </div>
               </Reveal>
             );

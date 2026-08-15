@@ -18,14 +18,16 @@ export function Specialties() {
   return (
     <section id="specialties" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
-        <span className="eyebrow text-terracotta">Find the right therapist</span>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
-          A diverse team, matched to your child&apos;s needs.
-        </h2>
-        <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          Every specialist on Hayven is admin-verified before their profile goes live, across the
-          therapy types families ask for most.
-        </p>
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="eyebrow text-terracotta">Find the right therapist</span>
+          <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
+            A diverse team, matched to your child&apos;s needs.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
+            Every specialist on Hayven is admin-verified before their profile goes live, across the
+            therapy types families ask for most.
+          </p>
+        </div>
 
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {SPECIALTY_CARDS.map((card, index) => (
