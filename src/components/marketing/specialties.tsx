@@ -56,12 +56,12 @@ export function Specialties() {
           <Reveal>
             <Link
               href={`/search?specialty=${encodeURIComponent(dominant.title)}`}
-              className="group grid overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-colors hover:border-terracotta/40 md:grid-cols-2"
+              className="group flex flex-col overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-colors hover:border-terracotta/40 md:flex-row md:items-center"
             >
-              <div className="relative aspect-4/3 overflow-hidden md:aspect-auto">
-                {specialtyImage(dominant, 0, "(min-width: 768px) 50vw, 100vw")}
+              <div className="relative aspect-video overflow-hidden md:basis-1/3 md:shrink-0">
+                {specialtyImage(dominant, 0, "(min-width: 768px) 33vw, 100vw")}
               </div>
-              <div className="flex flex-col justify-center p-8 lg:p-11">
+              <div className="flex flex-1 flex-col justify-center p-8 lg:p-11">
                 <div className="flex size-11 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">
                   <Icon icon={dominant.icon} size="md" />
                 </div>
