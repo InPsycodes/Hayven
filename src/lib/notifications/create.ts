@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail, renderNotificationEmail } from "@/lib/email/send";
 
 export type NotificationType =
   | "booking_confirmed"
@@ -8,13 +9,20 @@ export type NotificationType =
   | "note_added"
   | "payment_receipt"
   | "verification_update"
-  | "meeting_link_ready";
+  | "meeting_link_ready"
+  | "support_request_new"
+  | "support_request_resolved";
 
 /**
  * Fire-and-forget: a notification failing to write must never roll back the
  * booking/message/note/decision that triggered it. notifications' RLS only
  * lets a user manage their own rows, so cross-user delivery always needs the
  * service-role client -- same shape as logAuditEvent.
+ *
+ * The in-app row is the one that must never silently fail -- it's queried
+ * back by the notification bell. The email is a best-effort echo of the
+ * same title/body sent alongside it, in its own try/catch so a Resend
+ * outage can never affect the notification actually landing in-app.
  */
 export async function createNotification(params: {
   userId: string;
@@ -22,8 +30,8 @@ export async function createNotification(params: {
   title: string;
   body: string;
 }): Promise<void> {
+  const admin = createAdminClient();
   try {
-    const admin = createAdminClient();
     const { error } = await admin.from("notifications").insert({
       user_id: params.userId,
       type: params.type,
@@ -33,5 +41,18 @@ export async function createNotification(params: {
     if (error) console.error("notification insert failed", params.type, error.message);
   } catch (err) {
     console.error("notification insert threw", params.type, err);
+  }
+
+  try {
+    const { data: user } = await admin.from("users").select("email").eq("id", params.userId).maybeSingle();
+    if (user?.email) {
+      await sendEmail({
+        to: user.email,
+        subject: params.title,
+        html: renderNotificationEmail(params.title, params.body),
+      });
+    }
+  } catch (err) {
+    console.error("notification email threw", params.type, err);
   }
 }

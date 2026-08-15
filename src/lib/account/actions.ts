@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth/session";
 import { logAuditEvent } from "@/lib/audit/log";
+import { createNotification } from "@/lib/notifications/create";
+import { checkRateLimit } from "@/lib/rate-limit/check";
 
 export interface FormState {
   error?: string;
@@ -97,5 +100,61 @@ export async function requestAccountDeletion(_prevState: FormState, formData: Fo
 
   revalidatePath("/parent/profile");
   revalidatePath("/therapist/profile");
+  return {};
+}
+
+/** Submitting a support request notifies every admin (in-app + email, via
+ * createNotification) so it doesn't just sit unseen -- an admin replies from
+ * /admin/support, which notifies the requester back the same way. */
+export async function submitSupportRequest(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const session = await getSession();
+  if (!session) {
+    return { error: "You must be signed in to contact support." };
+  }
+
+  const rateLimitOk = await checkRateLimit(`support_request:${session.userId}`, 5, 60 * 60);
+  if (!rateLimitOk) {
+    return { error: "You've submitted several requests recently. Please wait a bit before submitting another." };
+  }
+
+  const subject = formData.get("subject");
+  const message = formData.get("message");
+  if (typeof subject !== "string" || !subject.trim()) {
+    return { error: "Please add a subject." };
+  }
+  if (typeof message !== "string" || !message.trim()) {
+    return { error: "Please describe what's going on." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("support_requests")
+    .insert({ user_id: session.userId, subject: subject.trim(), message: message.trim() })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    return { error: error?.message ?? "Couldn't submit your request. Please try again." };
+  }
+
+  await logAuditEvent({
+    actor: session,
+    action: "support_request.submit",
+    entityType: "support_request",
+    entityId: data.id,
+  });
+
+  const admin = createAdminClient();
+  const { data: admins } = await admin.from("users").select("id").eq("role", "admin");
+  for (const a of admins ?? []) {
+    await createNotification({
+      userId: a.id,
+      type: "support_request_new",
+      title: `New support request: ${subject.trim()}`,
+      body: `From ${session.name} (${session.role}): ${message.trim().slice(0, 200)}`,
+    });
+  }
+
+  revalidatePath("/help");
   return {};
 }

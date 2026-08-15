@@ -11,6 +11,7 @@ import {
   IconUserX,
   IconReceiptRefund,
   IconMessage2,
+  IconLifebuoy,
 } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
@@ -29,6 +30,7 @@ const ADMIN_NAV = [
   { label: "Audit log", href: "/admin/audit-log", icon: IconHistory },
   { label: "Deletions", href: "/admin/deletion-requests", icon: IconUserX },
   { label: "Refunds", href: "/admin/refunds", icon: IconReceiptRefund },
+  { label: "Support", href: "/admin/support", icon: IconLifebuoy },
 ];
 
 export function AdminSidebar({

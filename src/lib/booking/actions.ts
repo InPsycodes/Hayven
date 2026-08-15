@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { createNotification } from "@/lib/notifications/create";
+import { checkRateLimit } from "@/lib/rate-limit/check";
 import { formatDateTime, formatNaira } from "@/data/format";
 
 type ActionResult<T> = { ok: true } & T | { ok: false; error: string };
@@ -27,6 +28,15 @@ export async function createPendingBooking(input: {
   const session = await getSession();
   if (!session || session.role !== "parent") {
     return { ok: false, error: "You must be signed in as a parent to book a session." };
+  }
+
+  // Attempt-frequency guard, separate from the concurrent-hold cap below --
+  // that one limits how many unpaid holds can exist at once, this limits how
+  // fast new hold attempts can come in (a script retrying rapidly, not just
+  // one that's accumulated a few legitimate holds).
+  const rateLimitOk = await checkRateLimit(`booking_hold:${session.userId}`, 10, 10 * 60);
+  if (!rateLimitOk) {
+    return { ok: false, error: "Too many booking attempts. Please wait a few minutes and try again." };
   }
 
   const supabase = await createClient();

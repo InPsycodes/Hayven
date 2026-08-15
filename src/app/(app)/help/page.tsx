@@ -3,12 +3,16 @@ import { IconChevronDown } from "@tabler/icons-react";
 
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card } from "@/components/ui/card";
+import { SupportRequestSection } from "@/components/shared/support-request-section";
 import { getSession } from "@/lib/auth/session";
+import { getRealSupportRequests } from "@/lib/account/queries";
 import { FAQ_CATEGORIES } from "@/content/help-faqs";
 
 export default async function HelpPage() {
   const session = await getSession();
   if (!session || (session.role !== "parent" && session.role !== "therapist")) redirect("/login");
+
+  const supportRequests = await getRealSupportRequests(session.userId);
 
   return (
     <div>
@@ -39,6 +43,8 @@ export default async function HelpPage() {
             </div>
           );
         })}
+
+        <SupportRequestSection requests={supportRequests} />
       </div>
     </div>
   );

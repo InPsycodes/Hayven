@@ -68,8 +68,16 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        <div className="mx-auto mt-14 max-w-7xl border-t border-white/10 pt-6 text-center text-xs text-canvas-white/50">
-          © {new Date().getFullYear()} Hayven · Nigeria pilot
+        <div className="mx-auto mt-14 flex max-w-7xl flex-col items-center gap-3 border-t border-white/10 pt-6 text-center text-xs text-canvas-white/50 sm:flex-row sm:justify-between">
+          <span>© {new Date().getFullYear()} Hayven · Nigeria pilot</span>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-canvas-white">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-canvas-white">
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

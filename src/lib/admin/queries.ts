@@ -63,6 +63,62 @@ export interface RealAccountDeletionRequest {
   };
 }
 
+export interface RealSupportRequest {
+  id: string;
+  subject: string;
+  message: string;
+  status: string;
+  resolution: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  requester: {
+    id: string;
+    fullName: string;
+    email: string;
+    role: string;
+  };
+}
+
+/** Cheap count-only query for a sidebar badge. */
+export async function getOpenSupportRequestCount(): Promise<number> {
+  const supabase = createAdminClient();
+  const { count } = await supabase
+    .from("support_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "open");
+  return count ?? 0;
+}
+
+export async function getSupportRequests(): Promise<RealSupportRequest[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("support_requests")
+    .select("id, subject, message, status, resolution, created_at, resolved_at, users!user_id(id, full_name, email, role)")
+    .order("status", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    const user = row.users as unknown as { id: string; full_name: string; email: string; role: string } | null;
+    return {
+      id: row.id,
+      subject: row.subject,
+      message: row.message,
+      status: row.status,
+      resolution: row.resolution,
+      createdAt: row.created_at,
+      resolvedAt: row.resolved_at,
+      requester: {
+        id: user?.id ?? "",
+        fullName: user?.full_name ?? "Unknown",
+        email: user?.email ?? "",
+        role: user?.role ?? "",
+      },
+    };
+  });
+}
+
 /** Cheap count-only query for a sidebar badge. */
 export async function getPendingDeletionRequestCount(): Promise<number> {
   const supabase = createAdminClient();

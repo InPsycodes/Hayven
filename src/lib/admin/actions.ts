@@ -400,3 +400,52 @@ export async function deleteReportPhraseVariant(id: string): Promise<{ ok: true 
   revalidatePath("/admin/report-phrases");
   return { ok: true };
 }
+
+/** Resolving sends the reply straight back to the requester via
+ * createNotification (in-app + email) -- there's no separate "internal
+ * notes" field here since the whole point of this table is the reply
+ * actually reaching them. */
+export async function resolveSupportRequest(
+  requestId: string,
+  resolution: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+
+  if (!resolution.trim()) {
+    return { ok: false, error: "Write a reply before resolving." };
+  }
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("support_requests")
+    .update({
+      status: "resolved",
+      admin_id: session.userId,
+      resolution: resolution.trim(),
+      resolved_at: new Date().toISOString(),
+    })
+    .eq("id", requestId)
+    .eq("status", "open")
+    .select("id, user_id, subject")
+    .maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "Request not found or already resolved." };
+
+  await createNotification({
+    userId: data.user_id,
+    type: "support_request_resolved",
+    title: `Update on your support request: ${data.subject}`,
+    body: resolution.trim(),
+  });
+
+  await logAuditEvent({
+    actor: session,
+    action: "support_request.resolve",
+    entityType: "support_request",
+    entityId: requestId,
+  });
+
+  revalidatePath("/admin/support");
+  return { ok: true };
+}

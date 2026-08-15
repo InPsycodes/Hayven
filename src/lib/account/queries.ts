@@ -46,3 +46,34 @@ export async function getRealPendingDeletionRequest(userId: string): Promise<Rea
     requestedAt: data.requested_at,
   };
 }
+
+export interface RealSupportRequest {
+  id: string;
+  subject: string;
+  message: string;
+  status: string;
+  resolution: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export async function getRealSupportRequests(userId: string): Promise<RealSupportRequest[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("support_requests")
+    .select("id, subject, message, status, resolution, created_at, resolved_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    subject: row.subject,
+    message: row.message,
+    status: row.status,
+    resolution: row.resolution,
+    createdAt: row.created_at,
+    resolvedAt: row.resolved_at,
+  }));
+}

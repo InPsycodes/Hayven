@@ -24,7 +24,9 @@ export type AuditAction =
   | "booking.cancel"
   | "payment.mark_refunded"
   | "report_phrase.add"
-  | "report_phrase.delete";
+  | "report_phrase.delete"
+  | "support_request.submit"
+  | "support_request.resolve";
 
 /**
  * Fire-and-forget: a logging failure must never roll back a clinical write

@@ -6,6 +6,7 @@ import {
   getPendingVerificationCount,
   getPendingDeletionRequestCount,
   getPendingRefundCount,
+  getOpenSupportRequestCount,
 } from "@/lib/admin/queries";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -15,11 +16,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/login");
   }
 
-  const [pendingVerificationCount, pendingDeletionRequestCount, pendingRefundCount] = await Promise.all([
-    getPendingVerificationCount(),
-    getPendingDeletionRequestCount(),
-    getPendingRefundCount(),
-  ]);
+  const [pendingVerificationCount, pendingDeletionRequestCount, pendingRefundCount, openSupportRequestCount] =
+    await Promise.all([
+      getPendingVerificationCount(),
+      getPendingDeletionRequestCount(),
+      getPendingRefundCount(),
+      getOpenSupportRequestCount(),
+    ]);
 
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row">
@@ -29,6 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           "/admin/verification": pendingVerificationCount,
           "/admin/deletion-requests": pendingDeletionRequestCount,
           "/admin/refunds": pendingRefundCount,
+          "/admin/support": openSupportRequestCount,
         }}
       />
       <div className="flex-1 overflow-hidden">{children}</div>

@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/rate-limit/check";
 import type { UserRole } from "@/data/types";
 
 export interface SignUpInput {
@@ -11,6 +13,7 @@ export interface SignUpInput {
   email: string;
   phone: string;
   password: string;
+  agreedToTerms: boolean;
 }
 
 export type SignUpResult =
@@ -28,6 +31,9 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
   if (input.role !== "parent" && input.role !== "therapist") {
     return { ok: false, error: "Invalid account type." };
   }
+  if (!input.agreedToTerms) {
+    return { ok: false, error: "Please agree to the Privacy Policy and Terms of Service to continue." };
+  }
 
   const supabase = await createClient();
 
@@ -44,10 +50,21 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
   });
 
   if (error) return { ok: false, error: error.message };
+  if (!data.user) return { ok: false, error: "Something went wrong creating your account. Please try again." };
+
+  // Service-role, not the session-scoped client above: when email
+  // confirmation is required there's no active session yet to satisfy
+  // an `auth.uid() = id` RLS policy, but consent still needs recording
+  // against the row the handle_new_user trigger just created.
+  const admin = createAdminClient();
+  await admin
+    .from("users")
+    .update({ terms_accepted_at: new Date().toISOString() })
+    .eq("id", data.user.id);
 
   // Supabase's "Confirm email" setting controls whether a session comes
   // back immediately or the user has to click a confirmation link first.
-  if (!data.session || !data.user) {
+  if (!data.session) {
     return { ok: true, needsEmailConfirmation: true };
   }
 
@@ -55,6 +72,17 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
 }
 
 export async function signIn(email: string, password: string): Promise<SignInResult> {
+  // Checked -- and counted -- before the password is ever verified, so a
+  // brute-force attempt is blocked regardless of whether individual guesses
+  // succeed or fail. Keyed by email rather than IP: the actual risk here is
+  // someone hammering one known account, not a single source hammering many,
+  // and it sidesteps needing a reliable client-IP header behind Netlify's
+  // proxy layer.
+  const allowed = await checkRateLimit(`login:${email.trim().toLowerCase()}`, 5, 15 * 60);
+  if (!allowed) {
+    return { ok: false, error: "Too many login attempts. Please try again in a few minutes." };
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });

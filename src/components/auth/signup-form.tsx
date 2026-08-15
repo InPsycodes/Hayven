@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { signUp } from "@/lib/auth/actions";
 
@@ -29,9 +30,14 @@ export function SignupForm({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!agreedToTerms) {
+      setError("Please agree to the Privacy Policy and Terms of Service to continue.");
+      return;
+    }
     setError(null);
     startTransition(async () => {
       const result = await signUp({
@@ -40,6 +46,7 @@ export function SignupForm({
         email,
         phone,
         password,
+        agreedToTerms,
       });
 
       if (!result.ok) {
@@ -148,6 +155,25 @@ export function SignupForm({
           placeholder="••••••••"
         />
       </div>
+
+      <label className="flex items-start gap-2.5 text-sm text-muted-foreground">
+        <Checkbox
+          checked={agreedToTerms}
+          onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+          className="mt-0.5"
+        />
+        <span>
+          I agree to Hayven&apos;s{" "}
+          <Link href="/privacy" target="_blank" className="font-medium text-terracotta hover:underline">
+            Privacy Policy
+          </Link>{" "}
+          and{" "}
+          <Link href="/terms" target="_blank" className="font-medium text-terracotta hover:underline">
+            Terms of Service
+          </Link>
+          .
+        </span>
+      </label>
 
       {error && <p className="text-sm text-error">{error}</p>}
 
