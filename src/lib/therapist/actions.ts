@@ -7,12 +7,16 @@ import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/session";
 import { lagosWallClockToUtcIso } from "@/data/format";
 import { professionalBodyLabel } from "./professional-bodies";
+import { scanFileForViruses } from "@/lib/uploads/scan-file";
 
 export interface FormState {
   error?: string;
 }
 
-const MAX_CREDENTIAL_FILE_BYTES = 10 * 1024 * 1024;
+// Matches the virus-scan API's free-tier file-size limit -- every accepted
+// credential upload must actually be scannable, not just under some
+// separate, larger limit that would let bigger files bypass the scan.
+const MAX_CREDENTIAL_FILE_BYTES = 2.5 * 1024 * 1024;
 
 /**
  * Identifies a file by its actual leading bytes, not the client-reported
@@ -86,11 +90,18 @@ export async function saveCredentialsStep(
 
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_CREDENTIAL_FILE_BYTES) {
-      return { error: "File is too large. Please upload a file under 10MB." };
+      return { error: "File is too large. Please upload a file under 2.5MB." };
     }
     const extension = await detectSafeCredentialExtension(file);
     if (!extension) {
       return { error: "Please upload a PDF, JPG, or PNG file." };
+    }
+
+    // Scanned before it ever touches storage -- fails closed, not open, if
+    // the scan itself can't be completed.
+    const scanResult = await scanFileForViruses(file);
+    if (!scanResult.clean) {
+      return { error: scanResult.reason };
     }
 
     // Generated name, not the client-supplied file.name -- no path
