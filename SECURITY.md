@@ -29,7 +29,7 @@ Classify first — it decides how fast and how wide the response needs to be.
 
 These are the actual sources currently wired up — check all of them, not just the one that fired:
 
-- **Sentry** (`sentry.io`) — error monitoring, alerts by email. Catches crashes and unhandled exceptions, not silent unauthorized access.
+- **Sentry** (`sentry.io`) — error monitoring, alerts by email. Catches crashes and unhandled exceptions, and now also behavioral anomalies: `checkRateLimit()` fires a Sentry warning (tagged `anomaly: rate_limit`) every time a bucket trips, covering login/booking-hold/support-request bursts and — via a non-blocking call in `getAllReportsForAdmin()` — one admin account loading the full cross-platform report list unusually often.
 - **`audit_log` table** (Supabase) — records every sensitive admin/therapist action (verification decisions, assignment changes, report access, refunds, phrase-library edits, support resolutions). Query directly via the Supabase dashboard's SQL editor when investigating who did what and when. This table is append-only and column-locked from normal user access — it's the most trustworthy record of what happened.
 - **In-app support requests** (`/admin/support`) — a user reporting something looking wrong is a real signal, not noise.
 - **Supabase dashboard** — Auth logs (sign-ins, failed attempts), database logs, and the `rate_limit_attempts` table (a spike here is a live brute-force/abuse attempt in progress).
@@ -73,7 +73,13 @@ Internal notification: **[who on the team needs to know immediately — fill in]
 
 - Confirm the root cause is actually fixed (a migration applied, a key rotated, a deployment rolled back) before considering the incident closed — re-verify live, the same way every fix in this codebase has been verified, not just by reasoning about the code.
 - Restore any suspended accounts once safe.
-- If data was altered (not just read), restore from backup — see the "Confirm Supabase backups / point-in-time recovery" item on the launch checklist; this plan assumes that's in place.
+- If data was altered (not just read), restore from backup. **Confirmed gap (as of this writing): the Supabase project is on the Free plan, which does not include managed backups or point-in-time recovery.** Until upgraded to Pro (or higher) and PITR is enabled, the only recovery path is a manually-run `pg_dump` snapshot — see "Manual backup snapshots" below. If no recent manual dump exists, altered/lost data may not be recoverable at all. Treat upgrading the plan and enabling PITR as a prerequisite for handling any real (non-test) user data, not a nice-to-have.
+
+**Manual backup snapshots (until PITR is enabled):** From Supabase Dashboard → Project Settings → Database, copy the connection string (the "URI" one, not the pooler). Then, with just Node.js already installed (no separate Postgres tools needed):
+```
+npx supabase@latest db dump --db-url "postgresql://postgres:[YOUR-PASSWORD]@[YOUR-HOST]:5432/postgres" -f hayven-backup-2026-08-16.sql
+```
+(swap in today's date in the filename each time). Store the resulting file somewhere outside Supabase itself — a separate cloud drive, never this repo, since it contains real data. To restore, run the resulting `.sql` file against a fresh database with `psql` or the Supabase SQL editor. Run this on a real cadence (weekly, at minimum) until proper backups are in place — a six-month-old manual dump is not a recovery plan. (If you have Postgres client tools installed already, `pg_dump` against the same connection string works too and is equivalent.)
 
 ### 7. Post-incident review
 

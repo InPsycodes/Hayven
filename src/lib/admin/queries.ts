@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSession } from "@/lib/auth/session";
+import { checkRateLimit } from "@/lib/rate-limit/check";
 
 export interface RealCredential {
   id: string;
@@ -457,6 +459,15 @@ export interface AdminReportSummary {
 }
 
 export async function getAllReportsForAdmin(): Promise<AdminReportSummary[]> {
+  // Detection, not prevention: an admin legitimately needs this page, so a
+  // trip here must never block the read -- it only needs to alert someone
+  // if one account is loading the full cross-platform report list far more
+  // often than normal dashboard use would ever require.
+  const session = await getSession();
+  if (session) {
+    await checkRateLimit(`bulk-read:reports:${session.userId}`, 20, 5 * 60);
+  }
+
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("reports")
