@@ -15,7 +15,7 @@ export function TherapistResultRow({ therapist }: { therapist: DiscoveryTherapis
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-heading text-base text-charcoal">{therapist.displayName}</h3>
+          <h2 className="font-heading text-base text-charcoal">{therapist.displayName}</h2>
           <VerifiedBadge />
         </div>
         <p className="mt-0.5 text-sm text-muted-foreground">

@@ -71,7 +71,7 @@ export function SupportRequestSection({ requests }: { requests: RealSupportReque
               <p className="mt-1.5 text-sm text-muted-foreground">{r.message}</p>
               {r.resolution && (
                 <div className="mt-2 rounded-sm bg-white p-2.5">
-                  <p className="label-micro text-terracotta">Our reply</p>
+                  <p className="label-micro text-rust-dark">Our reply</p>
                   <p className="mt-1 text-sm text-charcoal">{r.resolution}</p>
                 </div>
               )}

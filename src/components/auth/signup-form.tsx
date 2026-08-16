@@ -71,7 +71,7 @@ export function SignupForm({
           We sent a confirmation link to <span className="font-medium text-charcoal">{email}</span>.
           Click it, then log in to continue.
         </p>
-        <Link href="/login" className="mt-2 text-sm font-medium text-terracotta hover:underline">
+        <Link href="/login" className="mt-2 text-sm font-medium text-rust-dark hover:underline">
           Go to login
         </Link>
       </div>
@@ -164,11 +164,11 @@ export function SignupForm({
         />
         <span>
           I agree to Hayven&apos;s{" "}
-          <Link href="/privacy" target="_blank" className="font-medium text-terracotta hover:underline">
+          <Link href="/privacy" target="_blank" className="font-medium text-rust-dark hover:underline">
             Privacy Policy
           </Link>{" "}
           and{" "}
-          <Link href="/terms" target="_blank" className="font-medium text-terracotta hover:underline">
+          <Link href="/terms" target="_blank" className="font-medium text-rust-dark hover:underline">
             Terms of Service
           </Link>
           .
@@ -193,7 +193,7 @@ export function SignupForm({
 
       <p className="text-center text-sm text-muted-foreground">
         {role === "therapist" ? "Already applied?" : "Already have an account?"}{" "}
-        <Link href="/login" className="font-medium text-terracotta hover:underline">
+        <Link href="/login" className="font-medium text-rust-dark hover:underline">
           Sign in
         </Link>
       </p>

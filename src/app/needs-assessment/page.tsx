@@ -32,7 +32,7 @@ export default function NeedsAssessmentPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <main className="flex min-h-screen flex-col md:flex-row">
       <SplitAuthPanel
         eyebrow="Matching quiz"
         tagline="Let us help you get the best help you need."
@@ -42,7 +42,7 @@ export default function NeedsAssessmentPage() {
           <div className="flex flex-col gap-2">
             <Label>What&apos;s the primary concern?</Label>
             <Select value={concern} onValueChange={setConcern}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" aria-label="What's the primary concern?">
                 <SelectValue placeholder="Select what best fits" />
               </SelectTrigger>
               <SelectContent>
@@ -58,7 +58,7 @@ export default function NeedsAssessmentPage() {
           <div className="flex flex-col gap-2">
             <Label>Session type preference</Label>
             <Select value={sessionType} onValueChange={setSessionType}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" aria-label="Session type preference">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -72,7 +72,7 @@ export default function NeedsAssessmentPage() {
           <div className="flex flex-col gap-2">
             <Label>Budget (max per session)</Label>
             <Select value={budgetMax} onValueChange={setBudgetMax}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" aria-label="Budget (max per session)">
                 <SelectValue placeholder="Any budget" />
               </SelectTrigger>
               <SelectContent>
@@ -88,6 +88,6 @@ export default function NeedsAssessmentPage() {
           </Button>
         </form>
       </SplitAuthPanel>
-    </div>
+    </main>
   );
 }

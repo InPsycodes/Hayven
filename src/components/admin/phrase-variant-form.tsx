@@ -58,7 +58,7 @@ export function PhraseVariantForm({
         <div className="flex flex-col gap-1.5">
           <Label className="label-micro text-muted-foreground">Domain</Label>
           <Select value={domainKey} onValueChange={handleDomainChange}>
-            <SelectTrigger className="w-full bg-white">
+            <SelectTrigger className="w-full bg-white" aria-label="Domain">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -75,7 +75,7 @@ export function PhraseVariantForm({
           <div className="flex flex-col gap-1.5">
             <Label className="label-micro text-muted-foreground">Band</Label>
             <Select value={band ?? undefined} onValueChange={setBand}>
-              <SelectTrigger className="w-full bg-white">
+              <SelectTrigger className="w-full bg-white" aria-label="Band">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -92,7 +92,7 @@ export function PhraseVariantForm({
         <div className="flex flex-col gap-1.5">
           <Label className="label-micro text-muted-foreground">Tone</Label>
           <Select value={tone} onValueChange={(v) => setTone(v as "warm" | "direct")}>
-            <SelectTrigger className="w-full bg-white">
+            <SelectTrigger className="w-full bg-white" aria-label="Tone">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

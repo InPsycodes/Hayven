@@ -7,7 +7,7 @@ export function FinalCta() {
         <h2 className="font-serif text-3xl leading-tight text-canvas-white sm:text-4xl lg:text-[2.75rem]">
           Ready to find the right support for your child?
         </h2>
-        <p className="text-lg text-canvas-white/85">
+        <p className="text-lg text-canvas-white/95">
           Join families and therapists already using Hayven.
         </p>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-4">

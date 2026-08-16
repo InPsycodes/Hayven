@@ -68,7 +68,7 @@ export function SupportRequestRow({ request }: { request: RealSupportRequest }) 
       ) : (
         request.resolution && (
           <div className="rounded-sm bg-white p-2.5 ring-1 ring-border">
-            <p className="label-micro text-terracotta">Our reply</p>
+            <p className="label-micro text-rust-dark">Our reply</p>
             <p className="mt-1 text-sm text-charcoal">{request.resolution}</p>
             {request.resolvedAt && (
               <p className="mt-1 text-[11px] text-muted-foreground">Resolved {formatDateTime(request.resolvedAt)}</p>

@@ -20,7 +20,7 @@ export default function TermsOfServicePage() {
   return (
     <div className="bg-canvas-white px-6 py-16 md:px-10 md:py-24">
       <div className="mx-auto max-w-2xl">
-        <span className="label-micro text-terracotta">Legal</span>
+        <span className="label-micro text-rust-dark">Legal</span>
         <h1 className="mt-3 font-heading text-3xl leading-tight text-charcoal sm:text-4xl">Terms of Service</h1>
         <p className="mt-3 text-sm text-muted-foreground">Effective {EFFECTIVE_DATE}</p>
 
@@ -32,11 +32,11 @@ export default function TermsOfServicePage() {
         <Section heading="1. Who we are">
           <p>
             Hayven is operated by Hayven{" "}
-            <span className="rounded bg-amber/10 px-1 py-0.5 text-amber">
+            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
               [confirm exact registered company name and RC number]
             </span>{" "}
             (&quot;Hayven,&quot; &quot;we,&quot; &quot;us&quot;), registered in Nigeria, of{" "}
-            <span className="rounded bg-amber/10 px-1 py-0.5 text-amber">
+            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
               [registered business address to be added]
             </span>
             .

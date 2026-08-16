@@ -64,7 +64,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
           <div className="flex flex-col gap-6">
             <Reveal delayMs={0}>
               <Card lift className="p-6">
-                <span className="label-micro text-terracotta">Next session</span>
+                <span className="label-micro text-rust-dark">Next session</span>
                 {nextSession ? (
                   <>
                     <p className="mt-2 text-base font-medium text-charcoal capitalize">

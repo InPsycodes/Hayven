@@ -18,7 +18,7 @@ export function Specialties() {
   return (
     <section id="specialties" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
-        <span className="eyebrow text-terracotta">Find the right therapist</span>
+        <span className="eyebrow text-rust-dark">Find the right therapist</span>
         <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
           A diverse team, matched to your child&apos;s needs.
         </h2>

@@ -34,7 +34,7 @@ export default async function AdminUsersPage() {
 
       <div className="flex flex-col gap-6 px-6 pb-8 md:px-8">
         <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)] md:p-6">
-          <h2 className="label-micro text-terracotta">Care team</h2>
+          <h2 className="label-micro text-rust-dark">Care team</h2>
           <h3 className="mt-1 font-heading text-lg text-charcoal">Therapist &amp; child assignments</h3>
 
           <div className="mt-5">
@@ -68,7 +68,7 @@ export default async function AdminUsersPage() {
         </section>
 
         <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)] md:p-6">
-          <h2 className="label-micro text-terracotta">Oversight</h2>
+          <h2 className="label-micro text-rust-dark">Oversight</h2>
           <h3 className="mt-1 font-heading text-lg text-charcoal">Supervisor &amp; therapist assignments</h3>
 
           <div className="mt-5">

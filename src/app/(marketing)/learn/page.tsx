@@ -31,7 +31,7 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
     <div className="flex flex-col">
       <section className="bg-offwhite px-6 pb-5 pt-12 md:px-10">
         <div className="mx-auto max-w-4xl">
-          <span className="label-micro text-terracotta">Learning Center</span>
+          <span className="label-micro text-rust-dark">Learning Center</span>
           <h1 className="mt-3 font-heading text-3xl leading-tight text-charcoal md:text-4xl">
             Understand what your child is going through, one clear answer at a time.
           </h1>
@@ -70,7 +70,7 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
             className="flex flex-col gap-4 rounded-md bg-charcoal p-8 text-offwhite transition-opacity hover:opacity-95 md:flex-row md:items-center md:justify-between"
           >
             <div className="flex flex-col gap-2">
-              <span className="label-micro text-terracotta">Featured</span>
+              <span className="label-micro text-rust-light">Featured</span>
               <h2 className="font-heading text-xl leading-snug md:max-w-lg">
                 {featured.title}
               </h2>
@@ -95,7 +95,7 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
                 href={`/learn/${article.slug}`}
                 className="flex flex-col gap-2 rounded-sm bg-white p-5 ring-1 ring-border transition-colors hover:ring-charcoal/30"
               >
-                <span className="label-micro text-terracotta">{article.category}</span>
+                <span className="label-micro text-rust-dark">{article.category}</span>
                 <h3 className="text-sm font-medium leading-snug text-charcoal">
                   {article.title}
                 </h3>

@@ -93,7 +93,7 @@ export default async function TherapySessionPage({
 
         {confidentialNote && (
           <div className="rounded-sm border border-terracotta/30 bg-terracotta/5 p-5">
-            <p className="label-micro flex items-center gap-1.5 text-terracotta">
+            <p className="label-micro flex items-center gap-1.5 text-rust-dark">
               <IconLock size={12} stroke={2} />
               Confidential &middot; internal only
             </p>

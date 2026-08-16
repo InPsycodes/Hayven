@@ -26,7 +26,7 @@ export default function AboutPage() {
     <div className="flex flex-col">
       <section className="bg-canvas-white px-6 py-20 md:px-10 md:py-28">
         <div className="mx-auto max-w-2xl">
-          <span className="eyebrow text-terracotta">About Hayven</span>
+          <span className="eyebrow text-rust-dark">About Hayven</span>
           <h1 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             Helping families understand, connect, and feel supported.
           </h1>

@@ -33,7 +33,7 @@ export function Faq() {
     <section id="faq" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
         <div>
-          <span className="eyebrow text-terracotta">Questions</span>
+          <span className="eyebrow text-rust-dark">Questions</span>
           <h2 className="mt-3 max-w-xl font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             Frequently asked questions.
           </h2>

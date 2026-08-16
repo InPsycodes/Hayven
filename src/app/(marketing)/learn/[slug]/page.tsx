@@ -18,7 +18,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <IconArrowLeft size={16} />
         Learning Center
       </Link>
-      <span className="label-micro text-terracotta">{article.category}</span>
+      <span className="label-micro text-rust-dark">{article.category}</span>
       <h1 className="mt-3 font-heading text-3xl leading-tight text-charcoal">{article.title}</h1>
       <p className="mt-3 text-xs text-muted-foreground">
         {article.readTime}

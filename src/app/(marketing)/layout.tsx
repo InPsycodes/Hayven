@@ -41,7 +41,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           <FooterColumn heading="Get started" links={GET_STARTED_LINKS} />
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold text-canvas-white">Contact</h3>
+            <h2 className="mb-4 text-sm font-semibold text-canvas-white">Contact</h2>
             <ul className="flex flex-col gap-2 text-sm">
               <li>
                 <a href="mailto:hayvenmind@gmail.com" className="hover:text-canvas-white">
@@ -93,7 +93,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <h3 className="mb-4 text-sm font-semibold text-canvas-white">{heading}</h3>
+      <h2 className="mb-4 text-sm font-semibold text-canvas-white">{heading}</h2>
       <ul className="flex flex-col gap-2 text-sm">
         {links.map((link) => (
           <li key={`${link.href}-${link.label}`}>

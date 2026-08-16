@@ -16,7 +16,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row">
       <SupervisorSidebar session={session} teamCount={teamCount} />
-      <div className="flex-1 overflow-hidden">{children}</div>
+      <main className="flex-1 overflow-hidden">{children}</main>
     </div>
   );
 }

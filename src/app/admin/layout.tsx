@@ -35,7 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           "/admin/support": openSupportRequestCount,
         }}
       />
-      <div className="flex-1 overflow-hidden">{children}</div>
+      <main className="flex-1 overflow-hidden">{children}</main>
     </div>
   );
 }

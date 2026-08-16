@@ -30,6 +30,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10 md:px-10">
+      <h1 className="sr-only">Find a therapist</h1>
       <Suspense>
         <SearchFilters specialties={specialties} />
       </Suspense>

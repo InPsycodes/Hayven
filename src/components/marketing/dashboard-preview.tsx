@@ -17,7 +17,7 @@ export function DashboardPreview() {
                 <p className="text-sm font-medium text-charcoal">{DASHBOARD_PREVIEW.childName}</p>
                 <p className="truncate text-xs text-ink-soft">{DASHBOARD_PREVIEW.meta}</p>
               </div>
-              <span className="shrink-0 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-success">
+              <span className="shrink-0 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-[#4a5540]">
                 {DASHBOARD_PREVIEW.statusLabel}
               </span>
             </div>
@@ -55,7 +55,7 @@ export function DashboardPreview() {
         </div>
 
         <div className="order-1 min-w-0 lg:order-2">
-          <span className="eyebrow text-terracotta">Progress & support</span>
+          <span className="eyebrow text-rust-dark">Progress & support</span>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             One dashboard for every appointment, note and next step.
           </h2>

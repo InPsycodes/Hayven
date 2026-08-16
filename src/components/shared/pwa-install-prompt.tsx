@@ -68,7 +68,11 @@ export function PwaInstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-20 z-40 flex items-center gap-3 rounded-sm bg-charcoal px-4 py-3 text-offwhite shadow-lg md:bottom-4 md:inset-x-auto md:right-4 md:z-50 md:max-w-sm">
+    <div
+      role="complementary"
+      aria-label="Install Hayven"
+      className="fixed inset-x-4 bottom-20 z-40 flex items-center gap-3 rounded-sm bg-charcoal px-4 py-3 text-offwhite shadow-lg md:bottom-4 md:inset-x-auto md:right-4 md:z-50 md:max-w-sm"
+    >
       {isIos ? (
         <>
           <IconShare2 size={20} stroke={1.75} className="shrink-0 text-terracotta" />

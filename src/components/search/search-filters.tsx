@@ -65,7 +65,7 @@ export function SearchFilters({ specialties }: { specialties: Specialty[] }) {
       )}
 
       <Select value={specialtyName} onValueChange={(v) => setParam("specialty", v)}>
-        <SelectTrigger size="sm" className="rounded-full">
+        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by specialty">
           <SelectValue placeholder="Specialty" />
         </SelectTrigger>
         <SelectContent>
@@ -81,7 +81,7 @@ export function SearchFilters({ specialties }: { specialties: Specialty[] }) {
         value={searchParams.get("location") || "any"}
         onValueChange={(v) => setParam("location", v === "any" ? "" : v)}
       >
-        <SelectTrigger size="sm" className="rounded-full">
+        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by location">
           <SelectValue placeholder="Location" />
         </SelectTrigger>
         <SelectContent>
@@ -95,7 +95,7 @@ export function SearchFilters({ specialties }: { specialties: Specialty[] }) {
         value={searchParams.get("priceMax") || "any"}
         onValueChange={(v) => setParam("priceMax", v === "any" ? "" : v)}
       >
-        <SelectTrigger size="sm" className="rounded-full">
+        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by price range">
           <SelectValue placeholder="Price range" />
         </SelectTrigger>
         <SelectContent>
@@ -108,7 +108,7 @@ export function SearchFilters({ specialties }: { specialties: Specialty[] }) {
       </Select>
 
       <Select defaultValue="any">
-        <SelectTrigger size="sm" className="rounded-full">
+        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by availability">
           <SelectValue placeholder="Availability" />
         </SelectTrigger>
         <SelectContent>
@@ -124,7 +124,7 @@ export function SearchFilters({ specialties }: { specialties: Specialty[] }) {
         value={searchParams.get("sessionType") || "any"}
         onValueChange={(v) => setParam("sessionType", v === "any" ? "" : v)}
       >
-        <SelectTrigger size="sm" className="rounded-full">
+        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by session type">
           <SelectValue placeholder="Session type" />
         </SelectTrigger>
         <SelectContent>

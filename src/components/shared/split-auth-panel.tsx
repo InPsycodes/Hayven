@@ -28,7 +28,7 @@ export function SplitAuthPanel({
           )}
         </div>
         <div className="flex flex-col gap-3">
-          {eyebrow && <span className="label-micro text-terracotta">{eyebrow}</span>}
+          {eyebrow && <span className="label-micro text-rust-light">{eyebrow}</span>}
           <h1 className="font-heading text-3xl leading-snug md:text-4xl">{tagline}</h1>
           {subtext && <p className="max-w-sm text-sm text-offwhite/70">{subtext}</p>}
         </div>

@@ -6,7 +6,7 @@ export function HowItWorks() {
   return (
     <section id="how-it-works" className="bg-terracotta px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
-        <span className="eyebrow text-canvas-white/70">How it works</span>
+        <span className="eyebrow text-canvas-white/95">How it works</span>
         <h2 className="mt-3 max-w-xl font-serif text-3xl leading-tight text-canvas-white sm:text-4xl lg:text-[2.75rem]">
           Four calm steps, start to finish.
         </h2>
@@ -17,13 +17,13 @@ export function HowItWorks() {
             return (
               <Reveal key={step.title} delayMs={index * 80}>
                 <div className={cn("flex flex-col gap-3", isLast && "md:-m-5 md:rounded-lg md:border md:border-white/20 md:p-5")}>
-                  <span className="font-serif text-4xl leading-none text-canvas-white/45">
+                  <span className="font-serif text-4xl leading-none text-canvas-white/70">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                   <h3 className="mt-1 font-serif text-lg text-canvas-white">{step.title}</h3>
-                  <p className="text-sm leading-relaxed text-canvas-white/75">{step.body}</p>
+                  <p className="text-sm leading-relaxed text-canvas-white/95">{step.body}</p>
                   {isLast && (
-                    <span className="mt-1 text-xs font-medium tracking-wide text-canvas-white/60">
+                    <span className="mt-1 text-xs font-medium tracking-wide text-canvas-white/95">
                       Where you&apos;ll spend most of your time
                     </span>
                   )}

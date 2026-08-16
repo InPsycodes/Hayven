@@ -13,7 +13,10 @@ const chipVariants = cva(
         filled: "border-transparent bg-charcoal text-white",
         accent: "border-transparent bg-terracotta text-white",
         tan: "border-transparent bg-paper text-charcoal",
-        soft: "border-transparent bg-terracotta/10 text-terracotta",
+        // Darker than the base terracotta token: the tinted background here
+        // reads lighter than a solid surface, so the base tone falls short
+        // of 4.5:1 at this size -- see status-badge.tsx for the same fix.
+        soft: "border-transparent bg-terracotta/10 text-rust-dark",
       },
     },
     defaultVariants: {

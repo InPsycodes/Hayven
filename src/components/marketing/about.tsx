@@ -30,7 +30,7 @@ export function About() {
         </div>
 
         <div className="min-w-0">
-          <span className="eyebrow text-terracotta">About Hayven</span>
+          <span className="eyebrow text-rust-dark">About Hayven</span>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             Helping families understand, connect, and feel supported.
           </h2>
@@ -43,7 +43,7 @@ export function About() {
           </p>
           <Link
             href="/about"
-            className="mt-3 inline-block text-sm font-medium text-terracotta hover:underline"
+            className="mt-3 inline-block text-sm font-medium text-rust-dark hover:underline"
           >
             Read our story →
           </Link>

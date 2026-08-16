@@ -21,7 +21,7 @@ export default async function AdminMetricsPage() {
 
       <div className="flex flex-col gap-6 px-6 pb-8 md:px-8">
         <section>
-          <h2 className="label-micro text-terracotta">People</h2>
+          <h2 className="label-micro text-rust-dark">People</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Parents" value={m.totalParents} />
             <StatCard label="Therapists" value={m.totalTherapists} />
@@ -31,7 +31,7 @@ export default async function AdminMetricsPage() {
         </section>
 
         <section>
-          <h2 className="label-micro text-terracotta">Activity</h2>
+          <h2 className="label-micro text-rust-dark">Activity</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Children" value={m.totalChildren} />
             <StatCard label="Bookings" value={m.totalBookings} />
@@ -41,7 +41,7 @@ export default async function AdminMetricsPage() {
         </section>
 
         <section>
-          <h2 className="label-micro text-terracotta">Reports</h2>
+          <h2 className="label-micro text-rust-dark">Reports</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Reports generated" value={m.totalReports} />
             <StatCard label="Published to parents" value={m.publishedReports} />
