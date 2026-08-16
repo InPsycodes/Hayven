@@ -31,7 +31,7 @@ export function Specialties() {
           {SPECIALTY_CARDS.map((card, index) => (
             <Reveal key={card.title} delayMs={index * 80}>
               <div className="group overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-all hover:-translate-y-1 hover:border-terracotta/40">
-                <div className="relative aspect-4/3 overflow-hidden">
+                <div className="relative aspect-4/3 overflow-hidden rounded-lg border-[1.5px] border-terracotta/60">
                   {card.imageSrc ? (
                     <Image
                       src={card.imageSrc}
