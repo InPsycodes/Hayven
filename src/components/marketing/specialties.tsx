@@ -29,9 +29,9 @@ export function Specialties() {
 
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {SPECIALTY_CARDS.map((card, index) => (
-            <Reveal key={card.title} delayMs={index * 80}>
-              <div className="group overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-all hover:-translate-y-1 hover:border-terracotta/40">
-                <div className="relative aspect-4/3 overflow-hidden rounded-lg border-[1.5px] border-terracotta/60">
+            <Reveal key={card.title} delayMs={index * 80} className="h-full">
+              <div className="group flex h-full flex-col overflow-hidden rounded-2xl border-[1.5px] border-terracotta/70 bg-canvas-white transition-all hover:-translate-y-1 hover:border-terracotta">
+                <div className="relative aspect-4/3 shrink-0 overflow-hidden">
                   {card.imageSrc ? (
                     <Image
                       src={card.imageSrc}
