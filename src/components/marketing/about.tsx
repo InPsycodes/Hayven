@@ -17,7 +17,7 @@ const VALUES = [
 
 export function About() {
   return (
-    <section id="about" className="bg-canvas-white px-6 py-24 lg:px-10 lg:py-32">
+    <section id="about" className="bg-ivory px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
         <div className="relative aspect-4/3 min-w-0 overflow-hidden rounded-[2rem] shadow-xl">
           <Image

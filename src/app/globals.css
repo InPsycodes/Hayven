@@ -59,6 +59,7 @@
   --color-offwhite: var(--offwhite);
   --color-canvas-white: var(--canvas-white);
   --color-canvas-deep: var(--canvas-deep);
+  --color-ivory: var(--ivory);
   --color-success: var(--success);
   --color-error: var(--error);
   --color-amber: var(--amber);
@@ -83,6 +84,7 @@
   --offwhite: #dcd3be;
   --canvas-white: #faf8f6; /* card surfaces, text on dark */
   --canvas-deep: #d6d1cc; /* reserved */
+  --ivory: #ebe5da; /* section-band alternate to --offwhite, warmer than --canvas-white */
   --success: #6b7a5e;
   --error: #b23a2e;
   --amber: #a8702a;
