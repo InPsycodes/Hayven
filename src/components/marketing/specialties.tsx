@@ -58,7 +58,7 @@ export function Specialties() {
               href={`/search?specialty=${encodeURIComponent(dominant.title)}`}
               className="group flex flex-col overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-colors hover:border-terracotta/40 md:flex-row md:items-center"
             >
-              <div className="relative aspect-video overflow-hidden border border-terracotta/60 md:basis-1/3 md:shrink-0">
+              <div className="relative aspect-video overflow-hidden rounded-lg border-[1.5px] border-terracotta/60 md:basis-1/3 md:shrink-0">
                 {specialtyImage(dominant, 0, "(min-width: 768px) 33vw, 100vw")}
               </div>
               <div className="flex flex-1 flex-col justify-center p-8 lg:p-11">
@@ -82,7 +82,7 @@ export function Specialties() {
                   href={`/search?specialty=${encodeURIComponent(card.title)}`}
                   className="group block overflow-hidden rounded-2xl border border-charcoal/8 bg-canvas-white transition-colors hover:border-terracotta/40"
                 >
-                  <div className="relative aspect-video overflow-hidden border border-terracotta/60">
+                  <div className="relative aspect-video overflow-hidden rounded-lg border-[1.5px] border-terracotta/60">
                     {specialtyImage(card, index + 1, "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw")}
                   </div>
                   <div className="p-5">
