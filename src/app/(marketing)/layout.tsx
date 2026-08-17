@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { TopNav } from "@/components/layout/top-nav";
 import { BrandMark } from "@/components/shared/brand-mark";
+import { getOrganizationSchema } from "@/lib/seo/organization-schema";
 
 const EXPLORE_LINKS = [
   { label: "Find a therapist", href: "/search" },
@@ -20,6 +21,11 @@ const GET_STARTED_LINKS = [
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Static, developer-authored JSON from getOrganizationSchema() -- never user input. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(getOrganizationSchema()) }}
+      />
       {/* Marketing chrome (links to sign up, social, contact) makes sense for
           a visitor deciding whether to convert -- not for someone who
           already installed the app. Hidden via a pure CSS media query so
