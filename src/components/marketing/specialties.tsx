@@ -30,7 +30,7 @@ export function Specialties() {
         <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {SPECIALTY_CARDS.map((card, index) => (
             <Reveal key={card.title} delayMs={index * 80} className="h-full">
-              <div className="group flex h-full flex-col overflow-hidden rounded-2xl border-[1.5px] border-terracotta/70 bg-canvas-white shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)] transition-all hover:-translate-y-1 hover:border-terracotta hover:shadow-[0_24px_64px_-14px_rgba(26,18,12,0.32),0_0_80px_-6px_rgba(156,89,52,0.55)]">
+              <div className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] border-[1.5px] border-terracotta/70 bg-canvas-white shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)] transition-all hover:-translate-y-1 hover:border-terracotta hover:shadow-[0_24px_64px_-14px_rgba(26,18,12,0.32),0_0_80px_-6px_rgba(156,89,52,0.55)]">
                 <div className="relative aspect-4/3 shrink-0 overflow-hidden">
                   {card.imageSrc ? (
                     <Image
