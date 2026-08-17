@@ -15,7 +15,7 @@ export function DashboardPreview() {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-charcoal">{DASHBOARD_PREVIEW.childName}</p>
-                <p className="truncate text-xs text-ink-soft">{DASHBOARD_PREVIEW.meta}</p>
+                <p className="text-xs text-ink-soft">{DASHBOARD_PREVIEW.meta}</p>
               </div>
               <span className="shrink-0 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-[#4a5540]">
                 {DASHBOARD_PREVIEW.statusLabel}

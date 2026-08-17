@@ -66,15 +66,15 @@ export function Faq() {
 
           <FloatingIcon
             src="/images/faq-icon-bubble.png"
-            className="-top-10 -left-8 size-24 -rotate-6 lg:size-28"
+            className="-top-6 -left-3 size-24 -rotate-6 lg:-top-10 lg:-left-8 lg:size-28"
           />
           <FloatingIcon
             src="/images/faq-icon-question.png"
-            className="top-1/4 -right-6 size-20 rotate-6 lg:size-24"
+            className="top-1/4 -right-3 size-20 rotate-6 lg:-right-6 lg:size-24"
           />
           <FloatingIcon
             src="/images/faq-icon-heart.png"
-            className="-bottom-8 left-6 size-20 rotate-3 lg:size-24"
+            className="-bottom-4 left-3 size-20 rotate-3 lg:-bottom-8 lg:left-6 lg:size-24"
           />
         </div>
       </div>
