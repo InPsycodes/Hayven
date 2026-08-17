@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   IconShieldCheck,
   IconUsers,
+  IconUserCog,
   IconReportAnalytics,
   IconChartBar,
   IconHistory,
@@ -24,6 +25,7 @@ import type { AppSession } from "@/lib/auth/session";
 
 const ADMIN_NAV = [
   { label: "Verification", href: "/admin/verification", icon: IconShieldCheck },
+  { label: "Accounts", href: "/admin/accounts", icon: IconUserCog },
   { label: "Assignments", href: "/admin/users", icon: IconUsers },
   { label: "Reports", href: "/admin/reports", icon: IconReportAnalytics },
   { label: "Report phrases", href: "/admin/report-phrases", icon: IconMessage2 },

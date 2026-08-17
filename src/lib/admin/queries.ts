@@ -572,3 +572,31 @@ export async function getReportPhraseVariants(): Promise<RealReportPhraseVariant
     createdAt: row.created_at,
   }));
 }
+
+export interface AdminUserRow {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  role: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function getAllUsersForAdmin(): Promise<AdminUserRow[]> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("users")
+    .select("id, full_name, email, phone, role, status, created_at")
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    phone: row.phone,
+    role: row.role,
+    status: row.status,
+    createdAt: row.created_at,
+  }));
+}

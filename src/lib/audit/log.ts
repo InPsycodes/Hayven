@@ -26,7 +26,10 @@ export type AuditAction =
   | "report_phrase.add"
   | "report_phrase.delete"
   | "support_request.submit"
-  | "support_request.resolve";
+  | "support_request.resolve"
+  | "account.suspend"
+  | "account.reactivate"
+  | "account.reset_password";
 
 /**
  * Fire-and-forget: a logging failure must never roll back a clinical write

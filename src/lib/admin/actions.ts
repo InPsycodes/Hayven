@@ -449,3 +449,60 @@ export async function resolveSupportRequest(
   revalidatePath("/admin/support");
   return { ok: true };
 }
+
+export async function setUserAccountStatus(
+  userId: string,
+  status: "active" | "suspended"
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+
+  // Suspending yourself through this UI is never the intent -- it's either a
+  // misclick or a real incident, and a real incident needs the out-of-band
+  // dashboard path (see SECURITY.md) so the account doing the containing
+  // can't accidentally contain itself.
+  if (userId === session.userId) {
+    return { ok: false, error: "You can't change your own account's status here." };
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.from("users").update({ status }).eq("id", userId);
+  if (error) return { ok: false, error: error.message };
+
+  await logAuditEvent({
+    actor: session,
+    action: status === "suspended" ? "account.suspend" : "account.reactivate",
+    entityType: "user",
+    entityId: userId,
+  });
+
+  revalidatePath("/admin/accounts");
+  return { ok: true };
+}
+
+export async function resetUserAccountPassword(
+  userId: string,
+  newPassword: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+
+  if (newPassword.length < 8) {
+    return { ok: false, error: "Password must be at least 8 characters." };
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.auth.admin.updateUserById(userId, { password: newPassword });
+  if (error) return { ok: false, error: error.message };
+
+  // Never put the new password itself in the audit trail -- only that a
+  // reset happened, who did it, and for whom.
+  await logAuditEvent({
+    actor: session,
+    action: "account.reset_password",
+    entityType: "user",
+    entityId: userId,
+  });
+
+  return { ok: true };
+}
