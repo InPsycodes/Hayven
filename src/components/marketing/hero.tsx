@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { IconCheck, IconArrowRight, IconArrowDown } from "@tabler/icons-react";
+import { IconCheck, IconArrowRight, IconArrowDown, IconSparkles } from "@tabler/icons-react";
 
 import { HERO_STAT } from "@/content/marketing/stats";
 import heroImage from "../../../public/images/hero-family.jpg";
@@ -60,6 +60,15 @@ export function Hero() {
               progress.
             </p>
 
+            <Link
+              href="/needs-assessment"
+              className="group inline-flex w-fit items-center gap-2 rounded-full border border-rust-light/50 bg-terracotta/20 px-5 py-2.5 text-sm font-semibold text-canvas-white backdrop-blur-sm transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-terracotta/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rust-light"
+            >
+              <IconSparkles size={15} stroke={2} className="text-rust-light" />
+              Take the 2-minute matching quiz
+              <IconArrowRight size={14} stroke={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+            </Link>
+
             <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/signup?role=parent"
@@ -75,13 +84,6 @@ export function Hero() {
                 I&apos;m a therapist
               </Link>
             </div>
-
-            <Link
-              href="/needs-assessment"
-              className="w-fit text-sm text-canvas-white/75 underline decoration-white/40 underline-offset-4 transition-colors hover:text-canvas-white"
-            >
-              Take the 2-minute matching quiz →
-            </Link>
           </div>
         </div>
       </div>

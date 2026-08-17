@@ -10,6 +10,7 @@ import { QuoteBreather } from "@/components/marketing/quote-breather";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { DashboardPreview } from "@/components/marketing/dashboard-preview";
 import { About } from "@/components/marketing/about";
+import { TrustSafety } from "@/components/marketing/trust-safety";
 import { Faq } from "@/components/marketing/faq";
 import { FinalCta } from "@/components/marketing/final-cta";
 import { Reveal } from "@/components/marketing/reveal";
@@ -61,6 +62,9 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
       </Reveal>
       <Reveal>
         <About />
+      </Reveal>
+      <Reveal>
+        <TrustSafety />
       </Reveal>
       <Reveal>
         <Faq />
