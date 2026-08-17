@@ -21,7 +21,7 @@ export function About() {
   return (
     <section id="about" className="bg-ivory px-6 py-28 lg:px-10 lg:py-36">
       <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
-        <div className="relative aspect-4/3 min-w-0 overflow-hidden rounded-[2rem] shadow-xl">
+        <div className="relative aspect-4/3 min-w-0 overflow-hidden rounded-[2rem] border-2 border-terracotta/50 shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)]">
           <Image
             src={aboutImage}
             alt="A father, mother, and daughter playing together during a therapy session"
