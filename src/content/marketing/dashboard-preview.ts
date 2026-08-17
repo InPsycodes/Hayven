@@ -1,3 +1,5 @@
+import { IconMessageCircle, IconUsers, IconHome } from "@tabler/icons-react";
+
 /**
  * Illustrative-only content for the landing page's dashboard mock. This is
  * marketing collateral, not real data -- it has no connection to the actual
@@ -9,9 +11,9 @@ export const DASHBOARD_PREVIEW = {
   meta: "Speech Therapy · Dr. Funmilayo Adebayo",
   statusLabel: "On track",
   progress: [
-    { label: "Communication", value: 82 },
-    { label: "Social interaction", value: 64 },
-    { label: "Daily living skills", value: 71 },
+    { label: "Communication", value: 82, icon: IconMessageCircle },
+    { label: "Social interaction", value: 64, icon: IconUsers },
+    { label: "Daily living skills", value: 71, icon: IconHome },
   ],
   footerLabel: "Therapy review",
   footerTime: "Wed, 10:00 AM",

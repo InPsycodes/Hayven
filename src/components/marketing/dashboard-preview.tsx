@@ -2,15 +2,21 @@ import Link from "next/link";
 import { IconCheck } from "@tabler/icons-react";
 
 import { DASHBOARD_PREVIEW, DASHBOARD_CHECKLIST } from "@/content/marketing/dashboard-preview";
+import { Icon } from "@/components/ui/icon";
+
+// Meaningful, not decorative: a row crossing into "strong progress" reads as
+// sage/success instead of the default terracotta, the same way a real
+// progress view would flag it.
+const STRONG_PROGRESS_THRESHOLD = 75;
 
 export function DashboardPreview() {
   return (
     <section className="px-6 py-28 lg:px-10 lg:py-36">
       <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
         <div className="order-2 min-w-0 lg:order-1">
-          <div className="rounded-[1.75rem] border border-charcoal/8 bg-canvas-white p-6 shadow-xl">
+          <div className="rounded-[1.75rem] border-[1.5px] border-terracotta/70 bg-canvas-white p-6 shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)]">
             <div className="flex items-center gap-3 border-b border-charcoal/8 pb-5">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-charcoal/10 font-serif text-sm text-charcoal">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-terracotta/25 bg-terracotta/12 font-serif text-sm text-rust-dark">
                 {DASHBOARD_PREVIEW.childInitials}
               </span>
               <div className="min-w-0 flex-1">
@@ -23,20 +29,30 @@ export function DashboardPreview() {
             </div>
 
             <div className="flex flex-col gap-3 border-b border-charcoal/8 py-5">
-              {DASHBOARD_PREVIEW.progress.map((row) => (
-                <div key={row.label} className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-xs text-ink-soft">
-                    <span>{row.label}</span>
-                    <span>{row.value}%</span>
+              {DASHBOARD_PREVIEW.progress.map((row) => {
+                const isStrong = row.value >= STRONG_PROGRESS_THRESHOLD;
+                return (
+                  <div key={row.label} className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-xs text-ink-soft">
+                      <span className="flex items-center gap-1.5">
+                        <Icon
+                          icon={row.icon}
+                          size="sm"
+                          className={isStrong ? "text-success" : "text-terracotta"}
+                        />
+                        {row.label}
+                      </span>
+                      <span className="font-medium text-charcoal">{row.value}%</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-charcoal/8">
+                      <div
+                        className={`h-full rounded-full ${isStrong ? "bg-success" : "bg-terracotta"}`}
+                        style={{ width: `${row.value}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-charcoal/8">
-                    <div
-                      className="h-full rounded-full bg-terracotta"
-                      style={{ width: `${row.value}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex items-center justify-between pt-5">
