@@ -19,14 +19,16 @@ export function Specialties() {
   return (
     <section id="specialties" className="px-6 py-28 lg:px-10 lg:py-36">
       <div className="mx-auto max-w-7xl">
-        <span className="eyebrow text-rust-dark">Find the right therapist</span>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
-          A diverse team, matched to your child&apos;s needs.
-        </h2>
-        <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-          Every specialist on Hayven is admin-verified before their profile goes live, across the
-          therapy types families ask for most.
-        </p>
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="eyebrow text-rust-dark">Find the right therapist</span>
+          <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
+            A diverse team, matched to your child&apos;s needs.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
+            Every specialist on Hayven is admin-verified before their profile goes live, across the
+            therapy types families ask for most.
+          </p>
+        </div>
 
         <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {SPECIALTY_CARDS.map((card, index) => (
@@ -63,7 +65,7 @@ export function Specialties() {
 
         <Link
           href="/search"
-          className="group mt-10 inline-flex items-center gap-2 rounded-full border border-terracotta px-6 py-3 text-sm font-semibold text-terracotta transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-terracotta hover:text-canvas-white"
+          className="group mx-auto mt-10 flex w-fit items-center gap-2 rounded-full border border-terracotta px-6 py-3 text-sm font-semibold text-terracotta transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-terracotta hover:text-canvas-white"
         >
           Browse verified therapists
           <IconArrowRight size={16} stroke={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />
