@@ -30,7 +30,7 @@ function FloatingIcon({
 
 export function Faq() {
   return (
-    <section id="faq" className="px-6 py-24 lg:px-10 lg:py-32">
+    <section id="faq" className="px-6 py-28 lg:px-10 lg:py-36">
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
         <div>
           <span className="eyebrow text-rust-dark">Questions</span>

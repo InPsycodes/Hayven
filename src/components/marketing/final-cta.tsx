@@ -13,13 +13,13 @@ export function FinalCta() {
         <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/signup?role=parent"
-            className="rounded-full bg-charcoal px-6 py-3.5 text-sm font-semibold text-canvas-white transition-colors hover:bg-charcoal/85"
+            className="rounded-full bg-charcoal px-6 py-3.5 text-sm font-semibold text-canvas-white transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-charcoal/85"
           >
             Get started as a parent
           </Link>
           <Link
             href="/signup?role=therapist"
-            className="rounded-full bg-canvas-white px-6 py-3.5 text-sm font-semibold text-charcoal transition-colors hover:bg-canvas-white/85"
+            className="rounded-full bg-canvas-white px-6 py-3.5 text-sm font-semibold text-charcoal transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-canvas-white/85"
           >
             Join as a therapist
           </Link>

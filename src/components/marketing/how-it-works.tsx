@@ -4,7 +4,7 @@ import { Reveal } from "@/components/marketing/reveal";
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-terracotta px-6 py-24 lg:px-10 lg:py-32">
+    <section id="how-it-works" className="bg-terracotta px-6 py-28 lg:px-10 lg:py-36">
       <div className="mx-auto max-w-7xl">
         <span className="eyebrow text-canvas-white/95">How it works</span>
         <h2 className="mt-3 max-w-xl font-serif text-3xl leading-tight text-canvas-white sm:text-4xl lg:text-[2.75rem]">

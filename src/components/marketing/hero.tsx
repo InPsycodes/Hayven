@@ -21,18 +21,18 @@ export function Hero() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, rgba(20,16,13,0.62) 0%, rgba(20,16,13,0.28) 26%, rgba(20,16,13,0.18) 45%, rgba(20,16,13,0.62) 76%, rgba(20,16,13,0.9) 100%)",
+            "linear-gradient(180deg, rgba(36,22,14,0.56) 0%, rgba(36,22,14,0.22) 26%, rgba(36,22,14,0.14) 45%, rgba(36,22,14,0.56) 76%, rgba(36,22,14,0.84) 100%)",
         }}
       />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(100deg, rgba(20,16,13,0.8) 0%, rgba(20,16,13,0.58) 32%, rgba(20,16,13,0.22) 56%, rgba(20,16,13,0.08) 68%, rgba(20,16,13,0.32) 100%)",
+            "linear-gradient(100deg, rgba(36,22,14,0.72) 0%, rgba(36,22,14,0.5) 32%, rgba(36,22,14,0.18) 56%, rgba(36,22,14,0.06) 68%, rgba(36,22,14,0.26) 100%)",
         }}
       />
 
-      <div className="relative z-10 flex flex-1 flex-col justify-center px-6 pt-28 pb-16 lg:px-10">
+      <div className="relative z-10 flex flex-1 flex-col justify-center px-6 pt-32 pb-20 lg:px-10">
         <div className="mx-auto w-full max-w-7xl">
           <div className="flex max-w-2xl flex-col gap-6">
             <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/12 px-4 py-2 text-sm text-canvas-white backdrop-blur-sm">
@@ -61,14 +61,14 @@ export function Hero() {
             <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/signup?role=parent"
-                className="inline-flex items-center gap-2 rounded-full bg-terracotta px-6 py-3.5 text-sm font-semibold text-canvas-white transition-colors hover:bg-rust-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
+                className="group inline-flex items-center gap-2 rounded-full bg-terracotta px-6 py-3.5 text-sm font-semibold text-canvas-white transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-rust-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
               >
                 I&apos;m a parent
-                <IconArrowRight size={16} stroke={2} />
+                <IconArrowRight size={16} stroke={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
               <Link
                 href="/signup?role=therapist"
-                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-semibold text-canvas-white backdrop-blur-sm transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-semibold text-canvas-white backdrop-blur-sm transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 I&apos;m a therapist
               </Link>

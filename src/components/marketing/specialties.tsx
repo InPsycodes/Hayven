@@ -16,7 +16,7 @@ const PLACEHOLDER_GRADIENTS = [
 
 export function Specialties() {
   return (
-    <section id="specialties" className="px-6 py-24 lg:px-10 lg:py-32">
+    <section id="specialties" className="px-6 py-28 lg:px-10 lg:py-36">
       <div className="mx-auto max-w-7xl">
         <span className="eyebrow text-rust-dark">Find the right therapist</span>
         <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
@@ -27,7 +27,7 @@ export function Specialties() {
           therapy types families ask for most.
         </p>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {SPECIALTY_CARDS.map((card, index) => (
             <Reveal key={card.title} delayMs={index * 80} className="h-full">
               <div className="group flex h-full flex-col overflow-hidden rounded-2xl border-[1.5px] border-terracotta/70 bg-canvas-white transition-all hover:-translate-y-1 hover:border-terracotta">
@@ -47,8 +47,8 @@ export function Specialties() {
                     />
                   )}
                 </div>
-                <div className="p-6">
-                  <div className="relative -mt-11 flex size-10 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">
+                <div className="p-8">
+                  <div className="relative -mt-[52px] flex size-10 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">
                     <Icon icon={card.icon} size="md" />
                   </div>
                   <h3 className="mt-4 font-serif text-xl text-charcoal">{card.title}</h3>

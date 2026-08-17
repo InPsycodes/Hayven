@@ -5,7 +5,7 @@ import { DASHBOARD_PREVIEW, DASHBOARD_CHECKLIST } from "@/content/marketing/dash
 
 export function DashboardPreview() {
   return (
-    <section className="px-6 py-24 lg:px-10 lg:py-32">
+    <section className="px-6 py-28 lg:px-10 lg:py-36">
       <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
         <div className="order-2 min-w-0 lg:order-1">
           <div className="rounded-[1.75rem] border border-charcoal/8 bg-canvas-white p-6 shadow-xl">
