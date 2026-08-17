@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { IconHeart, IconShieldCheck } from "@tabler/icons-react";
 
+import aboutImage from "../../../public/images/about-family-session.png";
+
 const VALUES = [
   {
     icon: IconHeart,
@@ -21,9 +23,10 @@ export function About() {
       <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
         <div className="relative aspect-4/3 min-w-0 overflow-hidden rounded-[2rem] shadow-xl">
           <Image
-            src="/images/about-family-session.png"
+            src={aboutImage}
             alt="A father, mother, and daughter playing together during a therapy session"
             fill
+            placeholder="blur"
             sizes="(min-width: 1024px) 50vw, 100vw"
             className="photo-treatment object-cover"
           />

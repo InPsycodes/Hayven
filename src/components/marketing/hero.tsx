@@ -3,6 +3,7 @@ import Link from "next/link";
 import { IconCheck, IconArrowRight, IconArrowDown } from "@tabler/icons-react";
 
 import { HERO_STAT } from "@/content/marketing/stats";
+import heroImage from "../../../public/images/hero-family.jpg";
 
 const TEXT_SHADOW = "0 2px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.45)";
 
@@ -10,10 +11,11 @@ export function Hero() {
   return (
     <section className="relative flex min-h-[100svh] flex-col overflow-hidden">
       <Image
-        src="/images/hero-family.jpg"
+        src={heroImage}
         alt="A parent and child laughing together at home"
         fill
         priority
+        placeholder="blur"
         sizes="100vw"
         className="photo-treatment object-cover object-[center_30%]"
       />

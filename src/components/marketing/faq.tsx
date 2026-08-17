@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 
 import { MARKETING_FAQS } from "@/content/marketing/faq";
 import {
@@ -7,6 +7,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+
+import faqConsultationImage from "../../../public/images/faq-consultation.png";
+import faqIconBubbleImage from "../../../public/images/faq-icon-bubble.png";
+import faqIconQuestionImage from "../../../public/images/faq-icon-question.png";
+import faqIconHeartImage from "../../../public/images/faq-icon-heart.png";
 
 const ICON_MASK = {
   WebkitMaskImage: "radial-gradient(circle, black 55%, transparent 100%)",
@@ -18,12 +23,12 @@ function FloatingIcon({
   src,
   className,
 }: {
-  src: string;
+  src: StaticImageData;
   className: string;
 }) {
   return (
     <div className={`absolute drop-shadow-lg ${className}`} style={ICON_MASK}>
-      <Image src={src} alt="" fill sizes="112px" className="object-cover" />
+      <Image src={src} alt="" fill placeholder="blur" sizes="112px" className="object-cover" />
     </div>
   );
 }
@@ -56,24 +61,25 @@ export function Faq() {
         <div className="relative mx-auto mt-20 w-full max-w-md lg:mt-0 lg:w-[540px]">
           <div className="relative aspect-square w-full">
             <Image
-              src="/images/faq-consultation.png"
+              src={faqConsultationImage}
               alt=""
               fill
+              placeholder="blur"
               sizes="(min-width: 1024px) 540px, 448px"
               className="object-contain"
             />
           </div>
 
           <FloatingIcon
-            src="/images/faq-icon-bubble.png"
+            src={faqIconBubbleImage}
             className="-top-6 -left-3 size-24 -rotate-6 lg:-top-10 lg:-left-8 lg:size-28"
           />
           <FloatingIcon
-            src="/images/faq-icon-question.png"
+            src={faqIconQuestionImage}
             className="top-1/4 -right-3 size-20 rotate-6 lg:-right-6 lg:size-24"
           />
           <FloatingIcon
-            src="/images/faq-icon-heart.png"
+            src={faqIconHeartImage}
             className="-bottom-4 left-3 size-20 rotate-3 lg:-bottom-8 lg:left-6 lg:size-24"
           />
         </div>

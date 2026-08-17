@@ -37,6 +37,7 @@ export function Specialties() {
                       src={card.imageSrc}
                       alt={`A ${card.title.toLowerCase()} session with a child`}
                       fill
+                      placeholder="blur"
                       sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                       className="photo-treatment size-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />

@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import quoteImage from "../../../public/images/quote-breather-mother-child.png";
+
 // The photo IS the section background (no boxed frame) -- a warm scrim,
 // using the same gradient this section always had, sits over it and fades
 // out toward the right so the photo takes over everywhere the quote isn't.
@@ -7,9 +9,10 @@ export function QuoteBreather() {
   return (
     <section className="relative overflow-hidden py-20 lg:min-h-[65vh] lg:py-0">
       <Image
-        src="/images/quote-breather-mother-child.png"
+        src={quoteImage}
         alt="A mother and her son sitting on the floor together, building a tower out of wooden blocks"
         fill
+        placeholder="blur"
         sizes="100vw"
         className="photo-treatment object-cover object-[58%_40%] lg:object-[72%_38%]"
       />
