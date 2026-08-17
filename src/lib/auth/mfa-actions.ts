@@ -3,20 +3,25 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSession } from "@/lib/auth/session";
 
 export type EnrollMfaResult =
   | { ok: true; factorId: string; qrCode: string; secret: string }
   | { ok: false; error: string };
 
+const NOT_SIGNED_IN_ERROR = "You must be signed in to enable two-factor authentication.";
+
 /** Starts TOTP enrollment -- returns a QR code (SVG data URI) and the raw
  * secret as a manual-entry fallback for authenticator apps that can't scan. */
 export async function enrollMfa(): Promise<EnrollMfaResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "You must be signed in to enable two-factor authentication." };
+  // getSession(), not a raw getUser() check -- these are plain server actions,
+  // independently reachable regardless of which page renders their UI, so
+  // this is the only thing standing between a suspended account's still-valid
+  // session cookie and enrolling a fresh MFA factor as a persistent backdoor.
+  const session = await getSession();
+  if (!session) return { ok: false, error: NOT_SIGNED_IN_ERROR };
 
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
   if (error) return { ok: false, error: error.message };
 
@@ -34,6 +39,9 @@ export async function confirmMfaEnrollment(
   factorId: string,
   code: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: NOT_SIGNED_IN_ERROR };
+
   const supabase = await createClient();
   const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
   if (challengeError) return { ok: false, error: challengeError.message };
@@ -53,6 +61,9 @@ export async function confirmMfaEnrollment(
 }
 
 export async function unenrollMfa(factorId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: NOT_SIGNED_IN_ERROR };
+
   const supabase = await createClient();
   const { error } = await supabase.auth.mfa.unenroll({ factorId });
   if (error) return { ok: false, error: error.message };
@@ -70,6 +81,9 @@ export interface MfaStatus {
 }
 
 export async function getMfaStatus(): Promise<MfaStatus> {
+  const session = await getSession();
+  if (!session) return { enrolled: false, factorId: null };
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.mfa.listFactors();
   if (error || !data) return { enrolled: false, factorId: null };
