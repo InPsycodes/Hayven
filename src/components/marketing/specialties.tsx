@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { IconArrowRight } from "@tabler/icons-react";
 
 import { SPECIALTY_CARDS } from "@/content/marketing/specialties";
 import { Icon } from "@/components/ui/icon";
@@ -62,9 +63,10 @@ export function Specialties() {
 
         <Link
           href="/search"
-          className="mt-10 inline-block border-b-2 border-terracotta pb-1 text-sm font-medium text-charcoal transition-colors hover:text-terracotta"
+          className="group mt-10 inline-flex items-center gap-2 rounded-full border border-terracotta px-6 py-3 text-sm font-semibold text-terracotta transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-terracotta hover:text-canvas-white"
         >
           Browse verified therapists
+          <IconArrowRight size={16} stroke={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />
         </Link>
       </div>
     </section>
