@@ -20,7 +20,7 @@ export function TrustSafety() {
         <div className="mt-14 grid gap-5 sm:grid-cols-3">
           {TRUST_SAFETY_POINTS.map((point, index) => (
             <Reveal key={point.title} delayMs={index * 80} className="h-full">
-              <div className="flex h-full flex-col gap-4 rounded-[1.25rem] border-[1.5px] border-terracotta/70 bg-canvas-white p-8 shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)]">
+              <div className="flex h-full scale-100 flex-col gap-4 rounded-[1.25rem] border-[1.5px] border-terracotta/70 bg-canvas-white p-8 shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)] transition-all duration-300 ease-out hover:scale-[1.04] hover:border-terracotta hover:shadow-[0_24px_64px_-14px_rgba(26,18,12,0.32),0_0_80px_-6px_rgba(156,89,52,0.55)]">
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-terracotta/25 bg-terracotta/12 text-terracotta">
                   <Icon icon={point.icon} size="md" />
                 </span>
