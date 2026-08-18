@@ -25,13 +25,13 @@ export function TrustSafety() {
                   taller at any card width -- no fixed-height guess needed.
                   The title fades out and the body fades in on hover, so the
                   card's footprint never changes and no sibling card shifts. */}
-              <div className="group relative flex h-full scale-100 flex-col gap-4 rounded-[1.25rem] border-[1.5px] border-terracotta/70 bg-canvas-white p-8 shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)] transition-all duration-300 ease-out hover:z-20 hover:scale-[1.04] hover:border-terracotta hover:shadow-[0_24px_64px_-14px_rgba(26,18,12,0.32),0_0_80px_-6px_rgba(156,89,52,0.55)]">
+              <div className="group relative flex h-full scale-100 flex-col items-center gap-4 rounded-[1.25rem] border-[1.5px] border-terracotta/70 bg-canvas-white p-8 text-center shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)] transition-all duration-300 ease-out hover:z-20 hover:scale-[1.04] hover:border-terracotta hover:shadow-[0_24px_64px_-14px_rgba(26,18,12,0.32),0_0_80px_-6px_rgba(156,89,52,0.55)]">
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-terracotta/25 bg-terracotta/12 text-terracotta">
                   <Icon icon={point.icon} size="md" />
                 </span>
 
-                <div className="grid">
-                  <h3 className="col-start-1 row-start-1 font-serif text-lg text-charcoal transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:opacity-0">
+                <div className="grid justify-items-center">
+                  <h3 className="col-start-1 row-start-1 self-start font-serif text-lg text-charcoal transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:opacity-0">
                     {point.title}
                   </h3>
                   <p className="col-start-1 row-start-1 translate-y-1 self-start text-sm leading-relaxed text-ink-soft opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100">
