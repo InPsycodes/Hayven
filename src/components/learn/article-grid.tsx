@@ -50,7 +50,7 @@ export function ArticleGrid({ articles }: { articles: Article[] }) {
               className="group grid grid-cols-[72px_1fr] items-center gap-4 py-5 sm:grid-cols-[100px_1fr] sm:gap-6"
             >
               <div
-                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-xl ${article.imageSrc ? "" : (meta?.tileClass ?? "bg-paper text-ink-soft")}`}
+                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl ${article.imageSrc ? "" : (meta?.tileClass ?? "bg-paper text-ink-soft")}`}
               >
                 {article.imageSrc ? (
                   <Image
