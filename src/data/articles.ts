@@ -3,6 +3,18 @@
  * Center is a public content library, not an API-spec entity) -- kept as
  * static editorial fixtures separate from src/data/fixtures/.
  */
+import type { StaticImageData } from "next/image";
+
+import sessionNotesImage from "../../public/images/learn-therapist-session-notes.jpg";
+import verificationImage from "../../public/images/learn-therapist-verification.jpg";
+import profileNoticedImage from "../../public/images/learn-therapist-profile-noticed.jpg";
+import messagingBoundariesImage from "../../public/images/learn-therapist-messaging-boundaries.jpg";
+import settingAvailabilityImage from "../../public/images/learn-therapist-setting-availability.jpg";
+import bookingConfirmedImage from "../../public/images/learn-therapist-booking-confirmed.jpg";
+import supervisorImage from "../../public/images/learn-therapist-supervisor.jpg";
+import cancellationsImage from "../../public/images/learn-therapist-cancellations.jpg";
+import endingCareImage from "../../public/images/learn-therapist-ending-care.jpg";
+
 export type Audience = "parent" | "therapist";
 
 export interface Article {
@@ -14,6 +26,8 @@ export interface Article {
   excerpt: string;
   body: string[];
   reviewedBy?: string;
+  /** Real photo for the article thumbnail, where one exists -- falls back to the category icon tile otherwise (see LEARN_TOPIC_META). */
+  imageSrc?: StaticImageData;
 }
 
 export const PARENT_CATEGORIES = [
@@ -189,6 +203,7 @@ export const ARTICLES: Article[] = [
     title: "Writing session notes parents will actually read",
     readTime: "4 min read",
     excerpt: "Plain language over clinical shorthand: what to translate, and what to keep precise.",
+    imageSrc: sessionNotesImage,
     body: [
       "A note written for your own clinical record and a note written for a parent to actually read aren't the same document, even when they're describing the same session. Hayven's parent-facing report is a separate, plain-language summary from your own clinical notes for exactly this reason.",
       "Target-behaviour labels are the clearest example. \"Elopement\" or \"tantrum duration\" are precise, useful shorthand for your own records, but they read as cold or even alarming to a parent seeing them for the first time. Translate the behaviour into what it actually looked like and why it matters, not the clinical term for it.",
@@ -204,6 +219,7 @@ export const ARTICLES: Article[] = [
     title: "What Hayven's verification process checks, and why",
     readTime: "4 min read",
     excerpt: "What to submit, what a decision actually means, and when your profile goes live.",
+    imageSrc: verificationImage,
     body: [
       "Your profile stays hidden from parent search until your credentials have been reviewed and approved. This applies to every therapist on Hayven, regardless of experience or specialty, since it's the thing parents are trusting when they book with someone they've never met.",
       "What to submit: your membership or license number, the professional body that issued it, and supporting documentation. Be specific about which professional body applies to your discipline. Nigeria doesn't have one single registry, so the review is only as accurate as what you submit.",
@@ -219,6 +235,7 @@ export const ARTICLES: Article[] = [
     title: "Getting your profile noticed by the right parents",
     readTime: "4 min read",
     excerpt: "What your bio, price, and location actually do for how parents find and choose you.",
+    imageSrc: profileNoticedImage,
     body: [
       "Once you're verified, three fields do most of the work in how parents find and choose you: your bio, your session price, and your location, all editable anytime from your Profile page.",
       "Your bio is the first thing a parent reads after your name and badge, and it's the part most therapists under-invest in. A bio that names specific specialties and the kind of family you work best with (\"I work mostly with early-elementary kids navigating a new diagnosis\") gives a parent something to match themselves against, far more than a general statement of credentials they've already seen in your badge.",
@@ -234,6 +251,7 @@ export const ARTICLES: Article[] = [
     title: "Setting messaging boundaries that protect your time",
     readTime: "3 min read",
     excerpt: "Generic, practical advice on response-time expectations that keeps messaging sustainable.",
+    imageSrc: messagingBoundariesImage,
     body: [
       "Messaging access is one of the things parents value most about working with a therapist directly, but without some structure it can quietly expand to fill every hour you're awake. A few boundaries that tend to hold up over time.",
       "Set an expectation early, not reactively. Mentioning in your first session or first message thread roughly when parents can expect a reply (\"I check messages once a day, usually in the evening\") heads off both anxious follow-ups and the assumption that you're always reachable.",
@@ -330,6 +348,7 @@ export const ARTICLES: Article[] = [
     title: "Setting availability that actually gets booked",
     readTime: "4 min read",
     excerpt: "How the slot system actually works, and the small habits that keep your calendar realistic instead of stale.",
+    imageSrc: settingAvailabilityImage,
     body: [
       "Availability on Hayven works as individual slots you add directly, each with its own date, start and end time, and session type (in-person or virtual), not a recurring weekly pattern you set once and forget. That's a deliberate tradeoff: more control over exactly when you're open, but it also means a calendar you set up once and never touch again will quietly go stale.",
       "A slot you don't remove stays visible and bookable until someone books it or the date passes, so the main maintenance task on your end is removing slots you no longer want to offer, not adding new ones. If your actual availability changes (a new commitment, a personal conflict), deleting the now-inaccurate slot is what keeps your calendar trustworthy to parents browsing it.",
@@ -345,6 +364,7 @@ export const ARTICLES: Article[] = [
     title: "What happens when a slot gets booked: holds, payment, and confirmation",
     readTime: "3 min read",
     excerpt: "The exact sequence between a parent clicking your slot and it showing up as a confirmed session, and why a slot sometimes reappears.",
+    imageSrc: bookingConfirmedImage,
     body: [
       "It's worth knowing the actual sequence behind a booking, mostly because it explains a couple of things that can otherwise look like bugs: a slot briefly disappearing then reappearing, or a booking that doesn't show up on your schedule right away.",
       "When a parent selects your slot, it's marked as held, not booked, while they go through payment. During this window, the slot won't show as available to anyone else searching, but it also isn't a confirmed session yet, nothing has happened on your end, and it won't appear on your schedule as confirmed.",
@@ -360,6 +380,7 @@ export const ARTICLES: Article[] = [
     title: "Working with a supervisor on Hayven: what they can see, and why",
     readTime: "4 min read",
     excerpt: "Supervisor visibility isn't opt-in, and it's more than a summary view. What that actually means for your day-to-day practice.",
+    imageSrc: supervisorImage,
     body: [
       "If you're assigned a supervisor on Hayven, that assignment is made on the admin side, not something you opt into or configure yourself, and it's worth understanding what it actually gives them access to rather than assuming.",
       "A supervisor assigned to you can see your active caseload: which children you're currently working with, and can open individual session detail within that caseload, not just a high-level summary. This is closer to a clinical oversight relationship than a purely administrative one, so it's worth writing session notes with the same care whether or not you expect them to be reviewed.",
@@ -375,6 +396,7 @@ export const ARTICLES: Article[] = [
     title: "When a session doesn't happen: cancellations and no-shows on Hayven",
     readTime: "4 min read",
     excerpt: "What the platform does and doesn't handle automatically when a session falls through, and what's worth doing yourself.",
+    imageSrc: cancellationsImage,
     body: [
       "Either you or the parent can cancel a confirmed or pending-payment booking up until the session's scheduled start time, and that cancellation is recorded with a reason. It's worth knowing, though, that this is where the platform's automation currently stops: cancelling a paid booking doesn't itself trigger a refund.",
       "If a parent needs a refund after a cancellation, that's handled by Hayven's team directly rather than automatically, so if a family raises it with you, the honest and useful answer is to point them to reach out to Hayven about the refund specifically, rather than promising something the platform doesn't yet do on its own.",
@@ -391,6 +413,7 @@ export const ARTICLES: Article[] = [
     readTime: "4 min read",
     excerpt:
       "This isn't something you close out yourself from your dashboard, and that's by design. How to think about the conversation, and who to loop in.",
+    imageSrc: endingCareImage,
     body: [
       "Ending a therapist-child relationship well, whether because goals were met, a family is relocating, or care needs to transition elsewhere, is a distinct decision from simply not booking further sessions, and it's worth treating it as one rather than letting a relationship quietly go inactive.",
       "On Hayven specifically, this isn't a self-service action from your own dashboard: formally ending an active therapist-child assignment goes through your supervisor if you have one, or Hayven's admin team if you don't. That's a deliberate design choice, not a gap, closure is treated as something with enough weight to involve a second person, not a single click.",

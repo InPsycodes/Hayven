@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { IconSearch, IconClock } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
@@ -49,9 +50,20 @@ export function ArticleGrid({ articles }: { articles: Article[] }) {
               className="group grid grid-cols-[72px_1fr] items-center gap-4 py-5 sm:grid-cols-[100px_1fr] sm:gap-6"
             >
               <div
-                className={`flex aspect-square items-center justify-center rounded-xl ${meta?.tileClass ?? "bg-paper text-ink-soft"}`}
+                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-xl ${article.imageSrc ? "" : (meta?.tileClass ?? "bg-paper text-ink-soft")}`}
               >
-                {meta && <Icon icon={meta.icon} size="lg" />}
+                {article.imageSrc ? (
+                  <Image
+                    src={article.imageSrc}
+                    alt=""
+                    fill
+                    placeholder="blur"
+                    sizes="(min-width: 640px) 100px, 72px"
+                    className="photo-treatment size-full object-cover"
+                  />
+                ) : (
+                  meta && <Icon icon={meta.icon} size="lg" />
+                )}
               </div>
               <div className="flex min-w-0 flex-col gap-2">
                 {meta && (
