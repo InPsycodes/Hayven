@@ -6,6 +6,11 @@ import {
   IconFlag,
   IconMapPin,
   IconStethoscope,
+  IconTimeline,
+  IconActivity,
+  IconClipboardList,
+  IconHeartHandshake,
+  IconFileText,
 } from "@tabler/icons-react";
 import type { ComponentType } from "react";
 import type { IconProps } from "@tabler/icons-react";
@@ -56,5 +61,32 @@ export const LEARN_TOPIC_META: Record<string, LearnTopicMeta> = {
     icon: IconStethoscope,
     tileClass: "bg-charcoal text-canvas-white",
     chipClass: "bg-charcoal text-canvas-white",
+  },
+  // Therapist training curriculum modules (see Article.category values
+  // prefixed "module1".."module5" in src/data/articles.ts).
+  "Child Development": {
+    icon: IconTimeline,
+    tileClass: "bg-success/15 text-success",
+    chipClass: "bg-success/15 text-success",
+  },
+  "Behavioral Assessment": {
+    icon: IconActivity,
+    tileClass: "bg-amber/15 text-amber",
+    chipClass: "bg-amber/15 text-amber",
+  },
+  "Child Assessments": {
+    icon: IconClipboardList,
+    tileClass: "bg-rust-light/20 text-rust-dark",
+    chipClass: "bg-rust-light/20 text-rust-dark",
+  },
+  "Parents & Caregivers": {
+    icon: IconHeartHandshake,
+    tileClass: "bg-terracotta/10 text-rust-dark",
+    chipClass: "bg-terracotta/10 text-rust-dark",
+  },
+  "Clinical Documentation": {
+    icon: IconFileText,
+    tileClass: "border border-border bg-canvas-white text-ink-soft",
+    chipClass: "bg-canvas-white text-ink-soft ring-1 ring-border",
   },
 };
