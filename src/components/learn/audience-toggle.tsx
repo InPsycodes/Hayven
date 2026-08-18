@@ -14,7 +14,7 @@ export function AudienceToggle({ active }: { active: Audience }) {
   const router = useRouter();
 
   return (
-    <div className="inline-flex overflow-hidden rounded-full border border-border">
+    <div className="flex w-full overflow-hidden rounded-full border border-border p-0.5">
       {OPTIONS.map((option) => {
         const isActive = option.value === active;
         return (
@@ -23,7 +23,7 @@ export function AudienceToggle({ active }: { active: Audience }) {
             type="button"
             onClick={() => router.push(option.value === "parent" ? "/learn" : "/learn?audience=therapist")}
             className={cn(
-              "px-4 py-1.5 text-sm font-medium transition-colors",
+              "flex-1 rounded-full px-3 py-1.5 text-center text-sm font-medium transition-colors",
               isActive ? "bg-charcoal text-offwhite" : "bg-transparent text-charcoal hover:bg-paper"
             )}
           >
