@@ -42,3 +42,24 @@ export async function markAllNotificationsRead(): Promise<ActionResult> {
   revalidatePath("/supervisor", "layout");
   return { ok: true };
 }
+
+/**
+ * Called from the parent reports page on load. Scoped to "any report
+ * notification", not the specific report being viewed -- entity_id is a
+ * report id, and joining that back to "is this the report on screen right
+ * now" isn't worth the extra query for a notification-bell-adjacent read
+ * receipt. Worst case a reminder that would've fired doesn't, because the
+ * parent was already looking at their reports section.
+ */
+export async function markReportNotificationsRead(): Promise<void> {
+  const session = await getSession();
+  if (!session) return;
+
+  const supabase = await createClient();
+  await supabase
+    .from("notifications")
+    .update({ read: true })
+    .eq("user_id", session.userId)
+    .eq("entity_type", "report")
+    .eq("read", false);
+}

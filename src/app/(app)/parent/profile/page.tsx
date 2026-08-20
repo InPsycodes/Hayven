@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ProfileForm } from "@/components/shared/profile-form";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
 import { MfaSection } from "@/components/shared/mfa-section";
+import { PushNotificationsToggle } from "@/components/parent/push-notifications-toggle";
 import { getSession } from "@/lib/auth/session";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealAccountInfo, getRealPendingDeletionRequest } from "@/lib/account/queries";
@@ -73,6 +74,8 @@ export default async function ParentProfilePage() {
             </Link>
           </div>
         </Card>
+
+        <PushNotificationsToggle />
 
         <MfaSection initialStatus={mfaStatus} />
 

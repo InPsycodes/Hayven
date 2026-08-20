@@ -31,3 +31,30 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// Real OS-level push notifications (see src/lib/notifications/push.ts for
+// the send side). Payload is always JSON: { title, body, url }.
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  let payload: { title?: string; body?: string; url?: string };
+  try {
+    payload = event.data.json();
+  } catch {
+    return;
+  }
+  const { title = "Hayven", body = "", url = "/" } = payload;
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/icons/192",
+      badge: "/icons/192",
+      data: { url },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data as { url?: string } | undefined)?.url ?? "/";
+  event.waitUntil(self.clients.openWindow(url));
+});

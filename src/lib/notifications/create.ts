@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, renderNotificationEmail } from "@/lib/email/send";
+import { sendPushToUser } from "@/lib/notifications/push";
 
 export type NotificationType =
   | "booking_confirmed"
@@ -11,7 +12,11 @@ export type NotificationType =
   | "verification_update"
   | "meeting_link_ready"
   | "support_request_new"
-  | "support_request_resolved";
+  | "support_request_resolved"
+  | "report_published"
+  | "report_reminder"
+  | "session_started"
+  | "session_finished";
 
 /**
  * Fire-and-forget: a notification failing to write must never roll back the
@@ -29,6 +34,11 @@ export async function createNotification(params: {
   type: NotificationType;
   title: string;
   body: string;
+  /** Lets a later dedup check ask "does a notification of this type already exist for this entity" -- e.g. entityType: "report", entityId: reportId. Optional: existing notification types don't set these. */
+  entityType?: string;
+  entityId?: string;
+  /** Where a tap on the push notification (or a click in the in-app bell, if the UI ever wires that up) should navigate to. Defaults to the dashboard root. */
+  url?: string;
 }): Promise<void> {
   const admin = createAdminClient();
   try {
@@ -37,6 +47,8 @@ export async function createNotification(params: {
       type: params.type,
       title: params.title,
       body: params.body,
+      entity_type: params.entityType ?? null,
+      entity_id: params.entityId ?? null,
     });
     if (error) console.error("notification insert failed", params.type, error.message);
   } catch (err) {
@@ -54,5 +66,11 @@ export async function createNotification(params: {
     }
   } catch (err) {
     console.error("notification email threw", params.type, err);
+  }
+
+  try {
+    await sendPushToUser(params.userId, { title: params.title, body: params.body, url: params.url });
+  } catch (err) {
+    console.error("notification push threw", params.type, err);
   }
 }

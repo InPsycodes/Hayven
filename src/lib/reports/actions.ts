@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { logAuditEvent } from "@/lib/audit/log";
+import { createNotification } from "@/lib/notifications/create";
 import { getGenerationInput, getPhraseVariants } from "./queries";
 import { generateParentReport, generateTherapistReport } from "./generate";
 import type { ReportBody } from "./types";
@@ -179,6 +181,28 @@ export async function publishReport(reportId: string): Promise<{ ok: true } | { 
   if (!data) return { ok: false, error: "Report not found." };
 
   await logAuditEvent({ actor: session, action: "report.publish", entityType: "report", entityId: reportId, childId });
+
+  // Cross-user delivery (therapist publishing -> parent notified) needs the
+  // service-role client, same reasoning as createNotification's own reads --
+  // never let a notification failure roll back a publish that already
+  // succeeded, so this is fire-and-forget after the real write.
+  try {
+    const admin = createAdminClient();
+    const { data: child } = await admin.from("children").select("first_name, parent_id").eq("id", childId).maybeSingle();
+    if (child) {
+      await createNotification({
+        userId: child.parent_id,
+        type: "report_published",
+        entityType: "report",
+        entityId: reportId,
+        title: `${child.first_name}'s new session report is ready`,
+        body: `${session.name} just published a new report for ${child.first_name}.`,
+        url: `/parent/children/${childId}/reports`,
+      });
+    }
+  } catch (err) {
+    console.error("report_published notification threw", reportId, err);
+  }
 
   revalidatePath(`/therapist/children`);
   return { ok: true };

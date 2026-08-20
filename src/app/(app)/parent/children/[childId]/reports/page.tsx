@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth/session";
 import { getRealChildById } from "@/lib/parent/queries";
 import { getPublishedReportsForChild } from "@/lib/reports/queries";
 import { renderReportBody } from "@/lib/reports/generate";
+import { markReportNotificationsRead } from "@/lib/notifications/actions";
 import { formatDate } from "@/data/format";
 
 export default async function ParentChildReportsPage({ params }: { params: Promise<{ childId: string }> }) {
@@ -18,6 +19,7 @@ export default async function ParentChildReportsPage({ params }: { params: Promi
   if (!child || child.parentId !== session.userId) notFound();
 
   const reports = await getPublishedReportsForChild(childId);
+  await markReportNotificationsRead();
 
   return (
     <div>
