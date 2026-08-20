@@ -29,7 +29,9 @@ export type AuditAction =
   | "support_request.resolve"
   | "account.suspend"
   | "account.reactivate"
-  | "account.reset_password";
+  | "account.reset_password"
+  | "account.grant_supervisor"
+  | "account.revoke_supervisor";
 
 /**
  * Fire-and-forget: a logging failure must never roll back a clinical write

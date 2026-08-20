@@ -506,3 +506,65 @@ export async function resetUserAccountPassword(
 
   return { ok: true };
 }
+
+/**
+ * Grants or revokes the supervisor role -- the only way a supervisor account
+ * gets created today, since signup only ever offers parent/therapist and
+ * assignSupervisorToTherapist() requires the role to already be set.
+ *
+ * Granting is restricted to parent-role accounts: role is a single column,
+ * so switching a therapist or admin over would silently strand their own
+ * role-specific data (therapist_profiles, their own children, etc.) behind
+ * a login that can no longer reach it. A plain parent account carries none
+ * of that, matching how a dedicated supervisor account would really be set
+ * up (a fresh or repurposed login, not an existing practitioner's).
+ *
+ * Revoking also ends every active supervisor_assignments row for this user:
+ * is_supervisor_of_therapist()/is_supervised_child() key off that table, not
+ * the user's role column, so a stale active row would keep RLS-level access
+ * alive even after the role itself changes back.
+ */
+export async function setUserSupervisorRole(
+  userId: string,
+  makeSupervisor: boolean
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+
+  if (userId === session.userId) {
+    return { ok: false, error: "You can't change your own account's role here." };
+  }
+
+  const supabase = createAdminClient();
+  const { data: target } = await supabase.from("users").select("role").eq("id", userId).maybeSingle();
+  if (!target) return { ok: false, error: "Account not found." };
+
+  if (makeSupervisor) {
+    if (target.role !== "parent") {
+      return { ok: false, error: "Only parent accounts can be made supervisors." };
+    }
+    const { error } = await supabase.from("users").update({ role: "supervisor" }).eq("id", userId);
+    if (error) return { ok: false, error: error.message };
+
+    await logAuditEvent({ actor: session, action: "account.grant_supervisor", entityType: "user", entityId: userId });
+  } else {
+    if (target.role !== "supervisor") {
+      return { ok: false, error: "This account isn't a supervisor." };
+    }
+    const { error } = await supabase.from("users").update({ role: "parent" }).eq("id", userId);
+    if (error) return { ok: false, error: error.message };
+
+    const { error: endError } = await supabase
+      .from("supervisor_assignments")
+      .update({ status: "ended", ended_on: new Date().toISOString().slice(0, 10) })
+      .eq("supervisor_id", userId)
+      .eq("status", "active");
+    if (endError) return { ok: false, error: endError.message };
+
+    await logAuditEvent({ actor: session, action: "account.revoke_supervisor", entityType: "user", entityId: userId });
+  }
+
+  revalidatePath("/admin/accounts");
+  revalidatePath("/admin/users");
+  return { ok: true };
+}

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDate, initialsFromName } from "@/data/format";
 import type { AdminUserRow } from "@/lib/admin/queries";
-import { setUserAccountStatus, resetUserAccountPassword } from "@/lib/admin/actions";
+import { setUserAccountStatus, resetUserAccountPassword, setUserSupervisorRole } from "@/lib/admin/actions";
 
 const ROLE_FILTERS = [
   { key: "all", label: "All" },
@@ -60,8 +60,11 @@ function ResetPasswordForm({ userId, onDone }: { userId: string; onDone: () => v
 
 function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
   const [isPending, startTransition] = useTransition();
+  const [isRolePending, startRoleTransition] = useTransition();
   const [resetting, setResetting] = useState(false);
   const [localStatus, setLocalStatus] = useState(user.status);
+  const [localRole, setLocalRole] = useState(user.role);
+  const [roleError, setRoleError] = useState<string | null>(null);
 
   const suspended = localStatus === "suspended";
 
@@ -82,7 +85,7 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <StatusBadge tone="grey">{user.role}</StatusBadge>
+          <StatusBadge tone="grey">{localRole}</StatusBadge>
           <StatusBadge tone={suspended ? "error" : "sage"}>{suspended ? "Suspended" : "Active"}</StatusBadge>
           <span className="text-[11px] whitespace-nowrap text-muted-foreground">
             Joined {formatDate(user.createdAt)}
@@ -108,7 +111,27 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
         <Button size="sm" variant="ghost" disabled={isSelf} onClick={() => setResetting((v) => !v)}>
           Reset password
         </Button>
+        {(localRole === "parent" || localRole === "supervisor") && (
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={isRolePending || isSelf}
+            onClick={() =>
+              startRoleTransition(async () => {
+                setRoleError(null);
+                const makeSupervisor = localRole === "parent";
+                const result = await setUserSupervisorRole(user.id, makeSupervisor);
+                if (result.ok) setLocalRole(makeSupervisor ? "supervisor" : "parent");
+                else setRoleError(result.error);
+              })
+            }
+          >
+            {isRolePending ? "Saving..." : localRole === "parent" ? "Make supervisor" : "Remove supervisor"}
+          </Button>
+        )}
       </div>
+
+      {roleError && <p className="text-xs text-error">{roleError}</p>}
 
       {resetting && (
         <div className="border-t border-charcoal/8 pt-3">
