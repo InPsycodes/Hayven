@@ -174,8 +174,15 @@
   html,
   body {
     /* Safety net: a single overflowing element (grid blowout, unwrapped
-       text, etc.) should never be able to shift the whole page sideways. */
-    overflow-x: hidden;
+       text, etc.) should never be able to shift the whole page sideways.
+       `clip`, not `hidden` -- `hidden` forces the y-axis to a computed
+       `auto` too (the UA can't leave one axis visible and the other not),
+       which silently turns body into a scroll container that never
+       actually scrolls -- and any position:sticky descendant resolves
+       against that inert container instead of the real viewport, so it
+       never sticks. `clip` clips the same overflow without establishing
+       a scroll container at all. */
+    overflow-x: clip;
   }
   body {
     @apply bg-background text-foreground relative;

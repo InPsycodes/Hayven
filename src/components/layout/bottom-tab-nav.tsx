@@ -14,7 +14,7 @@ export function BottomTabNav({ session }: { session: AppSession }) {
   const items = BOTTOM_TABS[role];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-border bg-card px-1 py-1.5 md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-white/50 bg-[linear-gradient(180deg,rgba(250,248,246,0.82)_0%,rgba(250,248,246,0.94)_100%)] px-1 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_-10px_30px_-16px_rgba(26,18,12,0.3)] backdrop-blur-2xl backdrop-saturate-150 md:hidden">
       {items.map((item) => {
         const active = pathname === item.href;
         return (

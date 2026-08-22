@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 
@@ -90,70 +91,72 @@ export function MobileNavMenu({
         {isOpen ? <IconX size={22} stroke={1.75} /> : <IconMenu2 size={22} stroke={1.75} />}
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-[60] md:hidden">
-          <div
-            aria-hidden
-            onClick={() => onOpenChange(false)}
-            className={cn(
-              "absolute inset-0 bg-charcoal/40",
-              "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-[250ms]",
-              "motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]"
-            )}
-          />
-          <div
-            id="mobile-nav-panel"
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            className={cn(
-              "absolute inset-y-0 left-0 flex w-[82%] max-w-sm flex-col bg-offwhite shadow-2xl",
-              "motion-safe:animate-in motion-safe:slide-in-from-left-full motion-safe:duration-[280ms] motion-safe:ease-out",
-              "motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]"
-            )}
-          >
-            <div className="flex h-20 items-center justify-between px-6">
-              <BrandMark dark={false} />
-              <button
-                type="button"
-                aria-label="Close menu"
-                onClick={() => onOpenChange(false)}
-                className="flex size-11 items-center justify-center text-charcoal"
-              >
-                <IconX size={22} stroke={1.75} />
-              </button>
-            </div>
-
-            <nav className="flex flex-col gap-6 px-6 pt-4">
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
+      {isOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[60] md:hidden">
+            <div
+              aria-hidden
+              onClick={() => onOpenChange(false)}
+              className={cn(
+                "absolute inset-0 bg-charcoal/40 backdrop-blur-sm",
+                "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-[250ms]",
+                "motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]"
+              )}
+            />
+            <div
+              id="mobile-nav-panel"
+              ref={panelRef}
+              role="dialog"
+              aria-modal="true"
+              className={cn(
+                "absolute inset-y-0 left-0 flex w-[82%] max-w-sm flex-col border-r border-white/50 bg-[linear-gradient(180deg,rgba(250,248,246,0.92)_0%,rgba(250,248,246,0.82)_100%)] shadow-[inset_-1px_0_0_rgba(255,255,255,0.5),8px_0_40px_-14px_rgba(26,18,12,0.4)] backdrop-blur-2xl backdrop-saturate-150",
+                "motion-safe:animate-in motion-safe:slide-in-from-left-full motion-safe:duration-[280ms] motion-safe:ease-out",
+                "motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]"
+              )}
+            >
+              <div className="flex h-20 items-center justify-between px-6">
+                <BrandMark dark={false} />
+                <button
+                  type="button"
+                  aria-label="Close menu"
                   onClick={() => onOpenChange(false)}
-                  className="font-heading text-2xl text-charcoal"
+                  className="flex size-11 items-center justify-center text-charcoal"
                 >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+                  <IconX size={22} stroke={1.75} />
+                </button>
+              </div>
 
-            <div className="mt-auto flex flex-col gap-3 border-t border-charcoal/10 px-6 py-6">
-              <Link
-                href="/login"
-                onClick={() => onOpenChange(false)}
-                className="py-2 text-center text-sm text-charcoal"
-              >
-                Log in
-              </Link>
-              <Button asChild variant="accent" size="lg" className="w-full">
-                <Link href="/signup" onClick={() => onOpenChange(false)}>
-                  Get started
+              <nav className="flex flex-col gap-6 px-6 pt-4">
+                {links.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => onOpenChange(false)}
+                    className="font-heading text-2xl text-charcoal"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="mt-auto flex flex-col gap-3 border-t border-charcoal/10 px-6 py-6">
+                <Link
+                  href="/login"
+                  onClick={() => onOpenChange(false)}
+                  className="py-2 text-center text-sm text-charcoal"
+                >
+                  Log in
                 </Link>
-              </Button>
+                <Button asChild variant="accent" size="lg" className="w-full">
+                  <Link href="/signup" onClick={() => onOpenChange(false)}>
+                    Get started
+                  </Link>
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }

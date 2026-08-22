@@ -25,12 +25,17 @@ export function TopNav() {
   return isHome ? <HeroNav /> : <SolidNav pathname={pathname} />;
 }
 
-/** Standard dark bar, used on every marketing page except the landing page. */
+/**
+ * Standard dark bar, used on every marketing page except the landing page.
+ * Sticky rather than fixed -- it starts in normal flow so nothing needs
+ * padding-compensating for it, and only picks up the Liquid Glass treatment
+ * (blurring whatever scrolls underneath) once it actually reaches the top.
+ */
 function SolidNav({ pathname }: { pathname: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="flex items-center justify-between bg-charcoal px-6 py-5 md:px-10">
+    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[linear-gradient(180deg,rgba(26,26,26,0.85)_0%,rgba(26,26,26,0.7)_100%)] px-6 py-5 backdrop-blur-2xl backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_34px_-16px_rgba(0,0,0,0.5)] md:px-10 [@media(display-mode:standalone)]:hidden">
       <Link href="/">
         <BrandMark />
       </Link>
@@ -86,7 +91,7 @@ function HeroNav() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between px-6 transition-[background-color,background-image,border-color,backdrop-filter,box-shadow] duration-[350ms] ease-in-out lg:px-10",
+        "fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between px-6 transition-[background-color,background-image,border-color,backdrop-filter,box-shadow] duration-[350ms] ease-in-out lg:px-10 [@media(display-mode:standalone)]:hidden",
         scrolled
           ? "border-b border-white/40 bg-[linear-gradient(180deg,rgba(250,248,246,0.78)_0%,rgba(250,248,246,0.55)_100%)] backdrop-blur-2xl backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_34px_-16px_rgba(26,18,12,0.3)]"
           : "border-b border-transparent bg-transparent"
