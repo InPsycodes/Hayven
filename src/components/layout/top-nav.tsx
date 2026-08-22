@@ -73,8 +73,11 @@ function SolidNav({ pathname }: { pathname: string }) {
 
 /**
  * Landing-page-only nav: transparent over the hero photo, swapping to a
- * frosted light bar once scrolled past ~75% of the viewport height. Three
- * colour roles cross-fade together at .35s ease.
+ * Liquid Glass panel once scrolled past ~75% of the viewport height --
+ * heavy blur + saturation boost (so colour behind it stays vivid instead of
+ * washing grey), a warm-white gradient standing in for glass curvature, and
+ * an inset top highlight catching light the way a real refractive edge
+ * would. Three colour roles cross-fade together at .35s ease.
  */
 function HeroNav() {
   const scrolled = useScrolled(0.75);
@@ -83,9 +86,9 @@ function HeroNav() {
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between px-6 transition-[background-color,border-color,backdrop-filter] duration-[350ms] ease-in-out lg:px-10",
+        "fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between px-6 transition-[background-color,background-image,border-color,backdrop-filter,box-shadow] duration-[350ms] ease-in-out lg:px-10",
         scrolled
-          ? "border-b border-charcoal/10 bg-offwhite/88 backdrop-blur-[10px]"
+          ? "border-b border-white/40 bg-[linear-gradient(180deg,rgba(250,248,246,0.78)_0%,rgba(250,248,246,0.55)_100%)] backdrop-blur-2xl backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_10px_34px_-16px_rgba(26,18,12,0.3)]"
           : "border-b border-transparent bg-transparent"
       )}
     >
