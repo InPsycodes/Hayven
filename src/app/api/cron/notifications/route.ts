@@ -3,11 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { notifySessionsStarted, notifySessionsFinished, notifyUnreadReportReminders } from "@/lib/notifications/cron";
 
 /**
- * Vercel Cron sends `Authorization: Bearer $CRON_SECRET` automatically when
- * CRON_SECRET is set as a project env var. An external pinger (GitHub
- * Actions, cron-job.org, etc.) needs configuring to send the same header --
- * either way, this route doesn't know or care who's calling it, only that
- * they know the secret.
+ * Called every 15 minutes by a GitHub Actions scheduled workflow
+ * (.github/workflows/notifications-cron.yml), not Vercel Cron -- Vercel's
+ * Hobby plan only allows daily cron schedules, which silently blocked every
+ * deployment once vercel.json declared this at *\/15 * * * *. The workflow
+ * sends the same `Authorization: Bearer $CRON_SECRET` header any pinger
+ * would; this route doesn't know or care who's calling it, only that they
+ * know the secret.
  */
 export async function GET(req: NextRequest) {
   const expected = process.env.CRON_SECRET;
