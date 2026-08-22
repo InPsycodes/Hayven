@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createNotification } from "@/lib/notifications/create";
+import { checkRateLimit } from "@/lib/rate-limit/check";
 
 export async function sendRealMessage(
   bookingId: string,
@@ -13,6 +14,12 @@ export async function sendRealMessage(
   const session = await getSession();
   if (!session) return { ok: false, error: "You must be signed in to send a message." };
   if (!content.trim()) return { ok: false, error: "Message can't be empty." };
+
+  // No natural cap otherwise -- each message also fires an email + push
+  // notification to the recipient, so an unthrottled sender can flood both
+  // the thread and the other person's inbox/phone.
+  const allowed = await checkRateLimit(`message:${session.userId}`, 60, 10 * 60);
+  if (!allowed) return { ok: false, error: "You're sending messages too quickly. Please slow down." };
 
   const trimmed = content.trim();
   const supabase = await createClient();

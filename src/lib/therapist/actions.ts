@@ -8,6 +8,7 @@ import { getSession } from "@/lib/auth/session";
 import { lagosWallClockToUtcIso } from "@/data/format";
 import { professionalBodyLabel } from "./professional-bodies";
 import { scanFileForViruses } from "@/lib/uploads/scan-file";
+import { checkRateLimit } from "@/lib/rate-limit/check";
 
 export interface FormState {
   error?: string;
@@ -43,6 +44,12 @@ export async function saveCredentialsStep(
   if (!session || session.role !== "therapist") {
     return { error: "You must be signed in as a therapist to continue." };
   }
+
+  // Each accepted file hits the virus-scan vendor's API (free-tier quota,
+  // see MAX_CREDENTIAL_FILE_BYTES above) -- unthrottled retries here burn
+  // that shared quota, not just this one account's storage.
+  const rateLimitOk = await checkRateLimit(`credential-upload:${session.userId}`, 10, 15 * 60);
+  if (!rateLimitOk) return { error: "Too many attempts. Please try again in a few minutes." };
 
   const specialtyId = formData.get("specialtyId");
   const professionalBody = formData.get("professionalBody");

@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { initializeTransaction, verifyTransaction } from "@/lib/payments/paystack";
 import { finalizeBookingPayment } from "@/lib/booking/actions";
+import { checkRateLimit } from "@/lib/rate-limit/check";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -15,6 +16,13 @@ export async function initiatePaystackPayment(
   if (!session || session.role !== "parent") {
     return { ok: false, error: "You must be signed in as a parent to pay for a session." };
   }
+
+  // Each call creates a real transaction on Paystack's side, an external
+  // paid API -- bounded loosely by the booking_hold limit already (can't
+  // pay for more bookings than you can create), but repeated calls against
+  // the same pending booking aren't capped by that.
+  const rateLimitOk = await checkRateLimit(`payment-init:${session.userId}`, 15, 10 * 60);
+  if (!rateLimitOk) return { ok: false, error: "Too many attempts. Please try again in a few minutes." };
 
   const admin = createAdminClient();
 
