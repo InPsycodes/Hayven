@@ -61,14 +61,19 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
   });
 
   if (error) {
-    // Supabase's own wording ("User already registered") doesn't tell
-    // someone what to actually do about it -- point them at the sign-in
-    // link already on this page instead of leaving them stuck retrying
-    // signup with the same email.
+    // Softened rather than an explicit "you already have an account" --
+    // that phrasing is a clean account-enumeration oracle (anyone can learn
+    // who's on the platform just by trying to sign up with their email),
+    // which matters more than usual for a child-therapy app. This doesn't
+    // fully close that channel (a distinct error vs. instant success is
+    // still a signal) -- doing that properly needs signup gated on email
+    // confirmation, which needs a verified sending domain we don't have
+    // yet. The signup rate limit above at least caps how fast someone can
+    // probe emails at scale in the meantime.
     if (error.code === "user_already_exists") {
       return {
         ok: false,
-        error: "You already have an account with this email. Log in below to continue where you left off.",
+        error: "We couldn't create your account with these details. If you already have one, try logging in instead.",
       };
     }
     return { ok: false, error: error.message };
