@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { enrollMfa, confirmMfaEnrollment, unenrollMfa } from "@/lib/auth/mfa-actions";
 import type { MfaStatus } from "@/lib/auth/mfa-actions";
 
-type Step = "idle" | "enrolling" | "confirming";
+type Step = "idle" | "enrolling" | "confirming" | "disabling";
 
 export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
   const [status, setStatus] = useState(initialStatus);
@@ -54,17 +54,25 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
     });
   }
 
-  function disable() {
+  function startDisable() {
+    setError(null);
+    setCode("");
+    setStep("disabling");
+  }
+
+  function confirmDisable(e: React.FormEvent) {
+    e.preventDefault();
     if (!status.factorId) return;
-    if (!confirm("Turn off two-factor authentication for this account?")) return;
     setError(null);
     startTransition(async () => {
-      const result = await unenrollMfa(status.factorId!);
+      const result = await unenrollMfa(status.factorId!, code);
       if (!result.ok) {
         setError(result.error);
         return;
       }
       setStatus({ enrolled: false, factorId: null });
+      setStep("idle");
+      setCode("");
     });
   }
 
@@ -127,6 +135,44 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
         </form>
       )}
 
+      {step === "disabling" && (
+        <form onSubmit={confirmDisable} className="flex flex-col gap-3 rounded-sm bg-[#F6F4F0] p-4">
+          <p className="text-sm text-charcoal">
+            Enter a current code from your authenticator app to turn off two-factor authentication.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="mfaDisableCode">6-digit code</Label>
+            <Input
+              id="mfaDisableCode"
+              inputMode="numeric"
+              maxLength={6}
+              autoFocus
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="123456"
+            />
+          </div>
+          {error && <p className="text-sm text-error">{error}</p>}
+          <div className="flex gap-3">
+            <Button type="submit" variant="outline" disabled={isPending || code.length !== 6} className="w-fit">
+              {isPending ? "Verifying..." : "Turn off"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setStep("idle");
+                setCode("");
+                setError(null);
+              }}
+              className="w-fit"
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
+
       {step === "idle" && (
         <>
           {error && <p className="text-sm text-error">{error}</p>}
@@ -134,7 +180,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
             type="button"
             variant={status.enrolled ? "outline" : "default"}
             disabled={isPending}
-            onClick={status.enrolled ? disable : startEnroll}
+            onClick={status.enrolled ? startDisable : startEnroll}
             className="w-fit"
           >
             {isPending ? "Working..." : status.enrolled ? "Turn off" : "Set up two-factor authentication"}

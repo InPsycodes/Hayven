@@ -38,6 +38,14 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
     return { ok: false, error: "Please agree to the Privacy Policy and Terms of Service to continue." };
   }
 
+  // Same shape as signIn's rate limit, keyed by the submitted email --
+  // without this, signup can be scripted to spam Supabase's confirmation
+  // email at one target address indefinitely.
+  const allowed = await checkRateLimit(`signup:${input.email.trim().toLowerCase()}`, 5, 15 * 60);
+  if (!allowed) {
+    return { ok: false, error: "Too many attempts. Please try again in a few minutes." };
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signUp({

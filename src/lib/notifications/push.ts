@@ -3,6 +3,7 @@ import "server-only";
 import webpush from "web-push";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isValidPushEndpoint } from "@/lib/notifications/push-endpoint";
 
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
@@ -36,6 +37,10 @@ export async function sendPushToUser(
 
   await Promise.all(
     subscriptions.map(async (sub) => {
+      if (!isValidPushEndpoint(sub.endpoint)) {
+        await admin.from("push_subscriptions").delete().eq("id", sub.id);
+        return;
+      }
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },

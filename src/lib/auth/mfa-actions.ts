@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/session";
+import { checkRateLimit } from "@/lib/rate-limit/check";
 
 export type EnrollMfaResult =
   | { ok: true; factorId: string; qrCode: string; secret: string }
@@ -60,11 +61,37 @@ export async function confirmMfaEnrollment(
   return { ok: true };
 }
 
-export async function unenrollMfa(factorId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+/**
+ * Requires a fresh TOTP code, not just an already-AAL2 session -- a session
+ * being AAL2 only proves MFA was completed at some point in the past, which
+ * a stolen/hijacked cookie (e.g. via XSS) would already satisfy without the
+ * attacker ever possessing the actual authenticator secret. Re-checking a
+ * live code here means turning 2FA off still requires proving possession of
+ * it right now, the same guarantee logging in with it does.
+ */
+export async function unenrollMfa(
+  factorId: string,
+  code: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await getSession();
   if (!session) return { ok: false, error: NOT_SIGNED_IN_ERROR };
 
+  const allowed = await checkRateLimit(`mfa-unenroll:${factorId}`, 5, 15 * 60);
+  if (!allowed) {
+    return { ok: false, error: "Too many attempts. Please try again in a few minutes." };
+  }
+
   const supabase = await createClient();
+  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+  if (challengeError) return { ok: false, error: challengeError.message };
+
+  const { error: verifyError } = await supabase.auth.mfa.verify({
+    factorId,
+    challengeId: challenge.id,
+    code: code.trim(),
+  });
+  if (verifyError) return { ok: false, error: "Incorrect code. Please try again." };
+
   const { error } = await supabase.auth.mfa.unenroll({ factorId });
   if (error) return { ok: false, error: error.message };
 
@@ -99,6 +126,17 @@ export async function verifyMfaLogin(
   factorId: string,
   code: string
 ): Promise<{ ok: true; role: string } | { ok: false; error: string }> {
+  // Same reasoning as signIn's rate limit: an attacker who already has a
+  // valid password (AAL1 session, which is all that's needed to call this
+  // action) would otherwise be able to script unlimited 6-digit TOTP
+  // guesses against the second factor. Keyed by factorId -- a stable,
+  // non-guessable per-user identifier -- so this doesn't require a second
+  // round trip to look up the user before the limit is even checked.
+  const allowed = await checkRateLimit(`mfa-login:${factorId}`, 5, 15 * 60);
+  if (!allowed) {
+    return { ok: false, error: "Too many attempts. Please try again in a few minutes." };
+  }
+
   const supabase = await createClient();
   const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
   if (challengeError) return { ok: false, error: challengeError.message };

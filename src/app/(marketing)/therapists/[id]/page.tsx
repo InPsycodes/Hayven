@@ -10,6 +10,7 @@ import { getAvailabilityForTherapist } from "@/data/queries";
 import { getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { getDiscoveryTherapistById, type DiscoveryTherapist } from "@/lib/therapist/discovery";
 import { getOrganizationSchema } from "@/lib/seo/organization-schema";
+import { safeJsonLdStringify } from "@/lib/seo/json-ld";
 import type { AvailabilitySlot } from "@/data/types";
 
 /**
@@ -64,10 +65,11 @@ export default async function TherapistProfilePage({
 
   return (
     <>
-      {/* Static, developer-authored JSON from getTherapistPersonSchema() -- never user input beyond the therapist's own admin-verified profile fields. */}
+      {/* Embeds therapist-editable fields (bio, location) -- safeJsonLdStringify escapes
+          `<` so a bio containing "</script>" can't break out of this tag. */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(getTherapistPersonSchema(therapist)) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(getTherapistPersonSchema(therapist)) }}
       />
       <div className="mx-auto grid max-w-5xl gap-8 px-6 py-10 md:grid-cols-[3fr_2fr] md:px-10 md:py-14">
         <div className="flex flex-col gap-6">

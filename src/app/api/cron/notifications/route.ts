@@ -1,6 +1,18 @@
+import crypto from "crypto";
+
 import { NextRequest, NextResponse } from "next/server";
 
 import { notifySessionsStarted, notifySessionsFinished, notifyUnreadReportReminders } from "@/lib/notifications/cron";
+
+// Timing-safe, same reasoning as the Paystack webhook's signature check: a
+// plain `===` leaks how many leading characters matched via response-time
+// differences.
+function timingSafeEqualString(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
 /**
  * Called every 15 minutes by a GitHub Actions scheduled workflow
@@ -14,7 +26,7 @@ import { notifySessionsStarted, notifySessionsFinished, notifyUnreadReportRemind
 export async function GET(req: NextRequest) {
   const expected = process.env.CRON_SECRET;
   const provided = req.headers.get("authorization");
-  if (!expected || provided !== `Bearer ${expected}`) {
+  if (!expected || !provided || !timingSafeEqualString(provided, `Bearer ${expected}`)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

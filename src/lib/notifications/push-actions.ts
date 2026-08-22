@@ -2,6 +2,7 @@
 
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { isValidPushEndpoint } from "@/lib/notifications/push-endpoint";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -11,6 +12,10 @@ export async function subscribeToPush(subscription: {
 }): Promise<ActionResult> {
   const session = await getSession();
   if (!session) return { ok: false, error: "Not authorized." };
+
+  if (!isValidPushEndpoint(subscription.endpoint)) {
+    return { ok: false, error: "Unrecognized push subscription." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.from("push_subscriptions").upsert(
