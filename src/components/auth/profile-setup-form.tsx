@@ -95,7 +95,7 @@ export function ProfileSetupForm() {
         </p>
       </div>
 
-      {state.error && <p className="text-sm text-error">{state.error}</p>}
+      {state.error && <p className="text-sm text-error-text">{state.error}</p>}
 
       <Button type="submit" variant="accent" size="lg" disabled={isPending} className="w-full">
         {isPending ? "Submitting..." : "Submit for review"}

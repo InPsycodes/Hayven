@@ -8,6 +8,7 @@ import { IconArrowLeft, IconArrowUp, IconPaperclip } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { initialsFromName } from "@/data/format";
 import { sendRealMessage } from "@/lib/messages/actions";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 
 export interface ThreadMessage {
   id: string;
@@ -56,16 +57,22 @@ export function MessageThreadView({
     [messages]
   );
 
-  function handleSend(e: React.FormEvent) {
+  const { guard, reset } = useSubmitGuard();
+
+  const handleSend = guard((e: React.FormEvent) => {
     e.preventDefault();
     const content = draft;
-    if (!content.trim()) return;
+    if (!content.trim()) {
+      reset();
+      return;
+    }
     setDraft("");
     startTransition(async () => {
       await sendRealMessage(bookingId, content);
       router.refresh();
+      reset(); // each submit sends a new, distinct message -- not a one-time action
     });
-  }
+  });
 
   return (
     <div className="flex h-screen flex-col md:h-[calc(100vh-0px)]">

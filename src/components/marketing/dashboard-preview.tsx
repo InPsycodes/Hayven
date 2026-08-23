@@ -38,7 +38,7 @@ export function DashboardPreview() {
                         <Icon
                           icon={row.icon}
                           size="sm"
-                          className={isStrong ? "text-success" : "text-terracotta"}
+                          className={isStrong ? "text-success-text" : "text-terracotta"}
                         />
                         {row.label}
                       </span>

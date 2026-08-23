@@ -4,8 +4,8 @@ import { Reveal } from "@/components/marketing/reveal";
 import type { ReportBlock, ReportBody, ReportSection } from "@/lib/reports/types";
 
 const TREND_STYLE: Record<"positive" | "negative" | "neutral", { symbol: string; className: string }> = {
-  positive: { symbol: "▲", className: "text-success" },
-  negative: { symbol: "▼", className: "text-error" },
+  positive: { symbol: "▲", className: "text-success-text" },
+  negative: { symbol: "▼", className: "text-error-text" },
   neutral: { symbol: "●", className: "text-muted-foreground" },
 };
 

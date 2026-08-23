@@ -66,10 +66,12 @@ export function ageFromDob(dob: string): number {
 }
 
 export function initialsFromName(name: string): string {
-  return name
+  const initials = name
     .split(" ")
     .map((part) => part[0])
+    .filter((char): char is string => !!char && /\p{L}/u.test(char))
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  return initials || "?";
 }

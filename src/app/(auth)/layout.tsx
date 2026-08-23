@@ -1,3 +1,3 @@
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  return <main className="flex min-h-screen flex-col md:flex-row">{children}</main>;
+  return <main id="main" className="flex min-h-screen flex-col md:flex-row">{children}</main>;
 }

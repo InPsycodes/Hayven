@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useBookingStore } from "@/lib/booking-store";
 import { formatTime } from "@/data/format";
 import { createPendingBooking } from "@/lib/booking/actions";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import type { DiscoveryTherapist } from "@/lib/therapist/discovery";
 import type { AvailabilitySlot, SessionType } from "@/data/types";
 
@@ -54,8 +55,9 @@ export function BookingTimeForm({
   const dayTimes = openSlots.filter((s) => s.startTime.startsWith(activeDay ?? "\0"));
 
   const canContinue = Boolean(childId && sessionType && slotId) && !isPending;
+  const { guard, reset } = useSubmitGuard();
 
-  function handleContinue() {
+  const handleContinue = guard(() => {
     if (!childId || !slotId) return;
     setError(null);
 
@@ -74,12 +76,13 @@ export function BookingTimeForm({
       });
       if (!result.ok) {
         setError(result.error);
+        reset();
         return;
       }
       setDraft({ therapistId: therapist.id, childId, sessionType, slotId, bookingId: result.bookingId });
       router.push(`/book/${therapist.id}/payment`);
     });
-  }
+  });
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8">
@@ -87,12 +90,14 @@ export function BookingTimeForm({
 
       {kids.length > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Booking for</Label>
-          <div className="flex flex-wrap gap-2">
+          <Label id="booking-for-label">Booking for</Label>
+          <div role="radiogroup" aria-labelledby="booking-for-label" className="flex flex-wrap gap-2">
             {kids.map((child) => (
               <button
                 key={child.id}
                 type="button"
+                role="radio"
+                aria-checked={childId === child.id}
                 onClick={() => setChildId(child.id)}
                 className={cn(
                   "rounded-full border px-4 py-1.5 text-sm transition-colors",
@@ -110,12 +115,14 @@ export function BookingTimeForm({
 
       {therapist.sessionTypes.length > 1 && (
         <div className="flex flex-col gap-2">
-          <Label>Session type</Label>
-          <div className="flex gap-2">
+          <Label id="session-type-label">Session type</Label>
+          <div role="radiogroup" aria-labelledby="session-type-label" className="flex gap-2">
             {therapist.sessionTypes.map((type) => (
               <button
                 key={type}
                 type="button"
+                role="radio"
+                aria-checked={sessionType === type}
                 onClick={() => {
                   setSessionType(type);
                   setSlotId(undefined);
@@ -135,11 +142,11 @@ export function BookingTimeForm({
       )}
 
       <div className="flex flex-col gap-2">
-        <Label>Select a date</Label>
+        <Label id="booking-date-label">Select a date</Label>
         {days.length === 0 ? (
           <p className="text-sm text-muted-foreground">No open dates for this session type.</p>
         ) : (
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div role="radiogroup" aria-labelledby="booking-date-label" className="flex gap-2 overflow-x-auto pb-1">
             {days.map((day) => {
               const date = new Date(`${day}T00:00:00Z`);
               const isWeekend = [0, 6].includes(date.getUTCDay());
@@ -148,6 +155,8 @@ export function BookingTimeForm({
                 <button
                   key={day}
                   type="button"
+                  role="radio"
+                  aria-checked={active}
                   onClick={() => {
                     setSelectedDay(day);
                     setSlotId(undefined);
@@ -174,7 +183,7 @@ export function BookingTimeForm({
 
       {activeDay && (
         <div className="flex flex-col gap-2">
-          <Label>
+          <Label id="booking-time-label">
             Available times --{" "}
             {new Date(`${activeDay}T00:00:00Z`).toLocaleDateString("en-US", {
               month: "short",
@@ -182,11 +191,13 @@ export function BookingTimeForm({
               timeZone: "UTC",
             })}
           </Label>
-          <div className="flex flex-wrap gap-2">
+          <div role="radiogroup" aria-labelledby="booking-time-label" className="flex flex-wrap gap-2">
             {dayTimes.map((slot) => (
               <button
                 key={slot.id}
                 type="button"
+                role="radio"
+                aria-checked={slotId === slot.id}
                 onClick={() => setSlotId(slot.id)}
                 className={cn(
                   "rounded-sm border px-3.5 py-2 text-sm transition-colors",
@@ -202,7 +213,7 @@ export function BookingTimeForm({
         </div>
       )}
 
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <p className="text-sm text-error-text">{error}</p>}
 
       <Button onClick={handleContinue} disabled={!canContinue} size="lg" className="w-full">
         {isPending ? "Holding your slot..." : "Continue to payment →"}

@@ -116,7 +116,7 @@ export function PushNotificationsToggle() {
         )}
       </div>
 
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <p className="text-sm text-error-text">{error}</p>}
 
       {status === "denied" ? (
         <p className="text-xs text-muted-foreground">

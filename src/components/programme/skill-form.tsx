@@ -64,7 +64,7 @@ export function SkillForm({ childId }: { childId: string }) {
           ))}
         </select>
       </div>
-      {state.error && <p className="text-sm text-error">{state.error}</p>}
+      {state.error && <p className="text-sm text-error-text">{state.error}</p>}
       <Button type="submit" variant="accent" disabled={isPending} className="w-fit">
         {isPending ? "Adding..." : "Add skill"}
       </Button>

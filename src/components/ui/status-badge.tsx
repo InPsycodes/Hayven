@@ -18,10 +18,10 @@ const statusBadgeVariants = cva(
   {
     variants: {
       tone: {
-        sage: "bg-success/10 text-[#4a5540]",
-        amber: "bg-amber/10 text-[#6f4519]",
+        sage: "bg-success/10 text-success-text",
+        amber: "bg-amber/10 text-amber-text",
         rust: "bg-terracotta/10 text-rust-dark",
-        error: "bg-error/10 text-[#8f2e24]",
+        error: "bg-error/10 text-error-text",
         grey: "bg-charcoal/6 text-muted-foreground",
       },
     },

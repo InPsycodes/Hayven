@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import quoteImage from "../../../public/images/quote-breather-mother-child.png";
+import quoteImage from "../../../public/images/quote-breather-mother-child.webp";
 
 // The photo IS the section background (no boxed frame) -- a warm scrim,
 // using the same gradient this section always had, sits over it and fades

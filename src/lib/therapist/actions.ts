@@ -12,6 +12,13 @@ import { checkRateLimit } from "@/lib/rate-limit/check";
 
 export interface FormState {
   error?: string;
+  // Echoed back on error so the client can restore the two <Select>
+  // dropdowns even if whatever re-render useActionState triggers resets
+  // their local state -- the plain text <Input> fields survive that
+  // re-render on their own (uncontrolled native DOM value), but Select's
+  // displayed value doesn't, so it needs this same round-trip explicitly.
+  specialtyId?: string;
+  professionalBody?: string;
 }
 
 // Matches the virus-scan API's free-tier file-size limit -- every accepted
@@ -40,16 +47,25 @@ export async function saveCredentialsStep(
   _prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
+  // Extracted before any validation so every error return below can echo
+  // them back, regardless of which check fails.
+  const rawSpecialtyId = formData.get("specialtyId");
+  const rawProfessionalBody = formData.get("professionalBody");
+  const echo = {
+    specialtyId: typeof rawSpecialtyId === "string" ? rawSpecialtyId : undefined,
+    professionalBody: typeof rawProfessionalBody === "string" ? rawProfessionalBody : undefined,
+  };
+
   const session = await getSession();
   if (!session || session.role !== "therapist") {
-    return { error: "You must be signed in as a therapist to continue." };
+    return { ...echo, error: "You must be signed in as a therapist to continue." };
   }
 
   // Each accepted file hits the virus-scan vendor's API (free-tier quota,
   // see MAX_CREDENTIAL_FILE_BYTES above) -- unthrottled retries here burn
   // that shared quota, not just this one account's storage.
   const rateLimitOk = await checkRateLimit(`credential-upload:${session.userId}`, 10, 15 * 60);
-  if (!rateLimitOk) return { error: "Too many attempts. Please try again in a few minutes." };
+  if (!rateLimitOk) return { ...echo, error: "Too many attempts. Please try again in a few minutes." };
 
   const specialtyId = formData.get("specialtyId");
   const professionalBody = formData.get("professionalBody");
@@ -58,13 +74,13 @@ export async function saveCredentialsStep(
   const file = formData.get("file");
 
   if (typeof specialtyId !== "string" || !specialtyId) {
-    return { error: "Please select your specialty." };
+    return { ...echo, error: "Please select your specialty." };
   }
   if (typeof professionalBody !== "string" || !professionalBody) {
-    return { error: "Please select your professional body." };
+    return { ...echo, error: "Please select your professional body." };
   }
   if (typeof membershipNumber !== "string" || !membershipNumber.trim()) {
-    return { error: "Please enter your membership or license number." };
+    return { ...echo, error: "Please enter your membership or license number." };
   }
 
   const supabase = await createClient();
@@ -82,7 +98,7 @@ export async function saveCredentialsStep(
     .single();
 
   if (profileError || !profile) {
-    return { error: profileError?.message ?? "Couldn't save your profile. Please try again." };
+    return { ...echo, error: profileError?.message ?? "Couldn't save your profile. Please try again." };
   }
 
   const { error: specialtyError } = await supabase
@@ -92,23 +108,23 @@ export async function saveCredentialsStep(
       { onConflict: "therapist_id,specialty_id" }
     );
   if (specialtyError) {
-    return { error: specialtyError.message };
+    return { ...echo, error: specialtyError.message };
   }
 
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_CREDENTIAL_FILE_BYTES) {
-      return { error: "File is too large. Please upload a file under 2.5MB." };
+      return { ...echo, error: "File is too large. Please upload a file under 2.5MB." };
     }
     const extension = await detectSafeCredentialExtension(file);
     if (!extension) {
-      return { error: "Please upload a PDF, JPG, or PNG file." };
+      return { ...echo, error: "Please upload a PDF, JPG, or PNG file." };
     }
 
     // Scanned before it ever touches storage -- fails closed, not open, if
     // the scan itself can't be completed.
     const scanResult = await scanFileForViruses(file);
     if (!scanResult.clean) {
-      return { error: scanResult.reason };
+      return { ...echo, error: scanResult.reason };
     }
 
     // Generated name, not the client-supplied file.name -- no path
@@ -119,7 +135,7 @@ export async function saveCredentialsStep(
       .from("credentials")
       .upload(path, file, { upsert: false, contentType });
     if (uploadError) {
-      return { error: `File upload failed: ${uploadError.message}` };
+      return { ...echo, error: `File upload failed: ${uploadError.message}` };
     }
 
     const { error: credentialError } = await supabase.from("credentials").insert({
@@ -130,7 +146,7 @@ export async function saveCredentialsStep(
       membership_number: membershipNumber,
     });
     if (credentialError) {
-      return { error: credentialError.message };
+      return { ...echo, error: credentialError.message };
     }
   }
 

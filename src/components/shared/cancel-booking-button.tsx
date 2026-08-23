@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 
 type CancelResult = { ok: true; wasPaid: boolean } | { ok: false; error: string };
 
@@ -20,19 +21,21 @@ export function CancelBookingButton({
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cancelled, setCancelled] = useState(false);
+  const { guard, reset } = useSubmitGuard();
 
-  function handleCancel(formData: FormData) {
+  const handleCancel = guard((formData: FormData) => {
     const reason = formData.get("reason");
     setError(null);
     startTransition(async () => {
       const result = await cancelAction(bookingId, typeof reason === "string" ? reason : undefined);
       if (!result.ok) {
         setError(result.error);
+        reset();
         return;
       }
       setCancelled(true);
     });
-  }
+  });
 
   if (cancelled) {
     return <span className="fade-in shrink-0 text-xs text-muted-foreground">Cancelled.</span>;
@@ -45,7 +48,7 @@ export function CancelBookingButton({
         variant="outline"
         size="sm"
         onClick={() => setExpanded(true)}
-        className="shrink-0 border-error text-error hover:bg-error/5"
+        className="shrink-0 border-error text-error-text hover:bg-error/5"
       >
         Cancel session
       </Button>
@@ -60,14 +63,14 @@ export function CancelBookingButton({
           : "This will release the slot."}
       </p>
       <Textarea name="reason" rows={2} placeholder="Reason (optional)" className="text-xs" />
-      {error && <p className="text-xs text-error">{error}</p>}
+      {error && <p className="text-xs text-error-text">{error}</p>}
       <div className="flex gap-2">
         <Button
           type="submit"
           variant="outline"
           size="sm"
           disabled={isPending}
-          className="border-error text-error hover:bg-error/5"
+          className="border-error text-error-text hover:bg-error/5"
         >
           {isPending ? "Cancelling..." : "Confirm cancellation"}
         </Button>

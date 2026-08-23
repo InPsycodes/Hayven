@@ -37,7 +37,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           would shrink-to-fit the header's height and leave position:sticky
           nowhere to travel before it unsticks. */}
       <TopNav />
-      <main className="flex-1">{children}</main>
+      <main id="main" className="flex-1">{children}</main>
       <footer className="bg-charcoal px-6 py-16 text-canvas-white/70 lg:px-10 [@media(display-mode:standalone)]:hidden">
         <div className="mx-auto grid max-w-7xl gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>

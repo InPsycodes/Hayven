@@ -5,6 +5,7 @@ import { IconArrowRight } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
 import { formatDate, initialsFromName } from "@/data/format";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 
 function PersonBadge({ name }: { name: string }) {
   return (
@@ -33,6 +34,7 @@ export function AssignmentRow({
   onEnd: (assignmentId: string) => Promise<{ ok: true } | { ok: false; error: string }>;
 }) {
   const [isPending, startTransition] = useTransition();
+  const { guard, reset } = useSubmitGuard();
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3.5">
@@ -49,11 +51,12 @@ export function AssignmentRow({
           variant="ghost"
           size="sm"
           disabled={isPending}
-          onClick={() =>
+          onClick={guard(() =>
             startTransition(async () => {
-              await onEnd(assignmentId);
+              const result = await onEnd(assignmentId);
+              if (!result.ok) reset(); // allow retry -- row is only removed from the list on success
             })
-          }
+          )}
         >
           {isPending ? "Ending..." : "End"}
         </Button>

@@ -29,7 +29,13 @@ export function AddChildForm() {
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="dateOfBirth">Date of birth</Label>
-          <Input id="dateOfBirth" name="dateOfBirth" type="date" required />
+          <Input
+            id="dateOfBirth"
+            name="dateOfBirth"
+            type="date"
+            required
+            max={new Date().toISOString().slice(0, 10)}
+          />
         </div>
       </div>
 
@@ -43,7 +49,7 @@ export function AddChildForm() {
         />
       </div>
 
-      {state.error && <p className="text-sm text-error">{state.error}</p>}
+      {state.error && <p className="text-sm text-error-text">{state.error}</p>}
 
       <Button type="submit" disabled={isPending} className="w-fit">
         {isPending ? "Adding..." : "Add child"}

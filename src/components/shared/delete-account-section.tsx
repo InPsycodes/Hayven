@@ -48,13 +48,13 @@ export function DeleteAccountSection({
             rows={3}
             placeholder="Anything you'd like us to know? (optional)"
           />
-          {state.error && <p className="text-sm text-error">{state.error}</p>}
+          {state.error && <p className="text-sm text-error-text">{state.error}</p>}
           <div className="flex gap-3">
             <Button
               type="submit"
               variant="outline"
               disabled={isPending}
-              className="w-fit border-error text-error hover:bg-error/5"
+              className="w-fit border-error text-error-text hover:bg-error/5"
             >
               {isPending ? "Submitting..." : "Confirm request"}
             </Button>
@@ -68,7 +68,7 @@ export function DeleteAccountSection({
           type="button"
           variant="outline"
           onClick={() => setExpanded(true)}
-          className="w-fit border-error text-error hover:bg-error/5"
+          className="w-fit border-error text-error-text hover:bg-error/5"
         >
           Request account deletion
         </Button>

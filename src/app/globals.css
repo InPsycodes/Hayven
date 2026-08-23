@@ -63,6 +63,9 @@
   --color-success: var(--success);
   --color-error: var(--error);
   --color-amber: var(--amber);
+  --color-success-text: var(--success-text);
+  --color-error-text: var(--error-text);
+  --color-amber-text: var(--amber-text);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -88,6 +91,15 @@
   --success: #6b7a5e;
   --error: #b23a2e;
   --amber: #a8702a;
+  /* Darker than the base tones above -- text-success/text-error/text-amber
+     fail WCAG AA (as low as 2.81:1) when actually used as text color on the
+     app's warm-cream surfaces. These are what status-badge.tsx already used
+     privately for its own tinted-background text; promoted to real tokens
+     so every other place a status color renders as text gets the same fix,
+     not just badges. */
+  --success-text: #4a5540;
+  --error-text: #8f2e24;
+  --amber-text: #6f4519;
 
   --background: var(--offwhite);
   --foreground: var(--charcoal);

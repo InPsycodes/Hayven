@@ -32,7 +32,7 @@ export function NotificationBell({ notifications }: { notifications: RealNotific
     <Popover>
       <PopoverTrigger
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
-        className="relative flex items-center justify-center opacity-80 hover:opacity-100"
+        className="relative flex size-11 shrink-0 items-center justify-center opacity-80 hover:opacity-100"
       >
         <IconBell size={20} stroke={1.75} />
         {unreadCount > 0 && (

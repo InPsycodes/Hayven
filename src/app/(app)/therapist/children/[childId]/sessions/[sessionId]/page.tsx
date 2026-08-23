@@ -126,7 +126,7 @@ export default async function TherapySessionPage({
             )}
           </>
         ) : (
-          <p className="text-sm text-error">This report failed to generate. Please try again.</p>
+          <p className="text-sm text-error-text">This report failed to generate. Please try again.</p>
         )}
       </div>
     </div>

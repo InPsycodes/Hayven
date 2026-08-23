@@ -170,15 +170,22 @@ export async function publishReport(reportId: string): Promise<{ ok: true } | { 
     return { ok: false, error: "Report not found." };
   }
 
+  // Conditional on status != 'published' -- editing an already-published
+  // report flips status back to 'in_review' (see saveReport above), so a
+  // genuine republish always transitions FROM 'in_review'. A second,
+  // duplicate call for a report that's already published (a double-click,
+  // a network retry) finds nothing to update and safely no-ops instead of
+  // re-sending the parent notification below.
   const { data, error } = await supabase
     .from("reports")
     .update({ status: "published", published_at: new Date().toISOString(), approved_by: session.userId, approved_at: new Date().toISOString() })
     .eq("id", reportId)
+    .neq("status", "published")
     .select("id")
     .maybeSingle();
 
   if (error) return { ok: false, error: error.message };
-  if (!data) return { ok: false, error: "Report not found." };
+  if (!data) return { ok: true }; // already published by a prior call -- idempotent no-op
 
   await logAuditEvent({ actor: session, action: "report.publish", entityType: "report", entityId: reportId, childId });
 

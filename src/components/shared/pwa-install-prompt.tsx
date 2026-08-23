@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { IconDownload, IconShare2, IconX } from "@tabler/icons-react";
 
 const DISMISS_KEY = "hayven-install-dismissed";
@@ -16,9 +17,16 @@ interface BeforeInstallPromptEvent extends Event {
  * this shows an instructional hint instead of a button on iOS.
  */
 export function PwaInstallPrompt() {
+  const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIos, setIsIos] = useState(false);
   const [visible, setVisible] = useState(false);
+
+  // Admin/supervisor are staff back-office workflows, not the home-screen
+  // app experience this prompt is for -- also happens to be exactly where
+  // it was overlapping the verification panel's action buttons, since that
+  // panel's own button row is bottom-anchored in the same screen region.
+  const isStaffArea = pathname?.startsWith("/admin") || pathname?.startsWith("/supervisor");
 
   useEffect(() => {
     // Deferred a tick so the initial detection runs as a callback rather
@@ -65,7 +73,7 @@ export function PwaInstallPrompt() {
     if (outcome === "accepted") localStorage.setItem(DISMISS_KEY, "1");
   }
 
-  if (!visible) return null;
+  if (!visible || isStaffArea) return null;
 
   return (
     <div

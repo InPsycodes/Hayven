@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { resolveSupportRequest } from "@/lib/admin/actions";
 import { formatDateTime, initialsFromName } from "@/data/format";
 import type { RealSupportRequest } from "@/lib/admin/queries";
@@ -13,15 +14,19 @@ export function SupportRequestRow({ request }: { request: RealSupportRequest }) 
   const [reply, setReply] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { guard, reset } = useSubmitGuard();
   const isOpen = request.status === "open";
 
-  function handleResolve() {
+  const handleResolve = guard(() => {
     setError(null);
     startTransition(async () => {
       const result = await resolveSupportRequest(request.id, reply);
-      if (!result.ok) setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+        reset();
+      }
     });
-  }
+  });
 
   return (
     <div className="flex flex-col gap-2 px-3 py-3.5">
@@ -62,7 +67,7 @@ export function SupportRequestRow({ request }: { request: RealSupportRequest }) 
             <Button size="sm" variant="accent" disabled={isPending} onClick={handleResolve} className="w-fit">
               {isPending ? "Sending..." : "Send reply & resolve"}
             </Button>
-            {error && <p className="text-xs text-error">{error}</p>}
+            {error && <p className="text-xs text-error-text">{error}</p>}
           </div>
         </div>
       ) : (

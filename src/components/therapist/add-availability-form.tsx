@@ -86,7 +86,7 @@ export function AddAvailabilityForm() {
         </div>
       </div>
 
-      {state.error && <p className="text-sm text-error">{state.error}</p>}
+      {state.error && <p className="text-sm text-error-text">{state.error}</p>}
 
       <Button type="submit" disabled={isPending} className="w-fit">
         {isPending ? "Adding..." : "Add slot"}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, type statusBadgeVariants } from "@/components/ui/status-badge";
 import type { VariantProps } from "class-variance-authority";
 import { formatDateTime, initialsFromName } from "@/data/format";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { reviewAccountDeletionRequest, type AccountDeletionDecision } from "@/lib/admin/actions";
 import type { RealAccountDeletionRequest } from "@/lib/admin/queries";
 
@@ -22,15 +23,21 @@ export function DeletionRequestRow({ request }: { request: RealAccountDeletionRe
   const [pendingAction, setPendingAction] = useState<AccountDeletionDecision | null>(null);
   const [error, setError] = useState<string | null>(null);
   const status = STATUS_LABEL[request.status] ?? STATUS_LABEL.pending;
+  const { guard, reset } = useSubmitGuard();
 
-  function act(action: AccountDeletionDecision) {
+  const act = guard((action: AccountDeletionDecision) => {
     setPendingAction(action);
     setError(null);
     startTransition(async () => {
       const result = await reviewAccountDeletionRequest(request.id, action);
-      if (!result.ok) setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+        reset();
+      } else {
+        reset(); // "reviewed" -> "actioned" is a second legitimate click on this same row
+      }
     });
-  }
+  });
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
@@ -46,7 +53,7 @@ export function DeletionRequestRow({ request }: { request: RealAccountDeletionRe
             {request.requester.email}
             {request.reason ? ` · "${request.reason}"` : ""}
           </p>
-          {error && <p className="mt-1 text-xs text-error">{error}</p>}
+          {error && <p className="mt-1 text-xs text-error-text">{error}</p>}
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-3">

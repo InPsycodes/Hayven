@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { ReportView } from "@/components/therapy-session/report-view";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { publishReport } from "@/lib/reports/actions";
 import type { ReportBody } from "@/lib/reports/types";
 
@@ -27,19 +28,22 @@ export function ParentPreviewPanel({
   const [error, setError] = useState<string | null>(null);
 
   const needsRepublish = published !== null && currentStatus === "in_review";
+  const { guard, reset } = useSubmitGuard();
 
-  function handlePublish() {
+  const handlePublish = guard(() => {
     setError(null);
     startTransition(async () => {
       const result = await publishReport(reportId);
       if (!result.ok) {
         setError(result.error);
+        reset();
         return;
       }
       setPublished(new Date().toISOString());
       setCurrentStatus("published");
+      reset(); // a report can legitimately be edited and republished later
     });
-  }
+  });
 
   return (
     <div className="flex flex-col gap-3">
@@ -49,7 +53,7 @@ export function ParentPreviewPanel({
       </p>
       {flaggedPhrases.length > 0 && (
         <div className="rounded-sm border border-error/30 bg-error/5 px-3 py-2.5 text-xs text-charcoal">
-          <p className="font-medium text-error">Your session notes mention something worth a second look:</p>
+          <p className="font-medium text-error-text">Your session notes mention something worth a second look:</p>
           <p className="mt-1">
             &quot;{flaggedPhrases.join('", "')}&quot; {flaggedPhrases.length === 1 ? "was" : "were"} found in your
             session notes, which are shown to the parent above. If this is sensitive or internal, consider moving it
@@ -64,7 +68,7 @@ export function ParentPreviewPanel({
           {published && new Date(published).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}.
         </p>
       )}
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <p className="text-sm text-error-text">{error}</p>}
       <div className="flex items-center gap-3">
         {published && !needsRepublish ? (
           <StatusBadge tone="sage" className="fade-in w-fit">

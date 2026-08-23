@@ -38,6 +38,30 @@ export async function initiatePaystackPayment(
     return { ok: false, error: "This booking has already been processed." };
   }
 
+  // Atomic claim on payment_initiated_at -- prevents two concurrent Paystack
+  // transactions for the same booking (double-click, two tabs, a refresh
+  // mid-checkout). Only succeeds if the lock is unset or stale (older than
+  // PAYMENT_LOCK_STALE_MS, treated as an abandoned attempt); the condition
+  // lives in the WHERE clause of the update itself, not a separate read-then-
+  // write, so two simultaneous calls can't both pass the check.
+  const PAYMENT_LOCK_STALE_MS = 5 * 60 * 1000;
+  const staleCutoff = new Date(Date.now() - PAYMENT_LOCK_STALE_MS).toISOString();
+  const { data: lockedBooking, error: lockError } = await admin
+    .from("bookings")
+    .update({ payment_initiated_at: new Date().toISOString() })
+    .eq("id", bookingId)
+    .eq("status", "pending_payment")
+    .or(`payment_initiated_at.is.null,payment_initiated_at.lt.${staleCutoff}`)
+    .select("id")
+    .maybeSingle();
+  if (lockError) return { ok: false, error: lockError.message };
+  if (!lockedBooking) {
+    return {
+      ok: false,
+      error: "A payment is already in progress for this booking. Please wait a moment, then refresh the page.",
+    };
+  }
+
   const [{ data: parentUser }, { data: therapistProfile }] = await Promise.all([
     admin.from("users").select("email").eq("id", session.userId).maybeSingle(),
     admin.from("therapist_profiles").select("price_per_session").eq("id", booking.therapist_id).maybeSingle(),
@@ -58,6 +82,10 @@ export async function initiatePaystackPayment(
     });
     return { ok: true, authorizationUrl: result.authorizationUrl };
   } catch (err) {
+    // Release the lock immediately on a genuine failure -- otherwise a
+    // transient Paystack API error would leave the user unable to retry for
+    // up to PAYMENT_LOCK_STALE_MS, not just blocked from a concurrent one.
+    await admin.from("bookings").update({ payment_initiated_at: null }).eq("id", bookingId);
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Couldn't start payment. Please try again.",

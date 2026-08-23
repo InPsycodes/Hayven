@@ -31,7 +31,7 @@ export function UploadDropzone({
       />
       {fileName ? (
         <>
-          <IconFileCheck size={22} stroke={1.5} className="text-success" />
+          <IconFileCheck size={22} stroke={1.5} className="text-success-text" />
           <span className="text-sm font-medium text-charcoal">{fileName}</span>
         </>
       ) : (

@@ -38,9 +38,9 @@ export function ProfileForm({
         />
       </div>
 
-      {state.error && <p className="text-sm text-error">{state.error}</p>}
+      {state.error && <p className="text-sm text-error-text">{state.error}</p>}
       {!state.error && state !== initialState && (
-        <p className="fade-in text-sm text-success">Saved.</p>
+        <p className="fade-in text-sm text-success-text">Saved.</p>
       )}
 
       <Button type="submit" disabled={isPending} className="w-fit">

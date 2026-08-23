@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { PHRASE_DOMAINS } from "@/lib/reports/phrase-domains";
 
 export function PhraseVariantForm({
@@ -34,15 +35,19 @@ export function PhraseVariantForm({
     setBand(next.bands?.[0]?.key ?? null);
   }
 
-  function handleSubmit() {
+  const { guard, reset } = useSubmitGuard();
+
+  const handleSubmit = guard(() => {
     if (!phrase.trim()) {
       setError("Enter a phrase.");
+      reset();
       return;
     }
     setError(null);
     setSuccess(false);
     startTransition(async () => {
       const result = await onSubmit(domainKey, band, tone, phrase);
+      reset();
       if (!result.ok) {
         setError(result.error);
         return;
@@ -50,7 +55,7 @@ export function PhraseVariantForm({
       setPhrase("");
       setSuccess(true);
     });
-  }
+  });
 
   return (
     <div className="flex flex-col gap-3 rounded-sm bg-[#F6F4F0] p-4">
@@ -117,8 +122,8 @@ export function PhraseVariantForm({
         <Button onClick={handleSubmit} disabled={isPending} variant="accent" className="w-fit">
           {isPending ? "Adding..." : "Add phrase"}
         </Button>
-        {error && <p className="text-sm text-error">{error}</p>}
-        {success && <p className="fade-in text-sm text-success">Added.</p>}
+        {error && <p className="text-sm text-error-text">{error}</p>}
+        {success && <p className="fade-in text-sm text-success-text">Added.</p>}
       </div>
     </div>
   );

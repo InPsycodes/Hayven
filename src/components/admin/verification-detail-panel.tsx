@@ -9,6 +9,7 @@ import { StatusBadge, type statusBadgeVariants } from "@/components/ui/status-ba
 import type { VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { formatDate, initialsFromName } from "@/data/format";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { reviewVerificationRequestReal, type VerificationDecision } from "@/lib/admin/actions";
 import type { RealVerificationRequest } from "@/lib/admin/queries";
 
@@ -28,15 +29,19 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
   const [error, setError] = useState<string | null>(null);
   const status = STATUS_LABEL[request.status] ?? STATUS_LABEL.submitted;
   const isResolved = request.status === "approved" || request.status === "rejected";
+  const { guard, reset } = useSubmitGuard();
 
-  function act(action: VerificationDecision) {
+  const act = guard((action: VerificationDecision) => {
     setPendingAction(action);
     setError(null);
     startTransition(async () => {
       const result = await reviewVerificationRequestReal(request.id, action);
-      if (!result.ok) setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+        reset();
+      }
     });
-  }
+  });
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-offwhite">
@@ -117,7 +122,7 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
         </Card>
       </div>
 
-      {error && <p className="px-6 text-sm text-error md:px-8">{error}</p>}
+      {error && <p className="px-6 text-sm text-error-text md:px-8">{error}</p>}
 
       <div className="mt-auto flex flex-wrap gap-3 border-t border-charcoal/10 px-6 py-5 md:px-8">
         <Button
@@ -141,7 +146,7 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
           variant="outline"
           onClick={() => act("rejected")}
           disabled={isPending || isResolved}
-          className="flex-1 min-w-28 border-error text-error hover:bg-error/5"
+          className="flex-1 min-w-28 border-error text-error-text hover:bg-error/5"
         >
           Reject
         </Button>

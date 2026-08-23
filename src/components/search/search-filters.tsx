@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { IconSearch } from "@tabler/icons-react";
 
 import { Chip } from "@/components/ui/chip";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -50,91 +53,121 @@ export function SearchFilters({ specialties }: { specialties: Specialty[] }) {
   const query = searchParams.get("query") ?? "";
   const specialtyName = searchParams.get("specialty") ?? "";
   const activeSpecialty = specialties.find((s) => s.name === specialtyName);
+  const [queryDraft, setQueryDraft] = useState(query);
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setParam("query", queryDraft.trim());
+  }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {query && (
-        <Chip variant="filled" onRemove={() => setParam("query", "")}>
-          &ldquo;{query}&rdquo;
-        </Chip>
-      )}
-      {activeSpecialty && (
-        <Chip variant="filled" onRemove={() => setParam("specialty", "")}>
-          {activeSpecialty.name}
-        </Chip>
-      )}
+    <div className="flex flex-col gap-3">
+      <form onSubmit={handleSearchSubmit} className="relative max-w-md">
+        <IconSearch
+          size={16}
+          stroke={2}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
+        />
+        <Input
+          type="search"
+          value={queryDraft}
+          onChange={(e) => setQueryDraft(e.target.value)}
+          placeholder="Search by therapist name or specialty"
+          aria-label="Search therapists"
+          className="rounded-full pl-9"
+        />
+      </form>
 
-      <Select value={specialtyName} onValueChange={(v) => setParam("specialty", v)}>
-        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by specialty">
-          <SelectValue placeholder="Specialty" />
-        </SelectTrigger>
-        <SelectContent>
-          {specialties.map((s) => (
-            <SelectItem key={s.id} value={s.name}>
-              {s.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex flex-wrap items-center gap-2">
+        {query && (
+          <Chip
+            variant="filled"
+            onRemove={() => {
+              setQueryDraft("");
+              setParam("query", "");
+            }}
+          >
+            &ldquo;{query}&rdquo;
+          </Chip>
+        )}
+        {activeSpecialty && (
+          <Chip variant="filled" onRemove={() => setParam("specialty", "")}>
+            {activeSpecialty.name}
+          </Chip>
+        )}
 
-      <Select
-        value={searchParams.get("location") || "any"}
-        onValueChange={(v) => setParam("location", v === "any" ? "" : v)}
-      >
-        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by location">
-          <SelectValue placeholder="Location" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="any">Any location</SelectItem>
-          <SelectItem value="Lagos">Lagos</SelectItem>
-          <SelectItem value="Virtual">Virtual only</SelectItem>
-        </SelectContent>
-      </Select>
+        <Select value={specialtyName} onValueChange={(v) => setParam("specialty", v)}>
+          <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by specialty">
+            <SelectValue placeholder="Specialty" />
+          </SelectTrigger>
+          <SelectContent>
+            {specialties.map((s) => (
+              <SelectItem key={s.id} value={s.name}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Select
-        value={searchParams.get("priceMax") || "any"}
-        onValueChange={(v) => setParam("priceMax", v === "any" ? "" : v)}
-      >
-        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by price range">
-          <SelectValue placeholder="Price range" />
-        </SelectTrigger>
-        <SelectContent>
-          {PRICE_BANDS.map((band) => (
-            <SelectItem key={band.value || "any"} value={band.value || "any"}>
-              {band.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select
+          value={searchParams.get("location") || "any"}
+          onValueChange={(v) => setParam("location", v === "any" ? "" : v)}
+        >
+          <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by location">
+            <SelectValue placeholder="Location" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="any">Any location</SelectItem>
+            <SelectItem value="Lagos">Lagos</SelectItem>
+            <SelectItem value="Virtual">Virtual only</SelectItem>
+          </SelectContent>
+        </Select>
 
-      <Select defaultValue="any">
-        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by availability">
-          <SelectValue placeholder="Availability" />
-        </SelectTrigger>
-        <SelectContent>
-          {AVAILABILITY_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value || "any"} value={opt.value || "any"}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select
+          value={searchParams.get("priceMax") || "any"}
+          onValueChange={(v) => setParam("priceMax", v === "any" ? "" : v)}
+        >
+          <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by price range">
+            <SelectValue placeholder="Price range" />
+          </SelectTrigger>
+          <SelectContent>
+            {PRICE_BANDS.map((band) => (
+              <SelectItem key={band.value || "any"} value={band.value || "any"}>
+                {band.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Select
-        value={searchParams.get("sessionType") || "any"}
-        onValueChange={(v) => setParam("sessionType", v === "any" ? "" : v)}
-      >
-        <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by session type">
-          <SelectValue placeholder="Session type" />
-        </SelectTrigger>
-        <SelectContent>
-          {SESSION_TYPES.map((opt) => (
-            <SelectItem key={opt.value || "any"} value={opt.value || "any"}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select defaultValue="any">
+          <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by availability">
+            <SelectValue placeholder="Availability" />
+          </SelectTrigger>
+          <SelectContent>
+            {AVAILABILITY_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value || "any"} value={opt.value || "any"}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={searchParams.get("sessionType") || "any"}
+          onValueChange={(v) => setParam("sessionType", v === "any" ? "" : v)}
+        >
+          <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by session type">
+            <SelectValue placeholder="Session type" />
+          </SelectTrigger>
+          <SelectContent>
+            {SESSION_TYPES.map((opt) => (
+              <SelectItem key={opt.value || "any"} value={opt.value || "any"}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

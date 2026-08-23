@@ -53,7 +53,7 @@ export async function AppShell({
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row">
       <AppRoleSidebar session={session} role={role} counts={counts} />
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main id="main" className="flex-1 pb-20 md:pb-0">{children}</main>
       <BottomTabNav session={session} />
     </div>
   );

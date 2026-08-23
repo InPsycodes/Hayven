@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { enrollMfa, confirmMfaEnrollment, unenrollMfa } from "@/lib/auth/mfa-actions";
 import type { MfaStatus } from "@/lib/auth/mfa-actions";
 
@@ -36,7 +37,9 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
     });
   }
 
-  function confirmEnroll(e: React.FormEvent) {
+  const confirmEnrollGuard = useSubmitGuard();
+
+  const confirmEnroll = confirmEnrollGuard.guard((e: React.FormEvent) => {
     e.preventDefault();
     if (!factorId) return;
     setError(null);
@@ -44,6 +47,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
       const result = await confirmMfaEnrollment(factorId, code);
       if (!result.ok) {
         setError(result.error);
+        confirmEnrollGuard.reset();
         return;
       }
       setStatus({ enrolled: true, factorId });
@@ -52,7 +56,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
       setQrCode(null);
       setSecret(null);
     });
-  }
+  });
 
   function startDisable() {
     setError(null);
@@ -60,7 +64,9 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
     setStep("disabling");
   }
 
-  function confirmDisable(e: React.FormEvent) {
+  const confirmDisableGuard = useSubmitGuard();
+
+  const confirmDisable = confirmDisableGuard.guard((e: React.FormEvent) => {
     e.preventDefault();
     if (!status.factorId) return;
     setError(null);
@@ -68,13 +74,14 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
       const result = await unenrollMfa(status.factorId!, code);
       if (!result.ok) {
         setError(result.error);
+        confirmDisableGuard.reset();
         return;
       }
       setStatus({ enrolled: false, factorId: null });
       setStep("idle");
       setCode("");
     });
-  }
+  });
 
   return (
     <div className="flex flex-col gap-3 rounded-sm bg-white p-5 ring-1 ring-border">
@@ -112,7 +119,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
               placeholder="123456"
             />
           </div>
-          {error && <p className="text-sm text-error">{error}</p>}
+          {error && <p className="text-sm text-error-text">{error}</p>}
           <div className="flex gap-3">
             <Button type="submit" disabled={isPending || code.length !== 6} className="w-fit">
               {isPending ? "Verifying..." : "Confirm"}
@@ -152,7 +159,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
               placeholder="123456"
             />
           </div>
-          {error && <p className="text-sm text-error">{error}</p>}
+          {error && <p className="text-sm text-error-text">{error}</p>}
           <div className="flex gap-3">
             <Button type="submit" variant="outline" disabled={isPending || code.length !== 6} className="w-fit">
               {isPending ? "Verifying..." : "Turn off"}
@@ -175,7 +182,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
 
       {step === "idle" && (
         <>
-          {error && <p className="text-sm text-error">{error}</p>}
+          {error && <p className="text-sm text-error-text">{error}</p>}
           <Button
             type="button"
             variant={status.enrolled ? "outline" : "default"}

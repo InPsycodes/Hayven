@@ -26,7 +26,7 @@ export function ActiveToggle({
       }
       className={cn(
         "rounded-full px-3 py-1 text-xs font-medium transition-colors",
-        isActive ? "bg-success/10 text-success" : "bg-paper text-muted-foreground"
+        isActive ? "bg-success/10 text-success-text" : "bg-paper text-muted-foreground"
       )}
     >
       {isPending ? "..." : isActive ? "Active" : "Inactive"}

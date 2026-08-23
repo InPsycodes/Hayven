@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import type { AdminPickerOption } from "@/lib/admin/queries";
 
 export function AssignPicker({
@@ -27,16 +28,19 @@ export function AssignPicker({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { guard, reset } = useSubmitGuard();
 
-  function handleSubmit() {
+  const handleSubmit = guard(() => {
     if (!leftId || !rightId) {
       setError("Choose both to continue.");
+      reset();
       return;
     }
     setError(null);
     setSuccess(false);
     startTransition(async () => {
       const result = await onSubmit(leftId, rightId);
+      reset();
       if (!result.ok) {
         setError(result.error);
         return;
@@ -45,7 +49,7 @@ export function AssignPicker({
       setRightId("");
       setSuccess(true);
     });
-  }
+  });
 
   return (
     <div className="flex flex-col gap-3 rounded-sm bg-[#F6F4F0] p-4">
@@ -84,8 +88,8 @@ export function AssignPicker({
           {isPending ? "Saving..." : submitLabel}
         </Button>
       </div>
-      {error && <p className="text-sm text-error">{error}</p>}
-      {success && <p className="text-sm text-success">Assigned.</p>}
+      {error && <p className="text-sm text-error-text">{error}</p>}
+      {success && <p className="text-sm text-success-text">Assigned.</p>}
     </div>
   );
 }

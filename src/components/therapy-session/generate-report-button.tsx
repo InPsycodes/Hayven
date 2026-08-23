@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { generateReport } from "@/lib/reports/actions";
 
 export function GenerateReportButton({
@@ -20,17 +21,20 @@ export function GenerateReportButton({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleClick() {
+  const { guard, reset } = useSubmitGuard();
+
+  const handleClick = guard(() => {
     setError(null);
     startTransition(async () => {
       const result = await generateReport(sessionId, tone);
       if (!result.ok) {
         setError(result.error);
+        reset();
         return;
       }
       router.refresh();
     });
-  }
+  });
 
   return (
     <div className="flex flex-col gap-2">
@@ -51,7 +55,7 @@ export function GenerateReportButton({
           {isPending ? "Generating..." : "Generate report"}
         </Button>
       </div>
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <p className="text-sm text-error-text">{error}</p>}
     </div>
   );
 }

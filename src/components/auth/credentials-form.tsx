@@ -29,9 +29,26 @@ export function CredentialsForm({ specialties }: { specialties: Specialty[] }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-6 p-6 md:p-8">
+      {/* Uncontrolled + keyed off the server's echoed-back value, not a
+          controlled value/onValueChange pair -- on a failed submit (e.g.
+          an invalid file), a controlled Select here was resetting to its
+          placeholder on the useActionState re-render while the plain
+          <Input> fields survived untouched, forcing a second, unrelated
+          "please select your specialty" error on resubmit. Re-deriving
+          local state from `state` (via useState-adjust-during-render, and
+          separately via useEffect) both failed to hold -- something in
+          this re-render clears it moments later either way. Keying the
+          Select on the value itself sidesteps the mystery entirely: a
+          changed key forces a clean remount with the right defaultValue,
+          no controlled-state reconciliation involved. */}
       <div className="flex flex-col gap-2">
         <Label>Specialty</Label>
-        <Select name="specialtyId" required>
+        <Select
+          key={`specialty-${state.specialtyId ?? ""}`}
+          name="specialtyId"
+          defaultValue={state.specialtyId}
+          required
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select your specialty" />
           </SelectTrigger>
@@ -47,7 +64,12 @@ export function CredentialsForm({ specialties }: { specialties: Specialty[] }) {
 
       <div className="flex flex-col gap-2">
         <Label>Professional body / association</Label>
-        <Select name="professionalBody" required>
+        <Select
+          key={`professional-body-${state.professionalBody ?? ""}`}
+          name="professionalBody"
+          defaultValue={state.professionalBody}
+          required
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select your professional body" />
           </SelectTrigger>
@@ -103,7 +125,7 @@ export function CredentialsForm({ specialties }: { specialties: Specialty[] }) {
         </p>
       </div>
 
-      {state.error && <p className="text-sm text-error">{state.error}</p>}
+      {state.error && <p className="text-sm text-error-text">{state.error}</p>}
 
       <div className="flex gap-3">
         <Button asChild type="button" variant="outline" className="flex-1">

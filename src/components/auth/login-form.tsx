@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { signIn } from "@/lib/auth/actions";
 import { verifyMfaLogin } from "@/lib/auth/mfa-actions";
 import { roleHomePath } from "@/lib/auth/role-path";
@@ -27,24 +28,30 @@ export function LoginForm() {
     router.refresh();
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  const loginGuard = useSubmitGuard();
+
+  const handleSubmit = loginGuard.guard((e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
       const result = await signIn(email, password);
       if (!result.ok) {
         setError(result.error);
+        loginGuard.reset();
         return;
       }
       if ("mfaRequired" in result) {
         setMfaFactorId(result.factorId);
+        loginGuard.reset();
         return;
       }
       goHome(result.role);
     });
-  }
+  });
 
-  function handleVerifyMfa(e: React.FormEvent) {
+  const mfaGuard = useSubmitGuard();
+
+  const handleVerifyMfa = mfaGuard.guard((e: React.FormEvent) => {
     e.preventDefault();
     if (!mfaFactorId) return;
     setError(null);
@@ -52,11 +59,12 @@ export function LoginForm() {
       const result = await verifyMfaLogin(mfaFactorId, mfaCode);
       if (!result.ok) {
         setError(result.error);
+        mfaGuard.reset();
         return;
       }
       goHome(result.role as UserRole);
     });
-  }
+  });
 
   if (mfaFactorId) {
     return (
@@ -83,7 +91,7 @@ export function LoginForm() {
           />
         </div>
 
-        {error && <p className="text-sm text-error">{error}</p>}
+        {error && <p className="text-sm text-error-text">{error}</p>}
 
         <Button type="submit" size="lg" disabled={isPending || mfaCode.length !== 6} className="w-full">
           {isPending ? "Verifying..." : "Verify"}
@@ -135,7 +143,7 @@ export function LoginForm() {
         />
       </div>
 
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <p className="text-sm text-error-text">{error}</p>}
 
       <Button type="submit" size="lg" disabled={isPending} className="w-full">
         {isPending ? "Logging in..." : "Log in"}

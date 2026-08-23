@@ -3,12 +3,14 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { IconLoader2 } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { signUp } from "@/lib/auth/actions";
 
 type SignupRole = "parent" | "therapist";
@@ -32,10 +34,13 @@ export function SignupForm({
   const [password, setPassword] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  const { guard, reset } = useSubmitGuard();
+
+  const handleSubmit = guard((e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedToTerms) {
       setError("Please agree to the Privacy Policy and Terms of Service to continue.");
+      reset();
       return;
     }
     setError(null);
@@ -51,6 +56,7 @@ export function SignupForm({
 
       if (!result.ok) {
         setError(result.error);
+        reset();
         return;
       }
       if (result.needsEmailConfirmation) {
@@ -61,7 +67,7 @@ export function SignupForm({
       router.push(role === "therapist" ? "/signup/credentials" : "/parent");
       router.refresh();
     });
-  }
+  });
 
   if (needsConfirmation) {
     return (
@@ -175,7 +181,7 @@ export function SignupForm({
         </span>
       </label>
 
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <p className="text-sm text-error-text">{error}</p>}
 
       <Button
         type="submit"
@@ -184,12 +190,18 @@ export function SignupForm({
         disabled={isPending}
         className="w-full"
       >
+        {isPending && <IconLoader2 size={16} stroke={2} className="animate-spin" />}
         {isPending
-          ? "Creating account..."
+          ? "Creating your account..."
           : role === "therapist"
             ? "Continue to credentials →"
             : "Create account"}
       </Button>
+      {isPending && (
+        <p className="fade-in -mt-2 text-center text-xs text-muted-foreground">
+          This can take a few seconds. Please don&apos;t close this window.
+        </p>
+      )}
 
       <p className="text-center text-sm text-muted-foreground">
         {role === "therapist" ? "Already applied?" : "Already have an account?"}{" "}

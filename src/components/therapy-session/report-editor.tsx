@@ -6,6 +6,7 @@ import { Block } from "@/components/therapy-session/report-view";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { saveReport } from "@/lib/reports/actions";
 import type { ReportBlock, ReportBody } from "@/lib/reports/types";
 
@@ -39,7 +40,9 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
-  function handleSave() {
+  const { guard, reset } = useSubmitGuard();
+
+  const handleSave = guard(() => {
     setStatus("idle");
     setError(null);
     startTransition(async () => {
@@ -56,6 +59,7 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
         ),
       };
       const result = await saveReport(reportId, editedBody);
+      reset(); // a draft report is saved repeatedly, not a one-time submit
       if (!result.ok) {
         setStatus("error");
         setError(result.error);
@@ -63,7 +67,7 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
       }
       setStatus("saved");
     });
-  }
+  });
 
   return (
     <div className="flex flex-col gap-5">
@@ -107,13 +111,13 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
         )
       )}
 
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <p className="text-sm text-error-text">{error}</p>}
 
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} disabled={isPending}>
           {isPending ? "Saving..." : "Save report"}
         </Button>
-        {status === "saved" && <span className="fade-in text-sm text-success">Saved.</span>}
+        {status === "saved" && <span className="fade-in text-sm text-success-text">Saved.</span>}
       </div>
     </div>
   );

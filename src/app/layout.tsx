@@ -50,6 +50,17 @@ export default function RootLayout({
         {/* suppressHydrationWarning: only silences attribute mismatches on
             this element (e.g. Grammarly injecting data-gr-ext-installed
             before React hydrates), not real hydration bugs in children. */}
+        {/* First focusable element on every page, off-screen until it
+            receives keyboard focus -- lets a keyboard/screen-reader user
+            jump straight to the actual page content instead of tabbing
+            through the full nav (up to 8 links) every single time. Each
+            layout's own <main id="main"> is the landing target. */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-sm focus:bg-charcoal focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-canvas-white"
+        >
+          Skip to content
+        </a>
         {/* Disabled in dev: an installed service worker can keep serving a
             stale cached page indefinitely, even after a hard refresh, which
             makes live-testing bug fixes on a phone unreliable. Real PWA

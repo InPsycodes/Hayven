@@ -273,7 +273,7 @@ export function SessionEntryForm({
         </p>
       </div>
 
-      {state.error && <p className="text-sm text-error">{state.error}</p>}
+      {state.error && <p className="text-sm text-error-text">{state.error}</p>}
 
       <div className="fixed inset-x-0 bottom-0 border-t border-border bg-white p-4 md:sticky">
         <Button type="submit" disabled={isPending} size="lg" className="mx-auto block w-full max-w-2xl">

@@ -25,6 +25,20 @@ export async function addChild(_prevState: FormState, formData: FormData): Promi
   if (typeof dateOfBirth !== "string" || !dateOfBirth) {
     return { error: "Please enter a date of birth." };
   }
+  const dob = new Date(`${dateOfBirth}T00:00:00Z`);
+  if (Number.isNaN(dob.getTime())) {
+    return { error: "That date of birth doesn't look right." };
+  }
+  const now = new Date();
+  if (dob.getTime() > now.getTime()) {
+    return { error: "Date of birth cannot be in the future." };
+  }
+  const EARLIEST_PLAUSIBLE_YEARS = 25; // catches obvious mistakes (wrong century, fat-fingered year) without hardcoding a strict pediatric cutoff -- that's a product policy, not a data-integrity check.
+  const earliestPlausible = new Date(now);
+  earliestPlausible.setUTCFullYear(now.getUTCFullYear() - EARLIEST_PLAUSIBLE_YEARS);
+  if (dob.getTime() < earliestPlausible.getTime()) {
+    return { error: "That date of birth doesn't look right. Please double-check it." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.from("children").insert({

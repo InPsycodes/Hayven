@@ -4,6 +4,7 @@ import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/data/format";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import type { RealReportPhraseVariant } from "@/lib/admin/queries";
 
 export function PhraseVariantRow({
@@ -18,6 +19,7 @@ export function PhraseVariantRow({
   onDelete: (id: string) => Promise<{ ok: true } | { ok: false; error: string }>;
 }) {
   const [isPending, startTransition] = useTransition();
+  const { guard, reset } = useSubmitGuard();
 
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3.5">
@@ -38,11 +40,12 @@ export function PhraseVariantRow({
         variant="ghost"
         size="sm"
         disabled={isPending}
-        onClick={() =>
+        onClick={guard(() =>
           startTransition(async () => {
-            await onDelete(variant.id);
+            const result = await onDelete(variant.id);
+            if (!result.ok) reset(); // row is only removed from the list on success
           })
-        }
+        )}
       >
         {isPending ? "Deleting..." : "Delete"}
       </Button>

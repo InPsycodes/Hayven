@@ -37,7 +37,10 @@ export default async function ParentProfilePage() {
         <Card className="p-5">
           <div className="mb-1 flex items-center justify-between">
             <h2 className="font-heading text-base text-charcoal">Your children</h2>
-            <Link href="/parent/children" className="text-xs font-medium text-terracotta hover:underline">
+            <Link
+              href="/parent/children"
+              className="-m-2 p-2 text-xs font-medium text-terracotta hover:underline"
+            >
               Manage
             </Link>
           </div>
@@ -69,7 +72,10 @@ export default async function ParentProfilePage() {
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <h2 className="font-heading text-base text-charcoal">Help & FAQs</h2>
-            <Link href="/help" className="text-xs font-medium text-terracotta hover:underline">
+            <Link
+              href="/help"
+              className="-m-2 p-2 text-xs font-medium text-terracotta hover:underline"
+            >
               View
             </Link>
           </div>

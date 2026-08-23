@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { IconHeart, IconShieldCheck } from "@tabler/icons-react";
 
-import aboutImage from "../../../public/images/about-family-session.png";
+import aboutImage from "../../../public/images/about-family-session.webp";
 
 const VALUES = [
   {

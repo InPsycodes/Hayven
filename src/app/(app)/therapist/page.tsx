@@ -7,6 +7,7 @@ import { ReportWorkflowCard } from "@/components/dashboard/report-workflow-card"
 import { ScheduleItem } from "@/components/dashboard/schedule-item";
 import { NeedsAttentionItem } from "@/components/dashboard/needs-attention-item";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
+import { VerificationStatusBanner } from "@/components/therapist/verification-status-banner";
 import { Reveal } from "@/components/marketing/reveal";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
@@ -52,6 +53,8 @@ export default async function TherapistDashboardPage() {
       />
 
       <div className="flex flex-col gap-8 px-5 py-6 md:px-10 md:py-8">
+        <VerificationStatusBanner status={therapist.verificationStatus} />
+
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Reveal delayMs={0}>
             <StatCard label="Active clients" value={String(activeClients)} />

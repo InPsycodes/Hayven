@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDate, initialsFromName } from "@/data/format";
+import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import type { AdminUserRow } from "@/lib/admin/queries";
 import { setUserAccountStatus, resetUserAccountPassword, setUserSupervisorRole } from "@/lib/admin/actions";
 
@@ -22,28 +23,31 @@ function ResetPasswordForm({ userId, onDone }: { userId: string; onDone: () => v
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { guard, reset } = useSubmitGuard();
 
   return (
     <form
       className="flex flex-wrap items-center gap-2"
-      onSubmit={(e) => {
+      onSubmit={guard((e) => {
         e.preventDefault();
         setError(null);
         startTransition(async () => {
           const result = await resetUserAccountPassword(userId, password);
           if (!result.ok) {
             setError(result.error);
+            reset();
             return;
           }
           onDone();
         });
-      }}
+      })}
     >
       <Input
         type="text"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="New password (min 8 characters)"
+        aria-label="New password"
         className="w-56"
         autoFocus
       />
@@ -53,7 +57,7 @@ function ResetPasswordForm({ userId, onDone }: { userId: string; onDone: () => v
       <Button type="button" size="sm" variant="ghost" onClick={onDone} disabled={isPending}>
         Cancel
       </Button>
-      {error && <p className="w-full text-xs text-error">{error}</p>}
+      {error && <p className="w-full text-xs text-error-text">{error}</p>}
     </form>
   );
 }
@@ -65,6 +69,8 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
   const [localStatus, setLocalStatus] = useState(user.status);
   const [localRole, setLocalRole] = useState(user.role);
   const [roleError, setRoleError] = useState<string | null>(null);
+  const statusGuard = useSubmitGuard();
+  const roleGuard = useSubmitGuard();
 
   const suspended = localStatus === "suspended";
 
@@ -98,13 +104,14 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
           size="sm"
           variant={suspended ? "outline" : "destructive"}
           disabled={isPending || isSelf}
-          onClick={() =>
+          onClick={statusGuard.guard(() =>
             startTransition(async () => {
               const nextStatus = suspended ? "active" : "suspended";
               const result = await setUserAccountStatus(user.id, nextStatus);
               if (result.ok) setLocalStatus(nextStatus);
+              statusGuard.reset();
             })
-          }
+          )}
         >
           {isPending ? "Saving..." : suspended ? "Reactivate" : "Suspend"}
         </Button>
@@ -116,22 +123,23 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
             size="sm"
             variant="ghost"
             disabled={isRolePending || isSelf}
-            onClick={() =>
+            onClick={roleGuard.guard(() =>
               startRoleTransition(async () => {
                 setRoleError(null);
                 const makeSupervisor = localRole === "parent";
                 const result = await setUserSupervisorRole(user.id, makeSupervisor);
                 if (result.ok) setLocalRole(makeSupervisor ? "supervisor" : "parent");
                 else setRoleError(result.error);
+                roleGuard.reset();
               })
-            }
+            )}
           >
             {isRolePending ? "Saving..." : localRole === "parent" ? "Make supervisor" : "Remove supervisor"}
           </Button>
         )}
       </div>
 
-      {roleError && <p className="text-xs text-error">{roleError}</p>}
+      {roleError && <p className="text-xs text-error-text">{roleError}</p>}
 
       {resetting && (
         <div className="border-t border-charcoal/8 pt-3">

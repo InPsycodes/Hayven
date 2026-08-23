@@ -34,13 +34,13 @@ export const LEARN_TOPIC_META: Record<string, LearnTopicMeta> = {
   },
   ADHD: {
     icon: IconBolt,
-    tileClass: "bg-amber/15 text-amber",
-    chipClass: "bg-amber/15 text-amber",
+    tileClass: "bg-amber/15 text-amber-text",
+    chipClass: "bg-amber/15 text-amber-text",
   },
   Dyslexia: {
     icon: IconBook2,
-    tileClass: "bg-success/15 text-success",
-    chipClass: "bg-success/15 text-success",
+    tileClass: "bg-success/15 text-success-text",
+    chipClass: "bg-success/15 text-success-text",
   },
   "Sensory processing": {
     icon: IconWaveSine,
@@ -66,13 +66,13 @@ export const LEARN_TOPIC_META: Record<string, LearnTopicMeta> = {
   // prefixed "module1".."module5" in src/data/articles.ts).
   "Child Development": {
     icon: IconTimeline,
-    tileClass: "bg-success/15 text-success",
-    chipClass: "bg-success/15 text-success",
+    tileClass: "bg-success/15 text-success-text",
+    chipClass: "bg-success/15 text-success-text",
   },
   "Behavioral Assessment": {
     icon: IconActivity,
-    tileClass: "bg-amber/15 text-amber",
-    chipClass: "bg-amber/15 text-amber",
+    tileClass: "bg-amber/15 text-amber-text",
+    chipClass: "bg-amber/15 text-amber-text",
   },
   "Child Assessments": {
     icon: IconClipboardList,
