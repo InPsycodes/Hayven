@@ -35,13 +35,7 @@ export default async function AdminVerificationPage({
         activeId={selected?.id}
       />
       <div className="flex-1 overflow-hidden">
-        {selected ? (
-          <VerificationDetailPanel key={selected.id} request={selected} />
-        ) : (
-          <div className="flex h-full items-center justify-center p-8 text-[21px] text-muted-foreground">
-            No application selected.
-          </div>
-        )}
+        {selected && <VerificationDetailPanel key={selected.id} request={selected} />}
       </div>
     </div>
   );

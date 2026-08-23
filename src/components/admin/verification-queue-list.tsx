@@ -33,10 +33,10 @@ export function VerificationQueueList({
   ).length;
 
   return (
-    <div className="flex w-full shrink-0 flex-col bg-paper md:w-100">
+    <div className="flex w-full shrink-0 flex-col bg-paper md:w-90">
       <div className="p-5">
-        <h1 className="font-heading text-[27px] text-charcoal">Verification queue</h1>
-        <p className="text-lg text-muted-foreground">{pendingCount} pending review</p>
+        <h1 className="font-heading text-xl text-charcoal">Verification queue</h1>
+        <p className="text-sm text-muted-foreground">{pendingCount} pending review</p>
 
         <div className="mt-4 flex gap-1.5">
           {STATUS_FILTERS.map((filter) => {
@@ -47,7 +47,7 @@ export function VerificationQueueList({
                 key={filter.key}
                 href={`/admin/verification?status=${filter.key}`}
                 className={cn(
-                  "rounded-full px-4 py-2 text-lg font-medium whitespace-nowrap transition-colors",
+                  "rounded-full px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
                   active ? "bg-charcoal text-offwhite" : "bg-white text-charcoal hover:bg-white/70"
                 )}
               >
@@ -60,7 +60,7 @@ export function VerificationQueueList({
 
       <div className="flex flex-col gap-2 overflow-y-auto px-5 pb-5">
         {requests.length === 0 ? (
-          <p className="rounded-sm bg-white p-4 text-[21px] text-muted-foreground">
+          <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground">
             No applications in this view.
           </p>
         ) : (
@@ -78,17 +78,17 @@ export function VerificationQueueList({
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-paper text-sm font-medium text-charcoal">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-paper text-xs font-medium text-charcoal">
                     {initialsFromName(request.therapist.displayName)}
                   </span>
-                  <span className="truncate text-[21px] font-medium text-charcoal">
+                  <span className="truncate text-base font-medium text-charcoal">
                     {request.therapist.displayName}
                   </span>
                 </div>
-                <p className="truncate text-lg text-muted-foreground">
+                <p className="truncate text-sm text-muted-foreground">
                   {request.therapist.specialties.join(", ")}
                 </p>
-                <p className="text-base text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Submitted {timeSince(request.submittedAt)}
                 </p>
               </Link>
