@@ -38,7 +38,7 @@ export default async function AdminVerificationPage({
         {selected ? (
           <VerificationDetailPanel key={selected.id} request={selected} />
         ) : (
-          <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
+          <div className="flex h-full items-center justify-center p-8 text-[21px] text-muted-foreground">
             No application selected.
           </div>
         )}

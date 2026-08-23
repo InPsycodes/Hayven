@@ -13,7 +13,7 @@ export default async function AdminMetricsPage() {
   const m = await getPlatformMetrics();
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-[#F6F4F0]">
+    <div className="min-h-screen overflow-y-auto bg-offwhite">
       <div className="p-6 md:p-8">
         <h1 className="font-heading text-xl text-charcoal">Metrics</h1>
         <p className="mt-1 text-sm text-muted-foreground">A snapshot of platform activity.</p>
