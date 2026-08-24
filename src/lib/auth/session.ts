@@ -7,6 +7,8 @@ export interface AppSession {
   userId: string;
   role: UserRole;
   name: string;
+  /** Additive: a therapist can hold this alongside role === "therapist" and keep full access to their own practice. See migration 0054. */
+  isSupervisor: boolean;
 }
 
 /** Real, server-side session: the authenticated Supabase user + their public.users profile. */
@@ -28,7 +30,7 @@ export async function getSession(): Promise<AppSession | null> {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("role, full_name, status")
+    .select("role, full_name, status, is_supervisor")
     .eq("id", user.id)
     .single();
   if (!profile) return null;
@@ -42,5 +44,6 @@ export async function getSession(): Promise<AppSession | null> {
     userId: user.id,
     role: profile.role as UserRole,
     name: profile.full_name as string,
+    isSupervisor: profile.is_supervisor === true,
   };
 }

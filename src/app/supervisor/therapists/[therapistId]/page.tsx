@@ -13,7 +13,9 @@ export default async function SupervisorTherapistChildrenPage({
   params: Promise<{ therapistId: string }>;
 }) {
   const session = await getSession();
-  if (!session || session.role !== "supervisor") redirect("/login");
+  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+    redirect("/login");
+  }
 
   const { therapistId } = await params;
   const children = await getSupervisedChildrenForTherapist(therapistId, session.userId);

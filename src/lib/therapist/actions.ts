@@ -4,11 +4,14 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth/session";
 import { lagosWallClockToUtcIso } from "@/data/format";
 import { professionalBodyLabel } from "./professional-bodies";
 import { scanFileForViruses } from "@/lib/uploads/scan-file";
 import { checkRateLimit } from "@/lib/rate-limit/check";
+import { logAuditEvent } from "@/lib/audit/log";
+import { createNotification } from "@/lib/notifications/create";
 
 export interface FormState {
   error?: string;
@@ -375,4 +378,71 @@ export async function deleteAvailabilitySlot(
 
   revalidatePath("/therapist/schedule");
   return { ok: true };
+}
+
+/**
+ * A therapist requests supervisor access; every admin is notified (in-app +
+ * email) so it doesn't just sit unseen, same fanout shape as
+ * submitSupportRequest. An admin approves/denies from /admin/users via
+ * reviewSupervisorRequest, which is the only thing that actually grants
+ * users.is_supervisor -- see migration 0054.
+ */
+export async function requestSupervisorAccess(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") {
+    return { error: "You must be signed in as a therapist to request this." };
+  }
+
+  const rateLimitOk = await checkRateLimit(`supervisor-request:${session.userId}`, 3, 60 * 60);
+  if (!rateLimitOk) {
+    return { error: "You've submitted several requests recently. Please wait a bit before submitting another." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("supervisor_requests")
+    .select("id")
+    .eq("therapist_id", session.userId)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (existing) {
+    return {};
+  }
+
+  const note = formData.get("note");
+
+  const { data, error } = await supabase
+    .from("supervisor_requests")
+    .insert({
+      therapist_id: session.userId,
+      note: typeof note === "string" && note.trim() ? note.trim() : null,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    return { error: error?.message ?? "Couldn't submit your request. Please try again." };
+  }
+
+  await logAuditEvent({
+    actor: session,
+    action: "supervisor_request.submit",
+    entityType: "supervisor_request",
+    entityId: data.id,
+  });
+
+  const admin = createAdminClient();
+  const { data: admins } = await admin.from("users").select("id").eq("role", "admin");
+  for (const a of admins ?? []) {
+    await createNotification({
+      userId: a.id,
+      type: "supervisor_request_new",
+      title: `Supervisor access request: ${session.name}`,
+      body: `${session.name} requested supervisor access.${note && typeof note === "string" && note.trim() ? ` Note: ${note.trim().slice(0, 200)}` : ""}`,
+    });
+  }
+
+  revalidatePath("/therapist/profile");
+  return {};
 }

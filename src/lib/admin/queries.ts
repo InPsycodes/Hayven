@@ -121,6 +121,56 @@ export async function getSupportRequests(): Promise<RealSupportRequest[]> {
   });
 }
 
+export interface RealSupervisorRequest {
+  id: string;
+  note: string | null;
+  status: string;
+  requestedAt: string;
+  reviewedAt: string | null;
+  therapist: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+}
+
+/** Cheap count-only query for a sidebar badge. */
+export async function getPendingSupervisorRequestCount(): Promise<number> {
+  const supabase = createAdminClient();
+  const { count } = await supabase
+    .from("supervisor_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pending");
+  return count ?? 0;
+}
+
+export async function getSupervisorRequests(): Promise<RealSupervisorRequest[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("supervisor_requests")
+    .select("id, note, status, requested_at, reviewed_at, users!therapist_id(id, full_name, email)")
+    .order("status", { ascending: true })
+    .order("requested_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    const user = row.users as unknown as { id: string; full_name: string; email: string } | null;
+    return {
+      id: row.id,
+      note: row.note,
+      status: row.status,
+      requestedAt: row.requested_at,
+      reviewedAt: row.reviewed_at,
+      therapist: {
+        id: user?.id ?? "",
+        fullName: user?.full_name ?? "Unknown",
+        email: user?.email ?? "",
+      },
+    };
+  });
+}
+
 /** Cheap count-only query for a sidebar badge. */
 export async function getPendingDeletionRequestCount(): Promise<number> {
   const supabase = createAdminClient();
@@ -360,9 +410,14 @@ export async function getAllChildrenForAdmin(): Promise<AdminPickerOption[]> {
   return (data ?? []).map((row) => ({ id: row.id, label: row.first_name }));
 }
 
+/** Covers both a plain role === "supervisor" account and a therapist granted is_supervisor -- see migration 0054. */
 export async function getAllSupervisorsForAdmin(): Promise<AdminPickerOption[]> {
   const supabase = createAdminClient();
-  const { data } = await supabase.from("users").select("id, full_name").eq("role", "supervisor").order("full_name");
+  const { data } = await supabase
+    .from("users")
+    .select("id, full_name")
+    .or("role.eq.supervisor,is_supervisor.eq.true")
+    .order("full_name");
   return (data ?? []).map((row) => ({ id: row.id, label: row.full_name }));
 }
 
@@ -579,6 +634,7 @@ export interface AdminUserRow {
   email: string;
   phone: string | null;
   role: string;
+  isSupervisor: boolean;
   status: string;
   createdAt: string;
 }
@@ -587,7 +643,7 @@ export async function getAllUsersForAdmin(): Promise<AdminUserRow[]> {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("users")
-    .select("id, full_name, email, phone, role, status, created_at")
+    .select("id, full_name, email, phone, role, is_supervisor, status, created_at")
     .order("created_at", { ascending: false });
 
   return (data ?? []).map((row) => ({
@@ -596,6 +652,7 @@ export async function getAllUsersForAdmin(): Promise<AdminUserRow[]> {
     email: row.email,
     phone: row.phone,
     role: row.role,
+    isSupervisor: row.is_supervisor === true,
     status: row.status,
     createdAt: row.created_at,
   }));

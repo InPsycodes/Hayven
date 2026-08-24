@@ -18,11 +18,20 @@ export async function proxy(request: NextRequest) {
 
   // Always run this so the Supabase session cookie stays refreshed, even on
   // routes that aren't role-gated.
-  const { response, role } = await updateSupabaseSession(request);
+  const { response, role, isSupervisor } = await updateSupabaseSession(request);
 
   if (!match) return response;
 
-  if (role !== match.role) {
+  // /supervisor is reachable two ways: a plain role === "supervisor"
+  // account (the original mechanism), or a therapist granted is_supervisor
+  // -- who also still passes the /therapist check below and keeps their own
+  // dashboard. See migration 0054.
+  const allowed =
+    match.prefix === "/supervisor"
+      ? role === "supervisor" || (role === "therapist" && isSupervisor)
+      : role === match.role;
+
+  if (!allowed) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);

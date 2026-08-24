@@ -30,7 +30,9 @@ export default async function SupervisorChildOverviewPage({
   params: Promise<{ childId: string }>;
 }) {
   const session = await getSession();
-  if (!session || session.role !== "supervisor") redirect("/login");
+  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+    redirect("/login");
+  }
 
   const { childId } = await params;
   const child = await getSupervisedChildById(childId, session.userId);

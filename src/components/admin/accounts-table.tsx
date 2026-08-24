@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDate, initialsFromName } from "@/data/format";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import type { AdminUserRow } from "@/lib/admin/queries";
-import { setUserAccountStatus, resetUserAccountPassword, setUserSupervisorRole } from "@/lib/admin/actions";
+import { setUserAccountStatus, resetUserAccountPassword, setUserSupervisorFlag } from "@/lib/admin/actions";
 
 const ROLE_FILTERS = [
   { key: "all", label: "All" },
@@ -67,7 +67,7 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
   const [isRolePending, startRoleTransition] = useTransition();
   const [resetting, setResetting] = useState(false);
   const [localStatus, setLocalStatus] = useState(user.status);
-  const [localRole, setLocalRole] = useState(user.role);
+  const [localIsSupervisor, setLocalIsSupervisor] = useState(user.isSupervisor);
   const [roleError, setRoleError] = useState<string | null>(null);
   const statusGuard = useSubmitGuard();
   const roleGuard = useSubmitGuard();
@@ -91,7 +91,8 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <StatusBadge tone="grey">{localRole}</StatusBadge>
+          <StatusBadge tone="grey">{user.role}</StatusBadge>
+          {localIsSupervisor && <StatusBadge tone="sage">Supervisor</StatusBadge>}
           <StatusBadge tone={suspended ? "error" : "sage"}>{suspended ? "Suspended" : "Active"}</StatusBadge>
           <span className="text-[11px] whitespace-nowrap text-muted-foreground">
             Joined {formatDate(user.createdAt)}
@@ -118,7 +119,7 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
         <Button size="sm" variant="ghost" disabled={isSelf} onClick={() => setResetting((v) => !v)}>
           Reset password
         </Button>
-        {(localRole === "parent" || localRole === "supervisor") && (
+        {user.role === "therapist" && (
           <Button
             size="sm"
             variant="ghost"
@@ -126,15 +127,15 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
             onClick={roleGuard.guard(() =>
               startRoleTransition(async () => {
                 setRoleError(null);
-                const makeSupervisor = localRole === "parent";
-                const result = await setUserSupervisorRole(user.id, makeSupervisor);
-                if (result.ok) setLocalRole(makeSupervisor ? "supervisor" : "parent");
+                const makeSupervisor = !localIsSupervisor;
+                const result = await setUserSupervisorFlag(user.id, makeSupervisor);
+                if (result.ok) setLocalIsSupervisor(makeSupervisor);
                 else setRoleError(result.error);
                 roleGuard.reset();
               })
             )}
           >
-            {isRolePending ? "Saving..." : localRole === "parent" ? "Make supervisor" : "Remove supervisor"}
+            {isRolePending ? "Saving..." : localIsSupervisor ? "Remove supervisor" : "Make supervisor"}
           </Button>
         )}
       </div>
@@ -157,7 +158,9 @@ export function AccountsTable({ users, currentUserId }: { users: AdminUserRow[];
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return users.filter((u) => {
-      const matchesRole = roleFilter === "all" || u.role === roleFilter;
+      const matchesRole =
+        roleFilter === "all" ||
+        (roleFilter === "supervisor" ? u.role === "supervisor" || u.isSupervisor : u.role === roleFilter);
       const matchesSearch = !q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
       return matchesRole && matchesSearch;
     });

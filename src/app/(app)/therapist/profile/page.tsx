@@ -11,8 +11,9 @@ import { ProfessionalProfileForm } from "@/components/therapist/professional-pro
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { MfaSection } from "@/components/shared/mfa-section";
+import { SupervisorAccessSection } from "@/components/therapist/supervisor-access-section";
 import { getSession } from "@/lib/auth/session";
-import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
+import { getRealTherapistProfileByUserId, getMySupervisorRequestStatus } from "@/lib/therapist/queries";
 import { getRealAccountInfo, getRealPendingDeletionRequest } from "@/lib/account/queries";
 import { getMfaStatus } from "@/lib/auth/mfa-actions";
 
@@ -32,10 +33,11 @@ export default async function TherapistProfilePage() {
   const therapist = await getRealTherapistProfileByUserId(session.userId);
   if (!therapist) return <IncompleteProfileNotice />;
 
-  const [account, pendingDeletionRequest, mfaStatus] = await Promise.all([
+  const [account, pendingDeletionRequest, mfaStatus, supervisorRequest] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealPendingDeletionRequest(session.userId),
     getMfaStatus(),
+    getMySupervisorRequestStatus(session.userId),
   ]);
 
   const verification = VERIFICATION_LABEL[therapist.verificationStatus] ?? {
@@ -58,6 +60,8 @@ export default async function TherapistProfilePage() {
             <p className="mt-1 text-sm text-muted-foreground">{therapist.verifiedBadgeLabel}</p>
           )}
         </Card>
+
+        <SupervisorAccessSection isSupervisor={session.isSupervisor} latestRequest={supervisorRequest} />
 
         <ProfessionalProfileForm
           initialBio={therapist.bio}

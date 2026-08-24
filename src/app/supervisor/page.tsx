@@ -9,7 +9,9 @@ import { initialsFromName } from "@/data/format";
 
 export default async function SupervisorTeamPage() {
   const session = await getSession();
-  if (!session || session.role !== "supervisor") redirect("/login");
+  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+    redirect("/login");
+  }
 
   const therapists = await getMySupervisedTherapists(session.userId);
 

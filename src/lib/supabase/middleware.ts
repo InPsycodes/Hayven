@@ -31,10 +31,16 @@ export async function updateSupabaseSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   let role: UserRole | null = null;
+  let isSupervisor = false;
   if (user) {
-    const { data: profile } = await supabase.from("users").select("role").eq("id", user.id).single();
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role, is_supervisor")
+      .eq("id", user.id)
+      .single();
     role = (profile?.role as UserRole) ?? null;
+    isSupervisor = profile?.is_supervisor === true;
   }
 
-  return { response, user, role };
+  return { response, user, role, isSupervisor };
 }

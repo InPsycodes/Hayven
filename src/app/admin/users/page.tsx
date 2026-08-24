@@ -1,11 +1,13 @@
 import { AssignPicker } from "@/components/care-team/assign-picker";
 import { AssignmentRow } from "@/components/care-team/assignment-row";
+import { SupervisorRequestRow } from "@/components/admin/supervisor-request-row";
 import {
   getAllChildrenForAdmin,
   getAllSupervisorsForAdmin,
   getAllTherapistsForAdmin,
   getActiveSupervisorAssignments,
   getActiveTherapistChildAssignments,
+  getSupervisorRequests,
 } from "@/lib/admin/queries";
 import {
   assignSupervisorToTherapist,
@@ -15,13 +17,16 @@ import {
 } from "@/lib/admin/actions";
 
 export default async function AdminUsersPage() {
-  const [therapists, children, supervisors, therapistChildAssignments, supervisorAssignments] = await Promise.all([
-    getAllTherapistsForAdmin(),
-    getAllChildrenForAdmin(),
-    getAllSupervisorsForAdmin(),
-    getActiveTherapistChildAssignments(),
-    getActiveSupervisorAssignments(),
-  ]);
+  const [therapists, children, supervisors, therapistChildAssignments, supervisorAssignments, supervisorRequests] =
+    await Promise.all([
+      getAllTherapistsForAdmin(),
+      getAllChildrenForAdmin(),
+      getAllSupervisorsForAdmin(),
+      getActiveTherapistChildAssignments(),
+      getActiveSupervisorAssignments(),
+      getSupervisorRequests(),
+    ]);
+  const pendingSupervisorRequests = supervisorRequests.filter((r) => r.status === "pending");
 
   return (
     <div className="min-h-screen overflow-y-auto bg-offwhite">
@@ -50,7 +55,7 @@ export default async function AdminUsersPage() {
 
           <div className="mt-6 flex flex-col gap-2">
             {therapistChildAssignments.length === 0 ? (
-              <p className="rounded-sm bg-[#F6F4F0] p-4 text-sm text-muted-foreground">No active assignments yet.</p>
+              <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground">No active assignments yet.</p>
             ) : (
               therapistChildAssignments.map((a) => (
                 <AssignmentRow
@@ -63,6 +68,23 @@ export default async function AdminUsersPage() {
                   onEnd={endTherapistChildAssignment}
                 />
               ))
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)] md:p-6">
+          <h2 className="label-micro text-rust-dark">Oversight</h2>
+          <h3 className="mt-1 font-heading text-lg text-charcoal">Supervisor access requests</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Therapists who&apos;ve asked to oversee others. Approving grants supervisor access without
+            affecting their own caseload or schedule.
+          </p>
+
+          <div className="mt-5 flex flex-col divide-y divide-border">
+            {pendingSupervisorRequests.length === 0 ? (
+              <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground">No pending requests.</p>
+            ) : (
+              pendingSupervisorRequests.map((r) => <SupervisorRequestRow key={r.id} request={r} />)
             )}
           </div>
         </section>
@@ -84,7 +106,7 @@ export default async function AdminUsersPage() {
 
           <div className="mt-6 flex flex-col gap-2">
             {supervisorAssignments.length === 0 ? (
-              <p className="rounded-sm bg-[#F6F4F0] p-4 text-sm text-muted-foreground">
+              <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground">
                 No active supervisor assignments yet.
               </p>
             ) : (

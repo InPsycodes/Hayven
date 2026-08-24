@@ -14,7 +14,9 @@ import { assignChildToTherapist, endTherapistChildAssignmentAsSupervisor } from 
 
 export default async function SupervisorAssignmentsPage() {
   const session = await getSession();
-  if (!session || session.role !== "supervisor") redirect("/login");
+  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+    redirect("/login");
+  }
 
   const [therapists, children, teamAssignments] = await Promise.all([
     getMySupervisedTherapists(session.userId),

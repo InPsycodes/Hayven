@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconUsers, IconUserCheck, IconShieldLock } from "@tabler/icons-react";
+import { IconUsers, IconUserCheck, IconShieldLock, IconStethoscope } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
 import { BrandMark } from "@/components/shared/brand-mark";
@@ -18,6 +18,11 @@ const SUPERVISOR_NAV = [
   { label: "Settings", href: "/supervisor/settings", icon: IconShieldLock },
 ];
 
+// A therapist granted supervisor access (see migration 0054) still has a
+// real practice of their own, so unlike a plain role === "supervisor"
+// account, they need a way back to it from inside the supervisor portal.
+const MY_DASHBOARD_ITEM = { label: "My dashboard", href: "/therapist", icon: IconStethoscope };
+
 export function SupervisorSidebar({
   session,
   teamCount = 0,
@@ -26,11 +31,12 @@ export function SupervisorSidebar({
   teamCount?: number;
 }) {
   const pathname = usePathname();
+  const items = session.role === "therapist" ? [MY_DASHBOARD_ITEM, ...SUPERVISOR_NAV] : SUPERVISOR_NAV;
 
   return (
     <>
       <StaffMobileSidebar
-        items={SUPERVISOR_NAV.map((item) => ({
+        items={items.map((item) => ({
           ...item,
           active: pathname === item.href || pathname.startsWith(`${item.href}/`),
           count: item.href === "/supervisor" ? teamCount : 0,
@@ -45,7 +51,7 @@ export function SupervisorSidebar({
         <div className="flex flex-col gap-8">
           <BrandMark />
           <nav className="flex flex-col gap-1">
-            {SUPERVISOR_NAV.map((item) => {
+            {items.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               const count = item.href === "/supervisor" ? teamCount : 0;
               return (

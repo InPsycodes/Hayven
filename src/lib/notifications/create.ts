@@ -16,7 +16,10 @@ export type NotificationType =
   | "report_published"
   | "report_reminder"
   | "session_started"
-  | "session_finished";
+  | "session_finished"
+  | "supervisor_request_new"
+  | "supervisor_request_approved"
+  | "supervisor_request_denied";
 
 /**
  * Fire-and-forget: a notification failing to write must never roll back the

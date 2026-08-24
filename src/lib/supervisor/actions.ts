@@ -28,7 +28,9 @@ export async function assignChildToTherapist(
   therapyType?: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await getSession();
-  if (!session || session.role !== "supervisor") return { ok: false, error: "Not authorized." };
+  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+    return { ok: false, error: "Not authorized." };
+  }
 
   const supabase = await createClient();
   if (!(await isOwnTeamTherapist(supabase, session.userId, therapistId))) {
@@ -76,7 +78,9 @@ export async function endTherapistChildAssignmentAsSupervisor(
   assignmentId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await getSession();
-  if (!session || session.role !== "supervisor") return { ok: false, error: "Not authorized." };
+  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+    return { ok: false, error: "Not authorized." };
+  }
 
   const supabase = await createClient();
 

@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { IconUsers } from "@tabler/icons-react";
 
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card } from "@/components/ui/card";
@@ -54,6 +56,21 @@ export default async function TherapistDashboardPage() {
 
       <div className="flex flex-col gap-8 px-5 py-6 md:px-10 md:py-8">
         <VerificationStatusBanner status={therapist.verificationStatus} />
+
+        {session.isSupervisor && (
+          <Link
+            href="/supervisor"
+            className="flex items-center gap-3 rounded-sm bg-success/10 p-4 transition-colors hover:bg-success/15"
+          >
+            <IconUsers size={20} stroke={1.75} className="shrink-0 text-success-text" />
+            <div>
+              <p className="text-sm font-medium text-success-text">You have supervisor access</p>
+              <p className="mt-0.5 text-sm text-success-text/80">
+                Oversee the therapists assigned to you from the Supervisor portal.
+              </p>
+            </div>
+          </Link>
+        )}
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Reveal delayMs={0}>

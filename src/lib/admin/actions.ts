@@ -289,8 +289,16 @@ export async function assignSupervisorToTherapist(
 
   // is_supervisor_of_therapist() only checks the assignment row + status, never the
   // target user's actual role -- so this table's own RLS wouldn't catch a bad id here.
-  const { data: targetUser } = await supabase.from("users").select("role").eq("id", supervisorId).maybeSingle();
-  if (targetUser?.role !== "supervisor") {
+  // Covers both a plain role === "supervisor" account and a therapist granted
+  // is_supervisor (see migration 0054) -- getAllSupervisorsForAdmin() already
+  // only offers these two kinds of accounts as pickable options.
+  const { data: targetUser } = await supabase
+    .from("users")
+    .select("role, is_supervisor")
+    .eq("id", supervisorId)
+    .maybeSingle();
+  const isValidSupervisor = targetUser?.role === "supervisor" || (targetUser?.role === "therapist" && targetUser?.is_supervisor);
+  if (!isValidSupervisor) {
     return { ok: false, error: "That user isn't a supervisor." };
   }
 
@@ -508,23 +516,25 @@ export async function resetUserAccountPassword(
 }
 
 /**
- * Grants or revokes the supervisor role -- the only way a supervisor account
- * gets created today, since signup only ever offers parent/therapist and
- * assignSupervisorToTherapist() requires the role to already be set.
+ * Grants or revokes supervisor access on a therapist account. This is
+ * additive (users.is_supervisor), not a role change: a therapist keeps full
+ * access to their own /therapist dashboard, caseload, schedule, and bookings
+ * after being granted supervisor access, and separately gets in to
+ * /supervisor -- see migration 0054, proxy.ts, and supervisor/layout.tsx,
+ * which all key off the same (role === "therapist" && is_supervisor) check.
  *
- * Granting is restricted to parent-role accounts: role is a single column,
- * so switching a therapist or admin over would silently strand their own
- * role-specific data (therapist_profiles, their own children, etc.) behind
- * a login that can no longer reach it. A plain parent account carries none
- * of that, matching how a dedicated supervisor account would really be set
- * up (a fresh or repurposed login, not an existing practitioner's).
+ * Restricted to therapist-role accounts: a supervisor is meant to be an
+ * experienced practitioner overseeing others, and every RLS function this
+ * relies on (is_supervisor_of_therapist, is_supervised_child) already keys
+ * off supervisor_assignments membership rather than the role/flag itself,
+ * so nothing downstream needs the target to be anything other than a real
+ * therapist.
  *
  * Revoking also ends every active supervisor_assignments row for this user:
- * is_supervisor_of_therapist()/is_supervised_child() key off that table, not
- * the user's role column, so a stale active row would keep RLS-level access
- * alive even after the role itself changes back.
+ * a stale active row would keep RLS-level access alive even after the flag
+ * itself is cleared.
  */
-export async function setUserSupervisorRole(
+export async function setUserSupervisorFlag(
   userId: string,
   makeSupervisor: boolean
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -536,22 +546,24 @@ export async function setUserSupervisorRole(
   }
 
   const supabase = createAdminClient();
-  const { data: target } = await supabase.from("users").select("role").eq("id", userId).maybeSingle();
+  const { data: target } = await supabase.from("users").select("role, is_supervisor").eq("id", userId).maybeSingle();
   if (!target) return { ok: false, error: "Account not found." };
 
+  if (target.role !== "therapist") {
+    return { ok: false, error: "Only therapist accounts can be granted supervisor access." };
+  }
+
   if (makeSupervisor) {
-    if (target.role !== "parent") {
-      return { ok: false, error: "Only parent accounts can be made supervisors." };
-    }
-    const { error } = await supabase.from("users").update({ role: "supervisor" }).eq("id", userId);
+    if (target.is_supervisor) return { ok: true };
+
+    const { error } = await supabase.from("users").update({ is_supervisor: true }).eq("id", userId);
     if (error) return { ok: false, error: error.message };
 
     await logAuditEvent({ actor: session, action: "account.grant_supervisor", entityType: "user", entityId: userId });
   } else {
-    if (target.role !== "supervisor") {
-      return { ok: false, error: "This account isn't a supervisor." };
-    }
-    const { error } = await supabase.from("users").update({ role: "parent" }).eq("id", userId);
+    if (!target.is_supervisor) return { ok: true };
+
+    const { error } = await supabase.from("users").update({ is_supervisor: false }).eq("id", userId);
     if (error) return { ok: false, error: error.message };
 
     const { error: endError } = await supabase
@@ -565,6 +577,64 @@ export async function setUserSupervisorRole(
   }
 
   revalidatePath("/admin/accounts");
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+/**
+ * Approves or denies a therapist's self-submitted request for supervisor
+ * access (supervisor_requests, see migration 0054). Approving reuses
+ * setUserSupervisorFlag rather than duplicating the flag-set + audit-log
+ * logic, so a request-approved grant and a direct admin-initiated grant stay
+ * identical in every effect.
+ */
+export async function reviewSupervisorRequest(
+  requestId: string,
+  decision: "approved" | "denied"
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+
+  const supabase = createAdminClient();
+  const { data: request, error } = await supabase
+    .from("supervisor_requests")
+    .update({ status: decision, admin_id: session.userId, reviewed_at: new Date().toISOString() })
+    .eq("id", requestId)
+    .eq("status", "pending")
+    .select("id, therapist_id")
+    .maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  if (!request) return { ok: false, error: "Request not found or already reviewed." };
+
+  if (decision === "approved") {
+    const grantResult = await setUserSupervisorFlag(request.therapist_id, true);
+    if (!grantResult.ok) {
+      // The claim update above already flipped this request to "approved" --
+      // undo that so it doesn't sit in a state where nothing was actually
+      // granted. The request can be reviewed again once the underlying
+      // issue (almost always: the account is no longer a therapist) is fixed.
+      await supabase.from("supervisor_requests").update({ status: "pending", admin_id: null, reviewed_at: null }).eq("id", requestId);
+      return grantResult;
+    }
+  }
+
+  await createNotification({
+    userId: request.therapist_id,
+    type: decision === "approved" ? "supervisor_request_approved" : "supervisor_request_denied",
+    title: decision === "approved" ? "You now have supervisor access" : "Your supervisor access request",
+    body:
+      decision === "approved"
+        ? "An admin approved your request. You can now oversee therapists assigned to you from the Supervisor portal."
+        : "An admin reviewed your request and it wasn't approved this time.",
+  });
+
+  await logAuditEvent({
+    actor: session,
+    action: `supervisor_request.${decision}`,
+    entityType: "supervisor_request",
+    entityId: requestId,
+  });
+
   revalidatePath("/admin/users");
   return { ok: true };
 }

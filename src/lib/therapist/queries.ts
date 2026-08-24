@@ -181,3 +181,24 @@ export async function getRealTherapistById(id: string): Promise<RealPublicTherap
     specialtyNames: data.specialty_names ?? [],
   };
 }
+
+export interface RealSupervisorRequestStatus {
+  id: string;
+  status: string;
+  requestedAt: string;
+}
+
+/** Most recent supervisor-access request this therapist submitted, if any -- see migration 0054. */
+export async function getMySupervisorRequestStatus(userId: string): Promise<RealSupervisorRequestStatus | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("supervisor_requests")
+    .select("id, status, requested_at")
+    .eq("therapist_id", userId)
+    .order("requested_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+
+  return { id: data.id, status: data.status, requestedAt: data.requested_at };
+}
