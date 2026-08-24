@@ -84,7 +84,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
   });
 
   return (
-    <div className="flex flex-col gap-3 rounded-sm bg-white p-5 ring-1 ring-border">
+    <div className="flex flex-col gap-3 rounded-sm bg-card p-5 ring-1 ring-foreground/10">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="font-heading text-base text-charcoal">Two-factor authentication</h2>

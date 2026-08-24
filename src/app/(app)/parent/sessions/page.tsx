@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DashboardHeader } from "@/components/shared/dashboard-header";
@@ -36,8 +37,12 @@ export default async function ParentSessionsPage() {
       />
       <div className="px-5 py-6 md:px-10 md:py-8">
         {bookings.length === 0 ? (
-          <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground ring-1 ring-border">
-            No sessions booked yet. Find a therapist to get started.
+          <p className="rounded-sm bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10">
+            No sessions booked yet.{" "}
+            <Link href="/search" className="font-medium text-terracotta hover:underline">
+              Find a therapist
+            </Link>{" "}
+            to get started.
           </p>
         ) : (
           <Card lift className="p-2">

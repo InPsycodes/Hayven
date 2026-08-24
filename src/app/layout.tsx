@@ -22,7 +22,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: "Hayven: Verified child therapists you can trust",
+  title: {
+    default: "Hayven: Verified child therapists you can trust",
+    template: "%s · Hayven",
+  },
   description:
     "Hayven connects parents with credential-verified child therapists: booking, payments, and progress tracking in one place.",
   appleWebApp: {

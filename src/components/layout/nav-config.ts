@@ -26,10 +26,12 @@ export const SIDEBAR_NAV: Record<AppRole, NavItem[]> = {
   parent: [
     { label: "Dashboard", href: "/parent", icon: IconLayoutDashboard },
     { label: "My children", href: "/parent/children", icon: IconBabyCarriage },
+    { label: "Sessions", href: "/parent/sessions", icon: IconCalendar },
     { label: "Find a therapist", href: "/search", icon: IconSearch },
     { label: "Messages", href: "/parent/messages", icon: IconMessage },
     { label: "Learning Center", href: "/learn", icon: IconBook },
     { label: "Billing", href: "/parent/billing", icon: IconCreditCard },
+    { label: "Profile", href: "/parent/profile", icon: IconUserCircle },
   ],
   therapist: [
     { label: "Dashboard", href: "/therapist", icon: IconLayoutDashboard },
@@ -37,6 +39,7 @@ export const SIDEBAR_NAV: Record<AppRole, NavItem[]> = {
     { label: "Caseload", href: "/therapist/caseload", icon: IconUsers },
     { label: "Messages", href: "/therapist/messages", icon: IconMessage },
     { label: "Earnings", href: "/therapist/earnings", icon: IconWallet },
+    { label: "Profile", href: "/therapist/profile", icon: IconUserCircle },
   ],
 };
 

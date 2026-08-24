@@ -24,7 +24,7 @@ export default async function ParentChildrenPage() {
 
       <div className="flex flex-col gap-6 px-5 py-6 md:px-10 md:py-8">
         {children.length === 0 ? (
-          <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground ring-1 ring-border">
+          <p className="rounded-sm bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10">
             You haven&apos;t added a child yet. Add one below to start booking sessions.
           </p>
         ) : (

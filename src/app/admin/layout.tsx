@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/auth/session";
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
+
+export const metadata: Metadata = { title: "Admin" };
 import {
   getPendingVerificationCount,
   getPendingDeletionRequestCount,

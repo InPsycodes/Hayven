@@ -19,7 +19,7 @@ export function ProfileForm({
   const [state, formAction, isPending] = useActionState(updateAccountProfile, initialState);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 rounded-sm bg-white p-5 ring-1 ring-border">
+    <form action={formAction} className="flex flex-col gap-4 rounded-sm bg-card p-5 ring-1 ring-foreground/10">
       <h2 className="font-heading text-base text-charcoal">Account details</h2>
 
       <div className="flex flex-col gap-2">

@@ -203,6 +203,33 @@
     @apply font-sans scroll-smooth;
   }
 
+  /* Reserves real space for the fixed-position PWA install toast (see
+     pwa-install-prompt.tsx) so it pushes page content clear instead of
+     covering it -- values match the toast's own responsive footprint:
+     mobile sits at bottom-20 (80px) with ~56px of its own height, desktop
+     sits at bottom-4/right-4 (16px) as a smaller corner card.
+     Two mechanisms, because one alone doesn't cover every layout shape:
+     padding-bottom pushes down content that naturally flows past the
+     toast's height (most pages); the --pwa-reserve custom property is for
+     the handful of screens sized with min-h-screen/h-screen (the auth and
+     booking-step layouts) -- a fixed viewport-height section doesn't
+     shrink just because an ancestor gained padding, so those containers
+     use `min-height: calc(100vh - var(--pwa-reserve))` instead of the
+     plain Tailwind min-h-screen utility. Confirmed via live audit: without
+     this, the login page's "Sign up" link and the signup consent
+     checkbox were both genuinely unclickable under the toast, not just
+     visually covered. */
+  body.pwa-prompt-reserved {
+    padding-bottom: 152px;
+    --pwa-reserve: 152px;
+  }
+  @media (min-width: 768px) {
+    body.pwa-prompt-reserved {
+      padding-bottom: 92px;
+      --pwa-reserve: 92px;
+    }
+  }
+
   /* Subtle film-grain texture over the whole app -- decorative, non-interactive. */
   body::before {
     content: "";

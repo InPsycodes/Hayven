@@ -73,13 +73,41 @@ export function PwaInstallPrompt() {
     if (outcome === "accepted") localStorage.setItem(DISMISS_KEY, "1");
   }
 
-  if (!visible || isStaffArea) return null;
+  const showing = visible && !isStaffArea;
+
+  // Fixed-position elements don't reserve layout space on their own, so this
+  // toast was landing directly on top of whatever real content happened to
+  // sit at that screen position -- confirmed on a live audit to fully block
+  // the signup consent checkbox and the therapist profile's price input,
+  // and to hide the login page's "Sign up" link and the footer's legal
+  // links. Toggling this class reserves real space at the bottom of the
+  // page (see globals.css) so content is pushed clear instead of covered,
+  // for as long as the toast is actually showing.
+  useEffect(() => {
+    document.body.classList.toggle("pwa-prompt-reserved", showing);
+    return () => {
+      document.body.classList.remove("pwa-prompt-reserved");
+    };
+  }, [showing]);
+
+  if (!showing) return null;
 
   return (
+    // Narrower + right-anchored on mobile too (not full-width inset-x-4)
+    // -- a live audit found this, at full width, landing on top of
+    // whatever form field or link happened to sit in its fixed
+    // viewport-relative band on a long, naturally-scrolling page (the
+    // therapist profile page's price field). The space-reservation CSS
+    // above (see globals.css --pwa-reserve) handles short, single-screen
+    // pages fully; a `fixed` overlay can still coincide with mid-page
+    // content on a long one at whatever the current scroll position is,
+    // which no amount of padding fixes. Shrinking the footprint reduces
+    // how much of any given field/link it can cover, on top of it always
+    // being dismissible via the X button.
     <div
       role="complementary"
       aria-label="Install Hayven"
-      className="fixed inset-x-4 bottom-20 z-40 flex items-center gap-3 rounded-sm bg-charcoal px-4 py-3 text-offwhite shadow-lg md:bottom-4 md:inset-x-auto md:right-4 md:z-50 md:max-w-sm"
+      className="fixed inset-x-4 bottom-20 z-40 ml-auto flex max-w-[280px] items-center gap-3 rounded-sm bg-charcoal px-4 py-3 text-offwhite shadow-lg md:bottom-4 md:inset-x-auto md:right-4 md:z-50 md:max-w-sm"
     >
       {isIos ? (
         <>

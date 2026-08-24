@@ -44,7 +44,7 @@ export function AddAvailabilityForm() {
     <form
       ref={formRef}
       action={formAction}
-      className="flex flex-col gap-4 rounded-sm bg-white p-5 ring-1 ring-border"
+      className="flex w-full flex-col gap-4 rounded-sm bg-card p-5 ring-1 ring-foreground/10"
     >
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-base text-charcoal">Add availability</h2>

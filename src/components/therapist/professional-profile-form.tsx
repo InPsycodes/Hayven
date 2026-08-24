@@ -31,7 +31,7 @@ export function ProfessionalProfileForm({
   const [state, formAction, isPending] = useActionState(updateTherapistProfile, initialState);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 rounded-sm bg-white p-5 ring-1 ring-border">
+    <form action={formAction} className="flex flex-col gap-4 rounded-sm bg-card p-5 ring-1 ring-foreground/10">
       <h2 className="font-heading text-base text-charcoal">Professional profile</h2>
 
       <div className="flex flex-col gap-2">

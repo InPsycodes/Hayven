@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { StepHeader } from "@/components/shared/step-header";
 import { ConfirmationPanel } from "@/components/shared/confirmation-panel";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = { title: "You're all set" };
 
 export default function SignupCompletePage() {
   return (

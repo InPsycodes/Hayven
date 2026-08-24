@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/auth/session";
 import { SupervisorSidebar } from "@/components/layout/supervisor-sidebar";
 import { getMySupervisedTherapistCount } from "@/lib/supervisor/queries";
+
+export const metadata: Metadata = { title: "Supervisor" };
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();

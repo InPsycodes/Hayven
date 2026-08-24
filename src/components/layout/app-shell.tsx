@@ -51,7 +51,10 @@ export async function AppShell({
   const counts = role === "therapist" ? await getTherapistSidebarCounts(session) : await getParentSidebarCounts(session);
 
   return (
-    <div className="flex min-h-screen w-full flex-col md:flex-row">
+    // min-h-[calc(...)], not min-h-screen -- see the --pwa-reserve comment
+    // in globals.css. A live audit found the install toast fully blocking
+    // the therapist profile page's price input on mobile.
+    <div className="flex min-h-[calc(100vh-var(--pwa-reserve,0px))] w-full flex-col md:flex-row">
       <AppRoleSidebar session={session} role={role} counts={counts} />
       <main id="main" className="flex-1 pb-20 md:pb-0">{children}</main>
       <BottomTabNav session={session} />

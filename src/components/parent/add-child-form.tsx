@@ -19,7 +19,7 @@ export function AddChildForm() {
   }, [state]);
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-4 rounded-sm bg-white p-5 ring-1 ring-border">
+    <form ref={formRef} action={formAction} className="flex flex-col gap-4 rounded-sm bg-card p-5 ring-1 ring-foreground/10">
       <h2 className="font-heading text-base text-charcoal">Add a child</h2>
 
       <div className="grid gap-4 sm:grid-cols-2">

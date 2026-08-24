@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { StepHeader } from "@/components/shared/step-header";
 import { BookingTimeForm } from "@/components/booking/booking-time-form";
 import { getSession } from "@/lib/auth/session";
 import { getBookingPageContext } from "@/lib/booking/queries";
+
+export const metadata: Metadata = { title: "Choose a time" };
 
 export default async function BookingTimePage({
   params,

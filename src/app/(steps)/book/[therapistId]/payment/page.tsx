@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { StepHeader } from "@/components/shared/step-header";
 import { PaymentForm } from "@/components/booking/payment-form";
 import { getSession } from "@/lib/auth/session";
 import { getBookingPageContext } from "@/lib/booking/queries";
+
+export const metadata: Metadata = { title: "Payment" };
 
 export default async function BookingPaymentPage({
   params,

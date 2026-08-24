@@ -8,7 +8,7 @@ const ROWS: { key: keyof ReportWorkflowSummary; label: string; dotClassName: str
 
 export function ReportWorkflowCard({ summary }: { summary: ReportWorkflowSummary }) {
   return (
-    <div className="rounded-sm bg-paper p-[18px]">
+    <div className="rounded-sm bg-card p-[18px] ring-1 ring-border">
       <span className="label-micro text-muted-foreground">Report status</span>
       <div className="mt-2 flex flex-col gap-1">
         {ROWS.map((row) => (

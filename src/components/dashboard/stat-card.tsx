@@ -13,7 +13,7 @@ export function StatCard({
   emphasis?: boolean;
 }) {
   return (
-    <div className="rounded-sm bg-paper p-[18px]">
+    <div className="rounded-sm bg-card p-[18px] ring-1 ring-border">
       <span className="label-micro text-muted-foreground">{label}</span>
       <p
         className={cn(

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { StepHeader } from "@/components/shared/step-header";
@@ -5,6 +6,8 @@ import { BookingConfirmationContent } from "@/components/booking/booking-confirm
 import { getSession } from "@/lib/auth/session";
 import { getBookingPageContext, getRealBookingStatus } from "@/lib/booking/queries";
 import { finalizeFromReference } from "@/lib/payments/actions";
+
+export const metadata: Metadata = { title: "Booking confirmed" };
 
 export default async function BookingConfirmationPage({
   params,

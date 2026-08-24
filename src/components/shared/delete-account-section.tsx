@@ -23,7 +23,7 @@ export function DeleteAccountSection({
   const submitted = pendingRequest || (state !== initialState && !state.error);
 
   return (
-    <div className="flex flex-col gap-3 rounded-sm border border-error/30 bg-white p-5">
+    <div className="flex flex-col gap-3 rounded-sm border border-error/30 bg-card p-5">
       <div>
         <h2 className="font-heading text-base text-charcoal">Delete my account</h2>
         <p className="mt-1 text-sm text-muted-foreground">

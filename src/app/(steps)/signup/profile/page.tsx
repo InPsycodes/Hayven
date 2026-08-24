@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { StepHeader } from "@/components/shared/step-header";
 import { ProfileSetupForm } from "@/components/auth/profile-setup-form";
 import { getSession } from "@/lib/auth/session";
+
+export const metadata: Metadata = { title: "Set up your profile" };
 
 export default async function SignupProfilePage() {
   const session = await getSession();
