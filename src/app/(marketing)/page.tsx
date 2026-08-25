@@ -8,6 +8,7 @@ import { TrustStrip } from "@/components/marketing/trust-strip";
 import { Specialties } from "@/components/marketing/specialties";
 import { QuoteBreather } from "@/components/marketing/quote-breather";
 import { HowItWorks } from "@/components/marketing/how-it-works";
+import { Pricing } from "@/components/marketing/pricing";
 import { DashboardPreview } from "@/components/marketing/dashboard-preview";
 import { About } from "@/components/marketing/about";
 import { TrustSafety } from "@/components/marketing/trust-safety";
@@ -56,6 +57,9 @@ export default async function LandingPage({ searchParams }: LandingPageProps) {
       </Reveal>
       <Reveal>
         <HowItWorks />
+      </Reveal>
+      <Reveal>
+        <Pricing />
       </Reveal>
       <Reveal>
         <DashboardPreview />
