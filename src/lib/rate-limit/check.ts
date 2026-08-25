@@ -2,13 +2,18 @@ import "server-only";
 
 import * as Sentry from "@sentry/nextjs";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Backed by the check_rate_limit() Postgres function (migration 0046), not
- * a new third-party service -- runs fine for both an unauthenticated caller
- * (login, via the anon role) and an authenticated one, since the function
- * itself runs as security definer.
+ * a new third-party service. Calls through the service-role client, not the
+ * anon-key one -- migration 0055 revoked anon/authenticated's execute grant
+ * on this function entirely, since granting it to those roles made the
+ * function directly callable by anyone holding the public anon key straight
+ * against PostgREST's /rpc endpoint (with attacker-controlled bucket_key/
+ * limit/window), completely bypassing the server actions meant to be the
+ * only caller. The service-role client bypasses grants/RLS by design, same
+ * as every other privileged operation in this codebase.
  *
  * Fails open on an infrastructure error (DB unreachable, migration not yet
  * applied): a rate limiter that takes the whole app down when its own
@@ -26,7 +31,7 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function checkRateLimit(bucketKey: string, limit: number, windowSeconds: number): Promise<boolean> {
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data, error } = await supabase.rpc("check_rate_limit", {
       p_bucket_key: bucketKey,
       p_limit: limit,
