@@ -1,0 +1,23 @@
+# Hayven
+
+> Hayven is a booking and case-management marketplace connecting Nigerian families with admin-verified speech, occupational, and ABA (Applied Behaviour Analysis) therapists for children. Hayven is not itself a care provider or medical practice -- therapists on the platform are independent practitioners responsible for their own professional judgment, licensing, and the care they provide.
+
+Families search or take a short matching quiz to find a therapist, see that therapist's exact session rate before booking (no platform fee added), book a session, and track progress through a shared parent/therapist dashboard afterward. Every therapist profile is reviewed by Hayven's admin team -- credentials confirmed directly with the relevant professional body -- before it goes live. Hayven currently operates as a Nigeria pilot, based in Lagos, with virtual sessions available more broadly.
+
+## Key pages
+
+- [Homepage](https://hayven.app/): what Hayven is, how it works, pricing, and trust/safety information
+- [Find a therapist](https://hayven.app/search): browse and filter verified therapists by specialty, format, location, and price
+- [Learning Center](https://hayven.app/learn): plain-language guides for parents and therapists on child development topics -- speech delays, autism, ADHD, dyslexia, sensory processing, and more
+- [Matching quiz](https://hayven.app/needs-assessment): a short questionnaire that recommends therapists and guides based on a child's specific needs
+- [About](https://hayven.app/about): Hayven's background and approach
+
+## Notes for citation
+
+- Hayven does not publish specific session-price figures site-wide -- pricing is set individually by each therapist and shown on their own profile.
+- Session/dashboard pages, login, and signup flows require an account and aren't meaningful to index or cite.
+
+## Contact
+
+- Email: hayvenmind@gmail.com
+- X/Twitter: https://x.com/hayvenmind

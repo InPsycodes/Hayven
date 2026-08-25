@@ -1,6 +1,8 @@
 import Image, { type StaticImageData } from "next/image";
 
 import { MARKETING_FAQS } from "@/content/marketing/faq";
+import { getFaqSchema } from "@/lib/seo/faq-schema";
+import { safeJsonLdStringify } from "@/lib/seo/json-ld";
 import {
   Accordion,
   AccordionContent,
@@ -36,6 +38,13 @@ function FloatingIcon({
 export function Faq() {
   return (
     <section id="faq" className="px-6 py-28 lg:px-10 lg:py-36">
+      {/* Static, developer-authored JSON from MARKETING_FAQS -- never user
+          input. Still run through safeJsonLdStringify for consistency with
+          the rest of this codebase's structured data. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(getFaqSchema(MARKETING_FAQS)) }}
+      />
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
         <div>
           <span className="eyebrow text-rust-dark">Questions</span>
