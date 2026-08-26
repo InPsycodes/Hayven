@@ -60,7 +60,7 @@ export function MobileNavMenu({
     }
 
     function handleResize() {
-      if (window.innerWidth >= 768) onOpenChange(false);
+      if (window.innerWidth >= 1024) onOpenChange(false);
     }
 
     document.addEventListener("keydown", handleKeyDown);
@@ -84,7 +84,7 @@ export function MobileNavMenu({
         aria-label={isOpen ? "Close menu" : "Open menu"}
         onClick={() => onOpenChange(!isOpen)}
         className={cn(
-          "flex size-11 items-center justify-center transition-colors md:hidden",
+          "flex size-11 items-center justify-center transition-colors lg:hidden",
           triggerClassName
         )}
       >
@@ -93,7 +93,7 @@ export function MobileNavMenu({
 
       {isOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[60] md:hidden">
+          <div className="fixed inset-0 z-[60] lg:hidden">
             <div
               aria-hidden
               onClick={() => onOpenChange(false)}
@@ -120,7 +120,7 @@ export function MobileNavMenu({
                   type="button"
                   aria-label="Close menu"
                   onClick={() => onOpenChange(false)}
-                  className="flex size-11 items-center justify-center text-charcoal"
+                  className="flex size-11 items-center justify-center text-charcoal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
                 >
                   <IconX size={22} stroke={1.75} />
                 </button>

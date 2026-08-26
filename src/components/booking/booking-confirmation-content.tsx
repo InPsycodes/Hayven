@@ -24,17 +24,21 @@ export function BookingConfirmationContent({
   pending?: boolean;
 }) {
   const router = useRouter();
-  const { draft } = useBookingStore();
+  const { draft, hasHydrated } = useBookingStore();
   const child = kids.find((c) => c.id === draft.childId);
   const slot = slots.find((s) => s.id === draft.slotId);
 
   useEffect(() => {
-    if (!draft.slotId || !draft.childId) {
-      router.replace(`/book/${therapist.id}/time`);
+    // Wait for sessionStorage rehydration before deciding the draft is
+    // really missing -- see the hasHydrated comment in booking-store.ts.
+    // Getting this wrong here is the worst place for it: it would bounce
+    // someone who just successfully paid back to "pick a time."
+    if (hasHydrated && (!draft.slotId || !draft.childId)) {
+      router.replace(`/book/${therapist.id}/time?resumed=1`);
     }
-  }, [draft, router, therapist.id]);
+  }, [hasHydrated, draft, router, therapist.id]);
 
-  if (!child || !slot) {
+  if (!hasHydrated || !child || !slot) {
     return <div className="p-8 text-sm text-muted-foreground">Loading...</div>;
   }
 

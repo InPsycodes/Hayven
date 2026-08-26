@@ -28,6 +28,22 @@ export function PwaInstallPrompt() {
   // panel's own button row is bottom-anchored in the same screen region.
   const isStaffArea = pathname?.startsWith("/admin") || pathname?.startsWith("/supervisor");
 
+  // A live mobile-viewport audit confirmed this toast still overlaps real
+  // form controls on these specific pages regardless of how narrow it's
+  // made -- the password field on /login, the email field on /signup, the
+  // session-type dropdown on /needs-assessment, and every step of the
+  // booking flow. These are the platform's highest-stakes, lowest-tolerance-
+  // for-friction pages; an install nudge has no business competing with a
+  // password field for taps. No amount of padding/calc reservation fixes
+  // this in general -- a `fixed` element's viewport-relative position can
+  // always coincide with real content at some scroll offset on a long
+  // enough page -- so this is an exclusion, not another shrink.
+  const isCriticalFlow =
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname?.startsWith("/needs-assessment") ||
+    pathname?.startsWith("/book");
+
   useEffect(() => {
     // Deferred a tick so the initial detection runs as a callback rather
     // than synchronously in the effect body (avoids cascading renders on
@@ -73,7 +89,7 @@ export function PwaInstallPrompt() {
     if (outcome === "accepted") localStorage.setItem(DISMISS_KEY, "1");
   }
 
-  const showing = visible && !isStaffArea;
+  const showing = visible && !isStaffArea && !isCriticalFlow;
 
   // Fixed-position elements don't reserve layout space on their own, so this
   // toast was landing directly on top of whatever real content happened to
@@ -96,18 +112,20 @@ export function PwaInstallPrompt() {
     // Narrower + right-anchored on mobile too (not full-width inset-x-4)
     // -- a live audit found this, at full width, landing on top of
     // whatever form field or link happened to sit in its fixed
-    // viewport-relative band on a long, naturally-scrolling page (the
-    // therapist profile page's price field). The space-reservation CSS
-    // above (see globals.css --pwa-reserve) handles short, single-screen
-    // pages fully; a `fixed` overlay can still coincide with mid-page
-    // content on a long one at whatever the current scroll position is,
-    // which no amount of padding fixes. Shrinking the footprint reduces
-    // how much of any given field/link it can cover, on top of it always
-    // being dismissible via the X button.
+    // viewport-relative band on a long, naturally-scrolling page. The
+    // space-reservation CSS above (see globals.css --pwa-reserve) handles
+    // short, single-screen pages fully; a `fixed` overlay can still
+    // coincide with mid-page content on a long one at whatever the current
+    // scroll position is, which no amount of padding fixes -- the highest-
+    // stakes pages are excluded entirely instead (see isCriticalFlow
+    // above). Shrinking the footprint further here reduces how much of any
+    // given field/link it can cover on the remaining (lower-stakes,
+    // browsing/dashboard) pages, on top of it always being dismissible via
+    // the X button.
     <div
       role="complementary"
       aria-label="Install Hayven"
-      className="fixed inset-x-4 bottom-20 z-40 ml-auto flex max-w-[280px] items-center gap-3 rounded-sm bg-charcoal px-4 py-3 text-offwhite shadow-lg md:bottom-4 md:inset-x-auto md:right-4 md:z-50 md:max-w-sm"
+      className="fixed inset-x-4 bottom-20 z-40 ml-auto flex max-w-[240px] items-center gap-2.5 rounded-sm bg-charcoal px-3.5 py-2.5 text-offwhite shadow-lg md:bottom-4 md:inset-x-auto md:right-4 md:z-50 md:max-w-sm"
     >
       {isIos ? (
         <>

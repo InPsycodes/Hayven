@@ -63,6 +63,19 @@ const nextConfig: NextConfig = {
   // device (some interactions silently fail while others still work).
   allowedDevOrigins: ["192.168.8.133"],
 
+  // Next's own default cap on a Server Action's request body is 1MB --
+  // below the credential-upload flow's own 2.5MB check (MAX_CREDENTIAL_
+  // FILE_BYTES in src/lib/therapist/actions.ts), so a real ~1.5-2MB scanned
+  // certificate photo hit Next's framework-level limit first and crashed to
+  // a generic error page instead of ever reaching the app's own check --
+  // confirmed via a live pre-launch audit. 3mb leaves headroom above 2.5MB
+  // for multipart's own boundary/header overhead per Next's own guidance.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "3mb",
+    },
+  },
+
   async headers() {
     if (process.env.NODE_ENV !== "production") return [];
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];

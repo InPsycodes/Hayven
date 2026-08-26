@@ -39,7 +39,7 @@ function SolidNav({ pathname }: { pathname: string }) {
       <Link href="/">
         <BrandMark />
       </Link>
-      <nav className="hidden items-center gap-7 md:flex">
+      <nav className="hidden items-center gap-7 lg:flex">
         {LINKS.map((link) => {
           const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
           return (
@@ -104,7 +104,7 @@ function HeroNav() {
         />
       </Link>
 
-      <nav className="hidden items-center gap-9 md:flex">
+      <nav className="hidden items-center gap-9 lg:flex">
         {LINKS.map((link) => (
           <Link
             key={link.href}

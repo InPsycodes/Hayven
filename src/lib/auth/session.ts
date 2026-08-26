@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/data/types";
@@ -11,8 +12,20 @@ export interface AppSession {
   isSupervisor: boolean;
 }
 
-/** Real, server-side session: the authenticated Supabase user + their public.users profile. */
-export async function getSession(): Promise<AppSession | null> {
+/**
+ * Real, server-side session: the authenticated Supabase user + their public.users profile.
+ *
+ * Wrapped in React's cache() -- this is called from every layout, every
+ * page, and most server actions in the app, and does 3 sequential network
+ * round trips (auth.getUser, mfa.getAuthenticatorAssuranceLevel, a users
+ * table select) each time. cache() only memoizes within a single request's
+ * render pass, reset on the next request, so this does NOT reintroduce a
+ * stale-session window: a suspended account is still rejected on its very
+ * next request, exactly as before (confirmed via a live pre-launch audit
+ * that specifically tested this). It just stops paying for the same 3
+ * round trips 2-4x over on every single page load.
+ */
+export const getSession = cache(async function getSession(): Promise<AppSession | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -46,4 +59,4 @@ export async function getSession(): Promise<AppSession | null> {
     name: profile.full_name as string,
     isSupervisor: profile.is_supervisor === true,
   };
-}
+});

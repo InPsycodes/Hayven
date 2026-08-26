@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -39,8 +40,17 @@ export interface RealThreadPreview {
 
 const THREAD_LIST_LIMIT = 50;
 
-/** One thread per confirmed/completed booking, even before a first message is sent. Runs on every page load via the nav sidebar's unread badge, so it's bounded and batches the counterpart-name lookup into one query instead of one per booking. */
-export async function getRealMessageThreadsForParent(parentId: string): Promise<RealThreadPreview[]> {
+/**
+ * One thread per confirmed/completed booking, even before a first message is sent. Runs on every
+ * page load via the nav sidebar's unread badge (see AppShell), so it's bounded and batches the
+ * counterpart-name lookup into one query instead of one per booking. Wrapped in cache() -- the
+ * dashboard page itself also calls this for its own message preview, so within a single request
+ * this was hitting the DB twice for identical data; a live pre-launch performance audit flagged
+ * the resulting dashboard TTFB as a real, measurable regression versus the marketing pages.
+ */
+export const getRealMessageThreadsForParent = cache(async function getRealMessageThreadsForParent(
+  parentId: string
+): Promise<RealThreadPreview[]> {
   const supabase = await createClient();
   const { data: bookingsData } = await supabase
     .from("bookings")
@@ -75,15 +85,18 @@ export async function getRealMessageThreadsForParent(parentId: string): Promise<
       };
     })
   );
-}
+});
 
 /**
  * Uses the admin client to resolve the parent's display name -- there's no
  * public-facing view for parent profiles (unlike therapist_public_profiles),
  * so a therapist reading a booking counterpart's name goes through
  * server-only trusted code rather than a broadened RLS policy on `users`.
+ * Wrapped in cache() for the same reason as getRealMessageThreadsForParent
+ * above -- AppShell's sidebar badge and the therapist dashboard page both
+ * call this with the same argument within one request.
  */
-export async function getRealMessageThreadsForTherapist(
+export const getRealMessageThreadsForTherapist = cache(async function getRealMessageThreadsForTherapist(
   therapistProfileId: string
 ): Promise<RealThreadPreview[]> {
   const supabase = await createClient();
@@ -119,4 +132,4 @@ export async function getRealMessageThreadsForTherapist(
       };
     })
   );
-}
+});

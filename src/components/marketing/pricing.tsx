@@ -36,7 +36,7 @@ export function Pricing() {
 
         <Link
           href="/search"
-          className="group mx-auto mt-14 flex w-fit items-center gap-2 rounded-full border border-terracotta px-6 py-3 text-sm font-semibold text-terracotta transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-terracotta hover:text-canvas-white"
+          className="group mx-auto mt-14 flex w-fit items-center gap-2 rounded-full border border-rust-dark px-6 py-3 text-sm font-semibold text-rust-dark transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-rust-dark hover:text-canvas-white"
         >
           Browse therapists and their rates
           <IconArrowRight size={16} stroke={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />

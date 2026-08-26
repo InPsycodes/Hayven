@@ -31,7 +31,7 @@ export function PaymentForm({
   slots: AvailabilitySlot[];
 }) {
   const router = useRouter();
-  const { draft, setDraft } = useBookingStore();
+  const { draft, setDraft, hasHydrated } = useBookingStore();
   const [method, setMethod] = useState<BookingDraft["paymentMethod"]>(draft.paymentMethod ?? "card");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -47,10 +47,12 @@ export function PaymentForm({
   const ready = Boolean(draft.childId && draft.slotId && draft.sessionType);
 
   useEffect(() => {
-    if (!ready) {
-      router.replace(`/book/${therapist.id}/time`);
+    // Wait for sessionStorage rehydration before deciding the draft is
+    // really missing -- see the hasHydrated comment in booking-store.ts.
+    if (hasHydrated && !ready) {
+      router.replace(`/book/${therapist.id}/time?resumed=1`);
     }
-  }, [ready, router, therapist.id]);
+  }, [hasHydrated, ready, router, therapist.id]);
 
   const total = therapist.pricePerSession;
   const isReal = therapist.source === "real";
@@ -78,7 +80,7 @@ export function PaymentForm({
     });
   }
 
-  if (!ready || !child || !slot) {
+  if (!hasHydrated || !ready || !child || !slot) {
     return <div className="p-8 text-sm text-muted-foreground">Loading booking details...</div>;
   }
 
