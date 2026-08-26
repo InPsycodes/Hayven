@@ -19,28 +19,41 @@ function chartPoints(values: number[]): string {
 }
 
 function DashboardMini() {
-  const { communication } = DASHBOARD_PREVIEW.goalProgress;
-  const points = chartPoints(communication);
-  const now = communication[communication.length - 1];
+  const { communication, social } = DASHBOARD_PREVIEW.goalProgress;
+  const commPoints = chartPoints(communication);
+  const socialPoints = chartPoints(social);
+  const commNow = communication[communication.length - 1];
+  const socialNow = social[social.length - 1];
 
   return (
-    <div className="flex size-full flex-col justify-between p-5">
+    <div className="flex size-full flex-col justify-between p-8">
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs text-canvas-white/50">Communication</p>
-          <p className="font-serif text-3xl text-canvas-white">{now}%</p>
+        <div className="flex gap-8">
+          <div>
+            <p className="flex items-center gap-1.5 text-xs text-canvas-white/50">
+              <span className="size-2 rounded-full bg-success" /> Communication
+            </p>
+            <p className="mt-1 font-serif text-4xl text-canvas-white">{commNow}%</p>
+          </div>
+          <div>
+            <p className="flex items-center gap-1.5 text-xs text-canvas-white/50">
+              <span className="size-2 rounded-full bg-terracotta" /> Social
+            </p>
+            <p className="mt-1 font-serif text-4xl text-canvas-white">{socialNow}%</p>
+          </div>
         </div>
-        <span className="rounded-full bg-success/15 px-2.5 py-1 text-[10px] font-medium text-success">On track</span>
+        <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-medium text-success">On track</span>
       </div>
-      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-16 w-full overflow-visible" preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-32 w-full overflow-visible" preserveAspectRatio="none">
         <defs>
           <linearGradient id="dashboard-mini-fill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--success)" stopOpacity="0.3" />
             <stop offset="100%" stopColor="var(--success)" stopOpacity="0" />
           </linearGradient>
         </defs>
-        <polygon points={`0,${CHART_HEIGHT} ${points} ${CHART_WIDTH},${CHART_HEIGHT}`} fill="url(#dashboard-mini-fill)" />
-        <polyline points={points} fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <polygon points={`0,${CHART_HEIGHT} ${commPoints} ${CHART_WIDTH},${CHART_HEIGHT}`} fill="url(#dashboard-mini-fill)" />
+        <polyline points={socialPoints} fill="none" stroke="var(--terracotta)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={commPoints} fill="none" stroke="var(--success)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </div>
   );
@@ -49,15 +62,30 @@ function DashboardMini() {
 function SessionsMini() {
   const { nextAppointment, sessionNotes } = DASHBOARD_PREVIEW;
   return (
-    <div className="flex size-full flex-col gap-3 p-5">
-      <div className="rounded-lg bg-terracotta/15 p-3 ring-1 ring-terracotta/30">
-        <p className="text-[10px] font-semibold tracking-[0.06em] text-terracotta uppercase">Next session</p>
-        <p className="mt-1 text-sm font-medium text-canvas-white">{nextAppointment.label}</p>
-        <p className="text-[11px] text-canvas-white/55">{nextAppointment.time}</p>
+    <div className="flex size-full flex-col justify-center gap-5 p-8">
+      <div className="rounded-xl bg-terracotta/15 p-5 ring-1 ring-terracotta/30">
+        <p className="text-xs font-semibold tracking-[0.06em] text-terracotta uppercase">Next session</p>
+        <p className="mt-1.5 text-lg font-medium text-canvas-white">{nextAppointment.label}</p>
+        <p className="text-sm text-canvas-white/55">
+          {nextAppointment.time} · {nextAppointment.location}
+        </p>
       </div>
-      <div className="flex gap-2">
-        <Icon icon={IconStar} size="sm" className="mt-0.5 shrink-0 text-canvas-white/25" />
-        <p className="text-xs leading-relaxed text-canvas-white/60">&ldquo;{sessionNotes[0].quote}&rdquo;</p>
+      <div className="flex flex-col gap-4">
+        {sessionNotes.map((note, i) => (
+          <div key={i} className="flex gap-2.5">
+            <Icon
+              icon={IconStar}
+              size="sm"
+              className={i === 0 ? "mt-0.5 shrink-0 text-terracotta" : "mt-0.5 shrink-0 text-canvas-white/25"}
+            />
+            <div className="min-w-0">
+              <p className="text-sm leading-relaxed text-canvas-white/70">&ldquo;{note.quote}&rdquo;</p>
+              <p className="mt-1 text-xs text-canvas-white/40">
+                {note.author} · {note.date}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -67,21 +95,21 @@ function IntakeMini() {
   const { intakeForms } = DASHBOARD_PREVIEW;
   const complete = intakeForms.filter((f) => f.status === "complete").length;
   return (
-    <div className="flex size-full flex-col justify-between p-5">
+    <div className="flex size-full flex-col justify-center gap-6 p-8">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-canvas-white/50">Intake form</p>
-        <span className="font-serif text-lg text-canvas-white">
+        <p className="text-sm text-canvas-white/50">Intake form</p>
+        <span className="font-serif text-2xl text-canvas-white">
           {complete}/{intakeForms.length}
         </span>
       </div>
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-4">
         {intakeForms.map((form) => (
-          <div key={form.label} className="flex items-center justify-between text-xs">
+          <div key={form.label} className="flex items-center justify-between border-b border-white/8 pb-4 text-sm last:border-b-0 last:pb-0">
             <span className="text-canvas-white/70">{form.label}</span>
             {form.status === "complete" ? (
-              <Icon icon={IconCheck} size="sm" className="text-success" />
+              <Icon icon={IconCheck} size="md" className="text-success" />
             ) : (
-              <span className="text-[10px] font-medium text-amber">Due</span>
+              <span className="text-xs font-medium text-amber">Due</span>
             )}
           </div>
         ))}
@@ -93,15 +121,15 @@ function IntakeMini() {
 function ReportsMini() {
   const { reports } = DASHBOARD_PREVIEW;
   return (
-    <div className="flex size-full flex-col justify-center gap-3 p-5">
+    <div className="flex size-full flex-col justify-center gap-6 p-8">
       {reports.map((report) => (
-        <div key={report.label} className="flex items-center gap-2.5">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-canvas-white/50">
-            <Icon icon={IconFileText} size="sm" />
+        <div key={report.label} className="flex items-center gap-3.5">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-canvas-white/50">
+            <Icon icon={IconFileText} size="md" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-canvas-white/85">{report.label}</p>
-            <p className="text-[10px] text-canvas-white/40">{report.meta}</p>
+            <p className="truncate text-sm font-medium text-canvas-white/85">{report.label}</p>
+            <p className="text-xs text-canvas-white/40">{report.meta}</p>
           </div>
         </div>
       ))}
@@ -135,7 +163,7 @@ export function DashboardPreview() {
 
         {/* Illustrative-only mock of parent-dashboard features -- not a live
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
-        <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid gap-8 sm:grid-cols-2">
           {DASHBOARD_FEATURE_CARDS.map((card, index) => {
             const Preview = PREVIEWS[card.key];
             return (
