@@ -1,103 +1,172 @@
 import Link from "next/link";
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconStar, IconFileText } from "@tabler/icons-react";
 
-import { DASHBOARD_PREVIEW, DASHBOARD_CHECKLIST } from "@/content/marketing/dashboard-preview";
+import {
+  DASHBOARD_PREVIEW,
+  DASHBOARD_CHECKLIST,
+  DASHBOARD_FEATURE_CARDS,
+} from "@/content/marketing/dashboard-preview";
 import { Icon } from "@/components/ui/icon";
+import { Reveal } from "@/components/marketing/reveal";
 
-// Meaningful, not decorative: a row crossing into "strong progress" reads as
-// sage/success instead of the default terracotta, the same way a real
-// progress view would flag it.
-const STRONG_PROGRESS_THRESHOLD = 75;
+const CHART_WIDTH = 200;
+const CHART_HEIGHT = 90;
+const CHART_MAX = 100;
+
+function chartPoints(values: number[]): string {
+  const step = CHART_WIDTH / (values.length - 1);
+  return values.map((v, i) => `${i * step},${CHART_HEIGHT - (v / CHART_MAX) * CHART_HEIGHT}`).join(" ");
+}
+
+function DashboardMini() {
+  const { communication } = DASHBOARD_PREVIEW.goalProgress;
+  const points = chartPoints(communication);
+  const now = communication[communication.length - 1];
+
+  return (
+    <div className="flex size-full flex-col justify-between p-5">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs text-canvas-white/50">Communication</p>
+          <p className="font-serif text-3xl text-canvas-white">{now}%</p>
+        </div>
+        <span className="rounded-full bg-success/15 px-2.5 py-1 text-[10px] font-medium text-success">On track</span>
+      </div>
+      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="h-16 w-full overflow-visible" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="dashboard-mini-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--success)" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="var(--success)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon points={`0,${CHART_HEIGHT} ${points} ${CHART_WIDTH},${CHART_HEIGHT}`} fill="url(#dashboard-mini-fill)" />
+        <polyline points={points} fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
+function SessionsMini() {
+  const { nextAppointment, sessionNotes } = DASHBOARD_PREVIEW;
+  return (
+    <div className="flex size-full flex-col gap-3 p-5">
+      <div className="rounded-lg bg-terracotta/15 p-3 ring-1 ring-terracotta/30">
+        <p className="text-[10px] font-semibold tracking-[0.06em] text-terracotta uppercase">Next session</p>
+        <p className="mt-1 text-sm font-medium text-canvas-white">{nextAppointment.label}</p>
+        <p className="text-[11px] text-canvas-white/55">{nextAppointment.time}</p>
+      </div>
+      <div className="flex gap-2">
+        <Icon icon={IconStar} size="sm" className="mt-0.5 shrink-0 text-canvas-white/25" />
+        <p className="text-xs leading-relaxed text-canvas-white/60">&ldquo;{sessionNotes[0].quote}&rdquo;</p>
+      </div>
+    </div>
+  );
+}
+
+function IntakeMini() {
+  const { intakeForms } = DASHBOARD_PREVIEW;
+  const complete = intakeForms.filter((f) => f.status === "complete").length;
+  return (
+    <div className="flex size-full flex-col justify-between p-5">
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-canvas-white/50">Intake form</p>
+        <span className="font-serif text-lg text-canvas-white">
+          {complete}/{intakeForms.length}
+        </span>
+      </div>
+      <div className="flex flex-col gap-2.5">
+        {intakeForms.map((form) => (
+          <div key={form.label} className="flex items-center justify-between text-xs">
+            <span className="text-canvas-white/70">{form.label}</span>
+            {form.status === "complete" ? (
+              <Icon icon={IconCheck} size="sm" className="text-success" />
+            ) : (
+              <span className="text-[10px] font-medium text-amber">Due</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReportsMini() {
+  const { reports } = DASHBOARD_PREVIEW;
+  return (
+    <div className="flex size-full flex-col justify-center gap-3 p-5">
+      {reports.map((report) => (
+        <div key={report.label} className="flex items-center gap-2.5">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-white/[0.06] text-canvas-white/50">
+            <Icon icon={IconFileText} size="sm" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-medium text-canvas-white/85">{report.label}</p>
+            <p className="text-[10px] text-canvas-white/40">{report.meta}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const PREVIEWS: Record<string, () => React.ReactElement> = {
+  dashboard: DashboardMini,
+  sessions: SessionsMini,
+  intake: IntakeMini,
+  reports: ReportsMini,
+};
 
 export function DashboardPreview() {
   return (
     <section className="px-6 py-28 lg:px-10 lg:py-36">
-      <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
-        <div className="order-2 min-w-0 lg:order-1">
-          <div className="rounded-[1.75rem] border-[1.5px] border-terracotta/70 bg-canvas-white p-6 shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)]">
-            <div className="flex items-center gap-3 border-b border-charcoal/8 pb-5">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-terracotta/25 bg-terracotta/12 font-serif text-sm text-rust-dark">
-                {DASHBOARD_PREVIEW.childInitials}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-charcoal">{DASHBOARD_PREVIEW.childName}</p>
-                <p className="text-xs text-ink-soft">{DASHBOARD_PREVIEW.meta}</p>
-              </div>
-              <span className="shrink-0 rounded-full bg-success/10 px-2.5 py-1 text-[11px] font-medium text-[#4a5540]">
-                {DASHBOARD_PREVIEW.statusLabel}
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-3 border-b border-charcoal/8 py-5">
-              {DASHBOARD_PREVIEW.progress.map((row) => {
-                const isStrong = row.value >= STRONG_PROGRESS_THRESHOLD;
-                return (
-                  <div key={row.label} className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between text-xs text-ink-soft">
-                      <span className="flex items-center gap-1.5">
-                        <Icon
-                          icon={row.icon}
-                          size="sm"
-                          className={isStrong ? "text-success-text" : "text-terracotta"}
-                        />
-                        {row.label}
-                      </span>
-                      <span className="font-medium text-charcoal">{row.value}%</span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-charcoal/8">
-                      <div
-                        className={`h-full rounded-full ${isStrong ? "bg-success" : "bg-terracotta"}`}
-                        style={{ width: `${row.value}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center justify-between pt-5">
-              <div>
-                <p className="text-sm font-medium text-charcoal">{DASHBOARD_PREVIEW.footerLabel}</p>
-                <p className="text-xs text-ink-soft">{DASHBOARD_PREVIEW.footerTime}</p>
-              </div>
-              <button
-                type="button"
-                className="rounded-full border border-terracotta px-4 py-2 text-xs font-medium text-terracotta transition-colors hover:bg-terracotta hover:text-canvas-white"
-              >
-                View notes
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="order-1 min-w-0 lg:order-2">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-2xl text-center">
           <span className="eyebrow text-rust-dark">Progress & support</span>
           <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
-            One dashboard for every appointment, note and next step.
+            Everything about your child&apos;s care, on one screen.
           </h2>
-          <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-soft">
-            Parents see exactly what&apos;s coming up and what&apos;s already happened. No more
-            piecing it together from messages and memory.
-          </p>
-
-          <ul className="mt-8 flex flex-col gap-3">
-            {DASHBOARD_CHECKLIST.map((item) => (
-              <li key={item} className="flex items-center gap-3 text-sm text-charcoal">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-terracotta/12 text-terracotta">
-                  <IconCheck size={13} stroke={2.5} />
-                </span>
-                {item}
-              </li>
-            ))}
-          </ul>
-
           <Link
             href="/parent"
-            className="mt-8 inline-block border-b-2 border-terracotta pb-1 text-sm font-medium text-charcoal transition-colors hover:text-terracotta"
+            className="mt-4 inline-block border-b-2 border-terracotta pb-1 text-sm font-medium text-charcoal transition-colors hover:text-terracotta"
           >
             See a parent dashboard
           </Link>
         </div>
+
+        {/* Illustrative-only mock of parent-dashboard features -- not a live
+            screenshot, see src/content/marketing/dashboard-preview.ts. */}
+        <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {DASHBOARD_FEATURE_CARDS.map((card, index) => {
+            const Preview = PREVIEWS[card.key];
+            return (
+              <Reveal key={card.key} delayMs={index * 80} className="h-full">
+                <div className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] border-[1.5px] border-terracotta/70 bg-canvas-white shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)] transition-all hover:-translate-y-1 hover:border-terracotta hover:shadow-[0_24px_64px_-14px_rgba(26,18,12,0.32),0_0_80px_-6px_rgba(156,89,52,0.55)]">
+                  <div className="relative aspect-4/3 shrink-0 overflow-hidden bg-charcoal">
+                    <Preview />
+                  </div>
+                  <div className="p-8">
+                    <div className="relative -mt-[52px] flex size-10 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">
+                      <Icon icon={card.icon} size="md" />
+                    </div>
+                    <h3 className="mt-4 font-serif text-xl text-charcoal">{card.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-ink-soft">{card.description}</p>
+                  </div>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+
+        <ul className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-3">
+          {DASHBOARD_CHECKLIST.map((item) => (
+            <li key={item} className="flex items-center gap-2.5 text-sm text-charcoal">
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-terracotta/12 text-terracotta">
+                <IconCheck size={13} stroke={2.5} />
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
