@@ -18,8 +18,14 @@ export async function updateSupabaseSession(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
+          // @supabase/ssr's own default cookie options never include `secure`
+          // (confirmed by reading the package source -- DEFAULT_COOKIE_OPTIONS
+          // only sets path/sameSite/httpOnly/maxAge), so the session cookie
+          // was shipping without the Secure attribute even in production,
+          // confirmed via a live login. Guarded by NODE_ENV so it still works
+          // over plain http://localhost in dev.
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, { ...options, secure: process.env.NODE_ENV === "production" })
           );
         },
       },

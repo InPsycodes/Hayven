@@ -15,8 +15,13 @@ export async function createClient() {
         },
         setAll(cookiesToSet) {
           try {
+            // @supabase/ssr's own default cookie options never include
+            // `secure` (confirmed by reading the package source), so the
+            // session cookie was shipping without the Secure attribute even
+            // in production, confirmed via a live login. Guarded by NODE_ENV
+            // so it still works over plain http://localhost in dev.
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, { ...options, secure: process.env.NODE_ENV === "production" })
             );
           } catch {
             // Called from a Server Component -- safe to ignore since the
