@@ -77,14 +77,14 @@ export function MessageThreadView({
   return (
     <div className="flex h-screen flex-col md:h-[calc(100vh-0px)]">
       <div className="flex items-center gap-3 bg-charcoal px-4 py-4 text-offwhite">
-        <Link href={backHref} className="text-offwhite/70 hover:text-offwhite">
+        <Link href={backHref} className="text-offwhite/70 hover:text-offwhite" aria-label="Back to messages">
           <IconArrowLeft size={20} />
         </Link>
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-terracotta text-xs font-medium text-white">
           {initialsFromName(counterpartName)}
         </span>
         <div>
-          <p className="text-sm font-medium">{counterpartName}</p>
+          <h1 className="text-sm font-medium">{counterpartName}</h1>
           <p className="text-xs capitalize text-offwhite/60">{counterpartRole}</p>
         </div>
       </div>
@@ -128,6 +128,7 @@ export function MessageThreadView({
       <form onSubmit={handleSend} className="flex items-center gap-2 bg-white px-4 py-3">
         <button
           type="button"
+          aria-label="Attach a file"
           className="flex size-11 shrink-0 items-center justify-center text-muted-foreground hover:text-charcoal"
         >
           <IconPaperclip size={19} stroke={1.75} />
@@ -136,11 +137,13 @@ export function MessageThreadView({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={`Message ${counterpartName.split(" ")[0]}`}
+          aria-label={`Message ${counterpartName}`}
           className="h-11 flex-1 rounded-full bg-offwhite px-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-terracotta/40 placeholder:text-muted-foreground"
         />
         <button
           type="submit"
           disabled={isPending || !draft.trim()}
+          aria-label="Send message"
           className="flex size-11 shrink-0 items-center justify-center rounded-full bg-terracotta text-white transition-opacity disabled:opacity-40"
         >
           <IconArrowUp size={17} stroke={2} />

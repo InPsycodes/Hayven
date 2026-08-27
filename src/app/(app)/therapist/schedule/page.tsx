@@ -105,12 +105,14 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
             </div>
             <Link
               href={`/therapist/schedule?offset=${offsetWeeks - 1}`}
+              aria-label="Previous week"
               className="flex size-7 items-center justify-center rounded-sm border border-border text-muted-foreground hover:text-charcoal"
             >
               <IconChevronLeft size={16} />
             </Link>
             <Link
               href={`/therapist/schedule?offset=${offsetWeeks + 1}`}
+              aria-label="Next week"
               className="flex size-7 items-center justify-center rounded-sm border border-border text-muted-foreground hover:text-charcoal"
             >
               <IconChevronRight size={16} />

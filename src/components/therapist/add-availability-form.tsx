@@ -51,6 +51,7 @@ export function AddAvailabilityForm() {
         <button
           type="button"
           onClick={() => setOpen(false)}
+          aria-label="Close"
           className="text-muted-foreground hover:text-charcoal"
         >
           <IconX size={16} />

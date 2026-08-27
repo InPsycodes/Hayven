@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -201,7 +202,13 @@ export interface RealTodayBooking {
 
 /** Powers the therapist dashboard's "Today's schedule" list. */
 /** "Today" is always the Lagos calendar day, not the server's -- computed here rather than passed in, so callers can't each get the boundary wrong near midnight. */
-export async function getRealTodaysBookingsForTherapist(
+/**
+ * Wrapped in cache(): both the therapist dashboard page and AppShell (for
+ * the sidebar's today's-session-count badge) call this with the same
+ * therapistId within one request -- see src/lib/messages/queries.ts for the
+ * same pattern.
+ */
+export const getRealTodaysBookingsForTherapist = cache(async function getRealTodaysBookingsForTherapist(
   therapistId: string
 ): Promise<RealTodayBooking[]> {
   await autoCompletePastBookings(therapistId);
@@ -229,10 +236,15 @@ export async function getRealTodaysBookingsForTherapist(
     })
     .filter((b) => b.slotStartTime && toLagosWallClock(new Date(b.slotStartTime)).toISOString().startsWith(todayISODate))
     .sort((a, b) => a.slotStartTime.localeCompare(b.slotStartTime));
-}
+});
 
-/** Distinct children this therapist has had a non-cancelled booking with. */
-export async function getRealActiveClientCountForTherapist(therapistId: string): Promise<number> {
+/**
+ * Distinct children this therapist has had a non-cancelled booking with.
+ * Wrapped in cache(): both the therapist dashboard page and AppShell (for
+ * the sidebar's caseload-count badge) call this with the same therapistId
+ * within one request -- see src/lib/messages/queries.ts for the same pattern.
+ */
+export const getRealActiveClientCountForTherapist = cache(async function getRealActiveClientCountForTherapist(therapistId: string): Promise<number> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("bookings")
@@ -241,7 +253,7 @@ export async function getRealActiveClientCountForTherapist(therapistId: string):
     .neq("status", "cancelled");
   if (error || !data) return 0;
   return new Set(data.map((r) => r.child_id)).size;
-}
+});
 
 /** Sum of successful session-commission payments to this therapist this calendar month. */
 export async function getRealEarningsForTherapist(therapistUserId: string): Promise<number> {

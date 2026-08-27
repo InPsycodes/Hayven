@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { IconSearch } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,18 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
   const [roleError, setRoleError] = useState<string | null>(null);
   const statusGuard = useSubmitGuard();
   const roleGuard = useSubmitGuard();
+  const resetButtonRef = useRef<HTMLButtonElement>(null);
+  const wasResetting = useRef(false);
+
+  // Return focus to the trigger button once the inline reset-password form
+  // closes (whether by finishing or Cancel) -- otherwise a keyboard user
+  // loses their place and lands back at the top of the page.
+  useEffect(() => {
+    if (wasResetting.current && !resetting) {
+      resetButtonRef.current?.focus();
+    }
+    wasResetting.current = resetting;
+  }, [resetting]);
 
   const suspended = localStatus === "suspended";
 
@@ -116,7 +128,7 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
         >
           {isPending ? "Saving..." : suspended ? "Reactivate" : "Suspend"}
         </Button>
-        <Button size="sm" variant="ghost" disabled={isSelf} onClick={() => setResetting((v) => !v)}>
+        <Button ref={resetButtonRef} size="sm" variant="ghost" disabled={isSelf} onClick={() => setResetting((v) => !v)}>
           Reset password
         </Button>
         {user.role === "therapist" && (

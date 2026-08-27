@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -30,8 +31,14 @@ export interface RealTherapistProfile {
   reportTone: "warm" | "direct";
 }
 
-/** Real therapist_profiles lookup by auth user id -- null if they haven't started/finished onboarding. */
-export async function getRealTherapistProfileByUserId(
+/**
+ * Real therapist_profiles lookup by auth user id -- null if they haven't
+ * started/finished onboarding. Wrapped in cache(): both the therapist
+ * dashboard page and AppShell (for sidebar badge counts) call this with the
+ * same userId within one request -- see src/lib/messages/queries.ts for the
+ * same pattern.
+ */
+export const getRealTherapistProfileByUserId = cache(async function getRealTherapistProfileByUserId(
   userId: string
 ): Promise<RealTherapistProfile | null> {
   const supabase = await createClient();
@@ -57,7 +64,7 @@ export async function getRealTherapistProfileByUserId(
     verifiedBadgeLabel: data.verified_badge_label,
     reportTone: data.report_tone === "direct" ? "direct" : "warm",
   };
-}
+});
 
 export interface RealPublicTherapist {
   id: string;
