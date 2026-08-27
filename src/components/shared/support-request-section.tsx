@@ -39,7 +39,7 @@ export function SupportRequestSection({ requests }: { requests: RealSupportReque
             <Textarea id="message" name="message" required rows={4} placeholder="Tell us what's going on." />
           </div>
           {state.error && <p className="text-sm text-error-text">{state.error}</p>}
-          {succeeded && <p className="fade-in text-sm text-success-text">Sent — we&apos;ll reply here and by email.</p>}
+          {succeeded && <p className="fade-in text-sm text-success-text">Sent. We&apos;ll reply here and by email.</p>}
           <div className="flex gap-3">
             <Button type="submit" disabled={isPending} className="w-fit">
               {isPending ? "Sending..." : "Send message"}
