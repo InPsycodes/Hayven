@@ -275,7 +275,13 @@ export function SessionEntryForm({
 
       {state.error && <p className="text-sm text-error-text">{state.error}</p>}
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-white p-4 md:sticky">
+      {/* bottom-20 clears AppShell's BottomTabNav, which is also fixed
+          inset-x-0 bottom-0 at z-50 on every authenticated mobile page --
+          without this offset this bar rendered directly behind the tab nav,
+          fully hidden, since it never had a z-index of its own to even lose
+          that stacking fight visibly. md:sticky drops both the offset and
+          the tab nav (desktop-only) out of the picture. */}
+      <div className="fixed inset-x-0 bottom-20 z-10 border-t border-white/50 bg-[linear-gradient(180deg,rgba(250,248,246,0.82)_0%,rgba(250,248,246,0.94)_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_-10px_30px_-16px_rgba(26,18,12,0.3)] backdrop-blur-2xl backdrop-saturate-150 md:sticky md:bottom-0">
         <Button type="submit" disabled={isPending} size="lg" className="mx-auto block w-full max-w-2xl">
           {isPending ? "Saving..." : "Save session"}
         </Button>
