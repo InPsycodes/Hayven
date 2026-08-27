@@ -7,10 +7,12 @@ export function UploadDropzone({
   name,
   label = "Drag file here or click to upload",
   helperText = "PDF, JPG or PNG (max 2.5MB)",
+  required,
 }: {
   name?: string;
   label?: string;
   helperText?: string;
+  required?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -26,7 +28,12 @@ export function UploadDropzone({
         name={name}
         type="file"
         accept=".pdf,.jpg,.jpeg,.png"
-        className="hidden"
+        required={required}
+        // Hidden native input still runs the browser's own required-field
+        // validation on submit (surfaced via the wrapper button's click, not
+        // this input directly) -- same as the Select components elsewhere
+        // in this form.
+        className="pointer-events-none absolute h-px w-px opacity-0"
         onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
       />
       {fileName ? (

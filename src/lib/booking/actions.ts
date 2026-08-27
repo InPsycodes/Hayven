@@ -141,7 +141,7 @@ export async function finalizeBookingPayment(
   const { data: booking } = await admin
     .from("bookings")
     .select(
-      "id, parent_id, therapist_id, session_type, children(first_name), availability_slots(start_time), therapist_profiles(user_id, users(full_name))"
+      "id, parent_id, therapist_id, child_id, session_type, children(first_name), availability_slots(start_time), therapist_profiles(user_id, users(full_name))"
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -159,6 +159,21 @@ export async function finalizeBookingPayment(
     .maybeSingle();
   if (updateError) return { ok: false, error: updateError.message };
   if (!updated) return { ok: true }; // already finalized by a prior call -- idempotent no-op
+
+  // The therapist_child_assignments RLS policy (0011) was written to allow a
+  // therapist to "self-assign from a booking", and /therapist/caseload has
+  // always told therapists this happens automatically -- but nothing ever
+  // actually performed the insert, so a confirmed booking never showed up in
+  // caseload. This is that missing insert. 23505 = the active-assignment
+  // partial unique index already has a row for this pair (a prior admin
+  // assignment, or a repeat booking) -- not an error, just already covered.
+  const { error: assignmentError } = await admin.from("therapist_child_assignments").insert({
+    therapist_id: booking.therapist_id,
+    child_id: booking.child_id,
+  });
+  if (assignmentError && assignmentError.code !== "23505") {
+    console.error("Failed to auto-create therapist_child_assignment on booking confirmation", assignmentError);
+  }
 
   const child = booking.children as unknown as { first_name: string } | null;
   const slot = booking.availability_slots as unknown as { start_time: string } | null;
@@ -208,6 +223,7 @@ export async function finalizeBookingPayment(
   revalidatePath("/parent");
   revalidatePath("/parent/sessions");
   revalidatePath("/therapist/schedule");
+  revalidatePath("/therapist/caseload");
   return { ok: true };
 }
 

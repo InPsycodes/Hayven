@@ -114,7 +114,7 @@ export function CredentialsForm({ specialties }: { specialties: Specialty[] }) {
 
       <div className="flex flex-col gap-2">
         <Label>Upload certificate / membership document</Label>
-        <UploadDropzone name="file" />
+        <UploadDropzone name="file" required />
       </div>
 
       <div className="flex items-start gap-2.5 rounded-sm bg-paper p-4">

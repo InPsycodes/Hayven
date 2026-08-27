@@ -85,6 +85,15 @@ export async function saveCredentialsStep(
   if (typeof membershipNumber !== "string" || !membershipNumber.trim()) {
     return { ...echo, error: "Please enter your membership or license number." };
   }
+  // Without this, professionalBody/membershipNumber above would be
+  // collected but never persisted anywhere (the credentials insert only
+  // happens inside the file-upload branch below) -- silently discarding
+  // data the form presented as required, and leaving the admin
+  // verification checklist's "membership number confirmed" item with
+  // nothing to check against.
+  if (!(file instanceof File) || file.size === 0) {
+    return { ...echo, error: "Please upload your certificate or membership document." };
+  }
 
   const supabase = await createClient();
 
