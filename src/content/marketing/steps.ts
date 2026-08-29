@@ -9,8 +9,8 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     body: "Tell us about your child and what you're noticing. No clinical jargon required.",
   },
   {
-    title: "Share the full picture",
-    body: "A short intake form gives your matched therapist real context before the first session.",
+    title: "Find your fit",
+    body: "Browse verified therapist profiles by specialty, price, and availability, or take our 2-minute quiz for a head start.",
   },
   {
     title: "Book with confidence",
