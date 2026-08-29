@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { formatDateTime } from "@/data/format";
 import { getRealLearningArticles } from "@/lib/learning/queries";
+import { getIntakeFormForChild, intakeSectionStatuses } from "@/lib/intake/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealNextUpcomingBookingForChild } from "@/lib/booking/queries";
 import { getPublishedReportsForChild } from "@/lib/reports/queries";
@@ -28,12 +29,15 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
   const allChildren = await getRealChildrenForParent(session.userId);
   const activeChild = allChildren.find((c) => c.id === childParam) ?? allChildren[0];
 
-  const [nextSession, reports, allThreads, parentArticles] = await Promise.all([
+  const [nextSession, reports, allThreads, parentArticles, intakeForm] = await Promise.all([
     activeChild ? getRealNextUpcomingBookingForChild(activeChild.id) : null,
     activeChild ? getPublishedReportsForChild(activeChild.id) : [],
     getRealMessageThreadsForParent(session.userId),
     getRealLearningArticles("parent"),
+    activeChild ? getIntakeFormForChild(activeChild.id) : null,
   ]);
+  const intakeSections = intakeSectionStatuses(intakeForm);
+  const intakeCompleteCount = intakeSections.filter((s) => s.complete).length;
   const latestReport = reports[0] ?? null;
   const latestSnippet =
     latestReport && activeChild
@@ -143,7 +147,34 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
               </Card>
             </Reveal>
 
-            <Reveal delayMs={240}>
+            {activeChild && (
+              <Reveal delayMs={240}>
+                <Card className="p-5">
+                  <div className="flex items-center justify-between">
+                    <span className="label-micro text-muted-foreground">Intake form</span>
+                    <span className="text-xs font-medium text-muted-foreground">{intakeCompleteCount}/4 complete</span>
+                  </div>
+                  <div className="mt-3 flex flex-col gap-1.5">
+                    {intakeSections.map((section) => (
+                      <div key={section.key} className="flex items-center justify-between text-sm">
+                        <span className="text-charcoal">{section.label}</span>
+                        <span className={section.complete ? "text-success-text" : "text-amber-text"}>
+                          {section.complete ? "Complete" : "Due"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <Link
+                    href={`/parent/children/${activeChild.id}/intake`}
+                    className="mt-4 inline-block text-xs font-medium text-terracotta hover:underline"
+                  >
+                    {intakeCompleteCount === 4 ? "Review intake form" : "Finish intake form"}
+                  </Link>
+                </Card>
+              </Reveal>
+            )}
+
+            <Reveal delayMs={320}>
               <Card className="p-5">
                 <span className="label-micro text-muted-foreground">From the Learning Center</span>
                 <div className="mt-3 flex flex-col gap-3">

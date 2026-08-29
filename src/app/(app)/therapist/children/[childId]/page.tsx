@@ -61,6 +61,9 @@ export default async function ChildOverviewPage({
           <Button asChild variant="outline" size="sm" className="w-fit">
             <Link href={`/therapist/children/${childId}/programme`}>Manage programme</Link>
           </Button>
+          <Button asChild variant="outline" size="sm" className="w-fit">
+            <Link href={`/therapist/children/${childId}/intake`}>Intake form</Link>
+          </Button>
         </div>
 
         {window.sessions.length > 0 && (
