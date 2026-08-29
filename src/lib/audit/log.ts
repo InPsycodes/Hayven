@@ -34,7 +34,14 @@ export type AuditAction =
   | "account.revoke_supervisor"
   | "supervisor_request.submit"
   | "supervisor_request.approved"
-  | "supervisor_request.denied";
+  | "supervisor_request.denied"
+  | "learning_article.create"
+  | "learning_article.update"
+  | "learning_article.publish"
+  | "learning_article.unpublish"
+  | "learning_article.delete"
+  | "learning_category.create"
+  | "learning_category.delete";
 
 /**
  * Fire-and-forget: a logging failure must never roll back a clinical write
