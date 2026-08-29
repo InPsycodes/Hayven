@@ -1,8 +1,36 @@
 import { NextResponse } from "next/server";
+import type { StaticImageData } from "next/image";
 
 import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ARTICLES, FEATURED_ARTICLE, FEATURED_THERAPIST_ARTICLE, PARENT_CATEGORIES, THERAPIST_CATEGORIES } from "@/data/articles";
+
+import sessionNotesImage from "../../../../../public/images/learn-therapist-session-notes.jpg";
+import verificationImage from "../../../../../public/images/learn-therapist-verification.jpg";
+import profileNoticedImage from "../../../../../public/images/learn-therapist-profile-noticed.jpg";
+import messagingBoundariesImage from "../../../../../public/images/learn-therapist-messaging-boundaries.jpg";
+import settingAvailabilityImage from "../../../../../public/images/learn-therapist-setting-availability.jpg";
+import bookingConfirmedImage from "../../../../../public/images/learn-therapist-booking-confirmed.jpg";
+import supervisorImage from "../../../../../public/images/learn-therapist-supervisor.jpg";
+import cancellationsImage from "../../../../../public/images/learn-therapist-cancellations.jpg";
+import endingCareImage from "../../../../../public/images/learn-therapist-ending-care.jpg";
+
+// article.imageSrc is a Next.js static import -- its .src is a build-hashed
+// path (/_next/static/media/...hash....jpg) that changes on every deploy,
+// not something safe to store. The same import of the same file resolves to
+// the same cached module object, so this maps each StaticImageData back to
+// its real, stable public/ path by reference rather than by the hash.
+const STABLE_IMAGE_PATH = new Map<StaticImageData, string>([
+  [sessionNotesImage, "/images/learn-therapist-session-notes.jpg"],
+  [verificationImage, "/images/learn-therapist-verification.jpg"],
+  [profileNoticedImage, "/images/learn-therapist-profile-noticed.jpg"],
+  [messagingBoundariesImage, "/images/learn-therapist-messaging-boundaries.jpg"],
+  [settingAvailabilityImage, "/images/learn-therapist-setting-availability.jpg"],
+  [bookingConfirmedImage, "/images/learn-therapist-booking-confirmed.jpg"],
+  [supervisorImage, "/images/learn-therapist-supervisor.jpg"],
+  [cancellationsImage, "/images/learn-therapist-cancellations.jpg"],
+  [endingCareImage, "/images/learn-therapist-ending-care.jpg"],
+]);
 
 /**
  * One-time migration: moves the ~60 hardcoded articles in
@@ -81,7 +109,7 @@ export async function POST() {
         body: article.body,
         read_time: article.readTime,
         reviewed_by: article.reviewedBy ?? null,
-        image_url: article.imageSrc?.src ?? null,
+        image_url: (article.imageSrc && STABLE_IMAGE_PATH.get(article.imageSrc)) ?? null,
         featured: article.featured,
         status: "published",
         published_at: new Date().toISOString(),

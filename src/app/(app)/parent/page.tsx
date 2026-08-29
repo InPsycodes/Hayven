@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { formatDateTime } from "@/data/format";
-import { getArticlesForAudience } from "@/data/articles";
+import { getRealLearningArticles } from "@/lib/learning/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealNextUpcomingBookingForChild } from "@/lib/booking/queries";
 import { getPublishedReportsForChild } from "@/lib/reports/queries";
@@ -28,10 +28,11 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
   const allChildren = await getRealChildrenForParent(session.userId);
   const activeChild = allChildren.find((c) => c.id === childParam) ?? allChildren[0];
 
-  const [nextSession, reports, allThreads] = await Promise.all([
+  const [nextSession, reports, allThreads, parentArticles] = await Promise.all([
     activeChild ? getRealNextUpcomingBookingForChild(activeChild.id) : null,
     activeChild ? getPublishedReportsForChild(activeChild.id) : [],
     getRealMessageThreadsForParent(session.userId),
+    getRealLearningArticles("parent"),
   ]);
   const latestReport = reports[0] ?? null;
   const latestSnippet =
@@ -43,7 +44,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
   // every confirmed booking has a thread, but most haven't been said hello to yet.
   const threads = allThreads.filter((t) => t.lastMessage !== null);
 
-  const recommendedArticles = getArticlesForAudience("parent").slice(1, 3);
+  const recommendedArticles = parentArticles.slice(1, 3);
 
   return (
     <div>

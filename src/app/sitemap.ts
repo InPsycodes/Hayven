@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { ARTICLES } from "@/data/articles";
+import { getRealLearningArticles } from "@/lib/learning/queries";
 import { getRealVerifiedTherapists } from "@/lib/therapist/queries";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -16,7 +16,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  const articleRoutes: MetadataRoute.Sitemap = ARTICLES.map((article) => ({
+  const [parentArticles, therapistArticles] = await Promise.all([
+    getRealLearningArticles("parent"),
+    getRealLearningArticles("therapist"),
+  ]);
+  const articleRoutes: MetadataRoute.Sitemap = [...parentArticles, ...therapistArticles].map((article) => ({
     url: `${SITE_URL}/learn/${article.slug}`,
     changeFrequency: "monthly",
     priority: 0.6,

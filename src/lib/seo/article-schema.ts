@@ -1,4 +1,4 @@
-import type { Article } from "@/data/articles";
+import type { RealLearningArticle } from "@/lib/learning/queries";
 import { getOrganizationSchema } from "@/lib/seo/organization-schema";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -8,23 +8,24 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
  * getOrganizationSchema(): Hayven publishes and curates this content, but
  * isn't itself a medical provider, so author stays the Organization rather
  * than reaching for a medical-review schema this content doesn't actually
- * carry (reviewedBy on each Article fixture is a role description like
- * "Reviewed by a licensed speech-language pathologist", not a named
- * clinician -- not enough to back a real Person/reviewedBy claim).
- * No datePublished: these are static editorial fixtures with no real
- * publish date tracked anywhere, and inventing one would be worse than
- * omitting an optional field.
+ * carry (reviewedBy is a role description like "Reviewed by a licensed
+ * speech-language pathologist", not a named clinician -- not enough to back
+ * a real Person/reviewedBy claim).
  */
-export function getArticleSchema(article: Article) {
+export function getArticleSchema(article: RealLearningArticle) {
   const org = getOrganizationSchema();
   return {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: article.title,
     description: article.excerpt,
-    articleSection: article.category,
+    articleSection: article.categoryName ?? undefined,
     author: { "@type": "Organization", name: org.name, url: org.url },
     publisher: { "@type": "Organization", name: org.name, url: org.url, logo: org.logo },
     mainEntityOfPage: `${SITE_URL}/learn/${article.slug}`,
+    // Real now that content lives in learning_articles.published_at, unlike
+    // the old static fixtures this replaced (which had no tracked date at
+    // all, and inventing one would have been worse than omitting it).
+    datePublished: article.publishedAt ?? undefined,
   };
 }

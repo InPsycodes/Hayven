@@ -7,9 +7,9 @@ import { IconSearch, IconClock } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
 import { LEARN_TOPIC_META } from "@/content/marketing/learn-topics";
-import type { Article } from "@/data/articles";
+import type { RealLearningArticle } from "@/lib/learning/queries";
 
-export function ArticleGrid({ articles }: { articles: Article[] }) {
+export function ArticleGrid({ articles }: { articles: RealLearningArticle[] }) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -42,7 +42,7 @@ export function ArticleGrid({ articles }: { articles: Article[] }) {
 
       <div className="mt-2 flex flex-col divide-y divide-border">
         {filtered.map((article) => {
-          const meta = LEARN_TOPIC_META[article.category];
+          const meta = article.categoryName ? LEARN_TOPIC_META[article.categoryName] : undefined;
           return (
             <Link
               key={article.slug}
@@ -50,14 +50,13 @@ export function ArticleGrid({ articles }: { articles: Article[] }) {
               className="group grid grid-cols-[72px_1fr] items-center gap-4 py-5 sm:grid-cols-[100px_1fr] sm:gap-6"
             >
               <div
-                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl ${article.imageSrc ? "" : (meta?.tileClass ?? "bg-paper text-ink-soft")}`}
+                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl ${article.imageUrl ? "" : (meta?.tileClass ?? "bg-paper text-ink-soft")}`}
               >
-                {article.imageSrc ? (
+                {article.imageUrl ? (
                   <Image
-                    src={article.imageSrc}
+                    src={article.imageUrl}
                     alt=""
                     fill
-                    placeholder="blur"
                     sizes="(min-width: 640px) 100px, 72px"
                     className="photo-treatment size-full object-cover"
                   />
@@ -66,9 +65,9 @@ export function ArticleGrid({ articles }: { articles: Article[] }) {
                 )}
               </div>
               <div className="flex min-w-0 flex-col gap-2">
-                {meta && (
+                {meta && article.categoryName && (
                   <span className={`w-fit rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] ${meta.chipClass}`}>
-                    {article.category}
+                    {article.categoryName}
                   </span>
                 )}
                 <h3 className="font-serif text-base leading-snug text-charcoal transition-colors group-hover:text-rust-dark sm:text-lg">

@@ -3,14 +3,14 @@
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import type { Audience } from "@/data/articles";
+import type { LearningAudience } from "@/lib/learning/queries";
 
-const OPTIONS: { value: Audience; label: string }[] = [
+const OPTIONS: { value: LearningAudience; label: string }[] = [
   { value: "parent", label: "For parents" },
   { value: "therapist", label: "For therapists" },
 ];
 
-export function AudienceToggle({ active }: { active: Audience }) {
+export function AudienceToggle({ active }: { active: LearningAudience }) {
   const router = useRouter();
 
   const isTherapist = active === "therapist";

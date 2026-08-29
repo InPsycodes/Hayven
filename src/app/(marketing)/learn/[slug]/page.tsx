@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { IconArrowLeft } from "@tabler/icons-react";
 
-import { getArticleBySlug } from "@/data/articles";
+import { getRealLearningArticleBySlug } from "@/lib/learning/queries";
 import { getArticleSchema } from "@/lib/seo/article-schema";
 import { safeJsonLdStringify } from "@/lib/seo/json-ld";
 
@@ -13,7 +13,7 @@ interface ArticlePageProps {
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getRealLearningArticleBySlug(slug);
   if (!article) return {};
 
   return {
@@ -25,14 +25,14 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getRealLearningArticleBySlug(slug);
   if (!article) notFound();
 
   return (
     <article className="mx-auto max-w-2xl px-6 py-12 md:px-10">
-      {/* Static, developer-authored JSON from the article fixture -- never
-          user input. Still run through safeJsonLdStringify for consistency
-          with the rest of this codebase's structured data. */}
+      {/* Admin-authored content (see /admin/learning), not user input --
+          still run through safeJsonLdStringify for consistency with the
+          rest of this codebase's structured data. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(getArticleSchema(article)) }}
@@ -44,7 +44,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <IconArrowLeft size={16} />
         Learning Center
       </Link>
-      <span className="label-micro text-rust-dark">{article.category}</span>
+      {article.categoryName && <span className="label-micro text-rust-dark">{article.categoryName}</span>}
       <h1 className="mt-3 font-heading text-3xl leading-tight text-charcoal">{article.title}</h1>
       <p className="mt-3 text-xs text-muted-foreground">
         {article.readTime}

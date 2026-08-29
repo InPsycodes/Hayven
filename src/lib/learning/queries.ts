@@ -90,6 +90,21 @@ export async function getRealLearningArticles(audience: LearningAudience): Promi
   return data.map((row) => mapArticleRow(row as unknown as Parameters<typeof mapArticleRow>[0]));
 }
 
+/** The one featured article for an audience, if any. Powers the /learn hero -- see FEATURED_ARTICLE's old role in src/data/articles.ts. */
+export async function getRealFeaturedLearningArticle(audience: LearningAudience): Promise<RealLearningArticle | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("learning_articles")
+    .select(ARTICLE_COLUMNS)
+    .eq("audience", audience)
+    .eq("featured", true)
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return mapArticleRow(data as unknown as Parameters<typeof mapArticleRow>[0]);
+}
+
 /** A single published article by slug. Returns null for drafts too -- RLS already hides them, this is the same shape either way. */
 export async function getRealLearningArticleBySlug(slug: string): Promise<RealLearningArticle | null> {
   const supabase = await createClient();
