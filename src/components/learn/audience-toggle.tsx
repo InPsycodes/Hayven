@@ -10,6 +10,10 @@ const OPTIONS: { value: LearningAudience; label: string }[] = [
   { value: "therapist", label: "For therapists" },
 ];
 
+function hrefFor(value: LearningAudience) {
+  return value === "parent" ? "/learn" : "/learn?audience=therapist";
+}
+
 export function AudienceToggle({ active }: { active: LearningAudience }) {
   const router = useRouter();
 
@@ -20,6 +24,15 @@ export function AudienceToggle({ active }: { active: LearningAudience }) {
       role="radiogroup"
       aria-label="Audience"
       className="relative flex w-full rounded-full border border-border bg-white p-0.5"
+      onKeyDown={(e) => {
+        // ARIA APG radiogroup pattern: arrow keys move selection between
+        // options, not just Tab -- only two options here, so any
+        // horizontal/vertical arrow just flips to the other one.
+        if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
+        e.preventDefault();
+        const other = OPTIONS.find((o) => o.value !== active);
+        if (other) router.push(hrefFor(other.value));
+      }}
     >
       <span
         aria-hidden
@@ -36,7 +49,8 @@ export function AudienceToggle({ active }: { active: LearningAudience }) {
             type="button"
             role="radio"
             aria-checked={isActive}
-            onClick={() => router.push(option.value === "parent" ? "/learn" : "/learn?audience=therapist")}
+            tabIndex={isActive ? 0 : -1}
+            onClick={() => router.push(hrefFor(option.value))}
             className={cn(
               "relative z-10 flex-1 rounded-full px-3 py-1.5 text-center text-sm font-medium transition-colors duration-300",
               isActive ? "text-offwhite" : "text-charcoal hover:text-rust-dark"

@@ -40,13 +40,15 @@ export function PwaInstallPrompt() {
   // enough page -- so this is an exclusion, not another shrink. The
   // session-entry form's own fixed "Save session" bar sits in the same
   // screen region and was found overlapped the same way -- excluded here
-  // too rather than reworking that bar's position.
+  // too rather than reworking that bar's position. The intake form pages
+  // were found overlapped at 375px the same way once they existed.
   const isCriticalFlow =
     pathname === "/login" ||
     pathname === "/signup" ||
     pathname?.startsWith("/needs-assessment") ||
     pathname?.startsWith("/book") ||
-    /^\/therapist\/children\/[^/]+\/sessions\/new$/.test(pathname ?? "");
+    /^\/therapist\/children\/[^/]+\/sessions\/new$/.test(pathname ?? "") ||
+    /^\/(parent|therapist)\/children\/[^/]+\/intake$/.test(pathname ?? "");
 
   useEffect(() => {
     // Deferred a tick so the initial detection runs as a callback rather

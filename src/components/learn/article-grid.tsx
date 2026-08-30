@@ -83,7 +83,11 @@ export function ArticleGrid({ articles }: { articles: RealLearningArticle[] }) {
         })}
         {filtered.length === 0 && (
           <p className="py-10 text-center text-sm text-ink-soft">
-            No guides match &ldquo;{query}&rdquo; yet.
+            {query.trim()
+              ? <>No guides match &ldquo;{query}&rdquo; yet.</>
+              : articles.length === 0
+                ? "No guides in this category yet."
+                : "No guides match that search yet."}
           </p>
         )}
       </div>
