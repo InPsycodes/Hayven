@@ -38,6 +38,7 @@ export const SIDEBAR_NAV: Record<AppRole, NavItem[]> = {
     { label: "Schedule", href: "/therapist/schedule", icon: IconCalendar },
     { label: "Caseload", href: "/therapist/caseload", icon: IconUsers },
     { label: "Messages", href: "/therapist/messages", icon: IconMessage },
+    { label: "Learn", href: "/therapist/learn", icon: IconBook },
     { label: "Earnings", href: "/therapist/earnings", icon: IconWallet },
     { label: "Profile", href: "/therapist/profile", icon: IconUserCircle },
   ],

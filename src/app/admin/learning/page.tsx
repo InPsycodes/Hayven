@@ -17,9 +17,14 @@ export default async function AdminLearningPage() {
             Create, edit, and publish articles for the parent and therapist Learning Centers.
           </p>
         </div>
-        <Button asChild variant="accent">
-          <Link href="/admin/learning/new">New article</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="ghost">
+            <Link href="/admin/learning/courses">Courses</Link>
+          </Button>
+          <Button asChild variant="accent">
+            <Link href="/admin/learning/new">New article</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 px-6 pb-8 md:px-8">

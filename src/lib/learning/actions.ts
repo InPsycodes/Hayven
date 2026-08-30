@@ -5,18 +5,10 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
+import { slugify } from "@/lib/slugify";
 import type { LearningAudience } from "./queries";
 
 export type ActionResult<T = object> = { ok: true } & T | { ok: false; error: string };
-
-function slugify(title: string): string {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-}
 
 /** Appends -2, -3, ... until the slug is free. Article volume here is small (tens, not thousands), so a loop of individual existence checks is simpler than a single clever query. */
 async function uniqueSlug(admin: ReturnType<typeof createAdminClient>, base: string, excludeId?: string): Promise<string> {

@@ -42,7 +42,15 @@ export type AuditAction =
   | "learning_article.delete"
   | "learning_category.create"
   | "learning_category.delete"
-  | "intake_form.save";
+  | "intake_form.save"
+  | "learning_course.create"
+  | "learning_course.update"
+  | "learning_course.publish"
+  | "learning_course.unpublish"
+  | "learning_course.delete"
+  | "learning_lesson.create"
+  | "learning_lesson.update"
+  | "learning_lesson.delete";
 
 /**
  * Fire-and-forget: a logging failure must never roll back a clinical write
