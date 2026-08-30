@@ -70,7 +70,12 @@ export function LearningCategoryManager({ categories }: { categories: RealLearni
           >
             {c.name}
             <span className="text-muted-foreground">({c.audience})</span>
-            <button type="button" onClick={() => handleRemove(c.id)} aria-label={`Remove ${c.name}`} className="text-muted-foreground hover:text-error-text">
+            <button
+              type="button"
+              onClick={() => handleRemove(c.id)}
+              aria-label={`Remove ${c.name}`}
+              className="rounded-full text-muted-foreground outline-none hover:text-error-text focus-visible:ring-2 focus-visible:ring-terracotta/40"
+            >
               <IconX size={12} stroke={2} />
             </button>
           </span>

@@ -52,7 +52,7 @@ export function AudienceToggle({ active }: { active: LearningAudience }) {
             tabIndex={isActive ? 0 : -1}
             onClick={() => router.push(hrefFor(option.value))}
             className={cn(
-              "relative z-10 flex-1 rounded-full px-3 py-1.5 text-center text-sm font-medium transition-colors duration-300",
+              "relative z-10 flex-1 rounded-full px-3 py-1.5 text-center text-sm font-medium outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-terracotta/40",
               isActive ? "text-offwhite" : "text-charcoal hover:text-rust-dark"
             )}
           >

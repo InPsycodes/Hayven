@@ -32,7 +32,7 @@ export function TopicList({ categories, counts, total }: TopicListProps) {
               router.push(`/learn${query ? `?${query}` : ""}`);
             }}
             className={cn(
-              "flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors",
+              "flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-terracotta/40",
               isActive ? "bg-terracotta text-canvas-white" : "text-charcoal hover:bg-terracotta/10"
             )}
           >

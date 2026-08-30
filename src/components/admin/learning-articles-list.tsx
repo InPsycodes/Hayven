@@ -31,13 +31,19 @@ function ArticleRow({ article }: { article: RealLearningArticle }) {
           {article.categoryName ? ` · ${article.categoryName}` : ""} · /learn/{article.slug}
         </p>
       </div>
+      {/* min-h-11 = the 44px comfort tap-target guideline; sm:min-h-0 hands
+          height back to size="sm"'s own h-7 on non-touch/desktop widths,
+          where the audit didn't flag this as an issue -- a scoped override
+          rather than changing the shared Button component's sm size, which
+          is relied on elsewhere for its compact height on purpose. */}
       <div className="flex shrink-0 items-center gap-2">
-        <Button asChild size="sm" variant="ghost">
+        <Button asChild size="sm" variant="ghost" className="min-h-11 sm:min-h-0">
           <Link href={`/admin/learning/${article.id}/edit`}>Edit</Link>
         </Button>
         <Button
           size="sm"
           variant="outline"
+          className="min-h-11 sm:min-h-0"
           disabled={isPending}
           onClick={statusGuard.guard(() =>
             startTransition(async () => {
@@ -54,6 +60,7 @@ function ArticleRow({ article }: { article: RealLearningArticle }) {
         <Button
           size="sm"
           variant="destructive"
+          className="min-h-11 sm:min-h-0"
           disabled={isPending}
           onClick={deleteGuard.guard(() =>
             startTransition(async () => {
