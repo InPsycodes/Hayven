@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -68,19 +69,27 @@ export function BookingTimeForm({
     }
 
     startTransition(async () => {
-      const result = await createPendingBooking({
-        childId,
-        therapistId: therapist.id,
-        slotId,
-        sessionType,
-      });
-      if (!result.ok) {
-        setError(result.error);
+      try {
+        const result = await createPendingBooking({
+          childId,
+          therapistId: therapist.id,
+          slotId,
+          sessionType,
+        });
+        if (!result.ok) {
+          setError(result.error);
+          reset();
+          return;
+        }
+        setDraft({ therapistId: therapist.id, childId, sessionType, slotId, bookingId: result.bookingId });
+        router.push(`/book/${therapist.id}/payment`);
+      } catch {
+        // A thrown action (infra failure, not one of its handled results)
+        // would otherwise leave the submit guard latched and the button
+        // silently dead for the rest of this mount.
+        setError("Something went wrong holding your slot. Please try again.");
         reset();
-        return;
       }
-      setDraft({ therapistId: therapist.id, childId, sessionType, slotId, bookingId: result.bookingId });
-      router.push(`/book/${therapist.id}/payment`);
     });
   });
 
@@ -215,9 +224,22 @@ export function BookingTimeForm({
 
       {error && <p className="text-sm text-error-text">{error}</p>}
 
-      <Button onClick={handleContinue} disabled={!canContinue} size="lg" className="w-full">
-        {isPending ? "Holding your slot..." : "Continue to payment →"}
-      </Button>
+      {kids.length === 0 ? (
+        // No child on the account yet -- without one there's nothing to book
+        // for, so `childId` stays undefined and the button below would just
+        // sit permanently disabled with no explanation. Point them at the
+        // fix instead of showing a dead control.
+        <p className="rounded-sm bg-amber/10 p-3 text-sm text-amber-text">
+          Add a child to your account before booking a session.{" "}
+          <Link href="/parent/children" className="font-medium underline">
+            Add a child
+          </Link>
+        </p>
+      ) : (
+        <Button onClick={handleContinue} disabled={!canContinue} size="lg" className="w-full">
+          {isPending ? "Holding your slot..." : "Continue to payment →"}
+        </Button>
+      )}
     </div>
   );
 }
