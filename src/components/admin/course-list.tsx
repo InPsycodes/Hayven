@@ -9,6 +9,8 @@ import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import type { RealCourse } from "@/lib/courses/queries";
 import { setCourseStatus, deleteCourse } from "@/lib/courses/actions";
 
+const ROW_COLS = "sm:grid-cols-[1fr_140px_92px_96px_auto]";
+
 function CourseRow({ course }: { course: RealCourse }) {
   const [status, setStatus] = useState(course.status);
   const [deleted, setDeleted] = useState(false);
@@ -20,18 +22,23 @@ function CourseRow({ course }: { course: RealCourse }) {
   if (deleted) return null;
 
   return (
-    <div className="flex flex-col gap-2 rounded-sm bg-[#F6F4F0] p-3.5 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      className={`grid gap-2 border-b border-charcoal/8 px-3 py-3 last:border-0 sm:items-center sm:gap-3 ${ROW_COLS}`}
+    >
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate text-sm font-medium text-charcoal">{course.title}</p>
-          <StatusBadge tone={status === "published" ? "sage" : "grey"}>{status === "published" ? "Published" : "Draft"}</StatusBadge>
-        </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {course.lessonCount} lesson{course.lessonCount === 1 ? "" : "s"}
-          {course.categoryName ? ` · ${course.categoryName}` : ""} · /therapist/learn/{course.slug}
-        </p>
+        <p className="truncate text-sm font-medium text-charcoal">{course.title}</p>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">/therapist/learn/{course.slug}</p>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <span className="truncate text-xs text-muted-foreground">{course.categoryName ?? "—"}</span>
+      <span className="text-xs text-muted-foreground">
+        {course.lessonCount} lesson{course.lessonCount === 1 ? "" : "s"}
+      </span>
+      <span>
+        <StatusBadge tone={status === "published" ? "sage" : "amber"}>
+          {status === "published" ? "Published" : "Draft"}
+        </StatusBadge>
+      </span>
+      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         <Button asChild size="sm" variant="ghost" className="min-h-11 sm:min-h-0">
           <Link href={`/admin/learning/courses/${course.id}`}>Manage</Link>
         </Button>
@@ -73,20 +80,26 @@ function CourseRow({ course }: { course: RealCourse }) {
           Delete
         </Button>
       </div>
-      {error && <p className="w-full text-xs text-error-text">{error}</p>}
+      {error && <p className="text-xs text-error-text sm:col-span-full">{error}</p>}
     </div>
   );
 }
 
 export function CourseList({ courses }: { courses: RealCourse[] }) {
-  if (courses.length === 0) {
-    return <p className="rounded-sm bg-[#F6F4F0] p-4 text-sm text-muted-foreground">No courses yet.</p>;
-  }
   return (
-    <div className="flex flex-col gap-2">
-      {courses.map((c) => (
-        <CourseRow key={c.id} course={c} />
-      ))}
+    <div className="rounded-sm bg-white p-4 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)] md:p-5">
+      <div className={`hidden gap-3 border-b border-charcoal/10 px-3 pb-2 sm:grid ${ROW_COLS}`}>
+        {["Title", "Category", "Lessons", "Status", ""].map((h, i) => (
+          <span key={i} className={`label-micro text-muted-foreground ${i === 4 ? "text-right" : ""}`}>
+            {h}
+          </span>
+        ))}
+      </div>
+      {courses.length === 0 ? (
+        <p className="px-3 py-8 text-center text-sm text-muted-foreground">No courses yet.</p>
+      ) : (
+        courses.map((c) => <CourseRow key={c.id} course={c} />)
+      )}
     </div>
   );
 }

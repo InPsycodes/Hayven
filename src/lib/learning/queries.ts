@@ -113,6 +113,33 @@ export async function getRealLearningArticleBySlug(slug: string): Promise<RealLe
   return mapArticleRow(data as unknown as Parameters<typeof mapArticleRow>[0]);
 }
 
+/**
+ * Up to `limit` other published articles to show under an article as
+ * "keep reading" -- same category first, then topped up with the newest
+ * from the same audience. Never includes the article itself.
+ */
+export async function getRelatedLearningArticles(
+  article: Pick<RealLearningArticle, "id" | "audience" | "categoryId">,
+  limit = 3
+): Promise<RealLearningArticle[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("learning_articles")
+    .select(ARTICLE_COLUMNS)
+    .eq("audience", article.audience)
+    .eq("status", "published")
+    .neq("id", article.id)
+    .order("published_at", { ascending: false });
+  if (error || !data) return [];
+
+  const all = data.map((row) => mapArticleRow(row as unknown as Parameters<typeof mapArticleRow>[0]));
+  const sameCategory = article.categoryId
+    ? all.filter((a) => a.categoryId === article.categoryId)
+    : [];
+  const rest = all.filter((a) => !sameCategory.includes(a));
+  return [...sameCategory, ...rest].slice(0, limit);
+}
+
 /** Admin-only: every article regardless of status, for the /admin/learning list. */
 export async function getAllLearningArticlesForAdmin(): Promise<RealLearningArticle[]> {
   const admin = createAdminClient();
@@ -127,6 +154,43 @@ export async function getLearningArticleByIdForAdmin(id: string): Promise<RealLe
   const { data, error } = await admin.from("learning_articles").select(ARTICLE_COLUMNS).eq("id", id).maybeSingle();
   if (error || !data) return null;
   return mapArticleRow(data as unknown as Parameters<typeof mapArticleRow>[0]);
+}
+
+export interface LearningContentStats {
+  publishedArticles: number;
+  draftArticles: number;
+  parentArticles: number;
+  therapistArticles: number;
+  courses: number;
+  lessons: number;
+  parentCategories: number;
+  therapistCategories: number;
+}
+
+/** Admin-only: headline counts for the Learning Center content dashboard. */
+export async function getLearningContentStats(): Promise<LearningContentStats> {
+  const admin = createAdminClient();
+  const [published, drafts, parent, therapist, courses, lessons, categories] = await Promise.all([
+    admin.from("learning_articles").select("id", { count: "exact", head: true }).eq("status", "published"),
+    admin.from("learning_articles").select("id", { count: "exact", head: true }).eq("status", "draft"),
+    admin.from("learning_articles").select("id", { count: "exact", head: true }).eq("audience", "parent"),
+    admin.from("learning_articles").select("id", { count: "exact", head: true }).eq("audience", "therapist"),
+    admin.from("learning_courses").select("id", { count: "exact", head: true }),
+    admin.from("learning_lessons").select("id", { count: "exact", head: true }),
+    admin.from("learning_categories").select("audience"),
+  ]);
+
+  const cats = categories.data ?? [];
+  return {
+    publishedArticles: published.count ?? 0,
+    draftArticles: drafts.count ?? 0,
+    parentArticles: parent.count ?? 0,
+    therapistArticles: therapist.count ?? 0,
+    courses: courses.count ?? 0,
+    lessons: lessons.count ?? 0,
+    parentCategories: cats.filter((c) => c.audience === "parent").length,
+    therapistCategories: cats.filter((c) => c.audience === "therapist").length,
+  };
 }
 
 /** Admin-only: every category across both audiences, for the category-manager section. */

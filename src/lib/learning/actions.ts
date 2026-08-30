@@ -114,6 +114,7 @@ export async function updateLearningArticle(id: string, input: LearningArticleIn
   revalidatePath("/admin/learning");
   revalidatePath(`/admin/learning/${id}`);
   revalidatePath("/learn");
+  revalidatePath(`/learn/${slug}`);
   return { ok: true };
 }
 
