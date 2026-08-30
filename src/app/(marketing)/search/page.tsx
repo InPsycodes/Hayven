@@ -1,9 +1,10 @@
 import { Suspense } from "react";
+import Link from "next/link";
 
 import { SearchFilters } from "@/components/search/search-filters";
 import { TherapistResultRow } from "@/components/shared/therapist-result-row";
 import { getRealSpecialties } from "@/lib/therapist/queries";
-import { searchDiscoveryTherapists } from "@/lib/therapist/discovery";
+import { searchDiscoveryTherapists, type DiscoveryTherapist } from "@/lib/therapist/discovery";
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -12,7 +13,22 @@ interface SearchPageProps {
     location?: string;
     priceMax?: string;
     sessionType?: string;
+    sort?: string;
   }>;
+}
+
+function sortTherapists(therapists: DiscoveryTherapist[], sort: string | undefined): DiscoveryTherapist[] {
+  const list = [...therapists];
+  switch (sort) {
+    case "price_asc":
+      return list.sort((a, b) => a.pricePerSession - b.pricePerSession);
+    case "price_desc":
+      return list.sort((a, b) => b.pricePerSession - a.pricePerSession);
+    case "experience":
+      return list.sort((a, b) => b.yearsPracticing - a.yearsPracticing);
+    default:
+      return list;
+  }
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
@@ -28,25 +44,35 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }),
   ]);
 
+  const therapists = sortTherapists(results, params.sort);
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-10 md:px-10">
-      <h1 className="sr-only">Find a therapist</h1>
-      <Suspense>
-        <SearchFilters specialties={specialties} />
-      </Suspense>
-
-      <p className="mt-6 text-sm text-muted-foreground">
-        {results.length} verified {results.length === 1 ? "therapist" : "therapists"}
-        {params.query ? ` match "${params.query}"` : " found"}
+      <span className="eyebrow text-rust-dark">Verified specialists</span>
+      <h1 className="mt-2 font-serif text-2xl leading-tight text-charcoal md:text-3xl">
+        Find a therapist for your child
+      </h1>
+      <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-soft">
+        Every specialist is admin-verified before their profile goes live.
       </p>
 
-      <div className="mt-2">
-        {results.length === 0 ? (
-          <p className="py-16 text-center text-sm text-muted-foreground">
-            No therapists match these filters yet. Try widening your search.
+      <div className="mt-6">
+        <Suspense>
+          <SearchFilters specialties={specialties} resultCount={therapists.length} />
+        </Suspense>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3">
+        {therapists.length === 0 ? (
+          <p className="rounded-2xl bg-canvas-white p-10 text-center text-sm text-ink-soft ring-1 ring-charcoal/10">
+            No therapists match these filters yet. Try widening your search, or{" "}
+            <Link href="/needs-assessment" className="font-medium text-terracotta hover:underline">
+              take the 2-minute quiz
+            </Link>
+            .
           </p>
         ) : (
-          results.map((therapist) => (
+          therapists.map((therapist) => (
             <TherapistResultRow key={therapist.id} therapist={therapist} />
           ))
         )}
