@@ -28,6 +28,33 @@ export function BookingConfirmationContent({
   const child = kids.find((c) => c.id === draft.childId);
   const slot = slots.find((s) => s.id === draft.slotId);
 
+  const addToCalendar = () => {
+    if (!slot || !child) return;
+    const toIcsDate = (iso: string) => iso.replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const location = draft.sessionType === "virtual" ? "Virtual session" : therapist.location;
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Hayven//Booking//EN",
+      "BEGIN:VEVENT",
+      `UID:${draft.slotId}@hayven`,
+      `DTSTAMP:${toIcsDate(new Date().toISOString())}`,
+      `DTSTART:${toIcsDate(slot.startTime)}`,
+      `DTEND:${toIcsDate(slot.endTime)}`,
+      `SUMMARY:${child.firstName}'s session with ${therapist.displayName}`,
+      `LOCATION:${location}`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "hayven-session.ics";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     // Wait for sessionStorage rehydration before deciding the draft is
     // really missing -- see the hasHydrated comment in booking-store.ts.
@@ -68,7 +95,7 @@ export function BookingConfirmationContent({
       subtext="A confirmation has been sent to your email and the session is on your dashboard."
       actions={
         <>
-          <Button variant="outline" className="flex-1">
+          <Button variant="outline" className="flex-1" onClick={addToCalendar}>
             Add to calendar
           </Button>
           <Button asChild className="flex-1">

@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IconArrowLeft, IconArrowUp, IconPaperclip } from "@tabler/icons-react";
+import { IconArrowLeft, IconArrowUp } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
 import { initialsFromName } from "@/data/format";
@@ -126,13 +126,6 @@ export function MessageThreadView({
       </div>
 
       <form onSubmit={handleSend} className="flex items-center gap-2 bg-white px-4 py-3">
-        <button
-          type="button"
-          aria-label="Attach a file"
-          className="flex size-11 shrink-0 items-center justify-center text-muted-foreground hover:text-charcoal"
-        >
-          <IconPaperclip size={19} stroke={1.75} />
-        </button>
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
