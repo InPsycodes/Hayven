@@ -10,14 +10,17 @@ import { setLessonComplete } from "@/lib/courses/actions";
 function LessonRow({ lesson, initialComplete }: { lesson: RealLesson; initialComplete: boolean }) {
   const [complete, setComplete] = useState(initialComplete);
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { guard, reset } = useSubmitGuard();
 
   const toggle = guard(() => {
     const next = !complete;
+    setError(null);
     startTransition(async () => {
       const result = await setLessonComplete(lesson.id, next);
       if (result.ok) setComplete(next);
+      else setError(result.error);
       reset();
     });
   });
@@ -44,6 +47,7 @@ function LessonRow({ lesson, initialComplete }: { lesson: RealLesson; initialCom
           {lesson.title}
         </button>
       </div>
+      {error && <p className="px-4 pb-3 text-xs text-error-text">{error}</p>}
       {open && (
         <div className="flex flex-col gap-3 border-t border-border px-4 py-4 pl-[52px]">
           {lesson.body.map((paragraph, i) => (

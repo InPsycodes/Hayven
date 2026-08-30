@@ -1,0 +1,13 @@
+-- 0059 granted select, insert, delete on learning_lesson_progress to
+-- authenticated, reasoning that completion is purely an insert/delete
+-- toggle. That reasoning missed how PostgREST's upsert() actually works:
+-- .upsert(..., { onConflict: "user_id,lesson_id" }) compiles to a real
+-- `INSERT ... ON CONFLICT DO UPDATE`, which requires UPDATE privilege on
+-- the table even on a call where no conflict actually occurs -- Postgres
+-- checks the grant needed for the statement as written, not just the
+-- code path a given call happens to take. setLessonComplete's upsert
+-- call failed 100% of the time with "permission denied for table
+-- learning_lesson_progress" (42501) until this is applied. The RLS
+-- policy itself (user_id = auth.uid()) was already correct; this was a
+-- missing table-level grant, not a policy problem.
+grant update on public.learning_lesson_progress to authenticated;
