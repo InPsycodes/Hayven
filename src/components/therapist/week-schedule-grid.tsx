@@ -1,7 +1,10 @@
 import { cn } from "@/lib/utils";
 import { formatTime, toLagosWallClock } from "@/data/format";
+import { OpenSlotChip } from "@/components/therapist/open-slot-chip";
 
-const HOURS = [9, 10, 11, 12, 13, 14, 15, 16];
+// 8am–7pm covers typical practice hours; a slot the therapist adds outside
+// this range still won't show a chip, so keep it generous.
+const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
 type CellState = "next" | "booked" | "pending" | "blocked" | "open";
 
@@ -111,9 +114,16 @@ export function WeekScheduleGrid({
                     key={`${iso}-${hour}`}
                     className={cn(
                       "min-h-14 border-b border-l border-border p-1",
-                      isWeekend && state === "open" && "bg-paper/30"
+                      isWeekend && !slot && "bg-paper/30"
                     )}
                   >
+                    {state === "open" && slot && (
+                      <OpenSlotChip
+                        slotId={slot.id}
+                        label={formatTime(slot.startTime)}
+                        sessionType={slot.sessionType}
+                      />
+                    )}
                     {state !== "open" && slot && (
                       <div
                         className={cn(
