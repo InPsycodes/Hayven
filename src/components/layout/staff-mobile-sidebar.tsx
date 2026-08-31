@@ -92,7 +92,6 @@ export function StaffMobileSidebar({
       className="flex items-center justify-between px-4 py-4 md:hidden"
       style={{ background: "linear-gradient(184deg, var(--terracotta), var(--rust-dark) 78%)" }}
     >
-      <BrandMark />
       <button
         ref={triggerRef}
         type="button"
@@ -100,10 +99,11 @@ export function StaffMobileSidebar({
         aria-controls="staff-mobile-sidebar-panel"
         aria-label={isOpen ? "Close menu" : "Open menu"}
         onClick={() => setIsOpen((v) => !v)}
-        className="flex size-11 items-center justify-center text-canvas-white/90 transition-colors hover:text-canvas-white"
+        className="-ml-2 flex size-11 items-center justify-center text-canvas-white/90 transition-colors hover:text-canvas-white"
       >
         {isOpen ? <IconX size={22} stroke={1.75} /> : <IconMenu2 size={22} stroke={1.75} />}
       </button>
+      <BrandMark />
 
       {isOpen &&
         createPortal(

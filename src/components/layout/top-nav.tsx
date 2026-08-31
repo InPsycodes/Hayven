@@ -36,6 +36,14 @@ function SolidNav({ pathname }: { pathname: string }) {
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[linear-gradient(180deg,rgba(26,26,26,0.85)_0%,rgba(26,26,26,0.7)_100%)] px-6 py-5 backdrop-blur-2xl backdrop-saturate-150 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_10px_34px_-16px_rgba(0,0,0,0.5)] md:px-10 [@media(display-mode:standalone)]:hidden">
+      {/* Menu trigger sits first so it lands on the left below lg; it's
+          lg:hidden, so desktop is unaffected and the logo stays first there. */}
+      <MobileNavMenu
+        links={LINKS}
+        triggerClassName="-ml-2 text-offwhite/90 hover:text-offwhite"
+        isOpen={menuOpen}
+        onOpenChange={setMenuOpen}
+      />
       <Link href="/">
         <BrandMark />
       </Link>
@@ -58,19 +66,13 @@ function SolidNav({ pathname }: { pathname: string }) {
           );
         })}
       </nav>
-      <div className="flex items-center gap-4">
+      <div className="hidden items-center gap-4 lg:flex">
         <Link href="/login" className="hidden text-sm text-offwhite/80 hover:text-offwhite sm:inline">
           Log in
         </Link>
         <Button asChild variant="accent" size="sm" className="hidden sm:inline-flex">
           <Link href="/signup">Sign up</Link>
         </Button>
-        <MobileNavMenu
-          links={LINKS}
-          triggerClassName="text-offwhite/90 hover:text-offwhite"
-          isOpen={menuOpen}
-          onOpenChange={setMenuOpen}
-        />
       </div>
     </header>
   );
@@ -97,6 +99,17 @@ function HeroNav() {
           : "border-b border-transparent bg-transparent"
       )}
     >
+      {/* Menu trigger first -> lands on the left below lg (it's lg:hidden). */}
+      <MobileNavMenu
+        links={LINKS}
+        triggerClassName={cn(
+          "-ml-2 transition-colors duration-[350ms] ease-in-out",
+          scrolled ? "text-charcoal" : "text-canvas-white"
+        )}
+        isOpen={menuOpen}
+        onOpenChange={setMenuOpen}
+      />
+
       <Link href="/">
         <BrandMark
           dark={!scrolled}
@@ -119,7 +132,7 @@ function HeroNav() {
         ))}
       </nav>
 
-      <div className="flex items-center gap-4">
+      <div className="hidden items-center gap-4 lg:flex">
         <Link
           href="/login"
           className={cn(
@@ -138,15 +151,6 @@ function HeroNav() {
         >
           Get started
         </Link>
-        <MobileNavMenu
-          links={LINKS}
-          triggerClassName={cn(
-            "transition-colors duration-[350ms] ease-in-out",
-            scrolled ? "text-charcoal" : "text-canvas-white"
-          )}
-          isOpen={menuOpen}
-          onOpenChange={setMenuOpen}
-        />
       </div>
     </header>
   );
