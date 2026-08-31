@@ -13,7 +13,7 @@ import { verifyMfaLogin } from "@/lib/auth/mfa-actions";
 import { roleHomePath } from "@/lib/auth/role-path";
 import type { UserRole } from "@/data/types";
 
-export function LoginForm() {
+export function LoginForm({ justReset = false }: { justReset?: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -119,6 +119,12 @@ export function LoginForm() {
         <p className="mt-1 text-sm text-muted-foreground">Log in to your Hayven account.</p>
       </div>
 
+      {justReset && (
+        <p className="rounded-sm bg-success/10 p-3 text-sm text-success-text">
+          Your password has been updated. Log in with it below.
+        </p>
+      )}
+
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -132,7 +138,15 @@ export function LoginForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="password">Password</Label>
+        <div className="flex items-baseline justify-between gap-2">
+          <Label htmlFor="password">Password</Label>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium text-rust-dark hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <Input
           id="password"
           type="password"
