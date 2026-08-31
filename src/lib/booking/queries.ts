@@ -7,6 +7,7 @@ import { getAvailabilityForTherapist } from "@/data/queries";
 import { getDiscoveryTherapistById, type DiscoveryTherapist } from "@/lib/therapist/discovery";
 import { getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
+import { bookingWindow } from "@/lib/booking/window";
 import { toLagosWallClock } from "@/data/format";
 import type { AvailabilitySlot } from "@/data/types";
 
@@ -294,9 +295,11 @@ export async function getBookingPageContext(
   const therapist = await getDiscoveryTherapistById(therapistId);
   if (!therapist) return null;
 
+  // Scoped to now → +60 days so the flow never offers a slot in the past.
+  const window = bookingWindow();
   const [slots, realChildren] = await Promise.all([
     therapist.source === "real"
-      ? getRealAvailabilityForTherapist(therapistId).then((rows) =>
+      ? getRealAvailabilityForTherapist(therapistId, window).then((rows) =>
           rows.map((slot) => ({
             id: slot.id,
             therapistId: slot.therapistId,
@@ -306,7 +309,7 @@ export async function getBookingPageContext(
             sessionType: slot.sessionType as AvailabilitySlot["sessionType"],
           }))
         )
-      : getAvailabilityForTherapist(therapistId),
+      : getAvailabilityForTherapist(therapistId, window),
     getRealChildrenForParent(parentId),
   ]);
 

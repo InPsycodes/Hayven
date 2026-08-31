@@ -74,11 +74,14 @@ export async function createPendingBooking(input: {
 
   const { data: slot } = await admin
     .from("availability_slots")
-    .select("id, is_booked, therapist_id")
+    .select("id, is_booked, therapist_id, start_time")
     .eq("id", input.slotId)
     .maybeSingle();
   if (!slot || slot.therapist_id !== input.therapistId) {
     return { ok: false, error: "That slot is no longer available." };
+  }
+  if (new Date(slot.start_time).getTime() <= Date.now()) {
+    return { ok: false, error: "That time has already passed. Please pick another." };
   }
 
   const { data: heldSlot, error: holdError } = await admin
