@@ -37,7 +37,7 @@ export const DASHBOARD_CARE_TEAM = {
 };
 
 export const DASHBOARD_PREVIEW = {
-  url: "hayven.app/parent/children/bimpe",
+  url: "hayven.com.ng/parent/children/bimpe",
   childInitials: "BA",
   childName: "Bimpe Adewale",
   meta: "Age 6 · Speech Therapy · 14 sessions · started 12 Mar 2026",

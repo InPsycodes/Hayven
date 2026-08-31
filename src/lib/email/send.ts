@@ -14,8 +14,8 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
  * Sandbox default -- Resend will only actually deliver mail sent from this
  * address to the account owner's own verified email until a real sending
  * domain is added and verified in the Resend dashboard. Once that's done,
- * set EMAIL_FROM (e.g. "Hayven <notifications@hayven.app>") and every call
- * site here picks it up automatically, no code change needed.
+ * set EMAIL_FROM (e.g. "Hayven <notifications@send.hayven.com.ng>") and
+ * every call site here picks it up automatically, no code change needed.
  */
 const FROM_ADDRESS = process.env.EMAIL_FROM ?? "Hayven <onboarding@resend.dev>";
 

@@ -32,7 +32,7 @@ export const users: User[] = [
     id: "user_admin_ngozi",
     role: "admin",
     fullName: "Ngozi Eze",
-    email: "ngozi@hayven.app",
+    email: "ngozi@hayven.com.ng",
     phone: "+234 701 555 0100",
     status: "active",
     createdAt: "2026-01-01T09:00:00Z",
