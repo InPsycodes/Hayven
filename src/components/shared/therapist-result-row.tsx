@@ -8,15 +8,21 @@ import type { DiscoveryTherapist } from "@/lib/therapist/discovery";
 // Initials tile tints, tuned to read on the charcoal card. Picked by a hash
 // of the name so a given therapist always gets the same one.
 const AVATAR_TINTS = [
-  "bg-[rgba(184,115,76,0.22)] text-[#e7b590]",
+  "bg-[rgba(184,115,76,0.24)] text-[#e7b590]",
   "bg-[rgba(147,163,127,0.24)] text-[#bdccad]",
+  "bg-[rgba(158,142,183,0.2)] text-[#c9bdda]",
   "bg-white/10 text-canvas-white",
 ];
 
 function tintFor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i += 1) hash = (hash * 31 + name.charCodeAt(i)) | 0;
-  return AVATAR_TINTS[Math.abs(hash) % AVATAR_TINTS.length];
+  // FNV-1a — spreads short, similar strings across the buckets far better
+  // than a plain polynomial hash (the demo names all start "Dr. ...").
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < name.length; i += 1) {
+    hash ^= name.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return AVATAR_TINTS[(hash >>> 0) % AVATAR_TINTS.length];
 }
 
 function sessionTypeLabel(types: string[]): string | null {
