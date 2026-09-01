@@ -63,8 +63,8 @@ export default async function SupervisorTeamPage() {
         ]}
       />
 
-      <div className="mt-5 grid grid-cols-2 gap-3.5 md:grid-cols-12">
-        <div className="col-span-2 grid grid-cols-2 gap-3.5 md:contents">
+      <div className="mt-5 grid grid-cols-1 gap-3.5 md:grid-cols-12">
+        <div className="grid grid-cols-2 gap-3.5 md:contents">
           <div className="md:col-span-3">
             <CareStat icon={IconUsers} label="Therapists" value={String(therapists.length)} sub="on your team" href="/supervisor/assignments" />
           </div>
