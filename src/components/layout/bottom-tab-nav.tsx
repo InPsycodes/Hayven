@@ -13,6 +13,10 @@ export function BottomTabNav({ session }: { session: AppSession }) {
   const role = session.role as "parent" | "therapist";
   const items = BOTTOM_TABS[role];
 
+  // An open conversation is a focused, full-screen view (WhatsApp-style) --
+  // the tab bar would fight the composer for the bottom of the screen.
+  if (/\/messages\/[^/]+$/.test(pathname)) return null;
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-care-line bg-care-bg/95 px-1 py-1.5 pb-[calc(6px+env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
       {items.map((item) => {
