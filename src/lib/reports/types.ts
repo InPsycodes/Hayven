@@ -1,5 +1,22 @@
+export interface ReportProgressBar {
+  label: string;
+  /** 0-100, this session. */
+  value: number;
+  /** 0-100 last session, drawn as a tick behind the fill; null when there's no prior point. */
+  previousValue: number | null;
+}
+
+export interface ReportTrendLine {
+  label: string;
+  /** One value per session in the window, oldest -> newest; null where nothing was recorded that session. */
+  points: (number | null)[];
+  unit: "percent" | "per_hour";
+  /** Which direction of travel counts as progress -- drives the line colour and caption wording. */
+  improvement: "up" | "down";
+}
+
 export interface ReportBlock {
-  type: "paragraph" | "quote" | "bullets" | "data_table";
+  type: "paragraph" | "quote" | "bullets" | "data_table" | "progress_bars" | "trend_lines";
   /** Small uppercase eyebrow shown above the block, e.g. a clinical domain ("Communication"). */
   label?: string;
   text?: string;
@@ -10,6 +27,12 @@ export interface ReportBlock {
   rowGroups?: string[];
   /** Parallel to rows: which way this row's change should read (colour/arrow), not just its sign. */
   rowTrends?: ("positive" | "negative" | "neutral")[];
+  /** progress_bars: one horizontal 0-100 bar per goal/skill worked on this session. */
+  bars?: ReportProgressBar[];
+  /** trend_lines: one sparkline per goal/skill/behaviour with enough history to plot. */
+  lines?: ReportTrendLine[];
+  /** trend_lines: ISO date for each point index, shared by every line. */
+  pointDates?: string[];
 }
 
 export type ReportSectionKey =
@@ -22,6 +45,7 @@ export type ReportSectionKey =
   | "greeting"
   | "domain_progress"
   | "todays_wins"
+  | "progress_snapshot"
   | "next_steps";
 
 export interface ReportSection {
@@ -112,4 +136,23 @@ export interface GenerationInput {
   skills: GenerationSkillInput[];
   reinforcers: { label: string; effectiveness: number | null }[];
   abcObservations: GenerationAbcObservation[];
+  /** The recent-session window used to draw progress bars and trend
+   *  sparklines. Oldest -> newest, including the session being reported on,
+   *  capped to the most recent few sessions. */
+  history: GenerationHistoryInput;
+}
+
+export interface GenerationHistorySeries {
+  /** Matches an id in goals / skills / behaviours. */
+  id: string;
+  /** One value per date in `sessionDates`; null where nothing was recorded.
+   *  Goals/skills are percentages; behaviours are per-hour rates. */
+  values: (number | null)[];
+}
+
+export interface GenerationHistoryInput {
+  sessionDates: string[];
+  goals: GenerationHistorySeries[];
+  skills: GenerationHistorySeries[];
+  behaviours: GenerationHistorySeries[];
 }

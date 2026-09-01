@@ -6,7 +6,9 @@ import type {
   GenerationSkillInput,
   ReportBlock,
   ReportBody,
+  ReportProgressBar,
   ReportSection,
+  ReportTrendLine,
 } from "./types";
 import { applyParentFriendlyLanguage } from "./safety";
 
@@ -379,19 +381,22 @@ function buildDataSummary(input: GenerationInput): ReportSection {
     };
   }
 
-  return {
-    key: "data_summary",
-    heading: "Data summary",
-    blocks: [
-      {
-        type: "data_table",
-        columns: ["Measure", "This session", "Previous session", "Change"],
-        rows,
-        rowGroups,
-        rowTrends,
-      },
-    ],
-  };
+  const blocks: ReportBlock[] = [
+    {
+      type: "data_table",
+      columns: ["Measure", "This session", "Previous session", "Change"],
+      rows,
+      rowGroups,
+      rowTrends,
+    },
+  ];
+
+  const lines = buildTrendLines(input, 2);
+  if (lines) {
+    blocks.push({ type: "trend_lines", label: "Across recent sessions", lines, pointDates: input.history.sessionDates });
+  }
+
+  return { key: "data_summary", heading: "Data summary", blocks };
 }
 
 // ---------------------------------------------------------------------------
@@ -1110,6 +1115,94 @@ function buildTodaysWins(input: GenerationInput): ReportSection {
   return { key: "todays_wins", heading: "Today's wins", blocks: [{ type: "bullets", items: items.slice(0, 4) }] };
 }
 
+// ---------------------------------------------------------------------------
+// progress bars + trend sparklines -- both read entirely from input.history
+// (the recent-session window), never inventing a point that wasn't recorded.
+// ---------------------------------------------------------------------------
+
+function countKnown(values: (number | null)[]): number {
+  return values.filter((v) => v !== null).length;
+}
+
+/**
+ * One trend line per goal/skill/behaviour with at least `minPoints` recorded
+ * points in the window. Goals and skills are percentages (up = progress);
+ * behaviours are per-hour rates, where progress follows the behaviour's own
+ * target direction.
+ */
+function buildTrendLines(
+  input: GenerationInput,
+  minPoints: number,
+  opts?: { parentLabels?: boolean }
+): ReportBlock["lines"] {
+  const lines: ReportTrendLine[] = [];
+  for (const goal of input.goals) {
+    const h = input.history.goals.find((x) => x.id === goal.id);
+    if (h && countKnown(h.values) >= minPoints) {
+      lines.push({ label: goal.title, points: h.values, unit: "percent", improvement: "up" });
+    }
+  }
+  for (const skill of input.skills) {
+    const h = input.history.skills.find((x) => x.id === skill.id);
+    if (h && countKnown(h.values) >= minPoints) {
+      lines.push({ label: skill.label, points: h.values, unit: "percent", improvement: "up" });
+    }
+  }
+  for (const behaviour of input.behaviours) {
+    const h = input.history.behaviours.find((x) => x.id === behaviour.id);
+    if (h && countKnown(h.values) >= minPoints) {
+      lines.push({
+        label: opts?.parentLabels ? behaviourParentName(behaviour) : behaviour.label,
+        points: h.values,
+        unit: "per_hour",
+        improvement: behaviour.direction === "decrease" ? "down" : "up",
+      });
+    }
+  }
+  return lines.length > 0 ? lines : undefined;
+}
+
+const PROGRESS_SNAPSHOT_INTRO = [
+  `Here's where ${CHILD}'s main goals stand right now.`,
+  `A quick picture of how the goals we're working on are tracking.`,
+  `Where things stand on what we've been working on with ${CHILD}:`,
+];
+
+/**
+ * Parent-facing visual summary: a progress bar per goal/skill worked on this
+ * session (with a tick showing last session's level), plus trend sparklines
+ * for anything with enough history to be worth plotting.
+ */
+function buildProgressSnapshot(input: GenerationInput): ReportSection | null {
+  const bars: ReportProgressBar[] = [];
+  for (const goal of input.goals) {
+    if (goal.percentComplete === null) continue;
+    bars.push({ label: goal.title, value: goal.percentComplete, previousValue: goal.previousPercentComplete });
+  }
+  for (const skill of input.skills) {
+    if (skill.percentThisSession === null) continue;
+    bars.push({ label: skill.label, value: skill.percentThisSession, previousValue: skill.previousPercent });
+  }
+
+  const lines = buildTrendLines(input, 3, { parentLabels: true });
+  if (bars.length === 0 && !lines) return null;
+
+  const blocks: ReportBlock[] = [
+    { type: "paragraph", text: pickVariant(PROGRESS_SNAPSHOT_INTRO, input.session.date) },
+  ];
+  if (bars.length > 0) blocks.push({ type: "progress_bars", bars });
+  if (lines) {
+    blocks.push({
+      type: "trend_lines",
+      label: "Trend over recent sessions",
+      lines,
+      pointDates: input.history.sessionDates,
+    });
+  }
+
+  return { key: "progress_snapshot", heading: "Where things stand", blocks };
+}
+
 /** Plain-language, non-clinical translation of a domain-typed skill for a parent -- same "never claim what the data doesn't support" discipline as the clinical side, just warmer wording and no raw percentages. */
 /**
  * Every raw structured_data free-text value quoted here MUST go through
@@ -1590,11 +1683,13 @@ function toParentSafeInput(input: GenerationInput): GenerationInput {
 
 export function generateParentReport(input: GenerationInput, ctx: ToneContext): ReportBody {
   const parentInput = toParentSafeInput(input);
+  const snapshot = buildProgressSnapshot(parentInput);
   return {
     schemaVersion: 1,
     sections: [
       buildSessionNarrative(parentInput, ctx),
       buildTodaysWins(parentInput),
+      ...(snapshot ? [snapshot] : []),
       buildNextSteps(parentInput),
     ],
   };
@@ -1628,6 +1723,8 @@ export function renderReportBody(body: ReportBody, childFirstName: string): Repo
         text: block.text ? replace(block.text) : block.text,
         items: block.items?.map(replace),
         rows: block.rows?.map((row) => row.map(replace)),
+        bars: block.bars?.map((bar) => ({ ...bar, label: replace(bar.label) })),
+        lines: block.lines?.map((line) => ({ ...line, label: replace(line.label) })),
       })),
     })),
   };

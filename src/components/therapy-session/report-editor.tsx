@@ -20,6 +20,7 @@ function blockToText(block: ReportBlock): string {
 
 /** Edits each block's own text/items in place, preserving its type and label (e.g. a clinical_interpretation section's per-domain headings), instead of flattening the whole section into one paragraph. */
 function textToBlock(block: ReportBlock, text: string): ReportBlock {
+  if (block.type === "data_table" || block.type === "progress_bars" || block.type === "trend_lines") return block;
   if (block.type === "bullets") {
     const items = text
       .split("\n")

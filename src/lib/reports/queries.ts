@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { GenerationInput, GenerationSkillInput, ReportBody } from "./types";
+import type { GenerationHistoryInput, GenerationInput, GenerationSkillInput, ReportBody } from "./types";
 import type { ToneContext } from "./generate";
 
 export interface RealReport {
@@ -329,6 +329,56 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
     };
   });
 
+  // Recent-session window backing the report's progress bars + sparklines --
+  // this session and up to seven completed sessions before it, oldest first.
+  const HISTORY_LIMIT = 8;
+  const { data: histSessionsDesc } = await supabase
+    .from("therapy_sessions")
+    .select("id, session_date, duration_minutes")
+    .eq("child_id", therapySession.child_id)
+    .lte("session_date", therapySession.session_date)
+    .or(`status.eq.complete,id.eq.${sessionId}`)
+    .order("session_date", { ascending: false })
+    .limit(HISTORY_LIMIT);
+  const histSessions = (histSessionsDesc ?? []).slice().reverse();
+  const histIds = histSessions.map((s) => s.id);
+
+  const [{ data: histGoalEntries }, { data: histSkillEntries }, { data: histBehaviourEntries }] = await Promise.all([
+    supabase.from("session_goal_progress").select("session_id, goal_id, percent_complete").in("session_id", histIds),
+    supabase.from("session_skill_entries").select("session_id, skill_id, trials_total, trials_correct").in("session_id", histIds),
+    supabase
+      .from("session_behaviour_entries")
+      .select("session_id, target_behaviour_id, count, duration_seconds, intensity")
+      .in("session_id", histIds),
+  ]);
+
+  const history: GenerationHistoryInput = {
+    sessionDates: histSessions.map((s) => s.session_date),
+    goals: (goals ?? []).map((goal) => ({
+      id: goal.id,
+      values: histSessions.map((s) => {
+        const e = (histGoalEntries ?? []).find((x) => x.session_id === s.id && x.goal_id === goal.id);
+        return e ? e.percent_complete : null;
+      }),
+    })),
+    skills: (skills ?? []).map((skill) => ({
+      id: skill.id,
+      values: histSessions.map((s) => {
+        const e = (histSkillEntries ?? []).find((x) => x.session_id === s.id && x.skill_id === skill.id);
+        return skillPercent(e);
+      }),
+    })),
+    behaviours: (behaviours ?? []).map((behaviour) => ({
+      id: behaviour.id,
+      values: histSessions.map((s) => {
+        const e = (histBehaviourEntries ?? []).find(
+          (x) => x.session_id === s.id && x.target_behaviour_id === behaviour.id
+        );
+        return perHour(rawBehaviourValue(e, behaviour.measurement), s.duration_minutes);
+      }),
+    })),
+  };
+
   return {
     session: {
       date: therapySession.session_date,
@@ -353,5 +403,6 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
       consequence: o.consequence,
       outcome: o.outcome,
     })),
+    history,
   };
 }
