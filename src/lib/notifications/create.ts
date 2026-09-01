@@ -3,6 +3,8 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, renderNotificationEmail } from "@/lib/email/send";
 import { sendPushToUser } from "@/lib/notifications/push";
+import { EMAIL_PREF_BY_TYPE } from "@/lib/notifications/preferences-server";
+import { makeUnsubscribeToken } from "@/lib/notifications/unsubscribe-token";
 
 export type NotificationType =
   | "booking_confirmed"
@@ -60,22 +62,46 @@ export async function createNotification(params: {
     console.error("notification insert threw", params.type, err);
   }
 
-  try {
-    const { data: user } = await admin.from("users").select("email").eq("id", params.userId).maybeSingle();
-    if (user?.email) {
-      await sendEmail({
-        to: user.email,
-        subject: params.title,
-        html: renderNotificationEmail(params.title, params.body),
-      });
+  // Non-transactional types can be muted per-user; a missing preferences
+  // row (or a pre-0069 database) means "opted in".
+  const prefKey = EMAIL_PREF_BY_TYPE[params.type];
+  let optedIn = true;
+  if (prefKey) {
+    try {
+      const { data: pref } = await admin
+        .from("notification_preferences")
+        .select(prefKey)
+        .eq("user_id", params.userId)
+        .maybeSingle();
+      if (pref && (pref as Record<string, boolean>)[prefKey] === false) optedIn = false;
+    } catch {
+      // table not migrated yet -> treat as opted in
     }
-  } catch (err) {
-    console.error("notification email threw", params.type, err);
   }
 
-  try {
-    await sendPushToUser(params.userId, { title: params.title, body: params.body, url: params.url });
-  } catch (err) {
-    console.error("notification push threw", params.type, err);
+  if (optedIn) {
+    try {
+      const { data: user } = await admin.from("users").select("email").eq("id", params.userId).maybeSingle();
+      if (user?.email) {
+        const unsubscribeUrl = prefKey
+          ? `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/unsubscribe?t=${encodeURIComponent(
+              makeUnsubscribeToken(params.userId)
+            )}`
+          : undefined;
+        await sendEmail({
+          to: user.email,
+          subject: params.title,
+          html: renderNotificationEmail(params.title, params.body, unsubscribeUrl),
+        });
+      }
+    } catch (err) {
+      console.error("notification email threw", params.type, err);
+    }
+
+    try {
+      await sendPushToUser(params.userId, { title: params.title, body: params.body, url: params.url });
+    } catch (err) {
+      console.error("notification push threw", params.type, err);
+    }
   }
 }

@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { pickEmailPreferences, type EmailPreferences } from "@/lib/notifications/preferences";
+import { verifyUnsubscribeToken } from "@/lib/notifications/unsubscribe-token";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -62,4 +65,50 @@ export async function markReportNotificationsRead(): Promise<void> {
     .eq("user_id", session.userId)
     .eq("entity_type", "report")
     .eq("read", false);
+}
+
+// --- email preferences --------------------------------------------------
+
+/** Logged-in path: a user editing their own email preferences. */
+export async function updateMyEmailPreferences(patch: Partial<EmailPreferences>): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Not signed in." };
+
+  const clean = pickEmailPreferences(patch);
+  if (Object.keys(clean).length === 0) return { ok: true };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("notification_preferences")
+    .upsert(
+      { user_id: session.userId, ...clean, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    );
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/parent/profile");
+  revalidatePath("/therapist/profile");
+  return { ok: true };
+}
+
+/** Login-free path from an email's unsubscribe link. */
+export async function updateEmailPreferencesByToken(
+  token: string,
+  patch: Partial<EmailPreferences>
+): Promise<ActionResult> {
+  const userId = verifyUnsubscribeToken(token);
+  if (!userId) return { ok: false, error: "This link is invalid or has expired." };
+
+  const clean = pickEmailPreferences(patch);
+  if (Object.keys(clean).length === 0) return { ok: true };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("notification_preferences")
+    .upsert(
+      { user_id: userId, ...clean, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    );
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }

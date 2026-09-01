@@ -61,9 +61,12 @@ function escapeHtml(text: string): string {
  * no imagery) so it renders consistently across clients without a full
  * email-testing pass.
  */
-export function renderNotificationEmail(title: string, body: string): string {
+export function renderNotificationEmail(title: string, body: string, unsubscribeUrl?: string): string {
   const safeTitle = escapeHtml(title);
   const safeBody = escapeHtml(body);
+  const unsubscribeLine = unsubscribeUrl
+    ? `<br /><a href="${escapeHtml(unsubscribeUrl)}" style="color:#4a4744;text-decoration:underline;">Manage or turn off these emails</a>.`
+    : "";
   return `<!doctype html>
 <html>
   <body style="margin:0;padding:0;background-color:#e4e1df;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
@@ -85,7 +88,7 @@ export function renderNotificationEmail(title: string, body: string): string {
             <tr>
               <td style="padding:16px 28px 24px;border-top:1px solid rgba(26,26,26,0.08);">
                 <p style="margin:0;color:#4a4744;font-size:12px;">
-                  Hayven &middot; Nigeria pilot &middot; You&rsquo;re receiving this because of activity on your account.
+                  Hayven &middot; Nigeria pilot &middot; You&rsquo;re receiving this because of activity on your account.${unsubscribeLine}
                 </p>
               </td>
             </tr>

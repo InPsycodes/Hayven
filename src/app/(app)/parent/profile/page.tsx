@@ -8,21 +8,24 @@ import { ProfileForm } from "@/components/shared/profile-form";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
 import { MfaSection } from "@/components/shared/mfa-section";
 import { PushNotificationsToggle } from "@/components/parent/push-notifications-toggle";
+import { EmailPreferenceToggles } from "@/components/shared/email-preference-toggles";
 import { getSession } from "@/lib/auth/session";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealAccountInfo, getRealPendingDeletionRequest } from "@/lib/account/queries";
 import { getMfaStatus } from "@/lib/auth/mfa-actions";
+import { getMyEmailPreferences } from "@/lib/notifications/preferences-server";
 import { ageFromDob } from "@/data/format";
 
 export default async function ParentProfilePage() {
   const session = await getSession();
   if (!session || session.role !== "parent") redirect("/login");
 
-  const [account, children, pendingDeletionRequest, mfaStatus] = await Promise.all([
+  const [account, children, pendingDeletionRequest, mfaStatus, emailPrefs] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealChildrenForParent(session.userId),
     getRealPendingDeletionRequest(session.userId),
     getMfaStatus(),
+    getMyEmailPreferences(),
   ]);
 
   return (
@@ -82,6 +85,14 @@ export default async function ParentProfilePage() {
         </Card>
 
         <PushNotificationsToggle />
+
+        <Card className="p-5">
+          <h2 className="font-heading text-base text-charcoal">Notification emails</h2>
+          <p className="mt-1 mb-3 text-sm text-muted-foreground">
+            Turn off any you don&apos;t want. The notification bell still shows everything.
+          </p>
+          <EmailPreferenceToggles initial={emailPrefs} />
+        </Card>
 
         <MfaSection initialStatus={mfaStatus} />
 
