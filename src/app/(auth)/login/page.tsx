@@ -13,7 +13,15 @@ export default async function LoginPage({
   const { reset } = await searchParams;
 
   return (
-    <SplitAuthPanel tagline="Welcome back. Your child's care, all in one place.">
+    <SplitAuthPanel
+      eyebrow="Welcome back"
+      tagline="Your child's care, all in one place."
+      points={[
+        "Your next session, reports, and messages in one view.",
+        "Book verified therapists and pay securely.",
+        "Follow progress between sessions.",
+      ]}
+    >
       <LoginForm justReset={reset === "1"} />
     </SplitAuthPanel>
   );
