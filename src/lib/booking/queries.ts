@@ -3,7 +3,6 @@ import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAvailabilityForTherapist } from "@/data/queries";
 import { getDiscoveryTherapistById, type DiscoveryTherapist } from "@/lib/therapist/discovery";
 import { getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
@@ -297,21 +296,18 @@ export async function getBookingPageContext(
 
   // Scoped to now → +60 days so the flow never offers a slot in the past.
   const window = bookingWindow();
-  const [slots, realChildren] = await Promise.all([
-    therapist.source === "real"
-      ? getRealAvailabilityForTherapist(therapistId, window).then((rows) =>
-          rows.map((slot) => ({
-            id: slot.id,
-            therapistId: slot.therapistId,
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-            isBooked: slot.isBooked,
-            sessionType: slot.sessionType as AvailabilitySlot["sessionType"],
-          }))
-        )
-      : getAvailabilityForTherapist(therapistId, window),
+  const [slotRows, realChildren] = await Promise.all([
+    getRealAvailabilityForTherapist(therapistId, window),
     getRealChildrenForParent(parentId),
   ]);
+  const slots: AvailabilitySlot[] = slotRows.map((slot) => ({
+    id: slot.id,
+    therapistId: slot.therapistId,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    isBooked: slot.isBooked,
+    sessionType: slot.sessionType as AvailabilitySlot["sessionType"],
+  }));
 
   const kids = realChildren.map((c) => ({ id: c.id, firstName: c.firstName }));
 

@@ -6,7 +6,6 @@ import { Chip } from "@/components/ui/chip";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { BookingPanel } from "@/components/booking/booking-panel";
 import { initialsFromName } from "@/data/format";
-import { getAvailabilityForTherapist } from "@/data/queries";
 import { getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { bookingWindow } from "@/lib/booking/window";
 import { getDiscoveryTherapistById, type DiscoveryTherapist } from "@/lib/therapist/discovery";
@@ -49,17 +48,14 @@ export default async function TherapistProfilePage({
   // Same forward-only window as the booking flow -- the panel's "next
   // available" must never surface a slot in the past.
   const window = bookingWindow();
-  const slots: AvailabilitySlot[] =
-    therapist.source === "real"
-      ? (await getRealAvailabilityForTherapist(therapist.id, window)).map((slot) => ({
-          id: slot.id,
-          therapistId: slot.therapistId,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          isBooked: slot.isBooked,
-          sessionType: slot.sessionType as AvailabilitySlot["sessionType"],
-        }))
-      : await getAvailabilityForTherapist(therapist.id, window);
+  const slots: AvailabilitySlot[] = (await getRealAvailabilityForTherapist(therapist.id, window)).map((slot) => ({
+    id: slot.id,
+    therapistId: slot.therapistId,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    isBooked: slot.isBooked,
+    sessionType: slot.sessionType as AvailabilitySlot["sessionType"],
+  }));
 
   const verificationChecks = [
     `${therapist.verifiedBadgeLabel} status confirmed`,

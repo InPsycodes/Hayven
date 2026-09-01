@@ -10,8 +10,7 @@ export interface BookingDraft {
   childId?: string;
   sessionType?: SessionType;
   slotId?: string;
-  paymentMethod?: "card" | "bank_transfer" | "ussd";
-  /** Real booking id, set once a real (non-mock) booking has been created as pending_payment. */
+  /** Real booking id, set once the booking has been created as pending_payment. */
   bookingId?: string;
 }
 

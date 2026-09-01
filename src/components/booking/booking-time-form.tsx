@@ -62,12 +62,6 @@ export function BookingTimeForm({
     if (!childId || !slotId) return;
     setError(null);
 
-    if (therapist.source !== "real") {
-      setDraft({ therapistId: therapist.id, childId, sessionType, slotId, bookingId: undefined });
-      router.push(`/book/${therapist.id}/payment`);
-      return;
-    }
-
     startTransition(async () => {
       try {
         const result = await createPendingBooking({
