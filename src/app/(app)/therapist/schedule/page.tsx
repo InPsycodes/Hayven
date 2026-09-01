@@ -10,10 +10,11 @@ import { WeekScheduleGrid } from "@/components/therapist/week-schedule-grid";
 import { AddAvailabilityForm } from "@/components/therapist/add-availability-form";
 import { CancelBookingButton } from "@/components/shared/cancel-booking-button";
 import { MeetingLinkField } from "@/components/booking/meeting-link-field";
+import { MarkNoShowButton } from "@/components/booking/mark-no-show-button";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId, getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
-import { getRealBookingsForTherapist } from "@/lib/booking/queries";
+import { getRealBookingsForTherapist, getNoShowNotes } from "@/lib/booking/queries";
 import { cancelBookingAsTherapist } from "@/lib/booking/actions";
 import { formatDateTime, toLagosWallClock, fromLagosWallClock } from "@/data/format";
 
@@ -91,6 +92,21 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
     )
     .sort((a, b) => new Date(a.slotStartTime).getTime() - new Date(b.slotStartTime).getTime());
 
+  const RECENT_WINDOW_MS = 10 * 24 * 60 * 60 * 1000;
+  const recentlyFinished = realBookings
+    .filter(
+      (booking) =>
+        booking.slotEndTime &&
+        ["completed", "confirmed", "no_show"].includes(booking.status) &&
+        new Date(booking.slotEndTime).getTime() <= now.getTime() &&
+        new Date(booking.slotEndTime).getTime() > now.getTime() - RECENT_WINDOW_MS
+    )
+    .sort((a, b) => new Date(b.slotEndTime).getTime() - new Date(a.slotEndTime).getTime());
+
+  const noShowNotes = await getNoShowNotes(
+    recentlyFinished.filter((b) => b.status === "no_show").map((b) => b.id)
+  );
+
   const weekRangeLabel = `${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} - ${weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`;
 
   return (
@@ -159,6 +175,41 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
                   </div>
                 );
               })}
+            </div>
+          </Card>
+        )}
+
+        {recentlyFinished.length > 0 && (
+          <Card lift className="p-2">
+            <p className="px-3 pt-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Recently finished
+            </p>
+            <div className="flex flex-col divide-y divide-border">
+              {recentlyFinished.map((booking) => (
+                <div key={booking.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-charcoal">{booking.childFirstName}</p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {formatDateTime(booking.slotStartTime)} · {booking.sessionType.replace("_", " ")}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-3">
+                    {booking.status !== "no_show" && (
+                      <Link
+                        href={`/therapist/children/${booking.childId}/sessions/new`}
+                        className="text-xs font-medium text-terracotta hover:underline"
+                      >
+                        Log session
+                      </Link>
+                    )}
+                    <MarkNoShowButton
+                      bookingId={booking.id}
+                      isNoShow={booking.status === "no_show"}
+                      note={noShowNotes.get(booking.id) ?? null}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </Card>
         )}

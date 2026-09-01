@@ -53,6 +53,25 @@ export interface RealBooking {
   slotEndTime: string;
 }
 
+/**
+ * No-show notes for a set of bookings, keyed by booking id. Its own query
+ * (not folded into the main booking select) so a pre-0068 database -- where
+ * the column doesn't exist yet -- degrades to "no notes" instead of
+ * breaking every bookings list.
+ */
+export async function getNoShowNotes(bookingIds: string[]): Promise<Map<string, string | null>> {
+  const out = new Map<string, string | null>();
+  if (bookingIds.length === 0) return out;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("id, no_show_note")
+    .in("id", bookingIds);
+  if (error) return out;
+  for (const row of data ?? []) out.set(row.id, row.no_show_note ?? null);
+  return out;
+}
+
 export async function getRealBookingsForTherapist(therapistId: string): Promise<RealBooking[]> {
   await autoCompletePastBookings(therapistId);
   const supabase = await createClient();

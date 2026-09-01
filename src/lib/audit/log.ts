@@ -23,6 +23,8 @@ export type AuditAction =
   | "account_deletion_request.review"
   | "booking.cancel"
   | "booking.reschedule"
+  | "booking.no_show"
+  | "booking.no_show_undo"
   | "booking.set_meeting_link"
   | "payment.mark_refunded"
   | "report_phrase.add"

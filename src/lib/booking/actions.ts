@@ -570,6 +570,118 @@ export async function rescheduleBooking(
 }
 
 /**
+ * Therapist marks a past session as a no-show (the family didn't attend).
+ * Distinct from "completed" so a pattern is visible. No automatic refund or
+ * penalty -- the consequence policy is a separate decision. Reversible via
+ * undoNoShow in case of a misclick.
+ */
+export async function markNoShow(
+  bookingId: string,
+  note?: string
+): Promise<ActionResult<object>> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") {
+    return { ok: false, error: "You must be signed in as a therapist." };
+  }
+
+  const therapist = await getRealTherapistProfileByUserId(session.userId);
+  if (!therapist) return { ok: false, error: "Couldn't find your therapist profile." };
+
+  const admin = createAdminClient();
+  const { data: booking } = await admin
+    .from("bookings")
+    .select("id, therapist_id, parent_id, status, children(first_name), availability_slots(start_time, end_time)")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking || booking.therapist_id !== therapist.id) {
+    return { ok: false, error: "Booking not found." };
+  }
+  if (booking.status !== "completed" && booking.status !== "confirmed") {
+    return { ok: false, error: "Only a past confirmed session can be marked as a no-show." };
+  }
+
+  const slot = booking.availability_slots as unknown as { start_time: string; end_time: string } | null;
+  if (!slot || new Date(slot.end_time).getTime() > Date.now()) {
+    return { ok: false, error: "You can only mark a no-show after the session's scheduled time." };
+  }
+
+  const { data: updated, error: updateError } = await admin
+    .from("bookings")
+    .update({
+      status: "no_show",
+      no_show_at: new Date().toISOString(),
+      no_show_note: note && note.trim() ? note.trim() : null,
+    })
+    .eq("id", bookingId)
+    .in("status", ["completed", "confirmed"])
+    .select("id")
+    .maybeSingle();
+  if (updateError) return { ok: false, error: updateError.message };
+  if (!updated) return { ok: false, error: "This session can't be marked as a no-show." };
+
+  await logAuditEvent({
+    actor: session,
+    action: "booking.no_show",
+    entityType: "booking",
+    entityId: bookingId,
+  });
+
+  const child = booking.children as unknown as { first_name: string } | null;
+  const when = slot ? formatDateTime(slot.start_time) : "a recent session";
+  await createNotification({
+    userId: booking.parent_id,
+    type: "booking_confirmed",
+    title: "Session marked as not attended",
+    body: `${child?.first_name ?? "Your child"}'s session on ${when} was marked as not attended. If that's not right, message your therapist or contact Hayven support.`,
+    url: "/parent/sessions",
+  });
+
+  revalidatePath("/parent/sessions");
+  revalidatePath("/therapist/schedule");
+  return { ok: true };
+}
+
+export async function undoNoShow(bookingId: string): Promise<ActionResult<object>> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") {
+    return { ok: false, error: "You must be signed in as a therapist." };
+  }
+  const therapist = await getRealTherapistProfileByUserId(session.userId);
+  if (!therapist) return { ok: false, error: "Couldn't find your therapist profile." };
+
+  const admin = createAdminClient();
+  const { data: booking } = await admin
+    .from("bookings")
+    .select("id, therapist_id, status")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking || booking.therapist_id !== therapist.id) {
+    return { ok: false, error: "Booking not found." };
+  }
+  if (booking.status !== "no_show") {
+    return { ok: false, error: "This session isn't marked as a no-show." };
+  }
+
+  const { error: updateError } = await admin
+    .from("bookings")
+    .update({ status: "completed", no_show_at: null, no_show_note: null })
+    .eq("id", bookingId)
+    .eq("status", "no_show");
+  if (updateError) return { ok: false, error: updateError.message };
+
+  await logAuditEvent({
+    actor: session,
+    action: "booking.no_show_undo",
+    entityType: "booking",
+    entityId: bookingId,
+  });
+
+  revalidatePath("/parent/sessions");
+  revalidatePath("/therapist/schedule");
+  return { ok: true };
+}
+
+/**
  * Cancels a booking from the therapist's side (they can't make it, etc.) and
  * frees the slot. Same no-auto-refund caveat as cancelBooking -- an
  * already-paid (confirmed) booking just gets flagged for the admin refund
