@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { MobileNavMenu } from "@/components/marketing/mobile-nav-menu";
 import { useScrolled } from "@/components/marketing/use-scrolled";
 import { cn } from "@/lib/utils";
+import { roleHomePath } from "@/lib/auth/role-path";
+import { initialsFromName } from "@/data/format";
+import type { UserRole } from "@/data/types";
 
 const LINKS = [
   { label: "Home", href: "/" },
@@ -18,11 +21,16 @@ const LINKS = [
   { label: "For therapists", href: "/signup?role=therapist" },
 ];
 
-export function TopNav() {
+export interface NavSession {
+  role: UserRole;
+  name: string;
+}
+
+export function TopNav({ session }: { session?: NavSession | null }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
-  return isHome ? <HeroNav /> : <SolidNav pathname={pathname} />;
+  return isHome ? <HeroNav session={session} /> : <SolidNav pathname={pathname} session={session} />;
 }
 
 /**
@@ -31,7 +39,7 @@ export function TopNav() {
  * padding-compensating for it, and only picks up the Liquid Glass treatment
  * (blurring whatever scrolls underneath) once it actually reaches the top.
  */
-function SolidNav({ pathname }: { pathname: string }) {
+function SolidNav({ pathname, session }: { pathname: string; session?: NavSession | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -43,6 +51,7 @@ function SolidNav({ pathname }: { pathname: string }) {
         triggerClassName="-ml-2 text-offwhite/90 hover:text-offwhite"
         isOpen={menuOpen}
         onOpenChange={setMenuOpen}
+        session={session ? { role: session.role, dashboardHref: roleHomePath(session.role) } : null}
       />
       <Link href="/">
         <BrandMark />
@@ -67,12 +76,26 @@ function SolidNav({ pathname }: { pathname: string }) {
         })}
       </nav>
       <div className="hidden items-center gap-4 lg:flex">
-        <Link href="/login" className="hidden text-sm text-offwhite/80 hover:text-offwhite sm:inline">
-          Log in
-        </Link>
-        <Button asChild variant="accent" size="sm" className="hidden sm:inline-flex">
-          <Link href="/signup">Sign up</Link>
-        </Button>
+        {session ? (
+          <Link
+            href={roleHomePath(session.role)}
+            className="flex items-center gap-2.5 rounded-full border border-white/20 bg-white/10 py-1.5 pl-1.5 pr-4 text-sm text-offwhite transition-colors hover:bg-white/20"
+          >
+            <span className="flex size-7 items-center justify-center rounded-full bg-terracotta text-[11px] font-medium text-white">
+              {initialsFromName(session.name)}
+            </span>
+            Dashboard
+          </Link>
+        ) : (
+          <>
+            <Link href="/login" className="hidden text-sm text-offwhite/80 hover:text-offwhite sm:inline">
+              Log in
+            </Link>
+            <Button asChild variant="accent" size="sm" className="hidden sm:inline-flex">
+              <Link href="/signup">Sign up</Link>
+            </Button>
+          </>
+        )}
       </div>
     </header>
   );
@@ -86,7 +109,7 @@ function SolidNav({ pathname }: { pathname: string }) {
  * an inset top highlight catching light the way a real refractive edge
  * would. Three colour roles cross-fade together at .35s ease.
  */
-function HeroNav() {
+function HeroNav({ session }: { session?: NavSession | null }) {
   const scrolled = useScrolled(0.75);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -108,6 +131,7 @@ function HeroNav() {
         )}
         isOpen={menuOpen}
         onOpenChange={setMenuOpen}
+        session={session ? { role: session.role, dashboardHref: roleHomePath(session.role) } : null}
       />
 
       <Link href="/">
@@ -133,24 +157,41 @@ function HeroNav() {
       </nav>
 
       <div className="hidden items-center gap-4 lg:flex">
-        <Link
-          href="/login"
-          className={cn(
-            "hidden text-[15px] transition-colors duration-[350ms] ease-in-out sm:inline",
-            scrolled ? "text-ink-soft hover:text-charcoal" : "text-canvas-white/80 hover:text-canvas-white"
-          )}
-        >
-          Log in
-        </Link>
-        <Link
-          href="/signup"
-          className={cn(
-            "hidden rounded-full px-5 py-2.5 text-sm font-medium transition-colors duration-[350ms] ease-in-out sm:inline-block",
-            scrolled ? "bg-charcoal text-canvas-white hover:bg-charcoal/85" : "bg-canvas-white text-charcoal hover:bg-canvas-white/85"
-          )}
-        >
-          Get started
-        </Link>
+        {session ? (
+          <Link
+            href={roleHomePath(session.role)}
+            className={cn(
+              "flex items-center gap-2.5 rounded-full py-1.5 pl-1.5 pr-4 text-sm font-medium transition-colors duration-[350ms] ease-in-out",
+              scrolled ? "bg-charcoal text-canvas-white hover:bg-charcoal/85" : "bg-canvas-white text-charcoal hover:bg-canvas-white/85"
+            )}
+          >
+            <span className="flex size-7 items-center justify-center rounded-full bg-terracotta text-[11px] font-medium text-white">
+              {initialsFromName(session.name)}
+            </span>
+            Dashboard
+          </Link>
+        ) : (
+          <>
+            <Link
+              href="/login"
+              className={cn(
+                "hidden text-[15px] transition-colors duration-[350ms] ease-in-out sm:inline",
+                scrolled ? "text-ink-soft hover:text-charcoal" : "text-canvas-white/80 hover:text-canvas-white"
+              )}
+            >
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              className={cn(
+                "hidden rounded-full px-5 py-2.5 text-sm font-medium transition-colors duration-[350ms] ease-in-out sm:inline-block",
+                scrolled ? "bg-charcoal text-canvas-white hover:bg-charcoal/85" : "bg-canvas-white text-charcoal hover:bg-canvas-white/85"
+              )}
+            >
+              Get started
+            </Link>
+          </>
+        )}
       </div>
     </header>
   );

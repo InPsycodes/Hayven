@@ -19,11 +19,13 @@ export function MobileNavMenu({
   triggerClassName,
   isOpen,
   onOpenChange,
+  session,
 }: {
   links: NavLinkItem[];
   triggerClassName: string;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  session?: { role: string; dashboardHref: string } | null;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -140,18 +142,28 @@ export function MobileNavMenu({
               </nav>
 
               <div className="mt-auto flex flex-col gap-3 border-t border-charcoal/10 px-6 py-6">
-                <Link
-                  href="/login"
-                  onClick={() => onOpenChange(false)}
-                  className="py-2 text-center text-sm text-charcoal"
-                >
-                  Log in
-                </Link>
-                <Button asChild variant="accent" size="lg" className="w-full">
-                  <Link href="/signup" onClick={() => onOpenChange(false)}>
-                    Get started
-                  </Link>
-                </Button>
+                {session ? (
+                  <Button asChild variant="accent" size="lg" className="w-full">
+                    <Link href={session.dashboardHref} onClick={() => onOpenChange(false)}>
+                      Go to dashboard
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => onOpenChange(false)}
+                      className="py-2 text-center text-sm text-charcoal"
+                    >
+                      Log in
+                    </Link>
+                    <Button asChild variant="accent" size="lg" className="w-full">
+                      <Link href="/signup" onClick={() => onOpenChange(false)}>
+                        Get started
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>,
