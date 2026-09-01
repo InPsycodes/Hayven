@@ -6,9 +6,10 @@ import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
-import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
+import { getRealTherapistProfileByUserId, getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { createNotification } from "@/lib/notifications/create";
 import { checkRateLimit } from "@/lib/rate-limit/check";
+import { bookingWindow } from "@/lib/booking/window";
 import { formatDateTime, formatNaira } from "@/data/format";
 
 type ActionResult<T> = { ok: true } & T | { ok: false; error: string };
@@ -397,6 +398,175 @@ export async function setMeetingLink(
   revalidatePath("/parent/sessions");
   revalidatePath("/therapist/schedule");
   return { ok: true, meetingLink: newLink };
+}
+
+// A parent may move a confirmed booking to another of the same therapist's
+// open slots, up to 24 h before the current start time (the window the
+// confirmation screen promises). No payment change -- same therapist, same
+// price -- so this never touches the payments row.
+const RESCHEDULE_MIN_NOTICE_MS = 24 * 60 * 60 * 1000;
+
+export interface RescheduleOption {
+  slotId: string;
+  startTime: string;
+  endTime: string;
+}
+
+export async function getRescheduleOptions(
+  bookingId: string
+): Promise<ActionResult<{ currentStart: string; sessionType: string; options: RescheduleOption[] }>> {
+  const session = await getSession();
+  if (!session || session.role !== "parent") {
+    return { ok: false, error: "You must be signed in as a parent." };
+  }
+
+  const admin = createAdminClient();
+  const { data: booking } = await admin
+    .from("bookings")
+    .select("id, parent_id, therapist_id, status, session_type, availability_slot_id, availability_slots(start_time)")
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking || booking.parent_id !== session.userId) {
+    return { ok: false, error: "Booking not found." };
+  }
+  if (booking.status !== "confirmed") {
+    return { ok: false, error: "Only a confirmed session can be rescheduled." };
+  }
+
+  const currentSlot = booking.availability_slots as unknown as { start_time: string } | null;
+  const currentStart = currentSlot?.start_time ?? "";
+  if (currentStart && new Date(currentStart).getTime() - Date.now() < RESCHEDULE_MIN_NOTICE_MS) {
+    return {
+      ok: false,
+      error: "Sessions can only be rescheduled more than 24 hours in advance. Message your therapist to move it.",
+    };
+  }
+
+  const window = bookingWindow();
+  const slots = await getRealAvailabilityForTherapist(booking.therapist_id, window);
+  const options = slots
+    .filter(
+      (s) =>
+        !s.isBooked &&
+        s.sessionType === booking.session_type &&
+        s.id !== booking.availability_slot_id &&
+        new Date(s.startTime).getTime() > Date.now()
+    )
+    .map((s) => ({ slotId: s.id, startTime: s.startTime, endTime: s.endTime }));
+
+  return { ok: true, currentStart, sessionType: booking.session_type, options };
+}
+
+export async function rescheduleBooking(
+  bookingId: string,
+  newSlotId: string
+): Promise<ActionResult<{ newStart: string }>> {
+  const session = await getSession();
+  if (!session || session.role !== "parent") {
+    return { ok: false, error: "You must be signed in as a parent." };
+  }
+
+  const admin = createAdminClient();
+
+  const { data: booking } = await admin
+    .from("bookings")
+    .select(
+      "id, parent_id, therapist_id, status, session_type, availability_slot_id, children(first_name), availability_slots(start_time), therapist_profiles(user_id, users(full_name))"
+    )
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking || booking.parent_id !== session.userId) {
+    return { ok: false, error: "Booking not found." };
+  }
+  if (booking.status !== "confirmed") {
+    return { ok: false, error: "Only a confirmed session can be rescheduled." };
+  }
+  if (newSlotId === booking.availability_slot_id) {
+    return { ok: false, error: "That's the current time -- pick a different slot." };
+  }
+
+  const oldSlot = booking.availability_slots as unknown as { start_time: string } | null;
+  const oldSlotId = booking.availability_slot_id;
+  if (oldSlot && new Date(oldSlot.start_time).getTime() - Date.now() < RESCHEDULE_MIN_NOTICE_MS) {
+    return { ok: false, error: "Sessions can only be rescheduled more than 24 hours in advance." };
+  }
+
+  const { data: newSlot } = await admin
+    .from("availability_slots")
+    .select("id, therapist_id, session_type, is_booked, start_time")
+    .eq("id", newSlotId)
+    .maybeSingle();
+  if (!newSlot || newSlot.therapist_id !== booking.therapist_id || newSlot.session_type !== booking.session_type) {
+    return { ok: false, error: "That slot isn't available for this session." };
+  }
+  if (new Date(newSlot.start_time).getTime() <= Date.now()) {
+    return { ok: false, error: "That time has already passed -- pick another." };
+  }
+
+  // Hold the new slot atomically before touching the booking.
+  const { data: held } = await admin
+    .from("availability_slots")
+    .update({ is_booked: true })
+    .eq("id", newSlotId)
+    .eq("is_booked", false)
+    .select("id")
+    .maybeSingle();
+  if (!held) {
+    return { ok: false, error: "That slot was just taken. Please pick another time." };
+  }
+
+  const { data: moved, error: moveError } = await admin
+    .from("bookings")
+    // meeting_link was for the old time -- clear it so the therapist re-adds one.
+    .update({ availability_slot_id: newSlotId, meeting_link: null })
+    .eq("id", bookingId)
+    .eq("status", "confirmed")
+    .select("id")
+    .maybeSingle();
+  if (moveError || !moved) {
+    await admin.from("availability_slots").update({ is_booked: false }).eq("id", newSlotId);
+    return { ok: false, error: moveError?.message ?? "Couldn't move the session. Please try again." };
+  }
+
+  await admin.from("availability_slots").update({ is_booked: false }).eq("id", oldSlotId);
+
+  await logAuditEvent({
+    actor: session,
+    action: "booking.reschedule",
+    entityType: "booking",
+    entityId: bookingId,
+    metadata: { from: oldSlot?.start_time ?? null, to: newSlot.start_time },
+  });
+
+  const child = booking.children as unknown as { first_name: string } | null;
+  const therapistProfile = booking.therapist_profiles as unknown as {
+    user_id: string;
+    users: { full_name: string } | null;
+  } | null;
+  const newWhen = formatDateTime(newSlot.start_time);
+
+  await createNotification({
+    userId: booking.parent_id,
+    type: "booking_confirmed",
+    title: "Session rescheduled",
+    body: `${child?.first_name ?? "Your child"}'s session is now ${newWhen}.`,
+    url: "/parent/sessions",
+  });
+  if (therapistProfile?.user_id) {
+    await createNotification({
+      userId: therapistProfile.user_id,
+      type: "booking_confirmed",
+      title: "Session rescheduled",
+      body: `${child?.first_name ?? "A client"}'s session was moved to ${newWhen}.`,
+      url: "/therapist/schedule",
+    });
+  }
+
+  revalidatePath("/parent");
+  revalidatePath("/parent/sessions");
+  revalidatePath("/therapist/schedule");
+  revalidatePath("/therapist/caseload");
+  return { ok: true, newStart: newSlot.start_time };
 }
 
 /**

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { StatusBadge, type statusBadgeVariants } from "@/components/ui/status-badge";
 import type { VariantProps } from "class-variance-authority";
 import { CancelBookingButton } from "@/components/shared/cancel-booking-button";
+import { RescheduleBookingButton } from "@/components/booking/reschedule-booking-button";
 import { JoinSessionButton } from "@/components/booking/join-session-button";
 import { getSession } from "@/lib/auth/session";
 import { getRealBookingsForParent } from "@/lib/booking/queries";
@@ -55,6 +56,10 @@ export default async function ParentSessionsPage() {
                 const isUpcoming = booking.slotStartTime && new Date(booking.slotStartTime) > now;
                 const canCancel =
                   isUpcoming && (booking.status === "confirmed" || booking.status === "pending_payment");
+                const canReschedule =
+                  booking.status === "confirmed" &&
+                  booking.slotStartTime &&
+                  new Date(booking.slotStartTime).getTime() - now.getTime() > 24 * 60 * 60 * 1000;
                 const isVirtualConfirmed =
                   booking.sessionType === "virtual" && booking.status === "confirmed" && isUpcoming;
                 return (
@@ -71,6 +76,7 @@ export default async function ParentSessionsPage() {
                       </div>
                       <div className="flex shrink-0 flex-wrap items-center gap-3">
                         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                        {canReschedule && <RescheduleBookingButton bookingId={booking.id} />}
                         {canCancel && (
                           <CancelBookingButton
                             bookingId={booking.id}

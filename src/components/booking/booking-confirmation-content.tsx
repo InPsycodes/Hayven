@@ -115,8 +115,8 @@ export function BookingConfirmationContent({
         <Row label="Amount paid" value={formatNaira(therapist.pricePerSession)} />
       </div>
       <div className="mt-4 w-full rounded-sm bg-terracotta/10 p-4 text-left text-xs text-charcoal">
-        Need to reschedule? You can change this booking up to 24 hours before the session from
-        your dashboard.
+        Need to reschedule? You can move this booking to another of {therapist.displayName}&apos;s open
+        times up to 24 hours before the session, from your Sessions page.
       </div>
     </ConfirmationPanel>
   );
