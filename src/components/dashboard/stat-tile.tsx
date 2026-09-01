@@ -57,7 +57,10 @@ export function StatTile({
           {pill.text}
         </span>
       )}
-      <span className={cn("mb-3.5 flex size-[34px] items-center justify-center rounded-[9px]", CHIP_TONE[tone])}>
+      <span
+        aria-hidden
+        className={cn("mb-3.5 flex size-[34px] items-center justify-center rounded-[9px]", CHIP_TONE[tone])}
+      >
         <Chip size={18} stroke={1.75} />
       </span>
       <span
@@ -71,7 +74,12 @@ export function StatTile({
       <span className="mt-1.5 text-xs text-muted-foreground">{label}</span>
       <span className="mt-3 inline-flex min-w-0 items-center gap-1 text-xs font-semibold text-terracotta">
         <span className="truncate">{dest}</span>
-        <IconArrowRight size={13} stroke={2.25} className="shrink-0 transition-transform group-hover/tile:translate-x-0.5" />
+        <IconArrowRight
+          size={13}
+          stroke={2.25}
+          aria-hidden
+          className="shrink-0 transition-transform group-hover/tile:translate-x-0.5"
+        />
       </span>
     </Link>
   );

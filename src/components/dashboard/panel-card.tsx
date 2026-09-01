@@ -36,7 +36,7 @@ export function PanelCard({
       {children}
       <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-terracotta">
         {dest}
-        <IconArrowRight size={13} stroke={2.25} className="transition-transform group-hover/panel:translate-x-0.5" />
+        <IconArrowRight size={13} stroke={2.25} aria-hidden className="transition-transform group-hover/panel:translate-x-0.5" />
       </span>
     </Link>
   );
@@ -83,7 +83,7 @@ function StaticPanel({
           className="group/f mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-terracotta hover:underline"
         >
           {footer.dest}
-          <IconArrowRight size={13} stroke={2.25} className="transition-transform group-hover/f:translate-x-0.5" />
+          <IconArrowRight size={13} stroke={2.25} aria-hidden className="transition-transform group-hover/f:translate-x-0.5" />
         </Link>
       )}
     </div>

@@ -73,7 +73,6 @@ export function NotificationBell({ notifications }: { notifications: RealNotific
                 key={n.id}
                 type="button"
                 onClick={() => openNotification(n)}
-                aria-disabled={!n.url && n.read ? true : undefined}
                 className={cn(
                   "flex flex-col gap-0.5 px-3 py-2.5 text-left transition-colors hover:bg-paper",
                   !n.read && "bg-terracotta/5",

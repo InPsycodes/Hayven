@@ -20,7 +20,7 @@ export function FieldError({
   if (!children) return null;
   return (
     <p id={id} className={cn("flex items-start gap-1 text-xs text-error-text", className)}>
-      <IconAlertCircle size={13} stroke={2} className="mt-px shrink-0" />
+      <IconAlertCircle size={13} stroke={2} aria-hidden className="mt-px shrink-0" />
       <span>{children}</span>
     </p>
   );
