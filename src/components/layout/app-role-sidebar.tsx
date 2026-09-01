@@ -68,9 +68,7 @@ export function AppRoleSidebar({
       </div>
 
       <div className="rounded-xl border border-care-line/60 bg-care-surface p-3">
-        <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-care-ink-faint">
-          {role === "parent" ? "Care team" : "You"}
-        </span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-care-ink-faint">Account</span>
         <div className="mt-2.5 flex items-center gap-2.5">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-care-sage/15 text-[10px] font-bold text-care-sage">
             {initialsFromName(session.name)}

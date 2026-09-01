@@ -227,11 +227,19 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
             className="flex-1"
             right={<span className="text-[11px] text-care-ink-faint">14 weeks</span>}
           >
-            <CareBarChart data={attendanceWeeks} />
-            <p className="mt-2 text-[11px] text-care-ink-faint">
-              {attendanceWeeks.reduce((n, w) => n + w.attended, 0)} attended ·{" "}
-              {attendanceWeeks.reduce((n, w) => n + w.missed, 0)} missed
-            </p>
+            {past.length === 0 ? (
+              <p className="mt-4 py-6 text-sm text-care-ink-soft">
+                Session attendance shows here once {activeChild?.firstName ?? "your child"} has had a session.
+              </p>
+            ) : (
+              <>
+                <CareBarChart data={attendanceWeeks} />
+                <p className="mt-2 text-[11px] text-care-ink-faint">
+                  {attendanceWeeks.reduce((n, w) => n + w.attended, 0)} attended ·{" "}
+                  {attendanceWeeks.reduce((n, w) => n + w.missed, 0)} missed
+                </p>
+              </>
+            )}
           </CarePanel>
         </div>
 
