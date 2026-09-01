@@ -183,6 +183,22 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* Tailwind v4's Preflight dropped `cursor: pointer` from the button reset.
+     Put it back for everything that's actually clickable so the whole app
+     has a consistent affordance. Disabled controls keep the default arrow. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[role="button"],
+  label:has(> input:not(:disabled)),
+  summary,
+  select:not(:disabled),
+  [type="checkbox"]:not(:disabled),
+  [type="radio"]:not(:disabled),
+  [type="range"]:not(:disabled) {
+    cursor: pointer;
+  }
+
   html,
   body {
     /* Safety net: a single overflowing element (grid blowout, unwrapped
