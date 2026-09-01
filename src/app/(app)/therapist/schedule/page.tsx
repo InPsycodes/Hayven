@@ -100,7 +100,7 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <div className="flex overflow-hidden rounded-sm border border-border">
-              <span className="bg-charcoal px-3 py-1.5 text-xs font-medium text-offwhite">Week</span>
+              <span className="bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">Week</span>
               <span className="px-3 py-1.5 text-xs text-muted-foreground">Month</span>
             </div>
             <Link

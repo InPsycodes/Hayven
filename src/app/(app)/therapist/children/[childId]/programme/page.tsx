@@ -29,7 +29,7 @@ export default async function ChildProgrammePage({ params }: { params: Promise<{
     <div>
       <DashboardHeader session={session} greeting="Programme" subtext={child.firstName} />
       <div className="flex flex-col gap-6 px-5 py-6 md:px-10 md:py-8">
-        <section className="rounded-sm bg-white p-5 ring-1 ring-border">
+        <section className="rounded-sm bg-card p-5 ring-1 ring-border">
           <h2 className="font-heading text-lg text-charcoal">Goals</h2>
           <div className="mt-3 flex flex-col gap-2">
             {programme.goals.length === 0 ? (
@@ -54,7 +54,7 @@ export default async function ChildProgrammePage({ params }: { params: Promise<{
           </div>
         </section>
 
-        <section className="rounded-sm bg-white p-5 ring-1 ring-border">
+        <section className="rounded-sm bg-card p-5 ring-1 ring-border">
           <h2 className="font-heading text-lg text-charcoal">Target behaviours</h2>
           <div className="mt-3 flex flex-col gap-2">
             {programme.targetBehaviours.length === 0 ? (
@@ -81,7 +81,7 @@ export default async function ChildProgrammePage({ params }: { params: Promise<{
           </div>
         </section>
 
-        <section className="rounded-sm bg-white p-5 ring-1 ring-border">
+        <section className="rounded-sm bg-card p-5 ring-1 ring-border">
           <h2 className="font-heading text-lg text-charcoal">Skills</h2>
           <div className="mt-3 flex flex-col gap-2">
             {programme.skills.length === 0 ? (

@@ -26,7 +26,7 @@ export default async function ParentChildReportsPage({ params }: { params: Promi
       <DashboardHeader session={session} greeting="Progress reports" subtext={child.firstName} />
       <div className="flex flex-col gap-6 px-5 py-6 md:px-10 md:py-8">
         {reports.length === 0 ? (
-          <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground ring-1 ring-border">
+          <p className="rounded-sm bg-card p-4 text-sm text-muted-foreground ring-1 ring-border">
             No progress reports have been shared yet. Your child&apos;s therapist will publish one after a session.
           </p>
         ) : (

@@ -28,7 +28,7 @@ export default async function TherapistCaseloadPage() {
 
       <div className="px-5 py-6 md:px-10 md:py-8">
         {children.length === 0 ? (
-          <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground ring-1 ring-border">
+          <p className="rounded-sm bg-card p-4 text-sm text-muted-foreground ring-1 ring-border">
             No children assigned yet. An assignment is created automatically once you have a
             confirmed booking with a family.
           </p>

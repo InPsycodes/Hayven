@@ -29,7 +29,7 @@ export default async function SupervisorAssignmentsPage() {
       <DashboardHeader session={session} greeting="Team assignments" subtext="Assign your therapists to children" />
       <div className="flex flex-col gap-4 px-5 py-6 md:px-10 md:py-8">
         {therapists.length === 0 ? (
-          <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground ring-1 ring-border">
+          <p className="rounded-sm bg-card p-4 text-sm text-muted-foreground ring-1 ring-border">
             No therapists are assigned to you yet.
           </p>
         ) : (

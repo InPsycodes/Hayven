@@ -67,7 +67,7 @@ export default async function ChildOverviewPage({
         </div>
 
         {window.sessions.length > 0 && (
-          <div className="rounded-sm bg-white p-5 ring-1 ring-border">
+          <div className="rounded-sm bg-card p-5 ring-1 ring-border">
             <h2 className="font-heading text-lg text-charcoal">Sessions</h2>
             <div className="mt-3 flex flex-col gap-2">
               {window.sessions

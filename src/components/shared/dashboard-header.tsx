@@ -4,9 +4,9 @@ import { getRealNotificationsForUser } from "@/lib/notifications/queries";
 import { NotificationBell } from "@/components/shared/notification-bell";
 
 /**
- * Dashboard page header: a dark full-width block on mobile (per the PWA home
- * screen spec), the same content rendered as a plain header row on desktop
- * (per the dashboard spec) -- one component, two responsive presentations.
+ * Sub-page header for the signed-in portal. The portal renders in the
+ * warm-dark care theme (.care-theme on the app shell), so this is just a
+ * plain header row -- greeting, subtext, bell, avatar.
  */
 export async function DashboardHeader({
   session,
@@ -23,20 +23,18 @@ export async function DashboardHeader({
   const notifications = await getRealNotificationsForUser(session.userId);
 
   return (
-    <header className="flex items-center justify-between gap-3 bg-charcoal px-5 py-5 text-offwhite md:bg-transparent md:px-10 md:py-9 md:text-charcoal">
+    <header className="flex items-center justify-between gap-3 px-5 py-6 text-foreground md:px-10 md:py-8">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        {eyebrow && (
-          <span className="eyebrow text-[11px] text-amber md:text-terracotta">{eyebrow}</span>
-        )}
-        <h1 className="truncate font-heading text-xl md:text-[32px] md:leading-tight md:font-medium">
+        {eyebrow && <span className="eyebrow text-[11px] text-terracotta">{eyebrow}</span>}
+        <h1 className="truncate font-heading text-xl md:text-[28px] md:leading-tight md:font-medium">
           {greeting}
         </h1>
-        <p className="truncate text-xs text-offwhite/70 md:text-[13px] md:text-muted-foreground">
-          {subtext}
-        </p>
+        <p className="truncate text-xs text-muted-foreground md:text-[13px]">{subtext}</p>
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <NotificationBell notifications={notifications} />
+        <div className="text-foreground [&_button]:text-foreground/80 [&_button:hover]:text-foreground">
+          <NotificationBell notifications={notifications} />
+        </div>
         <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-terracotta text-[11px] font-medium text-white md:size-9">
           {initialsFromName(session.name)}
         </div>

@@ -73,7 +73,7 @@ export default async function TherapySessionPage({
         subtext={`${childName} · ${formatDate(therapySession.session_date)}`}
       />
       <div className="flex flex-col gap-4 px-5 py-6 md:px-10 md:py-8">
-        <div className="rounded-sm bg-white p-5 ring-1 ring-border">
+        <div className="rounded-sm bg-card p-5 ring-1 ring-border">
           <p className="text-sm text-charcoal">
             {therapySession.duration_minutes ?? "?"} min, {therapySession.setting?.replace("_", " ")}
             {therapySession.attendance && therapySession.attendance !== "present"

@@ -40,7 +40,7 @@ export default async function ParentBillingPage() {
         </div>
 
         {payments.length === 0 ? (
-          <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground ring-1 ring-border">
+          <p className="rounded-sm bg-card p-4 text-sm text-muted-foreground ring-1 ring-border">
             No payments yet.
           </p>
         ) : (

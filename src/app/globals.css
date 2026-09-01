@@ -175,6 +175,61 @@
   }
 }
 
+/*
+  Warm-dark theme for the whole signed-in portal (parent / therapist /
+  supervisor). Applied on the app shell wrapper. Remaps both the semantic
+  tokens (--background, --card, --border, ...) and the raw brand tokens
+  that components bake in as light surfaces / dark text (--charcoal,
+  --canvas-white, --paper, --terracotta, ...), so almost everything flips
+  without per-component edits. `bg-white` / `bg-charcoal` literals don't
+  respond to this -- those are fixed by hand where they appear in the
+  portal.
+*/
+.care-theme {
+  color-scheme: dark;
+
+  --background: var(--care-bg);
+  --foreground: var(--care-ink);
+  --card: var(--care-surface);
+  --card-foreground: var(--care-ink);
+  --popover: var(--care-surface);
+  --popover-foreground: var(--care-ink);
+  --primary: var(--care-accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--care-raised);
+  --secondary-foreground: var(--care-ink);
+  --muted: var(--care-raised);
+  --muted-foreground: var(--care-ink-soft);
+  --accent: var(--care-raised);
+  --accent-foreground: var(--care-ink);
+  --border: var(--care-line);
+  --input: var(--care-line);
+  --ring: color-mix(in oklch, var(--care-accent), transparent 45%);
+
+  /* raw brand tokens, remapped for dark */
+  --charcoal: var(--care-ink);
+  --ink-soft: var(--care-ink-soft);
+  --canvas-white: var(--care-surface);
+  --canvas-deep: var(--care-raised);
+  --offwhite: var(--care-bg);
+  --paper: var(--care-raised);
+  --ivory: var(--care-raised);
+  --terracotta: var(--care-accent);
+  --rust-dark: var(--care-accent-deep);
+  --rust-light: var(--care-accent);
+
+  /* status tones: the light-surface-darkened *-text values read as mud on
+     dark, so use the brighter base tones for text here. */
+  --success: var(--care-sage);
+  --amber: var(--care-amber);
+  --success-text: var(--care-sage);
+  --amber-text: var(--care-amber);
+  --error-text: #e0a093;
+
+  background: var(--care-bg);
+  color: var(--care-ink);
+}
+
 .dark {
   --background: var(--charcoal);
   --foreground: var(--offwhite);

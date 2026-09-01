@@ -29,7 +29,7 @@ export default async function SupervisorTherapistChildrenPage({
       />
       <div className="px-5 py-6 md:px-10 md:py-8">
         {children.length === 0 ? (
-          <p className="rounded-sm bg-white p-4 text-sm text-muted-foreground ring-1 ring-border">
+          <p className="rounded-sm bg-card p-4 text-sm text-muted-foreground ring-1 ring-border">
             No children assigned to this therapist yet, or they&apos;re not on your team.
           </p>
         ) : (
