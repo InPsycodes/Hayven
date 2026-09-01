@@ -9,6 +9,7 @@ import { StatusBadge, type statusBadgeVariants } from "@/components/ui/status-ba
 import { WeekScheduleGrid } from "@/components/therapist/week-schedule-grid";
 import { AddAvailabilityForm } from "@/components/therapist/add-availability-form";
 import { CancelBookingButton } from "@/components/shared/cancel-booking-button";
+import { MeetingLinkField } from "@/components/booking/meeting-link-field";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId, getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
@@ -131,21 +132,30 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
               {upcomingBookings.map((booking) => {
                 const status = STATUS_LABEL[booking.status] ?? { label: booking.status, tone: "grey" as const };
                 return (
-                  <div key={booking.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-charcoal">{booking.childFirstName}</p>
-                      <p className="text-xs text-muted-foreground capitalize">
-                        {formatDateTime(booking.slotStartTime)} · {booking.sessionType.replace("_", " ")}
-                      </p>
+                  <div key={booking.id} className="flex flex-col gap-2 px-3 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-charcoal">{booking.childFirstName}</p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {formatDateTime(booking.slotStartTime)} · {booking.sessionType.replace("_", " ")}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center gap-3">
+                        <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                        <CancelBookingButton
+                          bookingId={booking.id}
+                          wasPaid={booking.status === "confirmed"}
+                          cancelAction={cancelBookingAsTherapist}
+                        />
+                      </div>
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center gap-3">
-                      <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
-                      <CancelBookingButton
+                    {booking.sessionType === "virtual" && booking.status === "confirmed" && (
+                      <MeetingLinkField
                         bookingId={booking.id}
-                        wasPaid={booking.status === "confirmed"}
-                        cancelAction={cancelBookingAsTherapist}
+                        startTime={booking.slotStartTime}
+                        initialLink={booking.meetingLink}
                       />
-                    </div>
+                    )}
                   </div>
                 );
               })}

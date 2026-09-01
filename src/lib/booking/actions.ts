@@ -315,6 +315,91 @@ export async function cancelBooking(
 }
 
 /**
+ * Therapist sets, updates, or clears the video link for a confirmed virtual
+ * booking. Deliberately vendor-agnostic -- the therapist pastes whatever room
+ * URL they already use (Google Meet, a Zoom personal room, Whereby, ...).
+ * Same service-role + explicit-ownership-check pattern as every other booking
+ * write; there is no therapist RLS write policy on `bookings` by design (0030).
+ */
+export async function setMeetingLink(
+  bookingId: string,
+  rawLink: string
+): Promise<ActionResult<{ meetingLink: string | null }>> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") {
+    return { ok: false, error: "You must be signed in as a therapist." };
+  }
+
+  const therapist = await getRealTherapistProfileByUserId(session.userId);
+  if (!therapist) return { ok: false, error: "Couldn't find your therapist profile." };
+
+  const link = rawLink.trim();
+  if (link) {
+    let parsed: URL;
+    try {
+      parsed = new URL(link);
+    } catch {
+      return { ok: false, error: "That doesn't look like a link. Paste the full URL, starting with https://" };
+    }
+    if (parsed.protocol !== "https:") {
+      return { ok: false, error: "The meeting link must start with https://" };
+    }
+  }
+
+  const admin = createAdminClient();
+
+  const { data: booking } = await admin
+    .from("bookings")
+    .select(
+      "id, therapist_id, parent_id, status, session_type, meeting_link, children(first_name), availability_slots(start_time)"
+    )
+    .eq("id", bookingId)
+    .maybeSingle();
+  if (!booking || booking.therapist_id !== therapist.id) {
+    return { ok: false, error: "Booking not found." };
+  }
+  if (booking.session_type !== "virtual") {
+    return { ok: false, error: "This is an in-person session -- it has no video link." };
+  }
+  if (booking.status !== "confirmed") {
+    return { ok: false, error: "You can add a video link once the session is confirmed." };
+  }
+
+  const newLink = link || null;
+  const { error: updateError } = await admin
+    .from("bookings")
+    .update({ meeting_link: newLink })
+    .eq("id", bookingId);
+  if (updateError) return { ok: false, error: updateError.message };
+
+  await logAuditEvent({
+    actor: session,
+    action: "booking.set_meeting_link",
+    entityType: "booking",
+    entityId: bookingId,
+  });
+
+  // Notify the parent only when a usable link actually appears -- not when
+  // it's cleared, and not on a no-op re-save of the same URL.
+  if (newLink && newLink !== booking.meeting_link) {
+    const slot = booking.availability_slots as unknown as { start_time: string } | null;
+    const child = booking.children as unknown as { first_name: string } | null;
+    const when = slot ? formatDateTime(slot.start_time) : "your upcoming session";
+    await createNotification({
+      userId: booking.parent_id,
+      type: "meeting_link_ready",
+      title: "Video link ready",
+      body: `The video link for ${child?.first_name ?? "your child"}'s session on ${when} is ready. Join from your sessions page when it's time.`,
+      url: "/parent/sessions",
+    });
+  }
+
+  revalidatePath("/parent/sessions");
+  revalidatePath("/therapist/schedule");
+  return { ok: true, meetingLink: newLink };
+}
+
+/**
  * Cancels a booking from the therapist's side (they can't make it, etc.) and
  * frees the slot. Same no-auto-refund caveat as cancelBooking -- an
  * already-paid (confirmed) booking just gets flagged for the admin refund

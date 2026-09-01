@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { StatusBadge, type statusBadgeVariants } from "@/components/ui/status-badge";
 import type { VariantProps } from "class-variance-authority";
 import { CancelBookingButton } from "@/components/shared/cancel-booking-button";
+import { JoinSessionButton } from "@/components/booking/join-session-button";
 import { getSession } from "@/lib/auth/session";
 import { getRealBookingsForParent } from "@/lib/booking/queries";
 import { cancelBooking } from "@/lib/booking/actions";
@@ -54,27 +55,39 @@ export default async function ParentSessionsPage() {
                 const isUpcoming = booking.slotStartTime && new Date(booking.slotStartTime) > now;
                 const canCancel =
                   isUpcoming && (booking.status === "confirmed" || booking.status === "pending_payment");
+                const isVirtualConfirmed =
+                  booking.sessionType === "virtual" && booking.status === "confirmed" && isUpcoming;
                 return (
-                  <div key={booking.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-charcoal">
-                        {booking.childFirstName} with {booking.therapistDisplayName}
-                      </p>
-                      <p className="text-xs text-muted-foreground capitalize">
-                        {booking.slotStartTime ? formatDateTime(booking.slotStartTime) : "Time not set"} ·{" "}
-                        {booking.sessionType.replace("_", " ")} · {format}
-                      </p>
+                  <div key={booking.id} className="flex flex-col gap-2 px-3 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-charcoal">
+                          {booking.childFirstName} with {booking.therapistDisplayName}
+                        </p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {booking.slotStartTime ? formatDateTime(booking.slotStartTime) : "Time not set"} ·{" "}
+                          {booking.sessionType.replace("_", " ")} · {format}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center gap-3">
+                        <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                        {canCancel && (
+                          <CancelBookingButton
+                            bookingId={booking.id}
+                            wasPaid={booking.status === "confirmed"}
+                            cancelAction={cancelBooking}
+                          />
+                        )}
+                      </div>
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center gap-3">
-                      <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
-                      {canCancel && (
-                        <CancelBookingButton
-                          bookingId={booking.id}
-                          wasPaid={booking.status === "confirmed"}
-                          cancelAction={cancelBooking}
-                        />
-                      )}
-                    </div>
+                    {isVirtualConfirmed &&
+                      (booking.meetingLink ? (
+                        <JoinSessionButton meetingLink={booking.meetingLink} startTime={booking.slotStartTime} />
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Your therapist will share the video link here before the session.
+                        </p>
+                      ))}
                   </div>
                 );
               })}
