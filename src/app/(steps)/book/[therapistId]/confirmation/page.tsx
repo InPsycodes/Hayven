@@ -45,6 +45,7 @@ export default async function BookingConfirmationPage({
         subtitle="Step 3 of 3: Confirmed"
         step={3}
         totalSteps={3}
+        closeHref="/parent"
       />
       <BookingConfirmationContent therapist={therapist} kids={kids} slots={slots} pending={stillPending} />
     </div>
