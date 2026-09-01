@@ -152,6 +152,7 @@ export async function submitSupportRequest(_prevState: FormState, formData: Form
       type: "support_request_new",
       title: `New support request: ${subject.trim()}`,
       body: `From ${session.name} (${session.role}): ${message.trim().slice(0, 200)}`,
+      url: "/admin/support",
     });
   }
 

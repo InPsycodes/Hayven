@@ -111,6 +111,7 @@ export async function reviewVerificationRequestReal(
       userId: therapistProfile.user_id,
       type: "verification_update",
       ...verificationCopy[status],
+      url: "/therapist/profile",
     });
   }
 
@@ -445,6 +446,7 @@ export async function resolveSupportRequest(
     type: "support_request_resolved",
     title: `Update on your support request: ${data.subject}`,
     body: resolution.trim(),
+    url: "/help",
   });
 
   await logAuditEvent({
@@ -626,6 +628,7 @@ export async function reviewSupervisorRequest(
       decision === "approved"
         ? "An admin approved your request. You can now oversee therapists assigned to you from the Supervisor portal."
         : "An admin reviewed your request and it wasn't approved this time.",
+    url: decision === "approved" ? "/supervisor" : "/therapist/profile",
   });
 
   await logAuditEvent({

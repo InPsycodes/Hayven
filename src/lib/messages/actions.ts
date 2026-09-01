@@ -37,13 +37,15 @@ export async function sendRealMessage(
     .maybeSingle();
   if (booking) {
     const therapistProfile = booking.therapist_profiles as unknown as { user_id: string } | null;
-    const recipientId = session.userId === booking.parent_id ? therapistProfile?.user_id : booking.parent_id;
+    const senderIsParent = session.userId === booking.parent_id;
+    const recipientId = senderIsParent ? therapistProfile?.user_id : booking.parent_id;
     if (recipientId) {
       await createNotification({
         userId: recipientId,
         type: "new_message",
         title: `New message from ${session.name}`,
         body: trimmed.slice(0, 140),
+        url: senderIsParent ? `/therapist/messages/${bookingId}` : `/parent/messages/${bookingId}`,
       });
     }
   }

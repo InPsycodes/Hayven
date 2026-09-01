@@ -449,6 +449,7 @@ export async function requestSupervisorAccess(_prevState: FormState, formData: F
       type: "supervisor_request_new",
       title: `Supervisor access request: ${session.name}`,
       body: `${session.name} requested supervisor access.${note && typeof note === "string" && note.trim() ? ` Note: ${note.trim().slice(0, 200)}` : ""}`,
+      url: "/admin/users",
     });
   }
 

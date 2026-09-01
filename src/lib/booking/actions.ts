@@ -204,6 +204,7 @@ export async function finalizeBookingPayment(
       type: "meeting_link_ready",
       title: "Meeting link ready",
       body: `Your virtual session with ${therapistName} on ${sessionLabel} is confirmed. Join from your sessions page when it's time.`,
+      url: "/parent/sessions",
     });
   } else {
     await createNotification({
@@ -211,6 +212,7 @@ export async function finalizeBookingPayment(
       type: "booking_confirmed",
       title: "Booking confirmed",
       body: `Your session with ${therapistName} on ${sessionLabel} is confirmed.`,
+      url: "/parent/sessions",
     });
   }
 
@@ -220,6 +222,7 @@ export async function finalizeBookingPayment(
       type: "payment_receipt",
       title: "Payment received",
       body: `You received ${formatNaira(Math.round(amountKobo / 100))} for your session with ${child?.first_name ?? "a client"}.`,
+      url: "/therapist/earnings",
     });
   }
 

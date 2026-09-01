@@ -40,7 +40,7 @@ export async function createNotification(params: {
   /** Lets a later dedup check ask "does a notification of this type already exist for this entity" -- e.g. entityType: "report", entityId: reportId. Optional: existing notification types don't set these. */
   entityType?: string;
   entityId?: string;
-  /** Where a tap on the push notification (or a click in the in-app bell, if the UI ever wires that up) should navigate to. Defaults to the dashboard root. */
+  /** Where a tap on the push notification, or a click on the in-app bell row, should navigate to. Stored on the row so the bell can deep-link it; also used for the push payload. Falls back to a non-clickable row when omitted. */
   url?: string;
 }): Promise<void> {
   const admin = createAdminClient();
@@ -52,6 +52,7 @@ export async function createNotification(params: {
       body: params.body,
       entity_type: params.entityType ?? null,
       entity_id: params.entityId ?? null,
+      url: params.url ?? null,
     });
     if (error) console.error("notification insert failed", params.type, error.message);
   } catch (err) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { IconBell } from "@tabler/icons-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -10,6 +11,7 @@ import { formatDateTime } from "@/data/format";
 import { cn } from "@/lib/utils";
 
 export function NotificationBell({ notifications }: { notifications: RealNotification[] }) {
+  const router = useRouter();
   const [items, setItems] = useState(notifications);
   const [, startTransition] = useTransition();
   const unreadCount = items.filter((n) => !n.read).length;
@@ -19,6 +21,11 @@ export function NotificationBell({ notifications }: { notifications: RealNotific
     startTransition(async () => {
       await markNotificationRead(id);
     });
+  }
+
+  function openNotification(n: RealNotification) {
+    if (!n.read) markOneRead(n.id);
+    if (n.url) router.push(n.url);
   }
 
   function markAllRead() {
@@ -62,10 +69,12 @@ export function NotificationBell({ notifications }: { notifications: RealNotific
               <button
                 key={n.id}
                 type="button"
-                onClick={() => !n.read && markOneRead(n.id)}
+                onClick={() => openNotification(n)}
+                aria-disabled={!n.url && n.read ? true : undefined}
                 className={cn(
                   "flex flex-col gap-0.5 px-3 py-2.5 text-left transition-colors hover:bg-paper",
-                  !n.read && "bg-terracotta/5"
+                  !n.read && "bg-terracotta/5",
+                  n.url ? "cursor-pointer" : "cursor-default"
                 )}
               >
                 <div className="flex items-center gap-1.5">
