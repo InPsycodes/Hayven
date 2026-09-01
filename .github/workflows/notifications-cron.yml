@@ -10,10 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call notifications cron endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          # Set repo variable CRON_TARGET_URL to the deployed origin (no
+          # trailing slash). Falls back to the production domain.
+          TARGET_URL: ${{ vars.CRON_TARGET_URL || 'https://hayven.com.ng' }}
         run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET secret is not set -- add it in repo settings > Secrets and variables > Actions."
+            exit 1
+          fi
           status=$(curl -s -o /tmp/response.json -w "%{http_code}" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            https://hayven.com.ng/api/cron/notifications)
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${TARGET_URL}/api/cron/notifications")
           cat /tmp/response.json
           if [ "$status" -ne 200 ]; then
             echo "Request failed with status $status"
