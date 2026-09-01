@@ -114,13 +114,22 @@ export default function AboutPage() {
             ))}
           </div>
 
-          <div className="mt-10 flex items-center gap-3.5 border-t border-charcoal/10 pt-6">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-terracotta font-serif text-base font-semibold text-white">
-              A
-            </span>
+          <div className="mt-10 flex items-center gap-4 border-t border-charcoal/10 pt-6">
+            <div className="relative size-20 shrink-0 overflow-hidden rounded-xl ring-1 ring-charcoal/10 sm:size-24">
+              <Image
+                src="/images/about-founder.jpg"
+                alt="Ademola, founder of Hayven"
+                fill
+                sizes="96px"
+                className="object-cover object-top"
+              />
+            </div>
             <div>
-              <p className="text-sm font-semibold text-charcoal">Ademola</p>
+              <p className="font-serif text-lg text-charcoal">Ademola</p>
               <p className="text-[13px] text-muted-foreground">Founder, Hayven</p>
+              <p className="mt-1.5 max-w-xs text-[13px] leading-relaxed text-ink-soft">
+                A diagnostician who spent years watching families navigate this alone.
+              </p>
             </div>
           </div>
         </article>
