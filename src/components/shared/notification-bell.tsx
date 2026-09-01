@@ -25,7 +25,10 @@ export function NotificationBell({ notifications }: { notifications: RealNotific
 
   function openNotification(n: RealNotification) {
     if (!n.read) markOneRead(n.id);
-    if (n.url) router.push(n.url);
+    // Only ever follow an in-app path. Every url we write is a hardcoded
+    // "/..." literal, but a notification row is (by RLS) user-updatable, so
+    // refuse anything that could be an off-site or protocol-relative jump.
+    if (n.url && /^\/(?!\/)/.test(n.url)) router.push(n.url);
   }
 
   function markAllRead() {
