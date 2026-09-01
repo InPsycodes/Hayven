@@ -55,33 +55,37 @@ export default function AboutPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="bg-canvas-white px-6 pt-16 pb-16 md:px-10 md:pt-24 md:pb-20">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-16">
+      <section className="bg-[#181410] px-6 py-20 md:px-10 md:py-32">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-[1fr_0.82fr] md:gap-20">
           <div>
-            <span className="eyebrow text-rust-dark">About Hayven</span>
-            <h1 className="mt-4 font-serif text-3xl leading-[1.1] text-charcoal sm:text-4xl lg:text-[2.9rem]">
+            <span className="eyebrow text-rust-light">About Hayven</span>
+            <h1 className="mt-5 font-serif text-4xl leading-[1.08] text-canvas-white sm:text-5xl lg:text-[3.35rem]">
               We started Hayven so no parent has to figure it out alone.
             </h1>
-            <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-soft">
+            <p className="mt-6 max-w-md text-lg leading-relaxed text-canvas-white/65">
               A calmer path from the first worried question, through assessment and therapy,
               to everyday progress you can actually see.
             </p>
           </div>
-          <Reveal className="md:justify-self-end">
+          <Reveal className="relative md:justify-self-end">
+            <div
+              aria-hidden
+              className="absolute -inset-10 rounded-full bg-rust-light/20 blur-[90px]"
+            />
             <Image
               src={founderImage}
               alt="Ademola, founder of Hayven"
               placeholder="blur"
               priority
-              sizes="(max-width: 768px) 100vw, 420px"
-              className="w-full max-w-[380px] rounded-2xl object-cover ring-1 ring-charcoal/10 md:max-w-[420px]"
+              sizes="(max-width: 768px) 90vw, 440px"
+              className="relative mx-auto w-full max-w-[440px] rounded-2xl object-cover ring-1 ring-white/10 md:mx-0"
             />
           </Reveal>
         </div>
       </section>
 
       {/* The letter */}
-      <section className="border-t border-charcoal/8 bg-canvas-white px-6 py-20 md:px-10 md:py-24">
+      <section className="bg-canvas-white px-6 py-20 md:px-10 md:py-24">
         <article className="mx-auto max-w-2xl">
           <p className="font-serif text-xl leading-relaxed text-charcoal sm:text-[1.4rem]">
             {OPENING[0]}
