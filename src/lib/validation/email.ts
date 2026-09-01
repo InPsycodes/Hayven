@@ -30,9 +30,14 @@ const COMMON_TLDS = ["com", "net", "org", "edu", "co", "io", "ng", "co.uk", "com
 // broken. One @, something before it, a dotted domain after it, no spaces.
 const SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// RFC 5321 caps an address at 254 chars; anything longer is paste noise and
+// we don't want to run Levenshtein over it.
+const MAX_EMAIL_LEN = 254;
+
 export function emailFormatError(raw: string): string | null {
   const value = raw.trim();
   if (!value) return "Enter your email address.";
+  if (value.length > MAX_EMAIL_LEN) return "That email address is too long.";
   if (/\s/.test(value)) return "Email addresses can't contain spaces.";
   const at = value.indexOf("@");
   if (at === -1) return "That doesn't look like an email address -- it's missing an @.";
@@ -72,6 +77,7 @@ function levenshtein(a: string, b: string): number {
  */
 export function emailDomainSuggestion(raw: string): string | null {
   const value = raw.trim().toLowerCase();
+  if (value.length > MAX_EMAIL_LEN) return null;
   const at = value.lastIndexOf("@");
   if (at === -1) return null;
   const local = value.slice(0, at);
