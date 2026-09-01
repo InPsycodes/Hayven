@@ -4,7 +4,7 @@ import { Reveal } from "@/components/marketing/reveal";
 
 export function TrustSafety() {
   return (
-    <section className="px-6 py-28 lg:px-10 lg:py-36">
+    <section className="px-6 py-16 sm:py-20 lg:px-10 lg:py-36">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
           <span className="eyebrow text-rust-dark">Trust &amp; safety</span>
@@ -17,7 +17,7 @@ export function TrustSafety() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-3">
           {TRUST_SAFETY_POINTS.map((point, index) => (
             <Reveal key={point.title} delayMs={index * 80} className="h-full">
               {/* Title and body are stacked in the same grid cell (both

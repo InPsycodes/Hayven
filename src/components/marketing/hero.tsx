@@ -2,14 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { IconCheck, IconArrowRight, IconArrowDown, IconSparkles } from "@tabler/icons-react";
 
-import { HERO_STAT } from "@/content/marketing/stats";
 import heroImage from "../../../public/images/hero-family.jpg";
 
 const TEXT_SHADOW = "0 2px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.45)";
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-[100svh] flex-col overflow-hidden">
+    <section className="relative flex min-h-[90svh] flex-col overflow-hidden sm:min-h-[100svh]">
       <Image
         src={heroImage}
         alt="A parent and child laughing together at home"
@@ -17,7 +16,7 @@ export function Hero() {
         priority
         placeholder="blur"
         sizes="100vw"
-        className="photo-treatment object-cover object-[center_30%]"
+        className="photo-treatment object-cover object-[68%_18%] sm:object-[center_30%]"
       />
       <div
         className="pointer-events-none absolute inset-0"
@@ -34,9 +33,9 @@ export function Hero() {
         }}
       />
 
-      <div className="relative z-10 flex flex-1 flex-col justify-center px-6 pt-32 pb-20 lg:px-10">
+      <div className="relative z-10 flex flex-1 flex-col justify-center px-6 pt-28 pb-14 sm:pt-32 sm:pb-20 lg:px-10">
         <div className="mx-auto w-full max-w-7xl">
-          <div className="flex max-w-2xl flex-col gap-6">
+          <div className="flex max-w-2xl flex-col gap-5 sm:gap-6">
             <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/12 px-4 py-2 text-sm text-canvas-white backdrop-blur-sm">
               <IconCheck size={16} stroke={2.5} />
               Family-centred paediatric therapy
@@ -88,22 +87,14 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="relative z-10 border-t border-white/20 px-6 py-6 lg:px-10">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="eyebrow text-canvas-white/70">{HERO_STAT.eyebrow}</span>
-            <span className="w-fit border-b border-rust-light text-sm text-canvas-white/90">
-              {HERO_STAT.line}
-            </span>
-          </div>
-          <a
-            href="#specialties"
-            aria-label="Scroll to specialties"
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/30 text-canvas-white transition-colors hover:bg-white/10"
-          >
-            <IconArrowDown size={18} stroke={1.75} />
-          </a>
-        </div>
+      <div className="relative z-10 flex justify-center px-6 pb-8 sm:pb-10">
+        <a
+          href="#specialties"
+          aria-label="Scroll to what's next"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/30 text-canvas-white transition-colors hover:bg-white/10"
+        >
+          <IconArrowDown size={18} stroke={1.75} />
+        </a>
       </div>
     </section>
   );

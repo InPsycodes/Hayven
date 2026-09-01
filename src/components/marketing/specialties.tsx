@@ -17,7 +17,7 @@ const PLACEHOLDER_GRADIENTS = [
 
 export function Specialties() {
   return (
-    <section id="specialties" className="px-6 py-28 lg:px-10 lg:py-36">
+    <section id="specialties" className="px-6 py-16 sm:py-20 lg:px-10 lg:py-36">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
           <span className="eyebrow text-rust-dark">Find the right therapist</span>
@@ -30,10 +30,10 @@ export function Specialties() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-8">
           {SPECIALTY_CARDS.map((card, index) => (
-            <Reveal key={card.title} delayMs={index * 80} className="h-full">
-              <div className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] border-[1.5px] border-terracotta/70 bg-canvas-white shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)] transition-all hover:-translate-y-1 hover:border-terracotta hover:shadow-[0_24px_64px_-14px_rgba(26,18,12,0.32),0_0_80px_-6px_rgba(156,89,52,0.55)]">
+            <Reveal key={card.title} delayMs={index * 60} className="h-full">
+              <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-charcoal/10 bg-canvas-white transition-colors hover:border-charcoal/20">
                 <div className="relative aspect-4/3 shrink-0 overflow-hidden">
                   {card.imageSrc ? (
                     <Image
@@ -51,11 +51,11 @@ export function Specialties() {
                     />
                   )}
                 </div>
-                <div className="p-8">
-                  <div className="relative -mt-[52px] flex size-10 items-center justify-center rounded-xl border border-charcoal/8 bg-canvas-white text-terracotta">
+                <div className="p-5 sm:p-6">
+                  <div className="relative -mt-[46px] flex size-10 items-center justify-center rounded-xl border border-charcoal/10 bg-canvas-white text-terracotta">
                     <Icon icon={card.icon} size="md" />
                   </div>
-                  <h3 className="mt-4 font-serif text-xl text-charcoal">{card.title}</h3>
+                  <h3 className="mt-4 font-serif text-lg text-charcoal sm:text-xl">{card.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-ink-soft">{card.description}</p>
                 </div>
               </div>
@@ -65,7 +65,7 @@ export function Specialties() {
 
         <Link
           href="/search"
-          className="group mx-auto mt-10 flex w-fit items-center gap-2 rounded-full border border-rust-dark px-6 py-3 text-sm font-semibold text-rust-dark transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-rust-dark hover:text-canvas-white"
+          className="group mx-auto mt-10 flex w-fit items-center gap-2 rounded-full border border-rust-dark px-6 py-3 text-sm font-semibold text-rust-dark transition-colors duration-200 hover:bg-rust-dark hover:text-canvas-white"
         >
           Browse verified therapists
           <IconArrowRight size={16} stroke={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />

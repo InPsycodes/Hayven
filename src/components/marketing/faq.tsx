@@ -37,7 +37,7 @@ function FloatingIcon({
 
 export function Faq() {
   return (
-    <section id="faq" className="px-6 py-28 lg:px-10 lg:py-36">
+    <section id="faq" className="px-6 py-16 sm:py-20 lg:px-10 lg:py-36">
       {/* Static, developer-authored JSON from MARKETING_FAQS -- never user
           input. Still run through safeJsonLdStringify for consistency with
           the rest of this codebase's structured data. */}
@@ -55,7 +55,7 @@ export function Faq() {
             The things most parents want to know before they book their first session.
           </p>
 
-          <div className="mt-12 max-w-3xl">
+          <div className="mt-8 max-w-3xl sm:mt-12">
             <Accordion type="single" collapsible>
               {MARKETING_FAQS.map((faq) => (
                 <AccordionItem key={faq.question} value={faq.question}>

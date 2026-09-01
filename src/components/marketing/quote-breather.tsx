@@ -7,7 +7,7 @@ import quoteImage from "../../../public/images/quote-breather-mother-child.webp"
 // out toward the right so the photo takes over everywhere the quote isn't.
 export function QuoteBreather() {
   return (
-    <section className="relative overflow-hidden py-20 lg:min-h-[65vh] lg:py-0">
+    <section className="relative overflow-hidden py-16 sm:py-20 lg:min-h-[65vh] lg:py-0">
       <Image
         src={quoteImage}
         alt="A mother and her son sitting on the floor together, building a tower out of wooden blocks"
