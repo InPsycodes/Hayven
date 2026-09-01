@@ -7,7 +7,7 @@ import { IconUsers, IconUserCheck, IconShieldLock, IconStethoscope } from "@tabl
 import { Icon } from "@/components/ui/icon";
 import { BrandMark } from "@/components/shared/brand-mark";
 import { LogoutButton } from "@/components/shared/logout-button";
-import { StaffMobileSidebar } from "@/components/layout/staff-mobile-sidebar";
+import { SupervisorBottomNav } from "@/components/layout/supervisor-bottom-nav";
 import { cn } from "@/lib/utils";
 import { initialsFromName } from "@/data/format";
 import type { AppSession } from "@/lib/auth/session";
@@ -35,15 +35,7 @@ export function SupervisorSidebar({
 
   return (
     <>
-      <StaffMobileSidebar
-        items={items.map((item) => ({
-          ...item,
-          active: pathname === item.href || pathname.startsWith(`${item.href}/`),
-          count: item.href === "/supervisor" ? teamCount : 0,
-        }))}
-        userName={session.name}
-        roleLabel="Supervisor"
-      />
+      <SupervisorBottomNav items={items.map(({ label, href, icon }) => ({ label, href, icon }))} />
       <aside
         className="hidden w-full shrink-0 flex-col justify-between px-4 py-8 md:flex md:w-50"
         style={{ background: "linear-gradient(184deg, var(--terracotta), var(--rust-dark) 78%)" }}
