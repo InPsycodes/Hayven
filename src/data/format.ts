@@ -60,6 +60,29 @@ export function formatWeekday(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { weekday: "short", timeZone: LAGOS_TZ });
 }
 
+/**
+ * "in 3 hours" / "in 2 days" / "just now" / "5 days ago" -- a compact
+ * relative label for dashboard cards. No date-fns in this project, so it's
+ * a small hand-rolled version covering minutes up to weeks.
+ */
+export function formatRelativeToNow(iso: string): string {
+  const deltaMs = new Date(iso).getTime() - Date.now();
+  const future = deltaMs >= 0;
+  const abs = Math.abs(deltaMs);
+  const mins = Math.round(abs / 60000);
+  if (mins < 1) return "just now";
+  const wrap = (n: number, unit: string) => {
+    const label = `${n} ${unit}${n === 1 ? "" : "s"}`;
+    return future ? `in ${label}` : `${label} ago`;
+  };
+  if (mins < 60) return wrap(mins, "minute");
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return wrap(hours, "hour");
+  const days = Math.round(hours / 24);
+  if (days < 14) return wrap(days, "day");
+  return wrap(Math.round(days / 7), "week");
+}
+
 export function ageFromDob(dob: string): number {
   const diff = Date.now() - new Date(dob).getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));

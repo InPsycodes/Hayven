@@ -56,7 +56,7 @@ export async function AppShell({
     // the therapist profile page's price input on mobile.
     <div className="flex min-h-[calc(100vh-var(--pwa-reserve,0px))] w-full flex-col md:flex-row">
       <AppRoleSidebar session={session} role={role} counts={counts} />
-      <main id="main" className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main id="main" className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
       <BottomTabNav session={session} />
     </div>
   );

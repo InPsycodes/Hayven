@@ -12,17 +12,25 @@ export async function DashboardHeader({
   session,
   greeting,
   subtext,
+  eyebrow,
 }: {
   session: AppSession;
   greeting: string;
   subtext: string;
+  /** Small uppercase kicker above the greeting ("Welcome back," etc.). */
+  eyebrow?: string;
 }) {
   const notifications = await getRealNotificationsForUser(session.userId);
 
   return (
     <header className="flex items-center justify-between gap-3 bg-charcoal px-5 py-5 text-offwhite md:bg-transparent md:px-10 md:py-9 md:text-charcoal">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h1 className="truncate font-heading text-xl md:text-2xl">{greeting}</h1>
+        {eyebrow && (
+          <span className="eyebrow text-[11px] text-amber md:text-terracotta">{eyebrow}</span>
+        )}
+        <h1 className="truncate font-heading text-xl md:text-[32px] md:leading-tight md:font-medium">
+          {greeting}
+        </h1>
         <p className="truncate text-xs text-offwhite/70 md:text-[13px] md:text-muted-foreground">
           {subtext}
         </p>
