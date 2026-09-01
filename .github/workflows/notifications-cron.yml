@@ -1,8 +1,14 @@
-name: Notifications cron
+name: Notifications cron (backstop)
+
+# Primary scheduling is pg_cron inside Supabase (migration 0070) at */15.
+# This workflow is a low-frequency safety net for if pg_cron / pg_net is
+# ever wedged -- every cron task dedups its own work, so an extra run is
+# harmless. GitHub scheduled runs are unreliable, which is exactly why
+# they're no longer the primary path.
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "37 * * * *"
   workflow_dispatch: {}
 
 jobs:
@@ -12,8 +18,6 @@ jobs:
       - name: Call notifications cron endpoint
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          # Set repo variable CRON_TARGET_URL to the deployed origin (no
-          # trailing slash). Falls back to the production domain.
           TARGET_URL: ${{ vars.CRON_TARGET_URL || 'https://hayven.com.ng' }}
         run: |
           if [ -z "$CRON_SECRET" ]; then
