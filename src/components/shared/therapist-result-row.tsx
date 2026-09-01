@@ -2,8 +2,9 @@ import Link from "next/link";
 import { IconArrowRight, IconShieldCheck } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
-import { formatNaira, initialsFromName } from "@/data/format";
+import { formatNaira } from "@/data/format";
 import { StarRating } from "@/components/reviews/star-rating";
+import { TherapistAvatar } from "@/components/shared/therapist-avatar";
 import type { DiscoveryTherapist } from "@/lib/therapist/discovery";
 
 // Initials tile tints, tuned to read on the charcoal card. Picked by a hash
@@ -70,14 +71,13 @@ export function TherapistResultRow({ therapist }: { therapist: DiscoveryTherapis
       href={`/therapists/${therapist.id}`}
       className="group grid grid-cols-[auto_1fr] items-start gap-x-4 gap-y-3 rounded-2xl bg-charcoal p-4 text-canvas-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_22px_46px_-26px_rgba(26,18,12,0.55)] ring-1 ring-white/10 transition-all hover:-translate-y-0.5 hover:ring-white/20 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-x-5 sm:p-5"
     >
-      <span
-        className={cn(
-          "flex size-13 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold ring-1 ring-inset ring-white/15",
-          tintFor(therapist.displayName)
-        )}
-      >
-        {initialsFromName(therapist.displayName)}
-      </span>
+      <TherapistAvatar
+        name={therapist.displayName}
+        photoUrl={therapist.photoUrl}
+        size={52}
+        className="ring-1 ring-inset ring-white/15"
+        fallbackClassName={cn("text-[15px]", tintFor(therapist.displayName))}
+      />
 
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

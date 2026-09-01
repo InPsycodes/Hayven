@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { BookingPanel } from "@/components/booking/booking-panel";
-import { initialsFromName } from "@/data/format";
+import { TherapistAvatar } from "@/components/shared/therapist-avatar";
 import { getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { bookingWindow } from "@/lib/booking/window";
 import { getDiscoveryTherapistById, type DiscoveryTherapist } from "@/lib/therapist/discovery";
@@ -88,9 +88,12 @@ export default async function TherapistProfilePage({
         <div className="flex flex-col gap-6">
           <div>
             <div className="flex items-center gap-4">
-              <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-paper text-lg font-medium text-charcoal">
-                {initialsFromName(therapist.displayName)}
-              </div>
+              <TherapistAvatar
+                name={therapist.displayName}
+                photoUrl={therapist.photoUrl}
+                size={64}
+                fallbackClassName="bg-paper text-lg text-charcoal"
+              />
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="font-heading text-xl text-charcoal md:text-2xl">

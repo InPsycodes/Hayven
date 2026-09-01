@@ -29,6 +29,7 @@ export interface RealTherapistProfile {
   verificationStatus: string;
   verifiedBadgeLabel: string | null;
   reportTone: "warm" | "direct";
+  photoUrl: string | null;
 }
 
 /**
@@ -45,7 +46,7 @@ export const getRealTherapistProfileByUserId = cache(async function getRealThera
   const { data, error } = await supabase
     .from("therapist_profiles")
     .select(
-      "id, user_id, bio, location, session_types, price_per_session, years_practicing, verification_status, verified_badge_label, report_tone"
+      "id, user_id, bio, location, session_types, price_per_session, years_practicing, verification_status, verified_badge_label, report_tone, photo_url"
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -63,6 +64,7 @@ export const getRealTherapistProfileByUserId = cache(async function getRealThera
     verificationStatus: data.verification_status,
     verifiedBadgeLabel: data.verified_badge_label,
     reportTone: data.report_tone === "direct" ? "direct" : "warm",
+    photoUrl: data.photo_url ?? null,
   };
 });
 
@@ -76,6 +78,7 @@ export interface RealPublicTherapist {
   yearsPracticing: number | null;
   verifiedBadgeLabel: string | null;
   specialtyNames: string[];
+  photoUrl: string | null;
 }
 
 /** Public discovery: verified therapists only, via the therapist_public_profiles view. */
@@ -94,6 +97,7 @@ export async function getRealVerifiedTherapists(): Promise<RealPublicTherapist[]
     yearsPracticing: row.years_practicing,
     verifiedBadgeLabel: row.verified_badge_label,
     specialtyNames: row.specialty_names ?? [],
+    photoUrl: row.photo_url ?? null,
   }));
 }
 
@@ -186,6 +190,7 @@ export async function getRealTherapistById(id: string): Promise<RealPublicTherap
     yearsPracticing: data.years_practicing,
     verifiedBadgeLabel: data.verified_badge_label,
     specialtyNames: data.specialty_names ?? [],
+    photoUrl: data.photo_url ?? null,
   };
 }
 

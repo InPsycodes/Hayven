@@ -23,6 +23,7 @@ export interface DiscoveryTherapist {
   verifiedBadgeLabel: string;
   ageGroupsServed: string[];
   rating: ReviewSummary;
+  photoUrl: string | null;
 }
 
 export interface DiscoveryFilters {
@@ -66,6 +67,7 @@ export async function searchDiscoveryTherapists(
       verifiedBadgeLabel: t.verifiedBadgeLabel ?? "Verified",
       ageGroupsServed: [] as string[],
       rating: ratings.get(t.id) ?? { average: 0, count: 0 },
+      photoUrl: t.photoUrl,
     }))
     .filter((t) => matchesFilters(t, filters));
 }
@@ -86,5 +88,6 @@ export async function getDiscoveryTherapistById(id: string): Promise<DiscoveryTh
     verifiedBadgeLabel: match.verifiedBadgeLabel ?? "Verified",
     ageGroupsServed: [],
     rating: await getTherapistReviewSummary(match.id),
+    photoUrl: match.photoUrl,
   };
 }

@@ -456,3 +456,49 @@ export async function requestSupervisorAccess(_prevState: FormState, formData: F
   revalidatePath("/therapist/profile");
   return {};
 }
+
+/**
+ * Replace a therapist's public profile photo after onboarding. Same upload
+ * path as saveProfileStep's photo branch (public `avatars` bucket, magic-byte
+ * extension check, no virus scan -- images only, and the bucket is
+ * display-only) but standalone: no verification request, no redirect.
+ */
+export async function updateTherapistPhoto(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") {
+    return { error: "You must be signed in as a therapist." };
+  }
+
+  const photo = formData.get("photo");
+  if (!(photo instanceof File) || photo.size === 0) {
+    return { error: "Choose an image first." };
+  }
+  if (photo.size > MAX_CREDENTIAL_FILE_BYTES) {
+    return { error: "That image is too large. Please use one under 2.5MB." };
+  }
+  const extension = await detectSafeCredentialExtension(photo);
+  if (!extension || extension === "pdf") {
+    return { error: "Please upload a JPG or PNG image." };
+  }
+
+  const supabase = await createClient();
+  const path = `${session.userId}/${crypto.randomUUID()}.${extension}`;
+  const contentType = extension === "jpg" ? "image/jpeg" : "image/png";
+  const { error: uploadError } = await supabase.storage
+    .from("avatars")
+    .upload(path, photo, { upsert: true, contentType });
+  if (uploadError) {
+    return { error: `Photo upload failed: ${uploadError.message}` };
+  }
+  const photoUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+
+  const { error } = await supabase
+    .from("therapist_profiles")
+    .update({ photo_url: photoUrl })
+    .eq("user_id", session.userId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/therapist/profile");
+  revalidatePath("/search");
+  return {};
+}

@@ -76,6 +76,17 @@ const nextConfig: NextConfig = {
     },
   },
 
+  // Therapist profile photos live in the public `avatars` Supabase Storage
+  // bucket -- let next/image optimise them. Same host the CSP img-src
+  // already allows.
+  images: supabaseHost
+    ? {
+        remotePatterns: [
+          { protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" },
+        ],
+      }
+    : undefined,
+
   async headers() {
     if (process.env.NODE_ENV !== "production") return [];
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];

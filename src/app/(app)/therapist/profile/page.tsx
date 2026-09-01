@@ -8,6 +8,7 @@ import { StatusBadge, type statusBadgeVariants } from "@/components/ui/status-ba
 import type { VariantProps } from "class-variance-authority";
 import { ProfileForm } from "@/components/shared/profile-form";
 import { ProfessionalProfileForm } from "@/components/therapist/professional-profile-form";
+import { TherapistPhotoCard } from "@/components/therapist/photo-card";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { MfaSection } from "@/components/shared/mfa-section";
@@ -50,6 +51,8 @@ export default async function TherapistProfilePage() {
       <DashboardHeader session={session} greeting="Profile" subtext="Your account details" />
       <div className="flex max-w-lg flex-col gap-4 px-5 py-6 md:px-10 md:py-8">
         <ProfileForm initialFullName={account?.fullName ?? session.name} initialPhone={account?.phone ?? null} />
+
+        <TherapistPhotoCard name={session.name} photoUrl={therapist.photoUrl} />
 
         <Card className="p-5">
           <div className="flex items-center justify-between">
