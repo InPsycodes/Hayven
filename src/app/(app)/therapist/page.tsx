@@ -7,19 +7,22 @@ import {
   IconFileText,
   IconWallet,
   IconShieldCheck,
+  IconAlertTriangle,
+  IconVideo,
+  IconMapPin,
+  IconClock,
+  IconMessage,
 } from "@tabler/icons-react";
 
-import { DashboardHeader } from "@/components/shared/dashboard-header";
-import { StatTile } from "@/components/dashboard/stat-tile";
-import { PanelCard } from "@/components/dashboard/panel-card";
-import { ScheduleItem } from "@/components/dashboard/schedule-item";
-import { NeedsAttentionItem } from "@/components/dashboard/needs-attention-item";
+import { CareShell } from "@/components/care/care-shell";
+import { CareHeader } from "@/components/care/care-header";
+import { CareStat } from "@/components/care/care-stat";
+import { CarePanel } from "@/components/care/care-panel";
+import { CareAreaChart } from "@/components/care/care-area-chart";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
-import { VerificationStatusBanner } from "@/components/therapist/verification-status-banner";
-import { Reveal } from "@/components/marketing/reveal";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
-import { formatNaira, formatDate, LAGOS_TZ } from "@/data/format";
+import { formatNaira, formatDate, formatTime, formatRelativeToNow, LAGOS_TZ } from "@/data/format";
 import {
   getRealActiveClientCountForTherapist,
   getRealEarningsForTherapist,
@@ -27,6 +30,7 @@ import {
 } from "@/lib/booking/queries";
 import { getReportWorkflowSummary } from "@/lib/reports/queries";
 import { getRealMessageThreadsForTherapist } from "@/lib/messages/queries";
+import { getTherapistMonthlySeries } from "@/lib/dashboard/care";
 
 export default async function TherapistDashboardPage() {
   const session = await getSession();
@@ -37,210 +41,259 @@ export default async function TherapistDashboardPage() {
 
   const today = new Date();
 
-  const [todaysBookings, activeClients, reportSummary, earnings, threads] = await Promise.all([
+  const [todaysBookings, activeClients, reportSummary, earnings, threads, series] = await Promise.all([
     getRealTodaysBookingsForTherapist(therapist.id),
     getRealActiveClientCountForTherapist(therapist.id),
     getReportWorkflowSummary(therapist.id),
     getRealEarningsForTherapist(session.userId),
     getRealMessageThreadsForTherapist(therapist.id),
+    getTherapistMonthlySeries(session.userId, therapist.id, 6),
   ]);
 
-  // No read-tracking column -- "awaiting reply" (last message wasn't from
-  // this therapist) is the closest honest proxy for "unread."
   const awaitingReplyThreads = threads.filter(
     (t) => t.lastMessage !== null && t.lastMessageSenderId !== session.userId
   );
-  const nextSessionId = todaysBookings[0]?.id;
+  const nextBooking = todaysBookings[0];
   const caughtUp = reportSummary.needsReportCount === 0 && awaitingReplyThreads.length === 0;
 
+  const prevEarnings = series.length >= 2 ? series[series.length - 2].earnings : 0;
+  const earningsDelta =
+    prevEarnings > 0 ? Math.round(((earnings - prevEarnings) / prevEarnings) * 100) : null;
+
+  const verificationBanner =
+    therapist.verificationStatus === "rejected"
+      ? { tone: "error" as const, text: "Your verification wasn't approved — see your profile for details." }
+      : therapist.verificationStatus === "pending" || therapist.verificationStatus === "flagged"
+        ? {
+            tone: "amber" as const,
+            text:
+              therapist.verificationStatus === "flagged"
+                ? "We need more information on your application — check your profile."
+                : "Verification pending. Your credentials are being reviewed (2–5 business days).",
+          }
+        : null;
+
   return (
-    <div className="min-h-full bg-gradient-to-b from-terracotta/[0.09] via-background to-background">
-      <DashboardHeader
+    <CareShell>
+      <CareHeader
         session={session}
-        eyebrow="Welcome back,"
-        greeting={session.name}
-        subtext={`${today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: LAGOS_TZ })} · ${todaysBookings.length} session${todaysBookings.length === 1 ? "" : "s"} today`}
+        initials={session.name.replace("Dr. ", "").slice(0, 2).toUpperCase()}
+        title={`Good morning, ${session.name.split(" ")[0]}`}
+        status={
+          reportSummary.needsReportCount > 0
+            ? { label: `${reportSummary.needsReportCount} report${reportSummary.needsReportCount === 1 ? "" : "s"} due`, tone: "warn" }
+            : undefined
+        }
+        meta={`${today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: LAGOS_TZ })} · ${todaysBookings.length} session${todaysBookings.length === 1 ? "" : "s"} today · ${formatNaira(earnings)} this month`}
+        actions={[
+          { label: "Open schedule", href: "/therapist/schedule", variant: "ghost" },
+          { label: "Write a report", href: "/therapist/schedule" },
+        ]}
       />
 
-      <div className="flex flex-col gap-4 px-5 pt-2 md:px-10">
-        <VerificationStatusBanner status={therapist.verificationStatus} />
+      {verificationBanner && (
+        <div
+          className={
+            verificationBanner.tone === "error"
+              ? "mt-4 flex items-start gap-3 rounded-xl border border-error/25 bg-error/10 p-3.5 text-sm text-[#e6a99f]"
+              : "mt-4 flex items-start gap-3 rounded-xl border border-care-amber/25 bg-care-amber/10 p-3.5 text-sm text-care-amber"
+          }
+        >
+          <IconAlertTriangle size={17} stroke={1.75} className="mt-0.5 shrink-0" />
+          <span>{verificationBanner.text}</span>
+        </div>
+      )}
 
-        {session.isSupervisor && (
-          <Link
-            href="/supervisor"
-            className="group/sup flex items-center gap-3 rounded-xl bg-success/10 p-4 ring-1 ring-success/15 transition-colors hover:bg-success/15"
-          >
-            <IconShieldCheck size={20} stroke={1.75} className="shrink-0 text-success-text" />
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-success-text">You have supervisor access</p>
-              <p className="mt-0.5 text-sm text-success-text/80">
-                Oversee the therapists assigned to you from the Supervisor portal.
-              </p>
-            </div>
-            <span className="hidden shrink-0 items-center gap-1 text-xs font-semibold text-success-text sm:inline-flex">
-              Supervisor portal
-              <IconArrowRight size={13} stroke={2.25} className="transition-transform group-hover/sup:translate-x-0.5" />
-            </span>
-          </Link>
-        )}
-      </div>
+      {session.isSupervisor && (
+        <Link
+          href="/supervisor"
+          className="group mt-4 flex items-center gap-3 rounded-xl border border-care-sage/25 bg-care-sage/10 p-3.5 transition-colors hover:border-care-sage/40"
+        >
+          <IconShieldCheck size={18} stroke={1.75} className="shrink-0 text-care-sage" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-care-sage">You have supervisor access</p>
+            <p className="text-xs text-care-sage/80">Oversee your assigned therapists from the Supervisor portal.</p>
+          </div>
+          <span className="hidden shrink-0 items-center gap-1 text-xs font-semibold text-care-sage sm:inline-flex">
+            Open <IconArrowRight size={12} stroke={2.5} className="transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </Link>
+      )}
 
-      <div className="grid grid-cols-1 gap-4 px-5 py-6 md:grid-cols-12 md:px-10 md:py-6">
-        {/* Stat tiles */}
-        <div className="grid min-w-0 grid-cols-2 gap-4 md:contents">
-        <Reveal delayMs={0} className="min-w-0 md:col-span-3">
-          <StatTile
-            icon={IconUsers}
-            tone="accent"
-            value={String(activeClients)}
-            label={activeClients === 1 ? "Active client" : "Active clients"}
-            href="/therapist/caseload"
-            dest="Caseload"
-          />
-        </Reveal>
-        <Reveal delayMs={60} className="min-w-0 md:col-span-3">
-          <StatTile
-            icon={IconCalendarEvent}
-            tone="sage"
-            value={String(todaysBookings.length)}
-            label={todaysBookings.length === 1 ? "Session today" : "Sessions today"}
-            href="/therapist/schedule"
-            dest="Schedule"
-          />
-        </Reveal>
-        <Reveal delayMs={120} className="min-w-0 md:col-span-3">
-          <StatTile
-            icon={IconFileText}
-            tone={reportSummary.needsReportCount > 0 ? "amber" : "ink"}
-            value={String(reportSummary.needsReportCount)}
-            label={reportSummary.needsReportCount === 1 ? "Report due" : "Reports due"}
-            href="/therapist/schedule"
-            dest="Write reports"
-            pill={reportSummary.needsReportCount > 0 ? { tone: "due", text: "ACTION" } : undefined}
-          />
-        </Reveal>
-        <Reveal delayMs={180} className="min-w-0 md:col-span-3">
-          <StatTile
-            icon={IconWallet}
-            tone="ink"
-            value={formatNaira(earnings)}
-            label="Earned this month"
-            href="/therapist/earnings"
-            dest="Earnings & payouts"
-          />
-        </Reveal>
+      <div className="mt-5 grid grid-cols-2 gap-3.5 md:grid-cols-12">
+        <div className="col-span-2 grid grid-cols-2 gap-3.5 md:contents">
+          <div className="md:col-span-3">
+            <CareStat
+              icon={IconUsers}
+              label="Active clients"
+              value={String(activeClients)}
+              sub="on your caseload"
+              href="/therapist/caseload"
+            />
+          </div>
+          <div className="md:col-span-3">
+            <CareStat
+              icon={IconCalendarEvent}
+              label="Sessions today"
+              value={String(todaysBookings.length)}
+              sub={nextBooking ? `next at ${formatTime(nextBooking.slotStartTime)}` : "none scheduled"}
+              href="/therapist/schedule"
+            />
+          </div>
+          <div className="md:col-span-3">
+            <CareStat
+              icon={IconFileText}
+              label="Reports due"
+              value={String(reportSummary.needsReportCount)}
+              delta={reportSummary.needsReportCount > 0 ? { text: "action", good: false } : undefined}
+              sub={`${reportSummary.draftCount} draft · ${reportSummary.publishedCount} published`}
+              href="/therapist/schedule"
+            />
+          </div>
+          <div className="md:col-span-3">
+            <CareStat
+              icon={IconWallet}
+              label="This month"
+              value={formatNaira(earnings)}
+              delta={earningsDelta != null ? { text: `${earningsDelta >= 0 ? "+" : ""}${earningsDelta}%`, good: earningsDelta >= 0 } : undefined}
+              sub="earned so far"
+              href="/therapist/earnings"
+            />
+          </div>
         </div>
 
-        {/* Today's schedule */}
-        <Reveal delayMs={240} className="min-w-0 md:col-span-7">
-          <PanelCard.Static
+        <CarePanel
+          label="Earnings & sessions"
+          href="/therapist/earnings"
+          className="md:col-span-7"
+          right={<span className="text-[11px] text-care-ink-faint">Last 6 months</span>}
+        >
+          <CareAreaChart data={series} />
+        </CarePanel>
+
+        <div className="flex flex-col gap-3.5 md:col-span-5">
+          <CarePanel label="Next session" href="/therapist/schedule" accent>
+            {nextBooking ? (
+              <>
+                <h3 className="mt-2 font-heading text-lg font-medium text-care-ink">
+                  {nextBooking.childFirstName} — {nextBooking.sessionType.replace("_", " ")}
+                </h3>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-care-ink-soft">
+                  <span className="inline-flex items-center gap-1.5">
+                    {nextBooking.sessionType === "virtual" ? (
+                      <IconVideo size={13} stroke={1.75} />
+                    ) : (
+                      <IconMapPin size={13} stroke={1.75} />
+                    )}
+                    {nextBooking.sessionType === "virtual" ? "Google Meet" : nextBooking.location ?? "In-person"}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <IconClock size={13} stroke={1.75} />
+                    {formatTime(nextBooking.slotStartTime)} · {formatRelativeToNow(nextBooking.slotStartTime)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-care-ink-soft">No more sessions today.</p>
+            )}
+          </CarePanel>
+
+          <CarePanel.Static
             label="Today's schedule"
-            className="h-full"
-            footer={{ href: "/therapist/schedule", dest: "Full schedule" }}
+            className="flex-1"
+            right={<span className="text-[11px] text-care-ink-faint">{todaysBookings.length} sessions</span>}
+            footer={{ href: "/therapist/schedule", label: "Full schedule" }}
           >
             {todaysBookings.length === 0 ? (
-              <p className="py-4 text-sm text-muted-foreground">No sessions scheduled today.</p>
+              <p className="py-4 text-sm text-care-ink-soft">No sessions scheduled today.</p>
             ) : (
-              <div className="mt-1 flex flex-col divide-y divide-border">
-                {todaysBookings.map((booking) => (
-                  <ScheduleItem
-                    key={booking.id}
-                    clientName={booking.childFirstName}
-                    sessionType={booking.sessionType.replace("_", " ")}
-                    format={
-                      booking.sessionType === "virtual"
-                        ? "Google Meet"
-                        : booking.location ?? "In-person"
-                    }
-                    startTime={booking.slotStartTime}
-                    isNext={booking.id === nextSessionId}
-                  />
-                ))}
-              </div>
-            )}
-          </PanelCard.Static>
-        </Reveal>
-
-        {/* Needs attention */}
-        <Reveal delayMs={300} className="min-w-0 md:col-span-5">
-          <PanelCard.Static label="Needs attention" className="h-full">
-            {caughtUp ? (
-              <p className="py-4 text-sm text-muted-foreground">You&apos;re all caught up.</p>
-            ) : (
-              <div className="mt-1 flex flex-col divide-y divide-border">
-                {reportSummary.needsReportSessions.map((s) => (
-                  <NeedsAttentionItem
-                    key={s.id}
-                    tone="amber"
-                    title={`Report needed: ${s.childFirstName}`}
-                    subtitle={`Session on ${formatDate(s.sessionDate)} still needs a report`}
-                    href={`/therapist/children/${s.childId}/sessions/${s.id}`}
-                  />
-                ))}
-                {awaitingReplyThreads.map((thread) => (
-                  <NeedsAttentionItem
-                    key={thread.bookingId}
-                    tone="rust"
-                    title={`New message from ${thread.counterpartName}`}
-                    subtitle={thread.lastMessage ?? ""}
-                    href={`/therapist/messages/${thread.bookingId}`}
-                  />
-                ))}
-              </div>
-            )}
-          </PanelCard.Static>
-        </Reveal>
-
-        {/* Messages */}
-        <Reveal delayMs={360} className="min-w-0 md:col-span-7">
-          <PanelCard.Static
-            label="Messages awaiting reply"
-            className="h-full"
-            footer={{ href: "/therapist/messages", dest: "All messages" }}
-          >
-            <div className="mt-3 flex flex-col">
-              {awaitingReplyThreads.length === 0 ? (
-                <p className="py-3 text-sm text-muted-foreground">Nothing waiting on you.</p>
-              ) : (
-                awaitingReplyThreads.slice(0, 3).map((thread) => (
-                  <Link
-                    key={thread.bookingId}
-                    href={`/therapist/messages/${thread.bookingId}`}
-                    className="flex items-center gap-3 border-t border-border/60 py-2.5 first:border-t-0 hover:opacity-80"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-charcoal">{thread.counterpartName}</p>
-                      <p className="truncate text-xs text-muted-foreground">{thread.lastMessage}</p>
+              <div className="mt-2 flex flex-col divide-y divide-care-line/60">
+                {todaysBookings.map((b, i) => (
+                  <div key={b.id} className="flex items-center justify-between gap-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] text-care-ink">
+                        {b.childFirstName} — <span className="capitalize">{b.sessionType.replace("_", " ")}</span>
+                      </p>
+                      <p className="text-[11px] text-care-ink-faint">
+                        {b.sessionType === "virtual" ? "Google Meet" : b.location ?? "In-person"}
+                      </p>
                     </div>
-                    <IconArrowRight size={14} stroke={1.75} className="shrink-0 text-muted-foreground" />
-                  </Link>
-                ))
-              )}
-            </div>
-          </PanelCard.Static>
-        </Reveal>
+                    <span className={i === 0 ? "shrink-0 text-[13px] font-semibold text-care-accent" : "shrink-0 text-[13px] text-care-ink-soft"}>
+                      {formatTime(b.slotStartTime)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CarePanel.Static>
+        </div>
 
-        {/* Report status */}
-        <Reveal delayMs={420} className="min-w-0 md:col-span-5">
-          <PanelCard href="/therapist/schedule" label="Report status" dest="Manage reports" className="h-full">
-            <div className="mt-3 flex flex-col gap-2">
-              {[
-                { label: "Need reports", value: reportSummary.needsReportCount, dot: "bg-terracotta" },
-                { label: "Draft", value: reportSummary.draftCount, dot: "bg-amber" },
-                { label: "Published", value: reportSummary.publishedCount, dot: "bg-success" },
-              ].map((row) => (
-                <div key={row.label} className="flex items-center justify-between text-[13px]">
-                  <span className="flex items-center gap-2 text-charcoal">
-                    <span className={`size-1.5 rounded-full ${row.dot}`} />
-                    {row.label}
-                  </span>
-                  <span className="font-medium text-charcoal">{row.value}</span>
-                </div>
+        <CarePanel.Static
+          label="Needs attention"
+          className="md:col-span-6"
+        >
+          {caughtUp ? (
+            <p className="py-4 text-sm text-care-ink-soft">You&apos;re all caught up.</p>
+          ) : (
+            <div className="mt-2 flex flex-col divide-y divide-care-line/60">
+              {reportSummary.needsReportSessions.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/therapist/children/${s.childId}/sessions/${s.id}`}
+                  className="flex gap-3 py-2.5 hover:opacity-80"
+                >
+                  <IconFileText size={15} stroke={1.75} className="mt-0.5 shrink-0 text-care-amber" />
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-care-ink">Report needed: {s.childFirstName}</p>
+                    <p className="text-[11.5px] text-care-ink-faint">Session on {formatDate(s.sessionDate)} still needs a report</p>
+                  </div>
+                </Link>
+              ))}
+              {awaitingReplyThreads.map((t) => (
+                <Link
+                  key={t.bookingId}
+                  href={`/therapist/messages/${t.bookingId}`}
+                  className="flex gap-3 py-2.5 hover:opacity-80"
+                >
+                  <IconMessage size={15} stroke={1.75} className="mt-0.5 shrink-0 text-care-accent" />
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-care-ink">New message · {t.counterpartName}</p>
+                    <p className="truncate text-[11.5px] text-care-ink-faint">{t.lastMessage}</p>
+                  </div>
+                </Link>
               ))}
             </div>
-          </PanelCard>
-        </Reveal>
+          )}
+        </CarePanel.Static>
+
+        <CarePanel.Static
+          label="Messages awaiting reply"
+          className="md:col-span-6"
+          footer={{ href: "/therapist/messages", label: "All messages" }}
+        >
+          <div className="mt-2 flex flex-col divide-y divide-care-line/60">
+            {awaitingReplyThreads.length === 0 ? (
+              <p className="py-4 text-sm text-care-ink-soft">Nothing waiting on you.</p>
+            ) : (
+              awaitingReplyThreads.slice(0, 3).map((t) => (
+                <Link
+                  key={t.bookingId}
+                  href={`/therapist/messages/${t.bookingId}`}
+                  className="flex items-center gap-3 py-2.5 hover:opacity-80"
+                >
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-care-raised text-[10px] font-bold text-care-ink-soft">
+                    {t.counterpartName.slice(0, 2).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-care-ink">{t.counterpartName}</p>
+                    <p className="truncate text-[11.5px] text-care-ink-faint">{t.lastMessage}</p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </CarePanel.Static>
       </div>
-    </div>
+    </CareShell>
   );
 }

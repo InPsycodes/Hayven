@@ -15,7 +15,7 @@ export function ChildSwitcher({ kids, activeId }: { kids: SwitcherChild[]; activ
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  if (kids.length === 0) return null;
+  if (kids.length <= 1) return null;
 
   function selectChild(id: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -24,7 +24,7 @@ export function ChildSwitcher({ kids, activeId }: { kids: SwitcherChild[]; activ
   }
 
   return (
-    <div className="flex flex-wrap gap-2 px-5 md:px-10">
+    <div className="mt-4 flex flex-wrap gap-2">
       {kids.map((child) => {
         const active = child.id === activeId;
         return (
@@ -35,14 +35,14 @@ export function ChildSwitcher({ kids, activeId }: { kids: SwitcherChild[]; activ
             className={cn(
               "flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors",
               active
-                ? "border-charcoal bg-charcoal text-offwhite"
-                : "border-border text-charcoal hover:border-charcoal/40"
+                ? "border-care-accent bg-care-accent/15 text-care-ink"
+                : "border-care-line text-care-ink-soft hover:border-care-ink-faint"
             )}
           >
             <span
               className={cn(
-                "flex size-6 items-center justify-center rounded-full text-[10px] font-medium",
-                active ? "bg-terracotta text-white" : "bg-paper text-charcoal"
+                "flex size-6 items-center justify-center rounded-full text-[10px] font-bold",
+                active ? "bg-care-accent text-white" : "bg-care-raised text-care-ink-soft"
               )}
             >
               {initialsFromName(child.firstName)}

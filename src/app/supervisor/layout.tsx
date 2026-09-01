@@ -20,9 +20,9 @@ export default async function SupervisorLayout({ children }: { children: React.R
   const teamCount = await getMySupervisedTherapistCount(session.userId);
 
   return (
-    <div className="flex min-h-screen w-full flex-col md:flex-row">
+    <div className="flex min-h-screen w-full flex-col bg-care-bg md:flex-row">
       <SupervisorSidebar session={session} teamCount={teamCount} />
-      <main id="main" className="min-w-0 flex-1 overflow-hidden pb-20 md:pb-0">{children}</main>
+      <main id="main" className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
     </div>
   );
 }

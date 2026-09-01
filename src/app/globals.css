@@ -67,6 +67,20 @@
   --color-error-text: var(--error-text);
   --color-amber-text: var(--amber-text);
 
+  /* Warm-dark dashboard palette (bg-care-surface, text-care-ink, ...) */
+  --color-care-bg: var(--care-bg);
+  --color-care-surface: var(--care-surface);
+  --color-care-raised: var(--care-raised);
+  --color-care-line: var(--care-line);
+  --color-care-ink: var(--care-ink);
+  --color-care-ink-soft: var(--care-ink-soft);
+  --color-care-ink-faint: var(--care-ink-faint);
+  --color-care-accent: var(--care-accent);
+  --color-care-accent-deep: var(--care-accent-deep);
+  --color-care-sage: var(--care-sage);
+  --color-care-green: var(--care-green);
+  --color-care-amber: var(--care-amber);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -100,6 +114,22 @@
   --success-text: #4a5540;
   --error-text: #8f2e24;
   --amber-text: #6f4519;
+
+  /* Warm-dark "care portal" palette for the dashboards. Fixed values, not
+     theme-swapped -- these screens are dark by design (see the dashboard
+     pages + the app sidebar). */
+  --care-bg: #211a13;
+  --care-surface: #2b2219;
+  --care-raised: #33291f;
+  --care-line: color-mix(in oklch, #ede4d3, transparent 90%);
+  --care-ink: #ede4d3;
+  --care-ink-soft: #b8ac97;
+  --care-ink-faint: #8a7d68;
+  --care-accent: #c9743f;
+  --care-accent-deep: #a95c30;
+  --care-sage: #8b9a6b;
+  --care-green: #7f9560;
+  --care-amber: #cf9450;
 
   --background: var(--offwhite);
   --foreground: var(--charcoal);

@@ -3,36 +3,36 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   IconArrowRight,
-  IconCalendarEvent,
-  IconMessage,
+  IconTargetArrow,
+  IconCalendarCheck,
   IconFileText,
   IconClipboardCheck,
   IconVideo,
   IconMapPin,
   IconClock,
+  IconQuote,
 } from "@tabler/icons-react";
 
-import { DashboardHeader } from "@/components/shared/dashboard-header";
+import { CareShell } from "@/components/care/care-shell";
+import { CareHeader } from "@/components/care/care-header";
+import { CareStat } from "@/components/care/care-stat";
+import { CarePanel } from "@/components/care/care-panel";
+import { CareBarChart } from "@/components/care/care-bar-chart";
 import { ChildSwitcher } from "@/components/dashboard/child-switcher";
-import { StatTile } from "@/components/dashboard/stat-tile";
-import { PanelCard } from "@/components/dashboard/panel-card";
-import { Reveal } from "@/components/marketing/reveal";
 import { getSession } from "@/lib/auth/session";
-import { formatDateTime, formatRelativeToNow } from "@/data/format";
-import { getRealLearningArticles } from "@/lib/learning/queries";
+import { ageFromDob, formatDateTime, formatRelativeToNow, formatShortDate } from "@/data/format";
 import { getIntakeFormForChild, intakeSectionStatuses } from "@/lib/intake/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
-import {
-  getRealNextUpcomingBookingForChild,
-  getRealBookingsForParent,
-} from "@/lib/booking/queries";
+import { getRealNextUpcomingBookingForChild, getRealBookingsForParent } from "@/lib/booking/queries";
 import { getPublishedReportsForChild } from "@/lib/reports/queries";
 import { renderReportBody, extractReportSnippet } from "@/lib/reports/generate";
-import { getRealMessageThreadsForParent } from "@/lib/messages/queries";
+import { getChildGoalsForParent, weeklyAttendance } from "@/lib/dashboard/care";
 
 interface ParentDashboardProps {
   searchParams: Promise<{ child?: string }>;
 }
+
+const DOMAIN_LABEL = (d: string | null) => (d ? d.replace(/_/g, " ") : "General");
 
 export default async function ParentDashboardPage({ searchParams }: ParentDashboardProps) {
   const session = await getSession();
@@ -42,292 +42,281 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
   const allChildren = await getRealChildrenForParent(session.userId);
   const activeChild = allChildren.find((c) => c.id === childParam) ?? allChildren[0];
 
-  const [nextSession, reports, allThreads, allBookings, parentArticles, intakeForm] = await Promise.all([
+  const [nextSession, reports, allBookings, intakeForm, goals] = await Promise.all([
     activeChild ? getRealNextUpcomingBookingForChild(activeChild.id) : null,
     activeChild ? getPublishedReportsForChild(activeChild.id) : [],
-    getRealMessageThreadsForParent(session.userId),
     getRealBookingsForParent(session.userId),
-    getRealLearningArticles("parent"),
     activeChild ? getIntakeFormForChild(activeChild.id) : null,
+    activeChild ? getChildGoalsForParent(activeChild.id) : [],
   ]);
 
   const intakeSections = intakeSectionStatuses(intakeForm);
-  const intakeCompleteCount = intakeSections.filter((s) => s.complete).length;
-  const latestReport = reports[0] ?? null;
-  const latestSnippet =
-    latestReport && activeChild
-      ? extractReportSnippet(renderReportBody(latestReport.parentBody, activeChild.firstName))
-      : null;
+  const intakeDone = intakeSections.filter((s) => s.complete).length;
 
-  // Threads with an actual message (every confirmed booking spawns a thread).
-  const threads = allThreads.filter((t) => t.lastMessage !== null);
-  const unreadCount = allThreads.filter(
-    (t) => t.lastMessage !== null && t.lastMessageSenderId !== session.userId
-  ).length;
-
+  const childBookings = activeChild ? allBookings.filter((b) => b.childId === activeChild.id) : [];
   const nowMs = new Date().getTime();
-  const upcomingCount = allBookings.filter(
-    (b) => b.status === "confirmed" && b.slotStartTime && new Date(b.slotStartTime).getTime() > nowMs
-  ).length;
+  const past = childBookings.filter((b) => b.slotStartTime && new Date(b.slotStartTime).getTime() <= nowMs);
+  const attended = past.filter((b) => b.status === "completed" || b.status === "confirmed").length;
+  const attendancePct = past.length ? Math.round((attended / past.length) * 100) : 0;
+  const attendanceWeeks = weeklyAttendance(childBookings, 14);
 
-  const recommendedArticles = parentArticles.slice(1, 3);
+  const goalsOnTrack = goals.filter((g) => g.status === "active" || g.status === "met").length;
+  const noteSnippets = activeChild
+    ? reports.slice(0, 2).map((r) => ({
+        text: extractReportSnippet(renderReportBody(r.parentBody, activeChild.firstName)),
+        when: formatShortDate(r.publishedAt),
+      }))
+    : [];
+
   const reportsHref = activeChild ? `/parent/children/${activeChild.id}/reports` : "/parent/children";
   const intakeHref = activeChild ? `/parent/children/${activeChild.id}/intake` : "/parent/children";
 
+  const statusPill =
+    goals.length > 0 && goalsOnTrack === goals.length
+      ? ({ label: "On track", tone: "ok" } as const)
+      : intakeDone < 4
+        ? ({ label: "Intake pending", tone: "warn" } as const)
+        : undefined;
+
+  const metaParts = activeChild
+    ? [
+        `Age ${ageFromDob(activeChild.dateOfBirth)}`,
+        `${attended} session${attended === 1 ? "" : "s"} attended`,
+        `${reports.length} report${reports.length === 1 ? "" : "s"}`,
+      ]
+    : ["Let's get set up"];
+
   return (
-    <div className="min-h-full bg-gradient-to-b from-terracotta/[0.09] via-background to-background">
-      <DashboardHeader
+    <CareShell>
+      <CareHeader
         session={session}
-        eyebrow="Welcome back,"
-        greeting={session.name.split(" ")[0]}
-        subtext={
-          allChildren.length > 0
-            ? `${allChildren.length} ${allChildren.length === 1 ? "child" : "children"} under care`
-            : "Let's get set up"
-        }
+        initials={activeChild ? activeChild.firstName.slice(0, 2).toUpperCase() : "H"}
+        title={activeChild ? activeChild.firstName : `Welcome, ${session.name.split(" ")[0]}`}
+        status={statusPill}
+        meta={metaParts.join(" · ")}
+        actions={[
+          { label: "View reports", href: reportsHref, variant: "ghost" },
+          { label: "Book session", href: "/search" },
+        ]}
       />
 
-      <div className="pt-2">
-        {allChildren.length > 0 && activeChild && (
-          <Suspense>
-            <ChildSwitcher kids={allChildren} activeId={activeChild.id} />
-          </Suspense>
-        )}
+      {allChildren.length > 1 && activeChild && (
+        <Suspense>
+          <ChildSwitcher kids={allChildren} activeId={activeChild.id} />
+        </Suspense>
+      )}
 
-        <div className="grid grid-cols-1 gap-4 px-5 pb-10 pt-5 md:grid-cols-12 md:px-10">
-          {/* Next session */}
-          <Reveal delayMs={0} className="min-w-0 md:col-span-8">
-            <PanelCard
-              href="/parent/sessions"
-              label={`Next session${activeChild ? ` · ${activeChild.firstName}` : ""}`}
-              dest="Sessions"
-              className="h-full bg-gradient-to-br from-card to-secondary/40"
-            >
-              {nextSession ? (
-                <>
-                  <p className="mt-3.5 font-mono text-xs uppercase tracking-wide text-charcoal/80">
-                    {formatDateTime(nextSession.slotStartTime)}
-                  </p>
-                  <h2 className="mt-1.5 font-heading text-[22px] font-medium capitalize leading-snug text-charcoal">
-                    {nextSession.sessionType.replace("_", " ")} with {nextSession.therapistDisplayName}
-                  </h2>
-                  <div className="mt-3.5 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      {nextSession.sessionType === "virtual" ? (
-                        <IconVideo size={14} stroke={1.75} />
-                      ) : (
-                        <IconMapPin size={14} stroke={1.75} />
-                      )}
-                      {nextSession.sessionType === "virtual"
-                        ? "Google Meet"
-                        : nextSession.location ?? nextSession.therapistLocation ?? "In-person"}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <IconClock size={14} stroke={1.75} />
-                      {formatRelativeToNow(nextSession.slotStartTime)}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  No upcoming sessions booked for {activeChild?.firstName ?? "this child"} yet.
-                  Find a therapist to get started.
-                </p>
-              )}
-            </PanelCard>
-          </Reveal>
-
-          {/* Latest progress */}
-          <Reveal delayMs={80} className="min-w-0 md:col-span-4">
-            <PanelCard href={reportsHref} label={`${activeChild?.firstName ?? "Your child"}'s progress`} dest="View report" className="h-full">
-              {latestReport && latestSnippet ? (
-                <>
-                  <p className="mt-3 font-heading text-[15px] italic leading-relaxed text-ink-soft">
-                    &ldquo;{latestSnippet}&rdquo;
-                  </p>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    Shared {formatDateTime(latestReport.publishedAt)}
-                  </p>
-                </>
-              ) : (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  No progress reports shared yet. Your child&apos;s therapist will publish one after a session.
-                </p>
-              )}
-            </PanelCard>
-          </Reveal>
-
-          {/* Stat tiles */}
-          <div className="grid min-w-0 grid-cols-2 gap-4 md:contents">
-          <Reveal delayMs={120} className="min-w-0 md:col-span-3">
-            <StatTile
-              icon={IconCalendarEvent}
-              tone="accent"
-              value={String(upcomingCount)}
-              label={upcomingCount === 1 ? "Upcoming session" : "Upcoming sessions"}
-              href="/parent/sessions"
-              dest="Sessions"
-            />
-          </Reveal>
-          <Reveal delayMs={160} className="min-w-0 md:col-span-3">
-            <StatTile
-              icon={IconMessage}
-              tone="sage"
-              value={String(unreadCount)}
-              label={unreadCount === 1 ? "Unread message" : "Unread messages"}
-              href="/parent/messages"
-              dest="Messages"
-              pill={unreadCount > 0 ? { tone: "due", text: "NEW" } : undefined}
-            />
-          </Reveal>
-          <Reveal delayMs={200} className="min-w-0 md:col-span-3">
-            <StatTile
-              icon={IconFileText}
-              tone="ink"
-              value={String(reports.length)}
-              label={reports.length === 1 ? "Session report" : "Session reports"}
+      <div className="mt-5 grid grid-cols-2 gap-3.5 md:grid-cols-12">
+        <div className="col-span-2 grid grid-cols-2 gap-3.5 md:contents">
+          <div className="md:col-span-3">
+            <CareStat
+              icon={IconTargetArrow}
+              label="Goals on track"
+              value={goals.length ? `${goalsOnTrack}/${goals.length}` : "—"}
+              sub={goals.length ? "set by your therapist" : "none set yet"}
+              bar={goals.length ? { pct: (goalsOnTrack / goals.length) * 100, tone: "sage" } : undefined}
               href={reportsHref}
-              dest="Reports"
             />
-          </Reveal>
-          <Reveal delayMs={240} className="min-w-0 md:col-span-3">
-            <StatTile
-              icon={IconClipboardCheck}
-              tone={intakeCompleteCount === 4 ? "sage" : "amber"}
-              value={`${intakeCompleteCount}/4`}
-              label="Intake sections done"
-              href={intakeHref}
-              dest="Intake form"
-              pill={
-                intakeCompleteCount < 4
-                  ? { tone: "due", text: `${4 - intakeCompleteCount} LEFT` }
-                  : undefined
-              }
-            />
-          </Reveal>
           </div>
-
-          {/* Messages */}
-          <Reveal delayMs={280} className="min-w-0 md:col-span-5">
-            <PanelCard.Static
-              label="Messages"
-              className="h-full"
-              footer={{ href: "/parent/messages", dest: "All messages" }}
-            >
-              <div className="mt-3 flex flex-col">
-                {threads.length === 0 ? (
-                  <p className="py-3 text-sm text-muted-foreground">No messages yet.</p>
-                ) : (
-                  threads.slice(0, 3).map((thread) => (
-                    <Link
-                      key={thread.bookingId}
-                      href={`/parent/messages/${thread.bookingId}`}
-                      className="flex items-center gap-3 border-t border-border/60 py-2.5 first:border-t-0 hover:opacity-80"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-charcoal">{thread.counterpartName}</p>
-                        <p className="truncate text-xs text-muted-foreground">{thread.lastMessage}</p>
-                      </div>
-                      <IconArrowRight size={14} stroke={1.75} className="shrink-0 text-muted-foreground" />
-                    </Link>
-                  ))
-                )}
-              </div>
-            </PanelCard.Static>
-          </Reveal>
-
-          {/* Intake checklist */}
-          {activeChild && (
-            <Reveal delayMs={320} className="min-w-0 md:col-span-4">
-              <PanelCard
-                href={intakeHref}
-                label={`${activeChild.firstName}'s intake form`}
-                dest={intakeCompleteCount === 4 ? "Review intake form" : "Finish intake form"}
-                className="h-full"
-                headerRight={
-                  <span className="text-xs font-medium text-muted-foreground">{intakeCompleteCount}/4</span>
-                }
-              >
-                <div className="mt-3 flex flex-col gap-2">
-                  {intakeSections.map((section) => (
-                    <div key={section.key} className="flex items-center justify-between text-[13px]">
-                      <span className="text-charcoal">{section.label}</span>
-                      <span className={section.complete ? "font-medium text-success-text" : "font-medium text-amber-text"}>
-                        {section.complete ? "Complete" : "Due"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className="h-full rounded-full bg-terracotta transition-all"
-                    style={{ width: `${(intakeCompleteCount / 4) * 100}%` }}
-                  />
-                </div>
-              </PanelCard>
-            </Reveal>
-          )}
-
-          {/* Billing */}
-          <Reveal delayMs={360} className="min-w-0 md:col-span-3">
-            <StatTile
-              icon={IconFileText}
-              tone="ink"
-              value="₦0"
-              label="Outstanding balance"
-              href="/parent/billing"
-              dest="Billing & receipts"
+          <div className="md:col-span-3">
+            <CareStat
+              icon={IconCalendarCheck}
+              label="Attendance"
+              value={past.length ? `${attendancePct}%` : "—"}
+              sub={past.length ? `${attended} of ${past.length} sessions` : "no sessions yet"}
+              bar={past.length ? { pct: attendancePct, tone: "sage" } : undefined}
+              href="/parent/sessions"
             />
-          </Reveal>
-
-          {/* Learning Center */}
-          {recommendedArticles.length > 0 && (
-            <Reveal delayMs={400} className="min-w-0 md:col-span-8">
-              <PanelCard.Static
-                label="From the Learning Center"
-                className="h-full"
-                footer={{ href: "/learn", dest: "Open Learning Center" }}
-              >
-                <div className="mt-3 flex flex-col">
-                  {recommendedArticles.map((article) => (
-                    <Link
-                      key={article.slug}
-                      href={`/learn/${article.slug}`}
-                      className="flex items-center gap-3 border-t border-border/60 py-2.5 first:border-t-0 hover:opacity-80"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium leading-snug text-charcoal">{article.title}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{article.readTime}</p>
-                      </div>
-                      <IconArrowRight size={14} stroke={1.75} className="shrink-0 text-muted-foreground" />
-                    </Link>
-                  ))}
-                </div>
-              </PanelCard.Static>
-            </Reveal>
-          )}
-
-          {/* Find a therapist */}
-          <Reveal delayMs={440} className="min-w-0 md:col-span-4">
-            <Link
-              href="/search"
-              className="group/promo flex h-full flex-col rounded-xl bg-gradient-to-br from-terracotta to-rust-dark p-5 text-canvas-white ring-1 ring-foreground/10 transition-[box-shadow,transform] hover:-translate-y-0.5 hover:shadow-[0_22px_48px_-24px_rgba(26,26,26,.5)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
-            >
-              <span className="label-micro text-canvas-white/70">Find a therapist</span>
-              <h3 className="mt-2 font-heading text-[17px] font-medium leading-snug">
-                Browse verified specialists near you
-              </h3>
-              <p className="mt-1.5 text-xs text-canvas-white/85">
-                Filter by concern, session type, and budget — matched to your child.
-              </p>
-              <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold">
-                Browse therapists
-                <IconArrowRight size={13} stroke={2.25} className="transition-transform group-hover/promo:translate-x-0.5" />
-              </span>
-            </Link>
-          </Reveal>
+          </div>
+          <div className="md:col-span-3">
+            <CareStat
+              icon={IconFileText}
+              label="Reports"
+              value={String(reports.length)}
+              sub={reports.length ? `latest ${formatShortDate(reports[0].publishedAt)}` : "none published yet"}
+              href={reportsHref}
+            />
+          </div>
+          <div className="md:col-span-3">
+            <CareStat
+              icon={IconClipboardCheck}
+              label="Intake form"
+              value={`${intakeDone}/4`}
+              sub={intakeDone < 4 ? `${4 - intakeDone} section${4 - intakeDone === 1 ? "" : "s"} left` : "complete"}
+              bar={{ pct: (intakeDone / 4) * 100, tone: intakeDone === 4 ? "sage" : "accent" }}
+              href={intakeHref}
+            />
+          </div>
         </div>
+
+        {/* Therapy goals */}
+        <CarePanel
+          label="Therapy goals"
+          href={reportsHref}
+          className="md:col-span-7"
+          right={<span className="text-[11px] text-care-ink-faint">{goals.length} total</span>}
+        >
+          {goals.length === 0 ? (
+            <p className="mt-4 py-6 text-sm text-care-ink-soft">
+              Your therapist will set goals for {activeChild?.firstName ?? "your child"} after the assessment.
+              You&apos;ll see progress here once sessions begin.
+            </p>
+          ) : (
+            <ul className="mt-3 flex flex-col divide-y divide-care-line/60">
+              {goals.slice(0, 6).map((g) => (
+                <li key={g.id} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] text-care-ink">{g.title}</p>
+                    <p className="text-[11px] uppercase tracking-wide text-care-ink-faint">{DOMAIN_LABEL(g.domain)}</p>
+                  </div>
+                  <span
+                    className={
+                      g.status === "met"
+                        ? "shrink-0 rounded-full bg-care-sage/15 px-2 py-0.5 text-[10.5px] font-semibold text-care-sage"
+                        : g.status === "active"
+                          ? "shrink-0 rounded-full bg-care-accent/15 px-2 py-0.5 text-[10.5px] font-semibold text-care-accent"
+                          : "shrink-0 rounded-full bg-care-ink-faint/15 px-2 py-0.5 text-[10.5px] font-semibold text-care-ink-faint"
+                    }
+                  >
+                    {g.status === "met" ? "Met" : g.status === "active" ? "In progress" : g.status}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-care-accent">
+            Open reports <IconArrowRight size={12} stroke={2.5} aria-hidden />
+          </span>
+        </CarePanel>
+
+        {/* Right column: next appointment + attendance chart */}
+        <div className="flex flex-col gap-3.5 md:col-span-5">
+          <CarePanel label="Next appointment" href="/parent/sessions" accent>
+            {nextSession ? (
+              <>
+                <h3 className="mt-2 font-heading text-lg font-medium capitalize text-care-ink">
+                  {nextSession.sessionType.replace("_", " ")} with {nextSession.therapistDisplayName}
+                </h3>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-care-ink-soft">
+                  <span className="inline-flex items-center gap-1.5">
+                    {nextSession.sessionType === "virtual" ? (
+                      <IconVideo size={13} stroke={1.75} />
+                    ) : (
+                      <IconMapPin size={13} stroke={1.75} />
+                    )}
+                    {nextSession.sessionType === "virtual"
+                      ? "Google Meet"
+                      : nextSession.location ?? nextSession.therapistLocation ?? "In-person"}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <IconClock size={13} stroke={1.75} />
+                    {formatDateTime(nextSession.slotStartTime)} · {formatRelativeToNow(nextSession.slotStartTime)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-care-ink-soft">
+                No upcoming session booked. Find a therapist to get started.
+              </p>
+            )}
+          </CarePanel>
+
+          <CarePanel
+            label="Attendance"
+            href="/parent/sessions"
+            className="flex-1"
+            right={<span className="text-[11px] text-care-ink-faint">14 weeks</span>}
+          >
+            <CareBarChart data={attendanceWeeks} />
+            <p className="mt-2 text-[11px] text-care-ink-faint">
+              {attendanceWeeks.reduce((n, w) => n + w.attended, 0)} attended ·{" "}
+              {attendanceWeeks.reduce((n, w) => n + w.missed, 0)} missed
+            </p>
+          </CarePanel>
+        </div>
+
+        {/* Bottom row */}
+        <CarePanel.Static
+          label="Latest session notes"
+          className="md:col-span-4"
+          footer={{ href: reportsHref, label: "All reports" }}
+        >
+          <div className="mt-3 flex flex-col divide-y divide-care-line/60">
+            {noteSnippets.length === 0 ? (
+              <p className="py-4 text-sm text-care-ink-soft">
+                Notes from your child&apos;s sessions appear here once a report is published.
+              </p>
+            ) : (
+              noteSnippets.map((s, i) => (
+                <div key={i} className="flex gap-2.5 py-2.5">
+                  <IconQuote size={14} stroke={1.75} aria-hidden className="mt-0.5 shrink-0 text-care-ink-faint" />
+                  <div className="min-w-0">
+                    <p className="text-[13px] italic leading-relaxed text-care-ink-soft">&ldquo;{s.text}&rdquo;</p>
+                    <p className="mt-1 text-[10.5px] uppercase tracking-wide text-care-ink-faint">Shared {s.when}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CarePanel.Static>
+
+        <CarePanel
+          label="Intake form"
+          href={intakeHref}
+          className="md:col-span-4"
+          right={<span className="text-[11px] text-care-ink-faint">{intakeDone} of 4</span>}
+        >
+          <ul className="mt-3 flex flex-col divide-y divide-care-line/60">
+            {intakeSections.map((s) => (
+              <li key={s.key} className="flex items-center justify-between py-2.5 text-[13px]">
+                <span className="text-care-ink">{s.label}</span>
+                <span
+                  className={
+                    s.complete
+                      ? "inline-flex items-center gap-1 text-[11px] font-semibold text-care-sage"
+                      : "text-[11px] font-semibold text-care-amber"
+                  }
+                >
+                  {s.complete ? "Complete" : "Due"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </CarePanel>
+
+        <CarePanel.Static
+          label="Reports"
+          className="md:col-span-4"
+          footer={{ href: reportsHref, label: "All reports" }}
+        >
+          <div className="mt-3 flex flex-col divide-y divide-care-line/60">
+            {reports.length === 0 ? (
+              <p className="py-4 text-sm text-care-ink-soft">No reports published yet.</p>
+            ) : (
+              reports.slice(0, 3).map((r, i) => (
+                <Link
+                  key={r.id}
+                  href={reportsHref}
+                  className="flex items-center gap-3 py-2.5 hover:opacity-80"
+                >
+                  <span className="flex h-8 w-7 shrink-0 items-center justify-center rounded bg-care-raised text-care-accent">
+                    <IconFileText size={15} stroke={1.75} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] text-care-ink">
+                      {i === 0 ? "Latest progress report" : "Progress report"}
+                    </p>
+                    <p className="text-[10.5px] uppercase tracking-wide text-care-ink-faint">
+                      {formatShortDate(r.publishedAt)}
+                      {i === 0 ? " · new" : ""}
+                    </p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </CarePanel.Static>
       </div>
-    </div>
+    </CareShell>
   );
 }

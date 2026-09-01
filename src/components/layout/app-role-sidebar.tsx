@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { IconMessageCircle } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
 import { BrandMark } from "@/components/shared/brand-mark";
@@ -14,9 +15,9 @@ import { SIDEBAR_NAV } from "./nav-config";
 const ROLE_LABEL = { parent: "Parent account", therapist: "Therapist workspace" } as const;
 
 /**
- * Shared rust-gradient sidebar for parent/therapist -- badge counts are
- * keyed by nav href and computed by the caller (AppShell), so this component
- * has zero data-fetching of its own, just rendering.
+ * Warm-dark "care portal" sidebar for parent/therapist. Badge counts are
+ * keyed by nav href and computed by the caller (AppShell), so this
+ * component has zero data-fetching of its own.
  */
 export function AppRoleSidebar({
   session,
@@ -31,13 +32,12 @@ export function AppRoleSidebar({
   const items = SIDEBAR_NAV[role];
 
   return (
-    <aside
-      className="hidden w-56 shrink-0 flex-col justify-between px-5 py-8 md:flex"
-      style={{ background: "linear-gradient(184deg, var(--terracotta), var(--rust-dark) 78%)" }}
-    >
-      <div className="flex flex-col gap-8">
-        <BrandMark />
-        <nav className="flex flex-col gap-1">
+    <aside className="hidden w-60 shrink-0 flex-col justify-between gap-6 border-r border-care-line/60 bg-care-bg px-4 py-5 text-care-ink md:flex">
+      <div className="flex flex-col gap-6">
+        <div className="px-2">
+          <BrandMark />
+        </div>
+        <nav className="flex flex-col gap-0.5">
           {items.map((item) => {
             const active =
               pathname === item.href || (item.href !== `/${role}` && pathname.startsWith(`${item.href}/`));
@@ -46,20 +46,18 @@ export function AppRoleSidebar({
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition-colors",
-                  active ? "bg-canvas-white font-semibold text-rust-dark" : "text-canvas-white/85 hover:bg-white/10"
+                  "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-colors",
+                  active
+                    ? "bg-care-accent/15 font-medium text-care-ink"
+                    : "text-care-ink-soft hover:bg-care-surface"
                 )}
               >
                 <Icon icon={item.icon} size="sm" className="shrink-0 opacity-90" />
                 <span className="flex-1">{item.label}</span>
                 {typeof count === "number" && count > 0 && (
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 py-0.5 text-[11px] font-semibold",
-                      active ? "bg-terracotta/10 text-rust-dark" : "bg-white/20 text-canvas-white"
-                    )}
-                  >
+                  <span className="rounded-full bg-care-amber px-1.5 py-px text-[10.5px] font-bold text-[#241a0d]">
                     {count}
                   </span>
                 )}
@@ -69,17 +67,31 @@ export function AppRoleSidebar({
         </nav>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-white/20 pt-4">
-        <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-canvas-white text-xs font-semibold text-rust-dark">
+      <div className="rounded-xl border border-care-line/60 bg-care-surface p-3">
+        <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-care-ink-faint">
+          {role === "parent" ? "Care team" : "You"}
+        </span>
+        <div className="mt-2.5 flex items-center gap-2.5">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-care-sage/15 text-[10px] font-bold text-care-sage">
             {initialsFromName(session.name)}
-          </div>
+          </span>
           <div className="flex min-w-0 flex-col">
-            <span className="truncate text-xs font-medium text-canvas-white">{session.name}</span>
-            <span className="label-micro text-canvas-white/70">{ROLE_LABEL[role]}</span>
+            <span className="truncate text-xs font-medium text-care-ink">{session.name}</span>
+            <span className="text-[10px] uppercase tracking-[0.12em] text-care-ink-faint">{ROLE_LABEL[role]}</span>
           </div>
         </div>
-        <LogoutButton className="text-canvas-white/70 hover:text-canvas-white" />
+        {role === "parent" && (
+          <Link
+            href="/parent/messages"
+            className="mt-2.5 flex items-center justify-center gap-1.5 rounded-lg border border-care-line py-1.5 text-[12px] font-medium text-care-ink transition-colors hover:bg-care-raised"
+          >
+            <IconMessageCircle size={13} stroke={1.75} />
+            Message team
+          </Link>
+        )}
+        <div className="mt-2.5 border-t border-care-line/60 pt-2.5">
+          <LogoutButton className="text-care-ink-faint hover:text-care-ink" />
+        </div>
       </div>
     </aside>
   );
