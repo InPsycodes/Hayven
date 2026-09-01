@@ -7,6 +7,8 @@ import { getSession } from "@/lib/auth/session";
 
 export interface FormState {
   error?: string;
+  /** Which field the error belongs to, so the form can highlight + focus it. */
+  field?: "firstName" | "dateOfBirth" | "presentingConcern";
 }
 
 export async function addChild(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -20,24 +22,24 @@ export async function addChild(_prevState: FormState, formData: FormData): Promi
   const presentingConcern = formData.get("presentingConcern");
 
   if (typeof firstName !== "string" || !firstName.trim()) {
-    return { error: "Please enter a first name." };
+    return { error: "Please enter a first name.", field: "firstName" };
   }
   if (typeof dateOfBirth !== "string" || !dateOfBirth) {
-    return { error: "Please enter a date of birth." };
+    return { error: "Please enter a date of birth.", field: "dateOfBirth" };
   }
   const dob = new Date(`${dateOfBirth}T00:00:00Z`);
   if (Number.isNaN(dob.getTime())) {
-    return { error: "That date of birth doesn't look right." };
+    return { error: "That date of birth doesn't look right.", field: "dateOfBirth" };
   }
   const now = new Date();
   if (dob.getTime() > now.getTime()) {
-    return { error: "Date of birth cannot be in the future." };
+    return { error: "Date of birth cannot be in the future.", field: "dateOfBirth" };
   }
   const EARLIEST_PLAUSIBLE_YEARS = 25; // catches obvious mistakes (wrong century, fat-fingered year) without hardcoding a strict pediatric cutoff -- that's a product policy, not a data-integrity check.
   const earliestPlausible = new Date(now);
   earliestPlausible.setUTCFullYear(now.getUTCFullYear() - EARLIEST_PLAUSIBLE_YEARS);
   if (dob.getTime() < earliestPlausible.getTime()) {
-    return { error: "That date of birth doesn't look right. Please double-check it." };
+    return { error: "That date of birth doesn't look right. Please double-check it.", field: "dateOfBirth" };
   }
 
   const supabase = await createClient();

@@ -7,7 +7,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldError } from "@/components/ui/field-error";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
+import { useFieldErrors } from "@/hooks/use-field-errors";
+import { emailDomainSuggestion, emailFormatError } from "@/lib/validation/email";
 import { signIn } from "@/lib/auth/actions";
 import { verifyMfaLogin } from "@/lib/auth/mfa-actions";
 import { roleHomePath } from "@/lib/auth/role-path";
@@ -19,6 +22,8 @@ export function LoginForm({ justReset = false }: { justReset?: boolean }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { errors, clearFieldError, setFieldError, showErrors } = useFieldErrors();
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
 
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
@@ -33,6 +38,16 @@ export function LoginForm({ justReset = false }: { justReset?: boolean }) {
   const handleSubmit = loginGuard.guard((e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const nextErrors = {
+      email: emailFormatError(email) ?? undefined,
+      password: password ? undefined : "Enter your password.",
+    };
+    if (showErrors(nextErrors, ["email", "password"])) {
+      loginGuard.reset();
+      return;
+    }
+
     startTransition(async () => {
       const result = await signIn(email, password);
       if (!result.ok) {
@@ -132,9 +147,40 @@ export function LoginForm({ justReset = false }: { justReset?: boolean }) {
           type="email"
           required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={errors.email ? true : undefined}
+          aria-describedby={errors.email ? "email-error" : undefined}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            clearFieldError("email");
+            setEmailSuggestion(null);
+          }}
+          onBlur={(e) => {
+            const fmt = emailFormatError(e.target.value);
+            if (fmt) {
+              setFieldError("email", fmt);
+            } else {
+              setEmailSuggestion(emailDomainSuggestion(e.target.value));
+            }
+          }}
           placeholder="you@example.com"
         />
+        <FieldError id="email-error">{errors.email}</FieldError>
+        {emailSuggestion && !errors.email && (
+          <p className="text-xs text-muted-foreground">
+            Did you mean{" "}
+            <button
+              type="button"
+              className="font-medium text-rust-dark hover:underline"
+              onClick={() => {
+                setEmail(emailSuggestion);
+                setEmailSuggestion(null);
+              }}
+            >
+              {emailSuggestion}
+            </button>
+            ?
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -152,9 +198,15 @@ export function LoginForm({ justReset = false }: { justReset?: boolean }) {
           type="password"
           required
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          aria-invalid={errors.password ? true : undefined}
+          aria-describedby={errors.password ? "password-error" : undefined}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            clearFieldError("password");
+          }}
           placeholder="••••••••"
         />
+        <FieldError id="password-error">{errors.password}</FieldError>
       </div>
 
       {error && <p className="text-sm text-error-text">{error}</p>}

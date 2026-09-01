@@ -9,8 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FieldError } from "@/components/ui/field-error";
 import { cn } from "@/lib/utils";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
+import { useFieldErrors } from "@/hooks/use-field-errors";
+import { emailDomainSuggestion, emailFormatError } from "@/lib/validation/email";
 import { signUp } from "@/lib/auth/actions";
 
 type SignupRole = "parent" | "therapist";
@@ -34,16 +37,33 @@ export function SignupForm({
   const [password, setPassword] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
+  const { errors, clearFieldError, setFieldError, showErrors } = useFieldErrors();
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
+
   const { guard, reset } = useSubmitGuard();
 
   const handleSubmit = guard((e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    const digits = phone.replace(/[^\d]/g, "");
+    const nextErrors = {
+      firstName: firstName.trim() ? undefined : "Enter your first name.",
+      lastName: lastName.trim() ? undefined : "Enter your last name.",
+      signupEmail: emailFormatError(email) ?? undefined,
+      phone: digits.length >= 7 ? undefined : "Enter a phone number we can reach you on.",
+      signupPassword:
+        password.length >= 6 ? undefined : "Use at least 6 characters for your password.",
+    };
+    if (showErrors(nextErrors, ["firstName", "lastName", "signupEmail", "phone", "signupPassword"])) {
+      reset();
+      return;
+    }
     if (!agreedToTerms) {
       setError("Please agree to the Privacy Policy and Terms of Service to continue.");
       reset();
       return;
     }
-    setError(null);
     startTransition(async () => {
       const result = await signUp({
         role,
@@ -109,9 +129,15 @@ export function SignupForm({
             id="firstName"
             required
             value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
+            aria-invalid={errors.firstName ? true : undefined}
+            aria-describedby={errors.firstName ? "firstName-error" : undefined}
+            onChange={(e) => {
+              setFirstName(e.target.value);
+              clearFieldError("firstName");
+            }}
             placeholder="Amaka"
           />
+          <FieldError id="firstName-error">{errors.firstName}</FieldError>
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="lastName">Last name</Label>
@@ -119,9 +145,15 @@ export function SignupForm({
             id="lastName"
             required
             value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
+            aria-invalid={errors.lastName ? true : undefined}
+            aria-describedby={errors.lastName ? "lastName-error" : undefined}
+            onChange={(e) => {
+              setLastName(e.target.value);
+              clearFieldError("lastName");
+            }}
             placeholder="Obi"
           />
+          <FieldError id="lastName-error">{errors.lastName}</FieldError>
         </div>
       </div>
 
@@ -132,9 +164,37 @@ export function SignupForm({
           type="email"
           required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={errors.signupEmail ? true : undefined}
+          aria-describedby={errors.signupEmail ? "signupEmail-error" : undefined}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            clearFieldError("signupEmail");
+            setEmailSuggestion(null);
+          }}
+          onBlur={(e) => {
+            const fmt = emailFormatError(e.target.value);
+            if (fmt) setFieldError("signupEmail", fmt);
+            else setEmailSuggestion(emailDomainSuggestion(e.target.value));
+          }}
           placeholder="you@example.com"
         />
+        <FieldError id="signupEmail-error">{errors.signupEmail}</FieldError>
+        {emailSuggestion && !errors.signupEmail && (
+          <p className="text-xs text-muted-foreground">
+            Did you mean{" "}
+            <button
+              type="button"
+              className="font-medium text-rust-dark hover:underline"
+              onClick={() => {
+                setEmail(emailSuggestion);
+                setEmailSuggestion(null);
+              }}
+            >
+              {emailSuggestion}
+            </button>
+            ?
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -144,9 +204,15 @@ export function SignupForm({
           type="tel"
           required
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          aria-invalid={errors.phone ? true : undefined}
+          aria-describedby={errors.phone ? "phone-error" : undefined}
+          onChange={(e) => {
+            setPhone(e.target.value);
+            clearFieldError("phone");
+          }}
           placeholder="+234 800 000 0000"
         />
+        <FieldError id="phone-error">{errors.phone}</FieldError>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -157,9 +223,15 @@ export function SignupForm({
           required
           minLength={6}
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          aria-invalid={errors.signupPassword ? true : undefined}
+          aria-describedby={errors.signupPassword ? "signupPassword-error" : undefined}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            clearFieldError("signupPassword");
+          }}
           placeholder="••••••••"
         />
+        <FieldError id="signupPassword-error">{errors.signupPassword}</FieldError>
       </div>
 
       <label className="flex items-start gap-2.5 text-sm text-muted-foreground">

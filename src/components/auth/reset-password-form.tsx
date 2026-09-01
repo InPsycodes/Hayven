@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldError } from "@/components/ui/field-error";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
+import { useFieldErrors } from "@/hooks/use-field-errors";
 import { updatePassword } from "@/lib/auth/reset-actions";
 
 export function ResetPasswordForm() {
@@ -15,18 +17,18 @@ export function ResetPasswordForm() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { errors, clearFieldError, showErrors } = useFieldErrors();
   const { guard, reset } = useSubmitGuard();
 
   const handleSubmit = guard((e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (password.length < 8) {
-      setError("Use at least 8 characters.");
-      reset();
-      return;
-    }
-    if (password !== confirm) {
-      setError("Those passwords don't match.");
+    const nextErrors = {
+      password: password.length >= 8 ? undefined : "Use at least 8 characters.",
+      confirm:
+        password && password === confirm ? undefined : confirm ? "Those passwords don't match." : "Re-enter your new password.",
+    };
+    if (showErrors(nextErrors, ["password", "confirm"])) {
       reset();
       return;
     }
@@ -60,9 +62,15 @@ export function ResetPasswordForm() {
           minLength={8}
           autoComplete="new-password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          aria-invalid={errors.password ? true : undefined}
+          aria-describedby={errors.password ? "password-error" : undefined}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            clearFieldError("password");
+          }}
           placeholder="At least 8 characters"
         />
+        <FieldError id="password-error">{errors.password}</FieldError>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -73,8 +81,14 @@ export function ResetPasswordForm() {
           required
           autoComplete="new-password"
           value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
+          aria-invalid={errors.confirm ? true : undefined}
+          aria-describedby={errors.confirm ? "confirm-error" : undefined}
+          onChange={(e) => {
+            setConfirm(e.target.value);
+            clearFieldError("confirm");
+          }}
         />
+        <FieldError id="confirm-error">{errors.confirm}</FieldError>
       </div>
 
       {error && <p className="text-sm text-error-text">{error}</p>}

@@ -6,7 +6,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldError } from "@/components/ui/field-error";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
+import { useFieldErrors } from "@/hooks/use-field-errors";
+import { emailDomainSuggestion, emailFormatError } from "@/lib/validation/email";
 import { requestPasswordReset } from "@/lib/auth/reset-actions";
 
 export function ForgotPasswordForm({ linkExpired = false }: { linkExpired?: boolean }) {
@@ -14,11 +17,17 @@ export function ForgotPasswordForm({ linkExpired = false }: { linkExpired?: bool
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { errors, clearFieldError, setFieldError, showErrors } = useFieldErrors();
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
   const { guard, reset } = useSubmitGuard();
 
   const handleSubmit = guard((e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (showErrors({ email: emailFormatError(email) ?? undefined }, ["email"])) {
+      reset();
+      return;
+    }
     startTransition(async () => {
       const result = await requestPasswordReset(email);
       if (!result.ok) {
@@ -69,9 +78,37 @@ export function ForgotPasswordForm({ linkExpired = false }: { linkExpired?: bool
           required
           autoComplete="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={errors.email ? true : undefined}
+          aria-describedby={errors.email ? "email-error" : undefined}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            clearFieldError("email");
+            setEmailSuggestion(null);
+          }}
+          onBlur={(e) => {
+            const fmt = emailFormatError(e.target.value);
+            if (fmt) setFieldError("email", fmt);
+            else setEmailSuggestion(emailDomainSuggestion(e.target.value));
+          }}
           placeholder="you@example.com"
         />
+        <FieldError id="email-error">{errors.email}</FieldError>
+        {emailSuggestion && !errors.email && (
+          <p className="text-xs text-muted-foreground">
+            Did you mean{" "}
+            <button
+              type="button"
+              className="font-medium text-rust-dark hover:underline"
+              onClick={() => {
+                setEmail(emailSuggestion);
+                setEmailSuggestion(null);
+              }}
+            >
+              {emailSuggestion}
+            </button>
+            ?
+          </p>
+        )}
       </div>
 
       {error && <p className="text-sm text-error-text">{error}</p>}
