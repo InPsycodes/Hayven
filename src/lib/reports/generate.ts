@@ -863,36 +863,242 @@ const ATTENDANCE_PARENT_PHRASE: Record<string, string> = {
   partial: `${CHILD} was able to join for part of today's session.`,
 };
 
-function buildGreeting(input: GenerationInput): ReportSection {
+/**
+ * Opening paragraph: attendance/mood folded into one lead sentence instead
+ * of a bullet-per-field list -- this is the part of the report that used to
+ * read "Attendance: on time. Presentation: happy." Composed, not templated
+ * per field.
+ */
+function sessionOpeningSentence(input: GenerationInput): string {
   const { session } = input;
   const duration = session.durationMinutes ? `${session.durationMinutes}-minute` : "";
   const therapistPhrase = session.therapistName ? ` with ${session.therapistName}` : "";
-  const blocks: ReportBlock[] = [
-    {
-      type: "paragraph",
-      text: `${CHILD} had a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session${therapistPhrase} on ${session.date}.`.replace(
-        "  ",
-        " "
-      ),
-    },
-  ];
-  if (session.location && session.location.trim()) {
-    blocks.push({ type: "paragraph", text: `Location: ${stripTrailingPeriod(session.location)}.` });
+  const base = `${CHILD} had a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session${therapistPhrase} on ${session.date}.`.replace(
+    "  ",
+    " "
+  );
+  const attendanceClause = session.attendance ? ATTENDANCE_PARENT_PHRASE[session.attendance] : null;
+  const presentation =
+    session.generalPresentation && session.generalPresentation.trim()
+      ? applyParentFriendlyLanguage(session.generalPresentation.trim(), input.behaviours)
+      : null;
+
+  return [base, attendanceClause, presentation].filter(Boolean).join(" ");
+}
+
+/** {heading, sentences} per domain actually touched this session -- goal domains, skill domain types (functional-independence further split by activity, e.g. "Toileting"), and behaviours. Order is first-touched-first, which is also the order the narrative reads in. */
+function collectDomainBuckets(
+  input: GenerationInput,
+  ctx: ToneContext
+): { key: string; heading: string; sentences: string[] }[] {
+  const order: string[] = [];
+  const buckets = new Map<string, { heading: string; sentences: string[] }>();
+
+  function push(key: string, heading: string, sentence: string | null) {
+    if (!sentence) return;
+    if (!buckets.has(key)) {
+      buckets.set(key, { heading, sentences: [] });
+      order.push(key);
+    }
+    buckets.get(key)!.sentences.push(sentence);
   }
-  if (session.attendance && ATTENDANCE_PARENT_PHRASE[session.attendance]) {
-    blocks.push({ type: "paragraph", text: ATTENDANCE_PARENT_PHRASE[session.attendance] });
+
+  for (const goal of input.goals) {
+    const label = goalDomainLabel(goal.domain);
+    push(`goal_${label}`, label, goalHighlight(goal));
   }
-  if (session.generalPresentation && session.generalPresentation.trim()) {
-    blocks.push({
-      type: "paragraph",
-      text: applyParentFriendlyLanguage(session.generalPresentation.trim(), input.behaviours),
-    });
+
+  const SKILL_BUCKET: Partial<Record<NonNullable<GenerationSkillInput["domainType"]>, [string, string]>> = {
+    name_response: ["name_response", "Responding to Name"],
+    functional_communication: ["functional_communication", "Communication"],
+    speech_approximation: ["speech_practice", "Speech Practice"],
+    communicative_initiation: ["communicative_initiation", "Initiating Communication"],
+    receptive_instructions: ["receptive_instructions", "Following Instructions"],
+    object_identification: ["object_identification", "Identifying Objects"],
+    concept_understanding: ["concept_understanding", "Understanding Concepts"],
+    tacting_naming: ["tacting_naming", "Naming Things"],
+    mand_diversity: ["mand_diversity", "Asking for Things"],
+    motor_speech_dttc: ["speech_practice", "Speech Practice"],
+  };
+
+  for (const skill of input.skills) {
+    if (skill.domainType === "functional_independence") {
+      const structured = skill.structuredData as unknown as FunctionalIndependenceData | null;
+      const activity = structured?.activity ?? "other";
+      const heading = ACTIVITY_LABEL[activity] ?? "Daily living";
+      push(
+        `fi_${activity}`,
+        heading,
+        domainSkillParentSentence(skill, input.behaviours, ctx) ?? skillHighlight(skill)
+      );
+      continue;
+    }
+    const mapped = skill.domainType ? SKILL_BUCKET[skill.domainType] : undefined;
+    if (mapped) {
+      // Fall back to the plain-percent sentence if the domain-typed one has
+      // no structured data to work with -- otherwise a skill silently
+      // disappears from the parent's story.
+      push(mapped[0], mapped[1], domainSkillParentSentence(skill, input.behaviours, ctx) ?? skillHighlight(skill));
+    } else {
+      push("general_skill", "General progress", skillHighlight(skill));
+    }
   }
-  if (session.therapistNotes && session.therapistNotes.trim()) {
-    const parentFriendly = applyParentFriendlyLanguage(session.therapistNotes.trim(), input.behaviours);
+
+  for (const behaviour of input.behaviours) {
+    push("behaviour", "Behaviour", behaviourFocusNote(behaviour));
+  }
+
+  return order.map((key) => ({ key, ...buckets.get(key)! }));
+}
+
+/**
+ * The parent report's main section: one flowing narrative instead of a
+ * stack of one-sentence cards headed "Responding to Name" / "Communication"
+ * / "Speech Practice". Every sentence below is the exact same
+ * therapist-voiced text the old per-domain sections used (percentBand /
+ * pickVariantDomain / admin phrase library, all untouched) -- this only
+ * changes how those sentences are assembled: a topic sentence naming what
+ * was worked on, then the sentences themselves grouped into short
+ * paragraphs, the way a person would actually write it up.
+ */
+/** The concrete things worked on -- goal titles, skill labels, behaviour parent-labels -- for the "today we focused on ..." opening line. Deduped, capped so it doesn't run on. */
+function focusAreaList(input: GenerationInput): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const add = (raw: string | null | undefined) => {
+    const v = raw?.trim().toLowerCase();
+    if (!v || seen.has(v)) return;
+    seen.add(v);
+    out.push(v);
+  };
+  for (const g of input.goals) if (g.percentComplete !== null) add(g.title);
+  for (const s of input.skills) if (s.percentThisSession !== null) add(s.label);
+  for (const b of input.behaviours) if (b.perHour !== null) add(behaviourParentName(b));
+  return out;
+}
+
+function buildSessionNarrative(input: GenerationInput, ctx: ToneContext): ReportSection {
+  const buckets = collectDomainBuckets(input, ctx);
+  const paragraphs: string[] = [];
+
+  const opening = [sessionOpeningSentence(input)];
+  const focus = focusAreaList(input);
+  if (focus.length > 0) {
+    const list =
+      focus.length > 5 ? `${focus.slice(0, 4).join(", ")}, and a few other areas` : joinList(focus);
+    opening.push(
+      pickVariant(
+        [`Today we focused on ${list}.`, `The session centred on ${list}.`, `Our focus this session was ${list}.`],
+        input.session.date
+      )
+    );
+  }
+  paragraphs.push(opening.join(" "));
+
+  const sentences = buckets.flatMap((b) => b.sentences);
+  const PARAGRAPH_SIZE = 2;
+  for (let i = 0; i < sentences.length; i += PARAGRAPH_SIZE) {
+    paragraphs.push(sentences.slice(i, i + PARAGRAPH_SIZE).join(" "));
+  }
+
+  if (buckets.length === 0) {
+    paragraphs.push("No specific goals or skills were tracked in this session.");
+  }
+
+  const blocks: ReportBlock[] = paragraphs.map((text) => ({ type: "paragraph", text }));
+
+  if (input.session.therapistNotes && input.session.therapistNotes.trim()) {
+    const parentFriendly = applyParentFriendlyLanguage(input.session.therapistNotes.trim(), input.behaviours);
     blocks.push({ type: "quote", label: "In the therapist's words", text: parentFriendly });
   }
-  return { key: "greeting", heading: "This session", blocks };
+
+  return { key: "greeting", heading: "Today's session", blocks };
+}
+
+const WIN_STRUCTURE_THRESHOLD = 80;
+const WIN_DELTA_THRESHOLD = 12;
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const GAIN_WIN: ((n: string) => string)[] = [
+  (n) => `A real step forward on ${n}.`,
+  (n) => `${cap(n)} moved noticeably in the right direction.`,
+  (n) => `Strong progress on ${n} this session.`,
+];
+const MASTERY_WIN: ((n: string) => string)[] = [
+  (n) => `Almost there with ${n}.`,
+  (n) => `${cap(n)} is close to fully independent.`,
+];
+const BEHAVIOUR_WIN: ((n: string) => string)[] = [
+  (n) => `Fewer moments of ${n} than last time.`,
+  (n) => `${cap(n)} came up less than last session.`,
+];
+
+/**
+ * Short, skimmable highlight list -- the 2-4 best moments of the session,
+ * phrased as punchy headlines (deliberately not the full narrative
+ * sentences, so the parent isn't reading the same line twice). Pulled from
+ * the same delta math the narrative and next-steps use; never invents
+ * progress that isn't in the data.
+ */
+function buildTodaysWins(input: GenerationInput): ReportSection {
+  const items: string[] = [];
+  const seen = new Set<string>();
+  const add = (text: string | null) => {
+    if (!text || seen.has(text)) return;
+    seen.add(text);
+    items.push(text);
+  };
+
+  const movers = [
+    ...input.goals
+      .filter((g) => g.percentComplete !== null)
+      .map((g) => ({
+        id: g.id,
+        name: g.title.toLowerCase(),
+        current: g.percentComplete as number,
+        delta: g.previousPercentComplete === null ? null : (g.percentComplete as number) - g.previousPercentComplete,
+      })),
+    ...input.skills
+      .filter((s) => s.percentThisSession !== null)
+      .map((s) => ({
+        id: s.id,
+        name: s.label.toLowerCase(),
+        current: s.percentThisSession as number,
+        delta: s.previousPercent === null ? null : (s.percentThisSession as number) - s.previousPercent,
+      })),
+  ];
+
+  // One win per goal/skill: near-mastery outranks a big jump.
+  const claimed = new Set<string>();
+  for (const m of movers.filter((m) => m.current >= WIN_STRUCTURE_THRESHOLD)) {
+    claimed.add(m.id);
+    add(pickVariant(MASTERY_WIN, m.id)(m.name));
+  }
+  for (const m of movers
+    .filter((m) => !claimed.has(m.id) && m.delta !== null && m.delta >= WIN_DELTA_THRESHOLD)
+    .sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0))) {
+    add(pickVariant(GAIN_WIN, m.id)(m.name));
+  }
+  for (const b of input.behaviours) {
+    if (b.perHour === null || b.previousPerHour === null) continue;
+    const improving = b.direction === "decrease" ? b.perHour < b.previousPerHour : b.perHour > b.previousPerHour;
+    if (improving) add(pickVariant(BEHAVIOUR_WIN, b.id)(behaviourParentName(b)));
+  }
+
+  if (items.length === 0) {
+    add(
+      pickVariant(
+        [
+          `${CHILD} stayed engaged and worked through today's planned activities.`,
+          `${CHILD} showed up ready to work today and got through everything we had planned.`,
+        ],
+        input.session.date
+      )
+    );
+  }
+
+  return { key: "todays_wins", heading: "Today's wins", blocks: [{ type: "bullets", items: items.slice(0, 4) }] };
 }
 
 /** Plain-language, non-clinical translation of a domain-typed skill for a parent -- same "never claim what the data doesn't support" discipline as the clinical side, just warmer wording and no raw percentages. */
@@ -1240,80 +1446,6 @@ function domainSkillParentSentence(
   return null;
 }
 
-/** Domain-headed parent sections: one named section per domain actually touched this session (goal domains, skill domain types -- functional-independence further split by activity, e.g. "Toileting" -- and behaviours), instead of the old cross-domain highlights/focus-areas split. Skills/goals with no domain type fall into "General progress" so nothing silently disappears. */
-function buildDomainProgressSections(input: GenerationInput, ctx: ToneContext): ReportSection[] {
-  const order: string[] = [];
-  const buckets = new Map<string, { heading: string; sentences: string[] }>();
-
-  function push(key: string, heading: string, sentence: string | null) {
-    if (!sentence) return;
-    if (!buckets.has(key)) {
-      buckets.set(key, { heading, sentences: [] });
-      order.push(key);
-    }
-    buckets.get(key)!.sentences.push(sentence);
-  }
-
-  for (const goal of input.goals) {
-    const label = goalDomainLabel(goal.domain);
-    push(`goal_${label}`, label, goalHighlight(goal));
-  }
-
-  for (const skill of input.skills) {
-    if (skill.domainType === "name_response") {
-      push("name_response", "Responding to Name", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "functional_communication") {
-      push("functional_communication", "Communication", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "speech_approximation") {
-      push("speech_practice", "Speech Practice", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "communicative_initiation") {
-      push("communicative_initiation", "Initiating Communication", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "receptive_instructions") {
-      push("receptive_instructions", "Following Instructions", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "object_identification") {
-      push("object_identification", "Identifying Objects", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "concept_understanding") {
-      push("concept_understanding", "Understanding Concepts", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "tacting_naming") {
-      push("tacting_naming", "Naming Things", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "mand_diversity") {
-      push("mand_diversity", "Asking for Things", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "motor_speech_dttc") {
-      push("speech_practice", "Speech Practice", domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else if (skill.domainType === "functional_independence") {
-      const structured = skill.structuredData as unknown as FunctionalIndependenceData | null;
-      const activity = structured?.activity ?? "other";
-      const heading = ACTIVITY_LABEL[activity] ?? "Daily living";
-      push(`fi_${activity}`, heading, domainSkillParentSentence(skill, input.behaviours, ctx));
-    } else {
-      push("general_skill", "General progress", skillHighlight(skill));
-    }
-  }
-
-  for (const behaviour of input.behaviours) {
-    push("behaviour", "Behaviour", behaviourFocusNote(behaviour));
-  }
-
-  if (order.length === 0) {
-    return [
-      {
-        key: "domain_progress",
-        heading: "Progress",
-        blocks: [{ type: "paragraph", text: "No specific goals or skills were tracked in this session." }],
-      },
-    ];
-  }
-
-  return order.map((key) => {
-    const bucket = buckets.get(key)!;
-    return {
-      key: "domain_progress" as const,
-      heading: bucket.heading,
-      blocks: [{ type: "paragraph" as const, text: bucket.sentences.join(" ") }],
-    };
-  });
-}
-
 const PRACTICE_TIP_VARIANTS: ((name: string) => string)[] = [
   (name) => `Try creating small, relaxed chances to practise ${name} together this week -- it's what stood out most this session.`,
   (name) => `${CHILD} is making real headway on ${name}. A few minutes of low-pressure practice at home goes a long way here.`,
@@ -1417,8 +1549,8 @@ export function generateParentReport(input: GenerationInput, ctx: ToneContext): 
   return {
     schemaVersion: 1,
     sections: [
-      buildGreeting(parentInput),
-      ...buildDomainProgressSections(parentInput, ctx),
+      buildSessionNarrative(parentInput, ctx),
+      buildTodaysWins(parentInput),
       buildNextSteps(parentInput),
     ],
   };
@@ -1440,9 +1572,9 @@ export function generateTherapistReport(input: GenerationInput): ReportBody {
   };
 }
 
-/** Substitutes the real child name at render time, keeping the stored body stable across name edits. */
+/** Substitutes the real child name at render time, keeping the stored body stable across name edits. Also normalises the phrase-pool " -- " to a real em dash so the finished report reads like prose, not source. */
 export function renderReportBody(body: ReportBody, childFirstName: string): ReportBody {
-  const replace = (text: string) => text.split(CHILD).join(childFirstName);
+  const replace = (text: string) => text.split(CHILD).join(childFirstName).replace(/ -- /g, " — ");
   return {
     ...body,
     sections: body.sections.map((section) => ({
@@ -1459,13 +1591,17 @@ export function renderReportBody(body: ReportBody, childFirstName: string): Repo
 
 /** A short quotable line for a compact preview (e.g. the parent dashboard card) -- the first progress highlight, or the session greeting if there's nothing to highlight. Call after renderReportBody so {{CHILD}} is already substituted. */
 export function extractReportSnippet(body: ReportBody): string | null {
-  const domainSection = body.sections.find((s) => s.key === "domain_progress");
-  const domainText = domainSection?.blocks.find((b) => b.type === "paragraph")?.text;
-  if (domainText) return domainText;
+  // Prefer the first "win" -- short, positive, exactly the tone the parent
+  // dashboard card wants.
+  const wins = body.sections.find((s) => s.key === "todays_wins");
+  const firstWin = wins?.blocks.find((b) => b.type === "bullets")?.items?.[0];
+  if (firstWin) return firstWin;
 
-  const greeting = body.sections.find((s) => s.key === "greeting");
-  const greetingText = greeting?.blocks.find((b) => b.type === "paragraph")?.text;
-  if (greetingText) return greetingText;
+  // Otherwise the narrative's opening, or (legacy stored reports) a domain
+  // progress paragraph.
+  const narrative = body.sections.find((s) => s.key === "greeting" || s.key === "domain_progress");
+  const narrativeText = narrative?.blocks.find((b) => b.type === "paragraph")?.text;
+  if (narrativeText) return narrativeText;
 
   return null;
 }

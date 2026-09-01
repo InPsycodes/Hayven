@@ -21,6 +21,7 @@ export type ReportSectionKey =
   | "recommendations"
   | "greeting"
   | "domain_progress"
+  | "todays_wins"
   | "next_steps";
 
 export interface ReportSection {
