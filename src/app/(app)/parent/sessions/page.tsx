@@ -76,6 +76,14 @@ export default async function ParentSessionsPage() {
                       </div>
                       <div className="flex shrink-0 flex-wrap items-center gap-3">
                         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                        {booking.status === "completed" && (
+                          <Link
+                            href={`/therapists/${booking.therapistId}#reviews`}
+                            className="text-xs font-medium text-terracotta hover:underline"
+                          >
+                            Review {booking.therapistDisplayName.split(" ")[0]}
+                          </Link>
+                        )}
                         {canReschedule && <RescheduleBookingButton bookingId={booking.id} />}
                         {canCancel && (
                           <CancelBookingButton

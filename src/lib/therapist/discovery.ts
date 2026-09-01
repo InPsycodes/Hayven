@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getRealVerifiedTherapists, getRealTherapistById } from "./queries";
+import { getReviewSummaries, getTherapistReviewSummary, type ReviewSummary } from "@/lib/reviews/queries";
 import type { SessionType } from "@/data/types";
 
 /**
@@ -21,6 +22,7 @@ export interface DiscoveryTherapist {
   yearsPracticing: number;
   verifiedBadgeLabel: string;
   ageGroupsServed: string[];
+  rating: ReviewSummary;
 }
 
 export interface DiscoveryFilters {
@@ -49,6 +51,7 @@ export async function searchDiscoveryTherapists(
   filters: DiscoveryFilters = {}
 ): Promise<DiscoveryTherapist[]> {
   const results = await getRealVerifiedTherapists();
+  const ratings = await getReviewSummaries(results.map((t) => t.id));
 
   return results
     .map((t) => ({
@@ -62,6 +65,7 @@ export async function searchDiscoveryTherapists(
       yearsPracticing: t.yearsPracticing ?? 0,
       verifiedBadgeLabel: t.verifiedBadgeLabel ?? "Verified",
       ageGroupsServed: [] as string[],
+      rating: ratings.get(t.id) ?? { average: 0, count: 0 },
     }))
     .filter((t) => matchesFilters(t, filters));
 }
@@ -81,5 +85,6 @@ export async function getDiscoveryTherapistById(id: string): Promise<DiscoveryTh
     yearsPracticing: match.yearsPracticing ?? 0,
     verifiedBadgeLabel: match.verifiedBadgeLabel ?? "Verified",
     ageGroupsServed: [],
+    rating: await getTherapistReviewSummary(match.id),
   };
 }

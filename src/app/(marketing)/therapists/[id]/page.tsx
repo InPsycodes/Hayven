@@ -9,6 +9,8 @@ import { initialsFromName } from "@/data/format";
 import { getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { bookingWindow } from "@/lib/booking/window";
 import { getDiscoveryTherapistById, type DiscoveryTherapist } from "@/lib/therapist/discovery";
+import { getTherapistReviews, getMyReviewState } from "@/lib/reviews/queries";
+import { ReviewSection } from "@/components/reviews/review-section";
 import { getOrganizationSchema } from "@/lib/seo/organization-schema";
 import { safeJsonLdStringify } from "@/lib/seo/json-ld";
 import type { AvailabilitySlot } from "@/data/types";
@@ -48,7 +50,12 @@ export default async function TherapistProfilePage({
   // Same forward-only window as the booking flow -- the panel's "next
   // available" must never surface a slot in the past.
   const window = bookingWindow();
-  const slots: AvailabilitySlot[] = (await getRealAvailabilityForTherapist(therapist.id, window)).map((slot) => ({
+  const [slotRows, reviews, myReview] = await Promise.all([
+    getRealAvailabilityForTherapist(therapist.id, window),
+    getTherapistReviews(therapist.id),
+    getMyReviewState(therapist.id),
+  ]);
+  const slots: AvailabilitySlot[] = slotRows.map((slot) => ({
     id: slot.id,
     therapistId: slot.therapistId,
     startTime: slot.startTime,
@@ -56,6 +63,12 @@ export default async function TherapistProfilePage({
     isBooked: slot.isBooked,
     sessionType: slot.sessionType as AvailabilitySlot["sessionType"],
   }));
+  const reviewSummary = {
+    count: reviews.length,
+    average: reviews.length
+      ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10) / 10
+      : 0,
+  };
 
   const verificationChecks = [
     `${therapist.verifiedBadgeLabel} status confirmed`,
@@ -123,11 +136,16 @@ export default async function TherapistProfilePage({
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card id="reviews" className="scroll-mt-24 p-6">
             <h2 className="font-heading text-base text-charcoal">Reviews</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              No reviews yet. Reviews appear after a parent completes a session.
-            </p>
+            <div className="mt-3">
+              <ReviewSection
+                therapistId={therapist.id}
+                reviews={reviews}
+                summary={reviewSummary}
+                mine={myReview}
+              />
+            </div>
           </Card>
         </div>
 

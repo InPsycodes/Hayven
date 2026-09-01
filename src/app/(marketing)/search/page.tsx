@@ -20,6 +20,10 @@ interface SearchPageProps {
 function sortTherapists(therapists: DiscoveryTherapist[], sort: string | undefined): DiscoveryTherapist[] {
   const list = [...therapists];
   switch (sort) {
+    case "rating":
+      return list.sort(
+        (a, b) => b.rating.average - a.rating.average || b.rating.count - a.rating.count
+      );
     case "price_asc":
       return list.sort((a, b) => a.pricePerSession - b.pricePerSession);
     case "price_desc":

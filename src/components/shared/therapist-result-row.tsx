@@ -3,6 +3,7 @@ import { IconArrowRight, IconShieldCheck } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
 import { formatNaira, initialsFromName } from "@/data/format";
+import { StarRating } from "@/components/reviews/star-rating";
 import type { DiscoveryTherapist } from "@/lib/therapist/discovery";
 
 // Initials tile tints, tuned to read on the charcoal card. Picked by a hash
@@ -90,6 +91,16 @@ export function TherapistResultRow({ therapist }: { therapist: DiscoveryTherapis
         </div>
 
         {metaLine && <p className="mt-0.5 text-xs text-canvas-white/60">{metaLine}</p>}
+
+        {therapist.rating.count > 0 && (
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-canvas-white/70">
+            <StarRating value={therapist.rating.average} size={12} trackClassName="text-white/20" />
+            <span className="font-medium text-canvas-white/90">{therapist.rating.average.toFixed(1)}</span>
+            <span className="text-canvas-white/45">
+              ({therapist.rating.count} review{therapist.rating.count === 1 ? "" : "s"})
+            </span>
+          </p>
+        )}
 
         {chips.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">

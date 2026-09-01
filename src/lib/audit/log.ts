@@ -52,7 +52,9 @@ export type AuditAction =
   | "learning_course.delete"
   | "learning_lesson.create"
   | "learning_lesson.update"
-  | "learning_lesson.delete";
+  | "learning_lesson.delete"
+  | "review.submit"
+  | "review.delete";
 
 /**
  * Fire-and-forget: a logging failure must never roll back a clinical write

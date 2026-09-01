@@ -28,6 +28,7 @@ const SESSION_TYPES = [
 
 const SORT_OPTIONS = [
   { label: "Recommended", value: "recommended" },
+  { label: "Top rated", value: "rating" },
   { label: "Price: low to high", value: "price_asc" },
   { label: "Price: high to low", value: "price_desc" },
   { label: "Most experienced", value: "experience" },
