@@ -98,6 +98,10 @@ export interface GenerationInput {
     durationMinutes: number | null;
     setting: string | null;
     therapistNotes: string | null;
+    /** The therapist's "what should we practice at home?" answer, split back
+     *  out of therapistNotes -- drives the parent report's "How you can help
+     *  at home" section. Null when the therapist left it blank. */
+    homePractice: string | null;
     attendance: string | null;
     generalPresentation: string | null;
     therapistName: string | null;

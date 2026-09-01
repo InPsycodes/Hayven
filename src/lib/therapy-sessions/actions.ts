@@ -33,8 +33,12 @@ function stitchSessionNotes(arrival: string | null, win: string | null, homework
   const parts: string[] = [];
   if (arrival) parts.push(`Arrived: ${cleanSentence(arrival)}.`);
   if (win) parts.push(`Biggest win: ${cleanSentence(win)}.`);
-  if (homework) parts.push(`Home practice focus: ${cleanSentence(homework)}.`);
   if (other) parts.push(`${cleanSentence(other)}.`);
+  // Kept last, and always prefixed exactly "Home practice focus: ", so
+  // getGenerationInput can split it back out into the parent report's own
+  // "How you can help at home" section instead of it only ever surfacing
+  // inside the session-narrative quote.
+  if (homework) parts.push(`Home practice focus: ${cleanSentence(homework)}.`);
   return parts.length > 0 ? parts.join(" ") : null;
 }
 

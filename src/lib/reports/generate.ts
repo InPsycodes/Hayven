@@ -880,7 +880,7 @@ function sessionOpeningSentence(input: GenerationInput): string {
   const attendanceClause = session.attendance ? ATTENDANCE_PARENT_PHRASE[session.attendance] : null;
   const presentation =
     session.generalPresentation && session.generalPresentation.trim()
-      ? applyParentFriendlyLanguage(session.generalPresentation.trim(), input.behaviours)
+      ? `${stripTrailingPeriod(applyParentFriendlyLanguage(session.generalPresentation.trim(), input.behaviours))}.`
       : null;
 
   return [base, attendanceClause, presentation].filter(Boolean).join(" ");
@@ -1007,8 +1007,14 @@ function buildSessionNarrative(input: GenerationInput, ctx: ToneContext): Report
 
   const blocks: ReportBlock[] = paragraphs.map((text) => ({ type: "paragraph", text }));
 
-  if (input.session.therapistNotes && input.session.therapistNotes.trim()) {
-    const parentFriendly = applyParentFriendlyLanguage(input.session.therapistNotes.trim(), input.behaviours);
+  // The "Home practice focus: …" sentence is lifted out into buildNextSteps
+  // ("How you can help at home") -- drop it from the quoted note here so the
+  // same guidance doesn't appear in two sections.
+  const quotableNotes = (input.session.therapistNotes ?? "")
+    .replace(/\s*Home practice focus:[\s\S]*$/, "")
+    .trim();
+  if (quotableNotes) {
+    const parentFriendly = applyParentFriendlyLanguage(quotableNotes, input.behaviours);
     blocks.push({ type: "quote", label: "In the therapist's words", text: parentFriendly });
   }
 
@@ -1069,21 +1075,24 @@ function buildTodaysWins(input: GenerationInput): ReportSection {
       })),
   ];
 
-  // One win per goal/skill: near-mastery outranks a big jump.
+  // One win per goal/skill: near-mastery outranks a big jump. Seeds carry
+  // the session date so a win that recurs across sessions isn't phrased
+  // identically every time.
+  const seed = input.session.date;
   const claimed = new Set<string>();
   for (const m of movers.filter((m) => m.current >= WIN_STRUCTURE_THRESHOLD)) {
     claimed.add(m.id);
-    add(pickVariant(MASTERY_WIN, m.id)(m.name));
+    add(pickVariant(MASTERY_WIN, seed + m.id)(m.name));
   }
   for (const m of movers
     .filter((m) => !claimed.has(m.id) && m.delta !== null && m.delta >= WIN_DELTA_THRESHOLD)
     .sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0))) {
-    add(pickVariant(GAIN_WIN, m.id)(m.name));
+    add(pickVariant(GAIN_WIN, seed + m.id)(m.name));
   }
   for (const b of input.behaviours) {
     if (b.perHour === null || b.previousPerHour === null) continue;
     const improving = b.direction === "decrease" ? b.perHour < b.previousPerHour : b.perHour > b.previousPerHour;
-    if (improving) add(pickVariant(BEHAVIOUR_WIN, b.id)(behaviourParentName(b)));
+    if (improving) add(pickVariant(BEHAVIOUR_WIN, seed + b.id)(behaviourParentName(b)));
   }
 
   if (items.length === 0) {
@@ -1462,6 +1471,12 @@ const CONSISTENCY_TIP_VARIANTS: ((name: string) => string)[] = [
   (name) => `We're keeping a close eye on ${name} right now. Sticking to the same calm, consistent response at home really helps.`,
 ];
 
+const HOME_PRACTICE_LEAD: ((text: string) => string)[] = [
+  (t) => `${cap(t)}.`,
+  (t) => `From your therapist: ${cap(t)}.`,
+  (t) => `To carry over at home this week — ${cap(t)}.`,
+];
+
 function buildNextSteps(input: GenerationInput): ReportSection {
   const items: string[] = [];
   const seen = new Set<string>();
@@ -1470,6 +1485,17 @@ function buildNextSteps(input: GenerationInput): ReportSection {
     seen.add(text);
     items.push(text);
   };
+  const seed = input.session.date;
+
+  // The therapist's own "what should we practice at home?" answer leads --
+  // it's the one piece of this section written specifically for this parent,
+  // this week, so it should never be buried under the generic tips.
+  const homePractice = input.session.homePractice?.trim()
+    ? stripTrailingPeriod(applyParentFriendlyLanguage(input.session.homePractice.trim(), input.behaviours))
+    : null;
+  if (homePractice) {
+    add(pickVariant(HOME_PRACTICE_LEAD, seed + homePractice)(homePractice));
+  }
 
   const movers = [
     ...input.goals
@@ -1489,23 +1515,26 @@ function buildNextSteps(input: GenerationInput): ReportSection {
         current: s.percentThisSession as number,
       })),
   ];
+  // Seeds carry the session date so the same goal/skill/behaviour doesn't
+  // produce a byte-identical tip in every report -- the phrasing rotates
+  // session to session even when the underlying data barely moves.
   const biggestGain = movers.filter((m) => m.delta > 0 && m.current < 80).sort((a, b) => b.delta - a.delta)[0];
-  if (biggestGain) add(pickVariant(PRACTICE_TIP_VARIANTS, biggestGain.id)(biggestGain.name));
+  if (biggestGain) add(pickVariant(PRACTICE_TIP_VARIANTS, seed + biggestGain.id)(biggestGain.name));
 
   for (const goal of input.goals) {
     if (goal.percentComplete !== null && goal.percentComplete >= 80) {
-      add(pickVariant(MASTERY_TIP_VARIANTS, goal.id)(goal.title));
+      add(pickVariant(MASTERY_TIP_VARIANTS, seed + goal.id)(goal.title));
     }
   }
   for (const skill of input.skills) {
     if (skill.percentThisSession !== null && skill.percentThisSession >= 80) {
-      add(pickVariant(MASTERY_TIP_VARIANTS, skill.id)(skill.label));
+      add(pickVariant(MASTERY_TIP_VARIANTS, seed + skill.id)(skill.label));
     }
   }
   for (const b of input.behaviours) {
     if (b.perHour === null || b.previousPerHour === null) continue;
     const worsening = b.direction === "decrease" ? b.perHour > b.previousPerHour : b.perHour < b.previousPerHour;
-    if (worsening) add(pickVariant(CONSISTENCY_TIP_VARIANTS, b.id)(behaviourParentName(b)));
+    if (worsening) add(pickVariant(CONSISTENCY_TIP_VARIANTS, seed + b.id)(behaviourParentName(b)));
   }
 
   if (items.length === 0) {
@@ -1515,10 +1544,25 @@ function buildNextSteps(input: GenerationInput): ReportSection {
     ];
     if (touched.length > 0) {
       add(
-        `This session focused on ${touched.join(" and ")}. Keep creating chances to practise these same things at home -- little and often helps most.`
+        pickVariant(
+          [
+            `This session focused on ${joinList(touched)}. Keep creating chances to practise these same things at home -- little and often helps most.`,
+            `The most useful thing at home this week is giving ${CHILD} relaxed, low-pressure chances to practise ${joinList(touched)}.`,
+            `Everyday moments -- meals, play, getting ready -- are good openings to practise ${joinList(touched)} together at home.`,
+          ],
+          seed
+        )
       );
     } else {
-      add("Keep up the consistent routines you're already using at home. Small, steady practice makes the biggest difference.");
+      add(
+        pickVariant(
+          [
+            "Keep up the consistent routines you're already using at home. Small, steady practice makes the biggest difference.",
+            "No new home practice this week -- just keep the routines you already have going. Consistency is what helps most.",
+          ],
+          seed
+        )
+      );
     }
   }
 

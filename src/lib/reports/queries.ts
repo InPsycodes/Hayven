@@ -180,6 +180,22 @@ function rawBehaviourValue(
   return entry.count;
 }
 
+/**
+ * The "what should we practice at home?" answer is stitched onto the end of
+ * therapist_notes by stitchSessionNotes as a trailing `Home practice focus: …`
+ * sentence. Pull it back out so the parent report can lead its own
+ * "How you can help at home" section with it, rather than it only ever
+ * appearing quoted inside the session narrative.
+ */
+function extractHomePractice(notes: string | null): string | null {
+  if (!notes) return null;
+  const marker = "Home practice focus: ";
+  const idx = notes.lastIndexOf(marker);
+  if (idx === -1) return null;
+  const after = notes.slice(idx + marker.length).trim().replace(/\.+$/, "").trim();
+  return after || null;
+}
+
 function perHour(raw: number | null, durationMinutes: number | null): number | null {
   if (raw === null || !durationMinutes) return null;
   return Math.round((raw / (durationMinutes / 60)) * 10) / 10;
@@ -319,6 +335,7 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
       durationMinutes: therapySession.duration_minutes,
       setting: therapySession.setting,
       therapistNotes: therapySession.therapist_notes,
+      homePractice: extractHomePractice(therapySession.therapist_notes),
       attendance: therapySession.attendance,
       generalPresentation: therapySession.general_presentation,
       therapistName: therapistProfile?.users?.full_name ?? null,
