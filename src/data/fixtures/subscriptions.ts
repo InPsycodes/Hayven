@@ -1,4 +1,5 @@
 import type { Subscription } from "../types";
+import { fxTs } from "./_clock";
 
 export const subscriptions: Subscription[] = [
   {
@@ -6,6 +7,6 @@ export const subscriptions: Subscription[] = [
     parentId: "user_parent_amaka",
     plan: "monthly",
     status: "active",
-    renewsAt: "2026-09-02T00:00:00Z",
+    renewsAt: fxTs(21, 0, 0),
   },
 ];

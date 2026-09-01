@@ -1,4 +1,5 @@
 import type { Payment } from "../types";
+import { fxTs } from "./_clock";
 
 export const payments: Payment[] = [
   {
@@ -10,7 +11,7 @@ export const payments: Payment[] = [
     type: "session_commission",
     gatewayReference: "PSK-8827134",
     status: "successful",
-    createdAt: "2026-07-16T08:05:00Z",
+    createdAt: fxTs(-16, 8, 5),
   },
   {
     id: "pay_zara_completed_2",
@@ -21,7 +22,7 @@ export const payments: Payment[] = [
     type: "session_commission",
     gatewayReference: "PSK-8829456",
     status: "successful",
-    createdAt: "2026-07-23T08:05:00Z",
+    createdAt: fxTs(-9, 8, 5),
   },
   {
     id: "pay_zara_upcoming",
@@ -32,7 +33,7 @@ export const payments: Payment[] = [
     type: "session_commission",
     gatewayReference: "PSK-8831902",
     status: "successful",
-    createdAt: "2026-07-30T08:05:00Z",
+    createdAt: fxTs(-2, 8, 5),
   },
   {
     id: "pay_dayo_completed",
@@ -43,7 +44,7 @@ export const payments: Payment[] = [
     type: "session_commission",
     gatewayReference: "PSK-8801221",
     status: "successful",
-    createdAt: "2026-07-10T08:05:00Z",
+    createdAt: fxTs(-21, 8, 5),
   },
   {
     id: "pay_dayo_upcoming",
@@ -54,7 +55,7 @@ export const payments: Payment[] = [
     type: "session_commission",
     gatewayReference: "PSK-8834410",
     status: "successful",
-    createdAt: "2026-07-28T08:05:00Z",
+    createdAt: fxTs(-3, 8, 5),
   },
   {
     id: "pay_amara_listing",
@@ -63,7 +64,7 @@ export const payments: Payment[] = [
     type: "listing_fee",
     gatewayReference: "PSK-INV-7729",
     status: "successful",
-    createdAt: "2026-07-01T08:00:00Z",
+    createdAt: fxTs(-33, 8, 0),
   },
   {
     id: "pay_amaka_subscription",
@@ -72,6 +73,6 @@ export const payments: Payment[] = [
     type: "parent_subscription",
     gatewayReference: "PSK-SUB-4471",
     status: "successful",
-    createdAt: "2026-07-02T08:00:00Z",
+    createdAt: fxTs(-30, 8, 0),
   },
 ];

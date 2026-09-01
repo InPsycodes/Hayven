@@ -1,4 +1,5 @@
 import type { Notification } from "../types";
+import { fxTs } from "./_clock";
 
 export const notifications: Notification[] = [
   {
@@ -6,9 +7,9 @@ export const notifications: Notification[] = [
     userId: "user_parent_amaka",
     type: "booking_confirmed",
     title: "Booking confirmed",
-    body: "Your session with Dr. Amara Chukwu on Aug 4 at 10:00am is confirmed.",
+    body: "Your session with Dr. Amara Chukwu is confirmed. Check your sessions for the time.",
     read: false,
-    createdAt: "2026-07-30T08:06:00Z",
+    createdAt: fxTs(-2, 8, 6),
   },
   {
     id: "notif_2",
@@ -17,7 +18,7 @@ export const notifications: Notification[] = [
     title: "New session note for Zara",
     body: "Dr. Amara Chukwu shared a progress update after Zara's last session.",
     read: false,
-    createdAt: "2026-07-20T11:16:00Z",
+    createdAt: fxTs(-7, 11, 16),
   },
   {
     id: "notif_3",
@@ -26,7 +27,7 @@ export const notifications: Notification[] = [
     title: "New message from Dr. Amara Chukwu",
     body: "Yes, 10 minutes a day is perfect...",
     read: true,
-    createdAt: "2026-08-01T19:03:00Z",
+    createdAt: fxTs(-3, 19, 3),
   },
   {
     id: "notif_4",
@@ -35,7 +36,7 @@ export const notifications: Notification[] = [
     title: "New message from Amaka Obi",
     body: "Will do! She's already asking to \"play the word game\" again...",
     read: false,
-    createdAt: "2026-08-01T19:07:00Z",
+    createdAt: fxTs(-3, 19, 7),
   },
   {
     id: "notif_5",
@@ -44,7 +45,7 @@ export const notifications: Notification[] = [
     title: "Payment received",
     body: "You received ₦15,000 for your session with Zara O.",
     read: true,
-    createdAt: "2026-07-30T08:05:00Z",
+    createdAt: fxTs(-9, 8, 5),
   },
   {
     id: "notif_6",
@@ -53,6 +54,6 @@ export const notifications: Notification[] = [
     title: "New verification request",
     body: "Grace Nwosu submitted credentials for review.",
     read: false,
-    createdAt: "2026-07-22T10:15:00Z",
+    createdAt: fxTs(-12, 10, 15),
   },
 ];

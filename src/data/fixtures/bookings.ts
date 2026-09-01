@@ -1,4 +1,5 @@
 import type { Booking } from "../types";
+import { fxTs } from "./_clock";
 
 export const bookings: Booking[] = [
   {
@@ -10,7 +11,7 @@ export const bookings: Booking[] = [
     status: "completed",
     sessionType: "virtual",
     meetingLink: "https://meet.google.com/hyv-zara-jul20",
-    createdAt: "2026-07-16T08:00:00Z",
+    createdAt: fxTs(-16, 8, 0),
   },
   {
     id: "booking_zara_completed_2",
@@ -21,7 +22,7 @@ export const bookings: Booking[] = [
     status: "completed",
     sessionType: "in_person",
     location: "Lekki Phase 1, Lagos",
-    createdAt: "2026-07-23T08:00:00Z",
+    createdAt: fxTs(-9, 8, 0),
   },
   {
     id: "booking_zara_upcoming",
@@ -32,7 +33,7 @@ export const bookings: Booking[] = [
     status: "confirmed",
     sessionType: "virtual",
     meetingLink: "https://meet.google.com/hyv-zara-aug04",
-    createdAt: "2026-07-30T08:00:00Z",
+    createdAt: fxTs(-2, 8, 0),
   },
   {
     id: "booking_zara_pending",
@@ -43,7 +44,7 @@ export const bookings: Booking[] = [
     status: "pending_payment",
     sessionType: "in_person",
     location: "Lekki Phase 1, Lagos",
-    createdAt: "2026-08-03T07:45:00Z",
+    createdAt: fxTs(-1, 7, 45),
   },
   {
     id: "booking_zara_cancelled",
@@ -53,7 +54,7 @@ export const bookings: Booking[] = [
     availabilitySlotId: "slot_amara_cancelled",
     status: "cancelled",
     sessionType: "virtual",
-    createdAt: "2026-07-20T08:00:00Z",
+    createdAt: fxTs(-9, 8, 0),
   },
   {
     id: "booking_dayo_upcoming",
@@ -64,7 +65,7 @@ export const bookings: Booking[] = [
     status: "confirmed",
     sessionType: "virtual",
     meetingLink: "https://meet.google.com/hyv-dayo-aug06",
-    createdAt: "2026-07-28T08:00:00Z",
+    createdAt: fxTs(-3, 8, 0),
   },
   {
     id: "booking_dayo_completed",
@@ -75,6 +76,6 @@ export const bookings: Booking[] = [
     status: "completed",
     sessionType: "in_person",
     location: "Yaba, Lagos",
-    createdAt: "2026-07-10T08:00:00Z",
+    createdAt: fxTs(-21, 8, 0),
   },
 ];

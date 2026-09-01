@@ -1,4 +1,5 @@
 import type { SessionNote } from "../types";
+import { fxTs } from "./_clock";
 
 export const sessionNotes: SessionNote[] = [
   {
@@ -9,7 +10,7 @@ export const sessionNotes: SessionNote[] = [
     goalsAddressed: ["goal_zara_sentences"],
     recommendations: "Zara is putting full sentences together on her own now, without me prompting each word. That's a real shift from last month. Keep reinforcing at home with the exercise sheet.",
     visibleToParent: true,
-    createdAt: "2026-07-20T11:15:00Z",
+    createdAt: fxTs(-14, 11, 15),
   },
   {
     id: "note_dayo_1",
@@ -19,7 +20,7 @@ export const sessionNotes: SessionNote[] = [
     goalsAddressed: ["goal_dayo_focus"],
     recommendations: "Dayo is starting to name when he feels frustrated instead of acting out right away, which is exactly what we're working toward. We'll keep building on that next session.",
     visibleToParent: true,
-    createdAt: "2026-07-15T17:00:00Z",
+    createdAt: fxTs(-19, 17, 0),
   },
   {
     id: "note_dayo_internal",
@@ -29,6 +30,6 @@ export const sessionNotes: SessionNote[] = [
     goalsAddressed: [],
     recommendations: "Continue monitoring; revisit in 3 sessions before any formal recommendation.",
     visibleToParent: false,
-    createdAt: "2026-07-15T17:05:00Z",
+    createdAt: fxTs(-19, 17, 5),
   },
 ];
