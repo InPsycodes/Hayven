@@ -2,14 +2,18 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
+import { formatDateTime, formatTime } from "@/data/format";
 
 type BookingRow = {
   id: string;
   parent_id: string;
   children: { first_name: string } | null;
   availability_slots: { start_time: string; end_time: string } | null;
-  therapist_profiles: { users: { full_name: string } | null } | null;
+  therapist_profiles: { user_id: string; users: { full_name: string } | null } | null;
 };
+
+const REMINDER_SELECT =
+  "id, parent_id, children(first_name), availability_slots(start_time, end_time), therapist_profiles(user_id, users(full_name))";
 
 /** Notification types already fired against this exact booking, keyed by booking id, for a given notification type -- one batched query instead of one existence check per row. */
 async function alreadyNotifiedIds(
@@ -37,7 +41,7 @@ export async function notifySessionsStarted(): Promise<number> {
   const admin = createAdminClient();
   const { data: raw } = await admin
     .from("bookings")
-    .select("id, parent_id, children(first_name), availability_slots(start_time, end_time), therapist_profiles(users(full_name))")
+    .select(REMINDER_SELECT)
     .eq("status", "confirmed");
   const data = raw as unknown as BookingRow[] | null;
   if (!data) return 0;
@@ -75,7 +79,7 @@ export async function notifySessionsFinished(): Promise<number> {
   const admin = createAdminClient();
   const { data: raw } = await admin
     .from("bookings")
-    .select("id, parent_id, children(first_name), availability_slots(start_time, end_time), therapist_profiles(users(full_name))")
+    .select(REMINDER_SELECT)
     .eq("status", "confirmed");
   const data = raw as unknown as BookingRow[] | null;
   if (!data) return 0;
@@ -108,6 +112,104 @@ export async function notifySessionsFinished(): Promise<number> {
     });
     count++;
   }
+  return count;
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+
+/** Booking ids that already got this reminder variant (dedup by entity_type marker). */
+async function alreadyRemindedIds(
+  admin: ReturnType<typeof createAdminClient>,
+  marker: string,
+  ids: string[]
+): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const { data } = await admin
+    .from("notifications")
+    .select("entity_id")
+    .eq("type", "session_reminder")
+    .eq("entity_type", marker)
+    .in("entity_id", ids);
+  return new Set((data ?? []).map((r) => r.entity_id as string));
+}
+
+/**
+ * Pre-session reminders for confirmed bookings: one "coming up" a day out
+ * (or sooner, if it was booked late) and one "starts soon" shortly before.
+ * Windows are wide enough (upper bounds well past the 15-min cron interval)
+ * to survive a delayed or skipped cron run; the dedup markers keep each
+ * variant to once per booking.
+ */
+export async function notifyUpcomingSessions(): Promise<number> {
+  const admin = createAdminClient();
+  const { data: raw } = await admin.from("bookings").select(REMINDER_SELECT).eq("status", "confirmed");
+  const data = raw as unknown as BookingRow[] | null;
+  if (!data) return 0;
+
+  const now = Date.now();
+  const timed = data
+    .filter((b) => b.availability_slots)
+    .map((b) => ({ b, ms: new Date(b.availability_slots!.start_time).getTime() - now }));
+
+  const dayBefore = timed.filter(({ ms }) => ms > 75 * 60 * 1000 && ms <= 25 * HOUR_MS).map(({ b }) => b);
+  const soon = timed.filter(({ ms }) => ms > 0 && ms <= 75 * 60 * 1000).map(({ b }) => b);
+
+  const [skipDay, skipSoon, skipSoonT] = await Promise.all([
+    alreadyRemindedIds(admin, "booking_reminder_day", dayBefore.map((b) => b.id)),
+    alreadyRemindedIds(admin, "booking_reminder_soon", soon.map((b) => b.id)),
+    alreadyRemindedIds(admin, "booking_reminder_soon_therapist", soon.map((b) => b.id)),
+  ]);
+
+  let count = 0;
+
+  for (const b of dayBefore) {
+    if (skipDay.has(b.id)) continue;
+    const child = b.children?.first_name ?? "Your child";
+    const therapist = b.therapist_profiles?.users?.full_name ?? "their therapist";
+    await createNotification({
+      userId: b.parent_id,
+      type: "session_reminder",
+      entityType: "booking_reminder_day",
+      entityId: b.id,
+      title: `Session coming up: ${child}`,
+      body: `${child}'s session with ${therapist} is ${formatDateTime(b.availability_slots!.start_time)}.`,
+      url: "/parent/sessions",
+    });
+    count++;
+  }
+
+  for (const b of soon) {
+    const child = b.children?.first_name ?? "Your child";
+    const therapist = b.therapist_profiles?.users?.full_name ?? "their therapist";
+    const when = formatTime(b.availability_slots!.start_time);
+
+    if (!skipSoon.has(b.id)) {
+      await createNotification({
+        userId: b.parent_id,
+        type: "session_reminder",
+        entityType: "booking_reminder_soon",
+        entityId: b.id,
+        title: `${child}'s session starts soon`,
+        body: `${child}'s session with ${therapist} starts at ${when}.`,
+        url: "/parent/sessions",
+      });
+      count++;
+    }
+
+    const therapistUserId = b.therapist_profiles?.user_id;
+    if (therapistUserId && !skipSoonT.has(b.id)) {
+      await createNotification({
+        userId: therapistUserId,
+        type: "session_reminder",
+        entityType: "booking_reminder_soon_therapist",
+        entityId: b.id,
+        title: `Session starts soon: ${child}`,
+        body: `Your session with ${child} starts at ${when}.`,
+        url: "/therapist/schedule",
+      });
+    }
+  }
+
   return count;
 }
 

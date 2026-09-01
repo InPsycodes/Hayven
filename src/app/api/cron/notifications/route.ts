@@ -2,7 +2,12 @@ import crypto from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { notifySessionsStarted, notifySessionsFinished, notifyUnreadReportReminders } from "@/lib/notifications/cron";
+import {
+  notifySessionsStarted,
+  notifySessionsFinished,
+  notifyUnreadReportReminders,
+  notifyUpcomingSessions,
+} from "@/lib/notifications/cron";
 
 // Timing-safe, same reasoning as the Paystack webhook's signature check: a
 // plain `===` leaks how many leading characters matched via response-time
@@ -30,11 +35,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [started, finished, reminders] = await Promise.all([
+  const [started, finished, reminders, upcoming] = await Promise.all([
     notifySessionsStarted(),
     notifySessionsFinished(),
     notifyUnreadReportReminders(),
+    notifyUpcomingSessions(),
   ]);
 
-  return NextResponse.json({ sessionsStarted: started, sessionsFinished: finished, reportReminders: reminders });
+  return NextResponse.json({
+    sessionsStarted: started,
+    sessionsFinished: finished,
+    reportReminders: reminders,
+    upcomingReminders: upcoming,
+  });
 }

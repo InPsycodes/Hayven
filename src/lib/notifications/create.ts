@@ -11,6 +11,7 @@ export type NotificationType =
   | "payment_receipt"
   | "verification_update"
   | "meeting_link_ready"
+  | "session_reminder"
   | "support_request_new"
   | "support_request_resolved"
   | "report_published"
