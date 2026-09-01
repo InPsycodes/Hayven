@@ -7,7 +7,7 @@ import { TrustStrip } from "@/components/marketing/trust-strip";
 import { Reveal } from "@/components/marketing/reveal";
 import { Icon } from "@/components/ui/icon";
 
-import aboutImage from "../../../../public/images/about-family-session.webp";
+import founderImage from "../../../../public/images/about-founder.jpg";
 
 export const metadata: Metadata = {
   title: "About Hayven",
@@ -55,33 +55,33 @@ export default function AboutPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="bg-canvas-white px-6 pt-16 pb-12 md:px-10 md:pt-24 md:pb-14">
-        <div className="mx-auto max-w-2xl">
-          <span className="eyebrow text-rust-dark">About Hayven</span>
-          <h1 className="mt-4 font-serif text-3xl leading-[1.1] text-charcoal sm:text-4xl lg:text-[2.9rem]">
-            We started Hayven so no parent has to figure it out alone.
-          </h1>
-          <p className="mt-5 text-lg leading-relaxed text-ink-soft">
-            A calmer path from the first worried question, through assessment and therapy,
-            to everyday progress you can actually see.
-          </p>
+      <section className="bg-canvas-white px-6 pt-16 pb-16 md:px-10 md:pt-24 md:pb-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-16">
+          <div>
+            <span className="eyebrow text-rust-dark">About Hayven</span>
+            <h1 className="mt-4 font-serif text-3xl leading-[1.1] text-charcoal sm:text-4xl lg:text-[2.9rem]">
+              We started Hayven so no parent has to figure it out alone.
+            </h1>
+            <p className="mt-5 max-w-md text-lg leading-relaxed text-ink-soft">
+              A calmer path from the first worried question, through assessment and therapy,
+              to everyday progress you can actually see.
+            </p>
+          </div>
+          <Reveal className="md:justify-self-end">
+            <Image
+              src={founderImage}
+              alt="Ademola, founder of Hayven"
+              placeholder="blur"
+              priority
+              sizes="(max-width: 768px) 100vw, 420px"
+              className="w-full max-w-[380px] rounded-2xl object-cover ring-1 ring-charcoal/10 md:max-w-[420px]"
+            />
+          </Reveal>
         </div>
       </section>
 
-      {/* Photo band */}
-      <div className="relative h-[42vh] min-h-[280px] w-full overflow-hidden bg-charcoal md:h-[52vh]">
-        <Image
-          src={aboutImage}
-          alt="A therapist working with a young child and their parent during a session"
-          fill
-          placeholder="blur"
-          sizes="100vw"
-          className="photo-treatment object-cover object-[center_35%]"
-        />
-      </div>
-
       {/* The letter */}
-      <section className="bg-canvas-white px-6 py-20 md:px-10 md:py-24">
+      <section className="border-t border-charcoal/8 bg-canvas-white px-6 py-20 md:px-10 md:py-24">
         <article className="mx-auto max-w-2xl">
           <p className="font-serif text-xl leading-relaxed text-charcoal sm:text-[1.4rem]">
             {OPENING[0]}
@@ -114,22 +114,13 @@ export default function AboutPage() {
             ))}
           </div>
 
-          <div className="mt-10 flex items-center gap-4 border-t border-charcoal/10 pt-6">
-            <div className="relative size-20 shrink-0 overflow-hidden rounded-xl ring-1 ring-charcoal/10 sm:size-24">
-              <Image
-                src="/images/about-founder.jpg"
-                alt="Ademola, founder of Hayven"
-                fill
-                sizes="96px"
-                className="object-cover object-top"
-              />
-            </div>
+          <div className="mt-10 flex items-center gap-3.5 border-t border-charcoal/10 pt-6">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-terracotta font-serif text-base font-semibold text-white">
+              A
+            </span>
             <div>
-              <p className="font-serif text-lg text-charcoal">Ademola</p>
+              <p className="text-sm font-semibold text-charcoal">Ademola</p>
               <p className="text-[13px] text-muted-foreground">Founder, Hayven</p>
-              <p className="mt-1.5 max-w-xs text-[13px] leading-relaxed text-ink-soft">
-                A diagnostician who spent years watching families navigate this alone.
-              </p>
             </div>
           </div>
         </article>
