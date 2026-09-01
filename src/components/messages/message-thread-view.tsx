@@ -112,10 +112,10 @@ export function MessageThreadView({
                 <div className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
                   <div
                     className={cn(
-                      "max-w-[75%] px-4 py-2.5 text-sm leading-relaxed",
+                      "max-w-[75%] rounded-[20px] px-4 py-2.5 text-sm leading-relaxed",
                       isOwn
-                        ? "rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md bg-care-accent text-white"
-                        : "rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md border border-care-line/60 bg-care-surface text-care-ink"
+                        ? "bg-care-accent text-white"
+                        : "border border-care-line/60 bg-care-surface text-care-ink"
                     )}
                   >
                     {message.content}
