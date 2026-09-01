@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but the placeholder template belongs in the repo so deployers have the
+# full list of required/optional vars.
+!.env.local.example
 
 # vercel
 .vercel

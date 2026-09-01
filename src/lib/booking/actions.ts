@@ -150,8 +150,14 @@ export async function finalizeBookingPayment(
     .maybeSingle();
   if (!booking) return { ok: false, error: "Booking not found." };
 
+  // MEETING_BASE_URL is the origin of whatever video tool the pilot uses
+  // (e.g. "https://meet.google.com" with a per-booking path, or a Whereby
+  // subdomain). Left unset until one is chosen -- virtual bookings then
+  // carry no auto link and the therapist shares one directly with the
+  // parent, which the notification copy below reflects.
+  const meetingBaseUrl = process.env.MEETING_BASE_URL?.replace(/\/+$/, "");
   const meetingLink =
-    booking.session_type === "virtual" ? `https://meet.hayven.app/${bookingId}` : null;
+    booking.session_type === "virtual" && meetingBaseUrl ? `${meetingBaseUrl}/${bookingId}` : null;
 
   const { data: updated, error: updateError } = await admin
     .from("bookings")
@@ -204,6 +210,14 @@ export async function finalizeBookingPayment(
       type: "meeting_link_ready",
       title: "Meeting link ready",
       body: `Your virtual session with ${therapistName} on ${sessionLabel} is confirmed. Join from your sessions page when it's time.`,
+      url: "/parent/sessions",
+    });
+  } else if (booking.session_type === "virtual") {
+    await createNotification({
+      userId: booking.parent_id,
+      type: "booking_confirmed",
+      title: "Booking confirmed",
+      body: `Your virtual session with ${therapistName} on ${sessionLabel} is confirmed. ${therapistName} will share the video link with you before the session.`,
       url: "/parent/sessions",
     });
   } else {
