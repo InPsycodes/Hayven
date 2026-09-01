@@ -3,8 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import type { UserRole } from "@/data/types";
 
-/** Refreshes the Supabase session cookie and resolves the caller's app role, for use in proxy.ts. */
-export async function updateSupabaseSession(request: NextRequest) {
+/**
+ * Refreshes the Supabase session cookie (the whole point -- this is the only
+ * place a rotated token gets written back, since a Server Component's
+ * setAll is a no-op) and, when `resolveRole` is set, also looks up the
+ * caller's app role for proxy.ts's route gate.
+ */
+export async function updateSupabaseSession(request: NextRequest, resolveRole = true) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -38,7 +43,7 @@ export async function updateSupabaseSession(request: NextRequest) {
 
   let role: UserRole | null = null;
   let isSupervisor = false;
-  if (user) {
+  if (user && resolveRole) {
     const { data: profile } = await supabase
       .from("users")
       .select("role, is_supervisor")

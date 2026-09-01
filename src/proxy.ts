@@ -16,9 +16,11 @@ export async function proxy(request: NextRequest) {
     (r) => pathname === r.prefix || pathname.startsWith(`${r.prefix}/`)
   );
 
-  // Always run this so the Supabase session cookie stays refreshed, even on
-  // routes that aren't role-gated.
-  const { response, role, isSupervisor } = await updateSupabaseSession(request);
+  // Runs on every page (see config.matcher) so a rotated session token is
+  // written back no matter where the user is -- otherwise the token silently
+  // expires on /book, marketing pages, etc. and the next server render
+  // bounces them to /login. The role lookup only happens for a role-gated path.
+  const { response, role, isSupervisor } = await updateSupabaseSession(request, Boolean(match));
 
   if (!match) return response;
 
@@ -41,14 +43,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // Every route except Next internals, API routes (they own their auth and
+  // the Paystack webhook must not take an extra Supabase round-trip), and
+  // static assets. The session-refresh needs to run app-wide; the role gate
+  // inside proxy() still only fires on the role-prefixed paths above.
   matcher: [
-    "/parent",
-    "/parent/:path*",
-    "/therapist",
-    "/therapist/:path*",
-    "/admin",
-    "/admin/:path*",
-    "/supervisor",
-    "/supervisor/:path*",
+    "/((?!api/|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|~offline|robots.txt|sitemap.xml|icons/|images/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|ttf)$).*)",
   ],
 };
