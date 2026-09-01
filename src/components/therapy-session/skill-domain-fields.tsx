@@ -47,7 +47,7 @@ function PromptLevelField({ skillId }: { skillId: string }) {
       <select
         id={`skill_${skillId}_prompt`}
         name={`skill_${skillId}_prompt`}
-        className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
+        className="h-9 rounded-sm border border-border bg-card px-2 text-sm"
         defaultValue=""
       >
         <option value="">Not recorded</option>
@@ -248,7 +248,7 @@ export function SkillDomainFields({ skillId, domainType }: { skillId: string; do
             <select
               id={`skill_${skillId}_fi_activity`}
               name={`skill_${skillId}_fi_activity`}
-              className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
+              className="h-9 rounded-sm border border-border bg-card px-2 text-sm"
               defaultValue=""
             >
               <option value="">Select</option>
@@ -277,7 +277,7 @@ export function SkillDomainFields({ skillId, domainType }: { skillId: string; do
             <select
               id={`skill_${skillId}_fi_independence`}
               name={`skill_${skillId}_fi_independence`}
-              className="h-9 w-full max-w-64 rounded-sm border border-border bg-white px-2 text-sm"
+              className="h-9 w-full max-w-64 rounded-sm border border-border bg-card px-2 text-sm"
               defaultValue=""
             >
               <option value="">Select</option>

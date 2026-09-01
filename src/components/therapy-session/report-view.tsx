@@ -105,7 +105,7 @@ export function Block({ block }: { block: ReportBlock }) {
 
 function SectionCard({ section }: { section: ReportSection }) {
   return (
-    <div className="flex flex-col gap-3 rounded-sm bg-white p-5 ring-1 ring-border">
+    <div className="flex flex-col gap-3 rounded-sm bg-card p-5 ring-1 ring-border">
       <h2 className="font-serif text-lg font-semibold text-charcoal">{section.heading}</h2>
       <div className="flex flex-col gap-3">
         {section.blocks.map((block, i) => (

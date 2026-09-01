@@ -22,7 +22,7 @@ export function ChartFrame({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-sm bg-white p-5 ring-1 ring-border">
+    <div className="rounded-sm bg-card p-5 ring-1 ring-border">
       <h3 className="text-sm font-medium text-charcoal">{title}</h3>
 
       {pointCount === 0 ? (

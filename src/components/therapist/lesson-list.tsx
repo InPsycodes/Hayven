@@ -46,7 +46,7 @@ function LessonRow({
   return (
     <div
       className={cn(
-        "rounded-xl bg-white ring-1 transition-colors",
+        "rounded-xl bg-card ring-1 transition-colors",
         state === "current" ? "ring-terracotta/60" : "ring-border",
         state === "upcoming" && !open && "opacity-70"
       )}

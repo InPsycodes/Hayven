@@ -42,7 +42,7 @@ export function OpenSlotChip({
   return (
     <div
       className={cn(
-        "group/slot flex h-full flex-col justify-center rounded-sm bg-white px-2 py-1 text-[11px] leading-tight text-charcoal ring-1 ring-inset ring-border",
+        "group/slot flex h-full flex-col justify-center rounded-sm bg-card px-2 py-1 text-[11px] leading-tight text-charcoal ring-1 ring-inset ring-border",
         isPending && "opacity-50"
       )}
     >

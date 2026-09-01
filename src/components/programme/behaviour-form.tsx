@@ -28,7 +28,7 @@ export function BehaviourForm({ childId }: { childId: string }) {
           <Label htmlFor="behaviour-label" className="label-micro text-muted-foreground">
             Label
           </Label>
-          <Input id="behaviour-label" name="label" required placeholder="Elopement" className="bg-white" />
+          <Input id="behaviour-label" name="label" required placeholder="Elopement" className="bg-card" />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="behaviour-parent-label" className="label-micro text-muted-foreground">
@@ -38,7 +38,7 @@ export function BehaviourForm({ childId }: { childId: string }) {
             id="behaviour-parent-label"
             name="parentLabel"
             placeholder="leaving the activity area"
-            className="bg-white"
+            className="bg-card"
           />
         </div>
       </div>
@@ -50,13 +50,13 @@ export function BehaviourForm({ childId }: { childId: string }) {
           id="behaviour-definition"
           name="definition"
           placeholder="Leaving the designated therapy area without permission."
-          className="bg-white"
+          className="bg-card"
         />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label className="label-micro text-muted-foreground">Direction</Label>
-          <div className="flex h-9 items-center gap-4 rounded-lg border border-input bg-white px-3 text-sm text-charcoal">
+          <div className="flex h-9 items-center gap-4 rounded-lg border border-input bg-card px-3 text-sm text-charcoal">
             <label className="flex items-center gap-1.5">
               <input type="radio" name="direction" value="decrease" defaultChecked required />
               Decrease
@@ -75,7 +75,7 @@ export function BehaviourForm({ childId }: { childId: string }) {
             id="behaviour-measurement"
             name="measurement"
             defaultValue="frequency"
-            className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
+            className="h-9 rounded-sm border border-border bg-card px-2 text-sm"
           >
             {MEASUREMENTS.map((m) => (
               <option key={m.value} value={m.value}>

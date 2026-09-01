@@ -75,26 +75,28 @@ export function MessageThreadView({
   });
 
   return (
-    <div className="flex h-screen flex-col md:h-[calc(100vh-0px)]">
-      <div className="flex items-center gap-3 bg-charcoal px-4 py-4 text-offwhite">
-        <Link href={backHref} className="text-offwhite/70 hover:text-offwhite" aria-label="Back to messages">
+    <div className="flex h-screen flex-col bg-care-bg text-care-ink">
+      <div className="flex items-center gap-3 border-b border-care-line/60 bg-care-surface px-4 py-3.5">
+        <Link
+          href={backHref}
+          className="text-care-ink-faint hover:text-care-ink"
+          aria-label="Back to messages"
+        >
           <IconArrowLeft size={20} />
         </Link>
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-terracotta text-xs font-medium text-white">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-care-accent text-xs font-medium text-white">
           {initialsFromName(counterpartName)}
         </span>
         <div>
-          <h1 className="text-sm font-medium">{counterpartName}</h1>
-          <p className="text-xs capitalize text-offwhite/60">{counterpartRole}</p>
+          <h1 className="text-sm font-medium text-care-ink">{counterpartName}</h1>
+          <p className="text-xs capitalize text-care-ink-faint">{counterpartRole}</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-offwhite px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         <div className="mx-auto flex max-w-2xl flex-col gap-3">
           {messages.length === 0 && (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              No messages yet. Say hello.
-            </p>
+            <p className="py-10 text-center text-sm text-care-ink-soft">No messages yet. Say hello.</p>
           )}
           {rows.map(({ message, showDivider, label }) => {
             const isOwn = message.senderId === currentUserId;
@@ -102,7 +104,7 @@ export function MessageThreadView({
               <div key={message.id} className="flex flex-col gap-3">
                 {showDivider && (
                   <div className="flex justify-center">
-                    <span className="rounded-full bg-paper px-3 py-1 text-[11px] text-charcoal/70">
+                    <span className="rounded-full bg-care-surface px-3 py-1 text-[11px] text-care-ink-soft">
                       {label}
                     </span>
                   </div>
@@ -112,8 +114,8 @@ export function MessageThreadView({
                     className={cn(
                       "max-w-[75%] px-4 py-2.5 text-sm leading-relaxed",
                       isOwn
-                        ? "rounded-tl-md rounded-tr-md rounded-bl-md rounded-br-[3px] bg-charcoal text-offwhite"
-                        : "rounded-tl-md rounded-tr-md rounded-br-md rounded-bl-[3px] bg-white text-charcoal ring-1 ring-border"
+                        ? "rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md bg-care-accent text-white"
+                        : "rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md border border-care-line/60 bg-care-surface text-care-ink"
                     )}
                   >
                     {message.content}
@@ -125,13 +127,16 @@ export function MessageThreadView({
         </div>
       </div>
 
-      <form onSubmit={handleSend} className="flex items-center gap-2 bg-white px-4 py-3">
+      <form
+        onSubmit={handleSend}
+        className="flex items-center gap-2 border-t border-care-line/60 bg-care-surface px-4 py-3"
+      >
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={`Message ${counterpartName.split(" ")[0]}`}
           aria-label={`Message ${counterpartName}`}
-          className="h-11 flex-1 rounded-full bg-offwhite px-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-terracotta/40 placeholder:text-muted-foreground"
+          className="h-11 flex-1 rounded-full border border-care-line/60 bg-care-bg px-4 text-sm text-care-ink outline-none focus-visible:ring-2 focus-visible:ring-care-accent/40 placeholder:text-care-ink-faint"
         />
         <button
           type="submit"

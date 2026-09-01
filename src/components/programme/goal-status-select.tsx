@@ -19,7 +19,7 @@ export function GoalStatusSelect({ goalId, status }: { goalId: string; status: s
           await updateGoalStatus(goalId, next);
         });
       }}
-      className="h-8 rounded-full border border-border bg-white px-3 text-xs font-medium text-charcoal capitalize"
+      className="h-8 rounded-full border border-border bg-card px-3 text-xs font-medium text-charcoal capitalize"
     >
       {STATUSES.map((s) => (
         <option key={s} value={s}>

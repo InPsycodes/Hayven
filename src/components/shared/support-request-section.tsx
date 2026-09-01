@@ -20,7 +20,7 @@ export function SupportRequestSection({ requests }: { requests: RealSupportReque
   const succeeded = state !== initialState && !state.error;
 
   return (
-    <div className="flex flex-col gap-4 rounded-sm bg-white p-5 ring-1 ring-border">
+    <div className="flex flex-col gap-4 rounded-sm bg-card p-5 ring-1 ring-border">
       <div>
         <h2 className="font-heading text-base text-charcoal">Contact support</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -70,7 +70,7 @@ export function SupportRequestSection({ requests }: { requests: RealSupportReque
               </div>
               <p className="mt-1.5 text-sm text-muted-foreground">{r.message}</p>
               {r.resolution && (
-                <div className="mt-2 rounded-sm bg-white p-2.5">
+                <div className="mt-2 rounded-sm bg-card p-2.5">
                   <p className="label-micro text-rust-dark">Our reply</p>
                   <p className="mt-1 text-sm text-charcoal">{r.resolution}</p>
                 </div>

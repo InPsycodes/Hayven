@@ -57,7 +57,7 @@ export function AssignPicker({
         <div className="flex flex-col gap-1.5">
           <Label className="label-micro text-muted-foreground">{leftLabel}</Label>
           <Select value={leftId} onValueChange={setLeftId}>
-            <SelectTrigger className="w-full bg-white" aria-label={leftLabel}>
+            <SelectTrigger className="w-full bg-card" aria-label={leftLabel}>
               <SelectValue placeholder="Choose one" />
             </SelectTrigger>
             <SelectContent>
@@ -72,7 +72,7 @@ export function AssignPicker({
         <div className="flex flex-col gap-1.5">
           <Label className="label-micro text-muted-foreground">{rightLabel}</Label>
           <Select value={rightId} onValueChange={setRightId}>
-            <SelectTrigger className="w-full bg-white" aria-label={rightLabel}>
+            <SelectTrigger className="w-full bg-card" aria-label={rightLabel}>
               <SelectValue placeholder="Choose one" />
             </SelectTrigger>
             <SelectContent>

@@ -73,7 +73,7 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
     <div className="flex flex-col gap-5">
       {body.sections.map((section) =>
         READ_ONLY_SECTIONS.has(section.key) ? (
-          <div key={section.key} className="flex flex-col gap-3 rounded-sm bg-white p-4 ring-1 ring-border">
+          <div key={section.key} className="flex flex-col gap-3 rounded-sm bg-card p-4 ring-1 ring-border">
             <Label>{section.heading}</Label>
             <p className="text-xs text-muted-foreground">Computed from recorded session data, not directly editable.</p>
             <div className="flex flex-col gap-3">
@@ -83,7 +83,7 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
             </div>
           </div>
         ) : (
-          <div key={section.key} className="flex flex-col gap-3 rounded-sm bg-white p-4 ring-1 ring-border">
+          <div key={section.key} className="flex flex-col gap-3 rounded-sm bg-card p-4 ring-1 ring-border">
             <Label>{section.heading}</Label>
             {section.blocks.map((block, i) => (
               <div key={i} className="flex flex-col gap-1">

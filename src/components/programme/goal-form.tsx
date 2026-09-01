@@ -20,13 +20,13 @@ export function GoalForm({ childId }: { childId: string }) {
           <Label htmlFor="goal-title" className="label-micro text-muted-foreground">
             Title
           </Label>
-          <Input id="goal-title" name="title" required placeholder="Increase verbal requesting" className="bg-white" />
+          <Input id="goal-title" name="title" required placeholder="Increase verbal requesting" className="bg-card" />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="goal-domain" className="label-micro text-muted-foreground">
             Domain (optional)
           </Label>
-          <Input id="goal-domain" name="domain" placeholder="Communication" className="bg-white" />
+          <Input id="goal-domain" name="domain" placeholder="Communication" className="bg-card" />
         </div>
       </div>
       <div className="flex flex-col gap-1.5">
@@ -37,7 +37,7 @@ export function GoalForm({ childId }: { childId: string }) {
           id="goal-description"
           name="description"
           placeholder="Requests preferred items using a 2-word phrase."
-          className="bg-white"
+          className="bg-card"
         />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -45,19 +45,19 @@ export function GoalForm({ childId }: { childId: string }) {
           <Label htmlFor="goal-baseline" className="label-micro text-muted-foreground">
             Baseline (optional)
           </Label>
-          <Input id="goal-baseline" name="baselineValue" placeholder="10" className="bg-white" />
+          <Input id="goal-baseline" name="baselineValue" placeholder="10" className="bg-card" />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="goal-target" className="label-micro text-muted-foreground">
             Target (optional)
           </Label>
-          <Input id="goal-target" name="targetValue" placeholder="80" className="bg-white" />
+          <Input id="goal-target" name="targetValue" placeholder="80" className="bg-card" />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="goal-unit" className="label-micro text-muted-foreground">
             Unit (optional)
           </Label>
-          <Input id="goal-unit" name="unit" placeholder="percent independent" className="bg-white" />
+          <Input id="goal-unit" name="unit" placeholder="percent independent" className="bg-card" />
         </div>
       </div>
       {state.error && <p className="text-sm text-error-text">{state.error}</p>}

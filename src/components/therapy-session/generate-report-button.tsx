@@ -42,7 +42,7 @@ export function GenerateReportButton({
         <div className="flex flex-col gap-1.5">
           <Label className="label-micro text-muted-foreground">Report tone</Label>
           <Select value={tone} onValueChange={(v) => setTone(v as "warm" | "direct")}>
-            <SelectTrigger className="w-32 bg-white">
+            <SelectTrigger className="w-32 bg-card">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

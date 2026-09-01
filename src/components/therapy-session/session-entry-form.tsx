@@ -79,7 +79,7 @@ export function SessionEntryForm({
             <select
               id="attendance"
               name="attendance"
-              className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
+              className="h-9 rounded-sm border border-border bg-card px-2 text-sm"
               defaultValue="present"
             >
               <option value="present">Present</option>
@@ -102,7 +102,7 @@ export function SessionEntryForm({
         <div className="flex flex-col gap-3">
           <Label>Target behaviours</Label>
           {programme.targetBehaviours.map((behaviour) => (
-            <div key={behaviour.id} className="flex flex-col gap-3 rounded-sm bg-white p-4 ring-1 ring-border">
+            <div key={behaviour.id} className="flex flex-col gap-3 rounded-sm bg-card p-4 ring-1 ring-border">
               <p className="text-sm font-medium text-charcoal">
                 {behaviour.label}{" "}
                 <span className="text-xs font-normal text-muted-foreground">({behaviour.direction})</span>
@@ -149,7 +149,7 @@ export function SessionEntryForm({
         <div className="flex flex-col gap-3">
           <Label>Skills</Label>
           {programme.skills.map((skill) => (
-            <div key={skill.id} className="flex flex-col gap-3 rounded-sm bg-white p-4 ring-1 ring-border">
+            <div key={skill.id} className="flex flex-col gap-3 rounded-sm bg-card p-4 ring-1 ring-border">
               <p className="text-sm font-medium text-charcoal">{skill.label}</p>
               {skill.domainType ? (
                 <SkillDomainFields skillId={skill.id} domainType={skill.domainType} />
@@ -174,7 +174,7 @@ export function SessionEntryForm({
                     <select
                       id={`skill_${skill.id}_prompt`}
                       name={`skill_${skill.id}_prompt`}
-                      className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
+                      className="h-9 rounded-sm border border-border bg-card px-2 text-sm"
                       defaultValue=""
                     >
                       <option value="">Not recorded</option>
@@ -196,7 +196,7 @@ export function SessionEntryForm({
         <div className="flex flex-col gap-3">
           <Label>Goal progress</Label>
           {programme.goals.map((goal) => (
-            <div key={goal.id} className="flex items-center justify-between gap-3 rounded-sm bg-white p-4 ring-1 ring-border">
+            <div key={goal.id} className="flex items-center justify-between gap-3 rounded-sm bg-card p-4 ring-1 ring-border">
               <span className="text-sm text-charcoal">{goal.title}</span>
               <div className="flex items-center gap-2">
                 <Input
@@ -222,7 +222,7 @@ export function SessionEntryForm({
             <Input name={`reinforcer_${i}_label`} placeholder="e.g. Bubbles" />
             <select
               name={`reinforcer_${i}_effectiveness`}
-              className="h-9 w-32 rounded-sm border border-border bg-white px-2 text-sm"
+              className="h-9 w-32 rounded-sm border border-border bg-card px-2 text-sm"
               defaultValue=""
             >
               <option value="">Effectiveness</option>

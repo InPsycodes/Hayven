@@ -30,7 +30,7 @@ export function AbcObservationBuilder() {
       <input type="hidden" name="abcCount" value={rowCount} />
 
       {Array.from({ length: rowCount }).map((_, i) => (
-        <div key={i} className="flex flex-col gap-3 rounded-sm bg-white p-4 ring-1 ring-border">
+        <div key={i} className="flex flex-col gap-3 rounded-sm bg-card p-4 ring-1 ring-border">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={`abc_${i}_behaviourLabel`} className="text-xs">
@@ -45,7 +45,7 @@ export function AbcObservationBuilder() {
               <select
                 id={`abc_${i}_antecedentCategory`}
                 name={`abc_${i}_antecedentCategory`}
-                className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
+                className="h-9 rounded-sm border border-border bg-card px-2 text-sm"
                 defaultValue=""
               >
                 {ANTECEDENT_CATEGORIES.map((c) => (

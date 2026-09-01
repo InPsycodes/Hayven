@@ -34,7 +34,7 @@ export function SkillForm({ childId }: { childId: string }) {
         <Label htmlFor="skill-label" className="label-micro text-muted-foreground">
           Label
         </Label>
-        <Input id="skill-label" name="label" required placeholder="Two-word phrase requesting" className="bg-white" />
+        <Input id="skill-label" name="label" required placeholder="Two-word phrase requesting" className="bg-card" />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="skill-mastery" className="label-micro text-muted-foreground">
@@ -44,7 +44,7 @@ export function SkillForm({ childId }: { childId: string }) {
           id="skill-mastery"
           name="masteryCriteria"
           placeholder="80% independent across 3 consecutive sessions."
-          className="bg-white"
+          className="bg-card"
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -55,7 +55,7 @@ export function SkillForm({ childId }: { childId: string }) {
           id="skill-domain"
           name="domainType"
           defaultValue=""
-          className="h-9 rounded-sm border border-border bg-white px-2 text-sm"
+          className="h-9 rounded-sm border border-border bg-card px-2 text-sm"
         >
           {DOMAIN_TYPES.map((d) => (
             <option key={d.value} value={d.value}>
