@@ -105,7 +105,7 @@ export function SignupForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <div className="flex rounded-full bg-charcoal/5 p-1">
         {(["parent", "therapist"] as const).map((r) => (
           <button

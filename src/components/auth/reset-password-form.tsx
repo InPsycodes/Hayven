@@ -45,7 +45,7 @@ export function ResetPasswordForm() {
   });
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <div>
         <h2 className="font-heading text-xl text-charcoal">Set a new password</h2>
         <p className="mt-1 text-sm text-muted-foreground">
