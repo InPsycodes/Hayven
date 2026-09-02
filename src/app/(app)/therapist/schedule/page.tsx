@@ -14,7 +14,7 @@ import { MarkNoShowButton } from "@/components/booking/mark-no-show-button";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId, getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
-import { getRealBookingsForTherapist, getNoShowNotes } from "@/lib/booking/queries";
+import { getRealBookingsForTherapist, getNoShowNotes, getBookingFinancials } from "@/lib/booking/queries";
 import { cancelBookingAsTherapist } from "@/lib/booking/actions";
 import { formatDateTime, toLagosWallClock, fromLagosWallClock } from "@/data/format";
 
@@ -106,6 +106,7 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
   const noShowNotes = await getNoShowNotes(
     recentlyFinished.filter((b) => b.status === "no_show").map((b) => b.id)
   );
+  const financials = await getBookingFinancials(upcomingBookings.map((b) => b.id));
 
   const weekRangeLabel = `${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} - ${weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`;
 
@@ -162,6 +163,9 @@ export default async function TherapistSchedulePage({ searchParams }: SchedulePa
                           bookingId={booking.id}
                           wasPaid={booking.status === "confirmed"}
                           cancelAction={cancelBookingAsTherapist}
+                          initiatedBy="therapist"
+                          paidAmount={financials.get(booking.id)?.paidAmount ?? null}
+                          slotStartTime={booking.slotStartTime}
                         />
                       </div>
                     </div>

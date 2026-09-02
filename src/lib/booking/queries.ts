@@ -72,6 +72,45 @@ export async function getNoShowNotes(bookingIds: string[]): Promise<Map<string, 
   return out;
 }
 
+export interface BookingFinancials {
+  /** Naira the parent was charged (successful session-commission payment). */
+  paidAmount: number | null;
+  /** Naira owed back per the cancellation policy; null if not computed. */
+  refundAmount: number | null;
+}
+
+/**
+ * Paid amount + computed refund for a set of bookings. Separate resilient
+ * query (like getNoShowNotes) so a pre-0071 database -- no refund_amount
+ * column -- still renders every bookings list.
+ */
+export async function getBookingFinancials(bookingIds: string[]): Promise<Map<string, BookingFinancials>> {
+  const out = new Map<string, BookingFinancials>();
+  if (bookingIds.length === 0) return out;
+  const supabase = await createClient();
+
+  const [{ data: payRows }, { data: bookingRows, error: bookingErr }] = await Promise.all([
+    supabase
+      .from("payments")
+      .select("booking_id, amount, status, type")
+      .in("booking_id", bookingIds)
+      .eq("status", "successful")
+      .eq("type", "session_commission"),
+    supabase.from("bookings").select("id, refund_amount").in("id", bookingIds),
+  ]);
+
+  const paidBy = new Map<string, number>();
+  for (const p of payRows ?? []) if (p.booking_id) paidBy.set(p.booking_id, p.amount);
+
+  const refundBy = new Map<string, number | null>();
+  if (!bookingErr) for (const b of bookingRows ?? []) refundBy.set(b.id, b.refund_amount ?? null);
+
+  for (const id of bookingIds) {
+    out.set(id, { paidAmount: paidBy.get(id) ?? null, refundAmount: refundBy.get(id) ?? null });
+  }
+  return out;
+}
+
 export async function getRealBookingsForTherapist(therapistId: string): Promise<RealBooking[]> {
   await autoCompletePastBookings(therapistId);
   const supabase = await createClient();

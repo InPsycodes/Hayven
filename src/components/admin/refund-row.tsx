@@ -41,7 +41,14 @@ export function RefundRow({ refund }: { refund: RealRefundOwed }) {
         {error && <p className="mt-1 text-xs text-error-text">{error}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <span className="text-sm font-medium text-charcoal">{formatNaira(refund.amount)}</span>
+        <span className="text-right text-sm font-medium text-charcoal">
+          {formatNaira(refund.refundAmount)}
+          {refund.refundAmount !== refund.amount && (
+            <span className="block text-[11px] font-normal text-muted-foreground">
+              of {formatNaira(refund.amount)} paid
+            </span>
+          )}
+        </span>
         {done ? (
           <span className="fade-in text-xs text-success-text">Refunded.</span>
         ) : (

@@ -10,6 +10,7 @@ import { getRealTherapistProfileByUserId, getRealAvailabilityForTherapist } from
 import { createNotification } from "@/lib/notifications/create";
 import { checkRateLimit } from "@/lib/rate-limit/check";
 import { bookingWindow } from "@/lib/booking/window";
+import { computeRefund, type RefundOutcome } from "@/lib/booking/refund-policy";
 import { formatDateTime, formatNaira } from "@/data/format";
 
 type ActionResult<T> = { ok: true } & T | { ok: false; error: string };
@@ -249,16 +250,64 @@ export async function finalizeBookingPayment(
 }
 
 /**
- * Cancels a parent's own booking and frees the slot. Does NOT process any
- * refund -- there is no Paystack refund integration in this codebase yet, so
- * for an already-paid (confirmed) booking this only updates records; the UI
- * is explicit with the parent that a refund is handled by the team
- * separately, not automatic.
+ * Applies the cancellation refund policy (src/lib/booking/refund-policy.ts):
+ * finds the paid amount, computes what the parent is owed, and records it on
+ * the booking (`refund_amount`). The actual money movement is still manual
+ * (admin refund queue) until the Paystack refund API is wired in -- this
+ * just makes the amount deterministic and visible instead of "the team will
+ * work it out". Returns null for an unpaid booking (nothing to refund).
+ */
+async function applyRefundPolicy(
+  admin: ReturnType<typeof createAdminClient>,
+  bookingId: string,
+  initiatedBy: "parent" | "therapist",
+  slotStartTime: string | null
+): Promise<RefundOutcome | null> {
+  const { data: payment } = await admin
+    .from("payments")
+    .select("amount")
+    .eq("booking_id", bookingId)
+    .eq("status", "successful")
+    .eq("type", "session_commission")
+    .maybeSingle();
+  if (!payment) return null;
+
+  const outcome = computeRefund({
+    amountPaidNaira: payment.amount,
+    slotStartMs: slotStartTime ? new Date(slotStartTime).getTime() : Date.now(),
+    nowMs: Date.now(),
+    initiatedBy,
+  });
+  // Pre-0071 this column doesn't exist yet -- the error is swallowed and the
+  // admin queue falls back to the full charged amount, same as before.
+  await admin.from("bookings").update({ refund_amount: outcome.refundNaira }).eq("id", bookingId);
+  return outcome;
+}
+
+function refundNotificationBody(childName: string, when: string, outcome: RefundOutcome, byTherapist: boolean): string {
+  const lead = byTherapist
+    ? `${childName}'s session on ${when} was cancelled by the therapist.`
+    : `${childName}'s session on ${when} is cancelled.`;
+  if (outcome.refundNaira <= 0) {
+    return `${lead} No refund applies for a cancellation this close to the session.`;
+  }
+  const feeNote =
+    outcome.feeNaira > 0
+      ? ` The Paystack processing fee (${formatNaira(outcome.feeNaira)}) is non-refundable.`
+      : "";
+  const tierNote =
+    outcome.tier === "partial" ? " (50%, as it was within 24 hours of the start time)" : "";
+  return `${lead} A refund of ${formatNaira(outcome.refundNaira)}${tierNote} will be sent to your card, usually within 5-10 business days.${feeNote}`;
+}
+
+/**
+ * Cancels a parent's own booking and frees the slot. Records the policy
+ * refund amount; the money is still moved by an admin for now.
  */
 export async function cancelBooking(
   bookingId: string,
   reason?: string
-): Promise<ActionResult<{ wasPaid: boolean }>> {
+): Promise<ActionResult<{ wasPaid: boolean; refundNaira: number }>> {
   const session = await getSession();
   if (!session || session.role !== "parent") {
     return { ok: false, error: "You must be signed in as a parent to cancel a session." };
@@ -268,7 +317,7 @@ export async function cancelBooking(
 
   const { data: booking } = await admin
     .from("bookings")
-    .select("id, parent_id, status, availability_slot_id, availability_slots(start_time)")
+    .select("id, parent_id, status, availability_slot_id, children(first_name), availability_slots(start_time)")
     .eq("id", bookingId)
     .maybeSingle();
   if (!booking || booking.parent_id !== session.userId) {
@@ -301,18 +350,32 @@ export async function cancelBooking(
 
   await admin.from("availability_slots").update({ is_booked: false }).eq("id", booking.availability_slot_id);
 
+  const outcome = await applyRefundPolicy(admin, bookingId, "parent", slot?.start_time ?? null);
+
+  if (outcome) {
+    const child = booking.children as unknown as { first_name: string } | null;
+    const when = slot ? formatDateTime(slot.start_time) : "your session";
+    await createNotification({
+      userId: session.userId,
+      type: "booking_confirmed",
+      title: "Session cancelled",
+      body: refundNotificationBody(child?.first_name ?? "Your child", when, outcome, false),
+      url: "/parent/sessions",
+    });
+  }
+
   await logAuditEvent({
     actor: session,
     action: "booking.cancel",
     entityType: "booking",
     entityId: bookingId,
-    metadata: { wasPaid },
+    metadata: { wasPaid, refundNaira: outcome?.refundNaira ?? null },
   });
 
   revalidatePath("/parent");
   revalidatePath("/parent/sessions");
   revalidatePath("/therapist/schedule");
-  return { ok: true, wasPaid };
+  return { ok: true, wasPaid, refundNaira: outcome?.refundNaira ?? 0 };
 }
 
 /**
@@ -619,6 +682,10 @@ export async function markNoShow(
   if (updateError) return { ok: false, error: updateError.message };
   if (!updated) return { ok: false, error: "This session can't be marked as a no-show." };
 
+  // Policy: a no-show forfeits the session, nothing owed. Separate update so
+  // a pre-0071 DB (no refund_amount column) doesn't fail the status change.
+  await admin.from("bookings").update({ refund_amount: 0 }).eq("id", bookingId);
+
   await logAuditEvent({
     actor: session,
     action: "booking.no_show",
@@ -682,15 +749,15 @@ export async function undoNoShow(bookingId: string): Promise<ActionResult<object
 }
 
 /**
- * Cancels a booking from the therapist's side (they can't make it, etc.) and
- * frees the slot. Same no-auto-refund caveat as cancelBooking -- an
- * already-paid (confirmed) booking just gets flagged for the admin refund
- * queue, nothing moves automatically.
+ * Cancels a booking from the therapist's side (they can't make it, etc.),
+ * frees the slot, and records a full policy refund for the parent (a family
+ * shouldn't lose money to a therapist's cancellation). The money is still
+ * moved by an admin for now.
  */
 export async function cancelBookingAsTherapist(
   bookingId: string,
   reason?: string
-): Promise<ActionResult<{ wasPaid: boolean }>> {
+): Promise<ActionResult<{ wasPaid: boolean; refundNaira: number }>> {
   const session = await getSession();
   if (!session || session.role !== "therapist") {
     return { ok: false, error: "You must be signed in as a therapist to cancel a session." };
@@ -705,7 +772,7 @@ export async function cancelBookingAsTherapist(
 
   const { data: booking } = await admin
     .from("bookings")
-    .select("id, therapist_id, status, availability_slot_id, availability_slots(start_time)")
+    .select("id, therapist_id, parent_id, status, availability_slot_id, children(first_name), availability_slots(start_time)")
     .eq("id", bookingId)
     .maybeSingle();
   if (!booking || booking.therapist_id !== therapist.id) {
@@ -738,16 +805,30 @@ export async function cancelBookingAsTherapist(
 
   await admin.from("availability_slots").update({ is_booked: false }).eq("id", booking.availability_slot_id);
 
+  const outcome = await applyRefundPolicy(admin, bookingId, "therapist", slot?.start_time ?? null);
+
+  if (outcome) {
+    const child = booking.children as unknown as { first_name: string } | null;
+    const when = slot ? formatDateTime(slot.start_time) : "your session";
+    await createNotification({
+      userId: booking.parent_id,
+      type: "booking_confirmed",
+      title: "Session cancelled by the therapist",
+      body: refundNotificationBody(child?.first_name ?? "Your child", when, outcome, true),
+      url: "/parent/sessions",
+    });
+  }
+
   await logAuditEvent({
     actor: session,
     action: "booking.cancel",
     entityType: "booking",
     entityId: bookingId,
-    metadata: { wasPaid },
+    metadata: { wasPaid, byTherapist: true, refundNaira: outcome?.refundNaira ?? null },
   });
 
   revalidatePath("/parent");
   revalidatePath("/parent/sessions");
   revalidatePath("/therapist/schedule");
-  return { ok: true, wasPaid };
+  return { ok: true, wasPaid, refundNaira: outcome?.refundNaira ?? 0 };
 }

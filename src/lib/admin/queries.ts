@@ -211,7 +211,11 @@ export async function getAccountDeletionRequests(): Promise<RealAccountDeletionR
 export interface RealRefundOwed {
   paymentId: string;
   bookingId: string;
+  /** Naira actually charged. */
   amount: number;
+  /** Naira to refund per the cancellation policy. Falls back to `amount`
+   *  for bookings cancelled before the policy column existed. */
+  refundAmount: number;
   gatewayReference: string;
   cancelledAt: string | null;
   cancellationReason: string | null;
@@ -242,6 +246,18 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
 
   if (error || !data) return [];
 
+  // Refund amounts owed per the cancellation policy, keyed by booking id.
+  // Its own resilient query so a pre-0071 DB doesn't empty the whole queue.
+  const bookingIds = data.map((r) => r.booking_id).filter((id): id is string => !!id);
+  const policyAmounts = new Map<string, number | null>();
+  if (bookingIds.length > 0) {
+    const { data: refundRows, error: refundErr } = await supabase
+      .from("bookings")
+      .select("id, refund_amount")
+      .in("id", bookingIds);
+    if (!refundErr) for (const b of refundRows ?? []) policyAmounts.set(b.id, b.refund_amount ?? null);
+  }
+
   return data
     .map((row) => {
       const booking = row.bookings as unknown as {
@@ -253,10 +269,14 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
       } | null;
       const payer = row.users as unknown as { full_name: string; email: string } | null;
       if (!booking || booking.status !== "cancelled") return null;
+      const policy = policyAmounts.get(row.booking_id);
+      // 0 => policy says nothing owed (late cancel after start); skip it.
+      if (policy === 0) return null;
       return {
         paymentId: row.id,
         bookingId: row.booking_id,
         amount: row.amount,
+        refundAmount: policy ?? row.amount,
         gatewayReference: row.gateway_reference,
         cancelledAt: booking.cancelled_at,
         cancellationReason: booking.cancellation_reason,

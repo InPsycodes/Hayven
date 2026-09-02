@@ -9,7 +9,7 @@ import { CancelBookingButton } from "@/components/shared/cancel-booking-button";
 import { RescheduleBookingButton } from "@/components/booking/reschedule-booking-button";
 import { JoinSessionButton } from "@/components/booking/join-session-button";
 import { getSession } from "@/lib/auth/session";
-import { getRealBookingsForParent } from "@/lib/booking/queries";
+import { getRealBookingsForParent, getBookingFinancials } from "@/lib/booking/queries";
 import { cancelBooking } from "@/lib/booking/actions";
 import { formatDateTime } from "@/data/format";
 
@@ -28,6 +28,7 @@ export default async function ParentSessionsPage() {
   if (!session || session.role !== "parent") redirect("/login");
 
   const bookings = await getRealBookingsForParent(session.userId);
+  const financials = await getBookingFinancials(bookings.map((b) => b.id));
   const now = new Date();
 
   return (
@@ -90,6 +91,8 @@ export default async function ParentSessionsPage() {
                             bookingId={booking.id}
                             wasPaid={booking.status === "confirmed"}
                             cancelAction={cancelBooking}
+                            paidAmount={financials.get(booking.id)?.paidAmount ?? null}
+                            slotStartTime={booking.slotStartTime}
                           />
                         )}
                       </div>
