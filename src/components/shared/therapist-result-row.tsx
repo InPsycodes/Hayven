@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { IconArrowRight, IconShieldCheck } from "@tabler/icons-react";
+import { IconArrowRight, IconCalendarEvent, IconShieldCheck } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
-import { formatNaira } from "@/data/format";
+import { formatNaira, formatShortDate, formatTime } from "@/data/format";
 import { StarRating } from "@/components/reviews/star-rating";
 import { TherapistAvatar } from "@/components/shared/therapist-avatar";
 import type { DiscoveryTherapist } from "@/lib/therapist/discovery";
@@ -101,6 +101,17 @@ export function TherapistResultRow({ therapist }: { therapist: DiscoveryTherapis
             </span>
           </p>
         )}
+
+        <p className="mt-1 flex items-center gap-1.5 text-xs">
+          <IconCalendarEvent size={12} stroke={2} className="text-canvas-white/45" />
+          {therapist.nextAvailable ? (
+            <span className="text-[#a9c495]">
+              Next opening {formatShortDate(therapist.nextAvailable)}, {formatTime(therapist.nextAvailable)}
+            </span>
+          ) : (
+            <span className="text-canvas-white/45">No openings in the next 60 days</span>
+          )}
+        </p>
 
         {chips.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">

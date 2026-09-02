@@ -34,7 +34,12 @@ const SORT_OPTIONS = [
   { label: "Most experienced", value: "experience" },
 ];
 
-const FILTER_KEYS = ["query", "specialty", "location", "priceMax", "sessionType"] as const;
+const FILTER_KEYS = ["query", "specialty", "location", "priceMax", "sessionType", "available"] as const;
+
+const AVAILABILITY_OPTIONS = [
+  { value: "2w", label: "Open in 2 weeks" },
+  { value: "30d", label: "Open in 30 days" },
+];
 
 export function SearchFilters({
   specialties,
@@ -63,6 +68,7 @@ export function SearchFilters({
   const location = searchParams.get("location") ?? "";
   const priceMax = searchParams.get("priceMax") ?? "";
   const sessionType = searchParams.get("sessionType") ?? "";
+  const available = searchParams.get("available") ?? "";
   const sort = searchParams.get("sort") ?? "recommended";
 
   const [queryDraft, setQueryDraft] = useState(query);
@@ -95,6 +101,11 @@ export function SearchFilters({
     activeFilters.push({
       key: "sessionType",
       label: sessionType === "in_person" ? "In-person" : "Virtual",
+    });
+  if (available)
+    activeFilters.push({
+      key: "available",
+      label: AVAILABILITY_OPTIONS.find((o) => o.value === available)?.label ?? "Has openings",
     });
 
   return (
@@ -170,6 +181,23 @@ export function SearchFilters({
           <SelectContent>
             <SelectItem value="any">Any session type</SelectItem>
             {SESSION_TYPES.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={available || "any"}
+          onValueChange={(v) => setParam("available", v === "any" ? "" : v)}
+        >
+          <SelectTrigger size="sm" className="rounded-full" aria-label="Filter by availability">
+            <SelectValue placeholder="Any availability" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="any">Any availability</SelectItem>
+            {AVAILABILITY_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
               </SelectItem>

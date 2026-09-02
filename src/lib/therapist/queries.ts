@@ -171,6 +171,35 @@ export async function getRealAvailabilityForTherapist(
   }));
 }
 
+/**
+ * Soonest open slot per therapist within the given range, batched -- one
+ * query for a whole search page. Missing key == no bookable slot in range.
+ * Slightly stale (doesn't run releaseExpiredHolds); the booking flow
+ * re-checks, so this is a ranking hint, not a guarantee.
+ */
+export async function getNextAvailableSlots(
+  therapistIds: string[],
+  range: { from: string; to: string }
+): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (therapistIds.length === 0) return out;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("availability_slots")
+    .select("therapist_id, start_time")
+    .in("therapist_id", therapistIds)
+    .eq("is_booked", false)
+    .gte("start_time", range.from)
+    .lte("start_time", range.to)
+    .order("start_time", { ascending: true });
+
+  for (const row of data ?? []) {
+    if (!out.has(row.therapist_id)) out.set(row.therapist_id, row.start_time);
+  }
+  return out;
+}
+
 export async function getRealTherapistById(id: string): Promise<RealPublicTherapist | null> {
   const supabase = await createClient();
   const { data, error } = await supabase

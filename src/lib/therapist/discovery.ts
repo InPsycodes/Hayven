@@ -1,7 +1,8 @@
 import "server-only";
 
-import { getRealVerifiedTherapists, getRealTherapistById } from "./queries";
+import { getRealVerifiedTherapists, getRealTherapistById, getNextAvailableSlots } from "./queries";
 import { getReviewSummaries, getTherapistReviewSummary, type ReviewSummary } from "@/lib/reviews/queries";
+import { bookingWindow } from "@/lib/booking/window";
 import type { SessionType } from "@/data/types";
 
 /**
@@ -24,6 +25,8 @@ export interface DiscoveryTherapist {
   ageGroupsServed: string[];
   rating: ReviewSummary;
   photoUrl: string | null;
+  /** ISO start of the soonest open slot within the booking window, or null. */
+  nextAvailable: string | null;
 }
 
 export interface DiscoveryFilters {
@@ -32,6 +35,8 @@ export interface DiscoveryFilters {
   sessionType?: SessionType;
   priceMax?: number;
   query?: string;
+  /** Keep only therapists with an open slot within this many days. */
+  availableWithinDays?: number;
 }
 
 function matchesFilters(t: DiscoveryTherapist, filters: DiscoveryFilters): boolean {
@@ -45,6 +50,11 @@ function matchesFilters(t: DiscoveryTherapist, filters: DiscoveryFilters): boole
     const haystack = `${t.displayName} ${t.bio} ${t.specialtyNames.join(" ")}`.toLowerCase();
     if (!haystack.includes(q)) return false;
   }
+  if (filters.availableWithinDays) {
+    if (!t.nextAvailable) return false;
+    const cutoff = Date.now() + filters.availableWithinDays * 24 * 60 * 60 * 1000;
+    if (new Date(t.nextAvailable).getTime() > cutoff) return false;
+  }
   return true;
 }
 
@@ -52,7 +62,11 @@ export async function searchDiscoveryTherapists(
   filters: DiscoveryFilters = {}
 ): Promise<DiscoveryTherapist[]> {
   const results = await getRealVerifiedTherapists();
-  const ratings = await getReviewSummaries(results.map((t) => t.id));
+  const ids = results.map((t) => t.id);
+  const [ratings, nextSlots] = await Promise.all([
+    getReviewSummaries(ids),
+    getNextAvailableSlots(ids, bookingWindow()),
+  ]);
 
   return results
     .map((t) => ({
@@ -68,6 +82,7 @@ export async function searchDiscoveryTherapists(
       ageGroupsServed: [] as string[],
       rating: ratings.get(t.id) ?? { average: 0, count: 0 },
       photoUrl: t.photoUrl,
+      nextAvailable: nextSlots.get(t.id) ?? null,
     }))
     .filter((t) => matchesFilters(t, filters));
 }
@@ -89,5 +104,6 @@ export async function getDiscoveryTherapistById(id: string): Promise<DiscoveryTh
     ageGroupsServed: [],
     rating: await getTherapistReviewSummary(match.id),
     photoUrl: match.photoUrl,
+    nextAvailable: (await getNextAvailableSlots([match.id], bookingWindow())).get(match.id) ?? null,
   };
 }

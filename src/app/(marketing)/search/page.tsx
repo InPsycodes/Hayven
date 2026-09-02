@@ -13,8 +13,15 @@ interface SearchPageProps {
     location?: string;
     priceMax?: string;
     sessionType?: string;
+    available?: string;
     sort?: string;
   }>;
+}
+
+const AVAILABLE_DAYS: Record<string, number> = { "2w": 14, "30d": 30 };
+
+function nextAvailableMs(t: DiscoveryTherapist): number {
+  return t.nextAvailable ? new Date(t.nextAvailable).getTime() : Number.POSITIVE_INFINITY;
 }
 
 function sortTherapists(therapists: DiscoveryTherapist[], sort: string | undefined): DiscoveryTherapist[] {
@@ -31,7 +38,14 @@ function sortTherapists(therapists: DiscoveryTherapist[], sort: string | undefin
     case "experience":
       return list.sort((a, b) => b.yearsPracticing - a.yearsPracticing);
     default:
-      return list;
+      // Recommended: soonest opening first (no opening sinks to the bottom),
+      // then higher-rated.
+      return list.sort(
+        (a, b) =>
+          nextAvailableMs(a) - nextAvailableMs(b) ||
+          b.rating.average - a.rating.average ||
+          b.rating.count - a.rating.count
+      );
   }
 }
 
@@ -45,6 +59,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       location: params.location,
       priceMax: params.priceMax ? Number(params.priceMax) : undefined,
       sessionType: params.sessionType as "in_person" | "virtual" | undefined,
+      availableWithinDays: params.available ? AVAILABLE_DAYS[params.available] : undefined,
     }),
   ]);
 
