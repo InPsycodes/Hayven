@@ -1,0 +1,5 @@
+# k6 run artefacts
+*.json
+*.csv
+summary-*.html
+results/

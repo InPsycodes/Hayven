@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // k6 load-test scripts -- run by the k6 binary (its own goja runtime and
+    // `k6/*` module resolver), not part of the Next app or its tsconfig.
+    "load-test/**",
   ]),
 ]);
 

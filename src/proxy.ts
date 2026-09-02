@@ -44,10 +44,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Every route except Next internals, API routes (they own their auth and
-  // the Paystack webhook must not take an extra Supabase round-trip), and
-  // static assets. The session-refresh needs to run app-wide; the role gate
-  // inside proxy() still only fires on the role-prefixed paths above.
+  // the Paystack webhook must not take an extra Supabase round-trip), the
+  // PostHog reverse-proxy paths (ingest/, see next.config.ts -- a logged-in
+  // user fires many analytics beacons and none of them should cost a
+  // Supabase Auth round-trip), and static assets. The session-refresh needs
+  // to run app-wide; the role gate inside proxy() still only fires on the
+  // role-prefixed paths above.
   matcher: [
-    "/((?!api/|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|~offline|robots.txt|sitemap.xml|icons/|images/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|ttf)$).*)",
+    "/((?!api/|ingest/|_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|~offline|robots.txt|sitemap.xml|icons/|images/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|ttf)$).*)",
   ],
 };
