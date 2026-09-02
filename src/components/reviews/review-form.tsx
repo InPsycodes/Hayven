@@ -90,6 +90,7 @@ export function ReviewForm({
         rows={3}
         maxLength={1500}
         placeholder="What was your experience like? (optional)"
+        aria-label="Review comment"
         className="text-sm"
       />
 

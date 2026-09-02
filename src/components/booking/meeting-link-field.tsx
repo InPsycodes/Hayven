@@ -69,6 +69,7 @@ export function MeetingLinkField({
           onChange={(e) => setLink(e.target.value)}
           placeholder="https://meet.google.com/..."
           inputMode="url"
+          aria-label="Video call link"
           className="h-8 min-w-0 flex-1 basis-48 text-xs"
         />
         <Button size="sm" onClick={save} disabled={isPending} className="shrink-0">

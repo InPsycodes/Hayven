@@ -26,7 +26,7 @@ export function GuideGrid({ guides }: { guides: GuideGridItem[] }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
-        <div className="flex w-full max-w-md items-center gap-2 rounded-full bg-canvas-white px-4 py-2.5 ring-1 ring-border">
+        <div className="flex w-full max-w-md items-center gap-2 rounded-full bg-canvas-white px-4 py-2.5 ring-1 ring-border focus-within:ring-2 focus-within:ring-terracotta">
           <IconSearch size={17} className="shrink-0 text-ink-soft" />
           <input
             type="text"

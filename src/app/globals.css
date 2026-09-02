@@ -375,6 +375,21 @@
       animation: pop-in 0.25s ease-out both;
     }
   }
+
+  /* Catch-all for the animations the rules above don't own -- Radix/
+     tailwindcss-animate enter/exit, scroll-behavior, any future CSS
+     transition. The named animations above are already gated, so this is
+     belt-and-suspenders for everything else. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @keyframes rise {

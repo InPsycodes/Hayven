@@ -62,7 +62,7 @@ export function CancelBookingButton({
           ? "This won't automatically refund you. Our team will follow up separately."
           : "This will release the slot."}
       </p>
-      <Textarea name="reason" rows={2} placeholder="Reason (optional)" className="text-xs" />
+      <Textarea name="reason" rows={2} placeholder="Reason (optional)" aria-label="Cancellation reason" className="text-xs" />
       {error && <p className="text-xs text-error-text">{error}</p>}
       <div className="flex gap-2">
         <Button

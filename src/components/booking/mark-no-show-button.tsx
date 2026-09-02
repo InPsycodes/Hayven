@@ -74,7 +74,13 @@ export function MarkNoShowButton({
       <p className="text-xs text-muted-foreground">
         The family didn&apos;t attend. Recorded for your records &mdash; no automatic refund or penalty.
       </p>
-      <Textarea name="note" rows={2} placeholder="Note (optional, seen by Hayven only)" className="text-xs" />
+      <Textarea
+        name="note"
+        rows={2}
+        placeholder="Note (optional, seen by Hayven only)"
+        aria-label="No-show note"
+        className="text-xs"
+      />
       {error && <p className="text-xs text-error-text">{error}</p>}
       <div className="flex gap-2">
         <Button type="submit" size="sm" variant="outline" disabled={pending}>
