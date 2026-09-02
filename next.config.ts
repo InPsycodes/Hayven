@@ -87,6 +87,21 @@ const nextConfig: NextConfig = {
       }
     : undefined,
 
+  // PostHog is proxied through this app at /ingest/* so the strict CSP's
+  // connect-src can stay 'self' (no third-party host to allowlist) and ad
+  // blockers don't drop the events. EU ingest region. Only wired up when the
+  // key is set, so local/dev builds without PostHog skip the rewrite.
+  async rewrites() {
+    if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return [];
+    return [
+      { source: "/ingest/static/:path*", destination: "https://eu-assets.i.posthog.com/static/:path*" },
+      { source: "/ingest/:path*", destination: "https://eu.i.posthog.com/:path*" },
+    ];
+  },
+  // PostHog's asset paths must reach it exactly as sent -- Next's default
+  // trailing-slash redirect would mangle them.
+  skipTrailingSlashRedirect: true,
+
   async headers() {
     if (process.env.NODE_ENV !== "production") return [];
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];

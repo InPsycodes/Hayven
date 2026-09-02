@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 
 import { SearchFilters } from "@/components/search/search-filters";
+import { SearchAnalytics } from "@/components/analytics/search-analytics";
 import { TherapistResultRow } from "@/components/shared/therapist-result-row";
 import { getRealSpecialties } from "@/lib/therapist/queries";
 import { searchDiscoveryTherapists, type DiscoveryTherapist } from "@/lib/therapist/discovery";
@@ -66,6 +67,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const therapists = sortTherapists(results, params.sort);
 
   return (
+    <>
+    <SearchAnalytics
+      count={therapists.length}
+      sort={params.sort}
+      sessionType={params.sessionType}
+      specialty={params.specialty}
+    />
     <div className="mx-auto max-w-4xl px-6 py-10 md:px-10">
       <span className="eyebrow text-rust-dark">Verified specialists</span>
       <h1 className="mt-2 font-serif text-2xl leading-tight text-charcoal md:text-3xl">
@@ -97,5 +105,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         )}
       </div>
     </div>
+    </>
   );
 }

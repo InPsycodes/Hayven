@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { IconLogout } from "@tabler/icons-react";
 
 import { signOut } from "@/lib/auth/actions";
+import { resetAnalytics } from "@/lib/analytics/client";
 import { cn } from "@/lib/utils";
 
 export function LogoutButton({ className, label }: { className?: string; label?: string }) {
@@ -13,7 +14,12 @@ export function LogoutButton({ className, label }: { className?: string; label?:
     <button
       type="button"
       disabled={isPending}
-      onClick={() => startTransition(() => signOut())}
+      onClick={() =>
+        startTransition(() => {
+          resetAnalytics();
+          return signOut();
+        })
+      }
       className={cn(
         "flex items-center gap-2 text-sm transition-colors disabled:opacity-50",
         className

@@ -15,6 +15,8 @@ import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { useFieldErrors } from "@/hooks/use-field-errors";
 import { emailDomainSuggestion, emailFormatError } from "@/lib/validation/email";
 import { signUp } from "@/lib/auth/actions";
+import { identifyUser, trackEvent } from "@/lib/analytics/client";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 type SignupRole = "parent" | "therapist";
 
@@ -64,6 +66,7 @@ export function SignupForm({
       reset();
       return;
     }
+    trackEvent(ANALYTICS_EVENTS.signupStarted, { role, step: "submit" });
     startTransition(async () => {
       const result = await signUp({
         role,
@@ -84,6 +87,7 @@ export function SignupForm({
         return;
       }
 
+      identifyUser(result.userId, result.role);
       router.push(role === "therapist" ? "/signup/credentials" : "/parent");
       router.refresh();
     });

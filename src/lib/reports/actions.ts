@@ -8,6 +8,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { logAuditEvent } from "@/lib/audit/log";
 import { createNotification } from "@/lib/notifications/create";
+import { captureServer } from "@/lib/analytics/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { getGenerationInput, getPhraseVariants } from "./queries";
 import { generateParentReport, generateTherapistReport } from "./generate";
 import type { ReportBody } from "./types";
@@ -188,6 +190,8 @@ export async function publishReport(reportId: string): Promise<{ ok: true } | { 
   if (!data) return { ok: true }; // already published by a prior call -- idempotent no-op
 
   await logAuditEvent({ actor: session, action: "report.publish", entityType: "report", entityId: reportId, childId });
+
+  await captureServer(session.userId, ANALYTICS_EVENTS.reportPublished, { role: "therapist" });
 
   // Cross-user delivery (therapist publishing -> parent notified) needs the
   // service-role client, same reasoning as createNotification's own reads --

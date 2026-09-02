@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit/check";
+import { captureServer } from "@/lib/analytics/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import type { UserRole } from "@/data/types";
 
 export interface SignUpInput {
@@ -17,12 +19,12 @@ export interface SignUpInput {
 }
 
 export type SignUpResult =
-  | { ok: true; role: UserRole; needsEmailConfirmation: false }
+  | { ok: true; role: UserRole; userId: string; needsEmailConfirmation: false }
   | { ok: true; needsEmailConfirmation: true }
   | { ok: false; error: string };
 
 export type SignInResult =
-  | { ok: true; role: UserRole }
+  | { ok: true; role: UserRole; userId: string }
   | { ok: true; mfaRequired: true; factorId: string }
   | { ok: false; error: string };
 
@@ -90,13 +92,15 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
     .update({ terms_accepted_at: new Date().toISOString() })
     .eq("id", data.user.id);
 
+  await captureServer(data.user.id, ANALYTICS_EVENTS.signupCompleted, { role: input.role });
+
   // Supabase's "Confirm email" setting controls whether a session comes
   // back immediately or the user has to click a confirmation link first.
   if (!data.session) {
     return { ok: true, needsEmailConfirmation: true };
   }
 
-  return { ok: true, role: input.role, needsEmailConfirmation: false };
+  return { ok: true, role: input.role, userId: data.user.id, needsEmailConfirmation: false };
 }
 
 export async function signIn(email: string, password: string): Promise<SignInResult> {
@@ -149,7 +153,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
     return { ok: true, mfaRequired: true, factorId };
   }
 
-  return { ok: true, role: profile.role as UserRole };
+  return { ok: true, role: profile.role as UserRole, userId: data.user.id };
 }
 
 export async function signOut() {

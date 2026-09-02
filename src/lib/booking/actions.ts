@@ -17,6 +17,8 @@ import {
   recordSessionEarnings,
   releaseBookingEarnings,
 } from "@/lib/payouts/earnings";
+import { captureServer } from "@/lib/analytics/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { formatDateTime, formatNaira } from "@/data/format";
 
 type ActionResult<T> = { ok: true } & T | { ok: false; error: string };
@@ -247,6 +249,11 @@ export async function finalizeBookingPayment(
       url: "/therapist/earnings",
     });
   }
+
+  await captureServer(booking.parent_id, ANALYTICS_EVENTS.bookingPaid, {
+    amount_naira: Math.round(amountKobo / 100),
+    session_type: booking.session_type ?? undefined,
+  });
 
   revalidatePath("/parent");
   revalidatePath("/parent/sessions");

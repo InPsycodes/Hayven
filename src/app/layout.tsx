@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, Geist_Mono } from "next/font/google";
 import { SerwistProvider } from "@serwist/turbopack/react";
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
+import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -72,6 +73,7 @@ export default function RootLayout({
         <SerwistProvider swUrl="/serwist/sw.js" disable={process.env.NODE_ENV === "development"}>
           {children}
           <PwaInstallPrompt />
+          <AnalyticsProvider />
         </SerwistProvider>
       </body>
     </html>

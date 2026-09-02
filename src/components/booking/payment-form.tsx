@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { useBookingStore } from "@/lib/booking-store";
 import { formatDateTime, formatNaira } from "@/data/format";
 import { initiatePaystackPayment } from "@/lib/payments/actions";
+import { trackEvent } from "@/lib/analytics/client";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import type { DiscoveryTherapist } from "@/lib/therapist/discovery";
 import type { BookingChild } from "@/components/booking/booking-time-form";
 import type { AvailabilitySlot } from "@/data/types";
@@ -58,6 +60,11 @@ export function PaymentForm({
       hasSubmittedRef.current = false;
       return;
     }
+
+    trackEvent(ANALYTICS_EVENTS.bookingStarted, {
+      session_type: draft.sessionType ?? undefined,
+      amount_naira: total,
+    });
 
     startTransition(async () => {
       const result = await initiatePaystackPayment(draft.bookingId!, therapist.id);

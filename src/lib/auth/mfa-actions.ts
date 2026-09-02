@@ -125,7 +125,7 @@ export async function getMfaStatus(): Promise<MfaStatus> {
 export async function verifyMfaLogin(
   factorId: string,
   code: string
-): Promise<{ ok: true; role: string } | { ok: false; error: string }> {
+): Promise<{ ok: true; role: string; userId: string } | { ok: false; error: string }> {
   // Same reasoning as signIn's rate limit: an attacker who already has a
   // valid password (AAL1 session, which is all that's needed to call this
   // action) would otherwise be able to script unlimited 6-digit TOTP
@@ -156,5 +156,5 @@ export async function verifyMfaLogin(
   const { data: profile } = await supabase.from("users").select("role").eq("id", user.id).single();
   if (!profile) return { ok: false, error: "Account setup isn't finished yet. Please try again shortly." };
 
-  return { ok: true, role: profile.role as string };
+  return { ok: true, role: profile.role as string, userId: user.id };
 }

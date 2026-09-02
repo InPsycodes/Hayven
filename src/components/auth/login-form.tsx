@@ -13,6 +13,7 @@ import { useFieldErrors } from "@/hooks/use-field-errors";
 import { emailDomainSuggestion, emailFormatError } from "@/lib/validation/email";
 import { signIn } from "@/lib/auth/actions";
 import { verifyMfaLogin } from "@/lib/auth/mfa-actions";
+import { identifyUser } from "@/lib/analytics/client";
 import { roleHomePath } from "@/lib/auth/role-path";
 import type { UserRole } from "@/data/types";
 
@@ -60,6 +61,7 @@ export function LoginForm({ justReset = false }: { justReset?: boolean }) {
         loginGuard.reset();
         return;
       }
+      identifyUser(result.userId, result.role);
       goHome(result.role);
     });
   });
@@ -77,6 +79,7 @@ export function LoginForm({ justReset = false }: { justReset?: boolean }) {
         mfaGuard.reset();
         return;
       }
+      identifyUser(result.userId, result.role);
       goHome(result.role as UserRole);
     });
   });

@@ -3,6 +3,8 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 import { recordSessionEarnings } from "@/lib/payouts/earnings";
+import { captureServer } from "@/lib/analytics/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { formatDateTime, formatTime } from "@/data/format";
 
 type BookingRow = {
@@ -113,6 +115,7 @@ export async function notifySessionsFinished(): Promise<number> {
       body: `${childName}'s session with ${therapistName} just wrapped up.`,
       url: "/parent/sessions",
     });
+    await captureServer(booking.parent_id, ANALYTICS_EVENTS.sessionCompleted);
     count++;
   }
   return count;
