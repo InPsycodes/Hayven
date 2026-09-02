@@ -63,6 +63,91 @@ export async function verifyTransaction(reference: string): Promise<VerifyTransa
   };
 }
 
+// --- Transfers (therapist payouts) -----------------------------------------
+
+export interface ResolvedBankAccount {
+  accountName: string;
+  accountNumber: string;
+}
+
+/** GET /bank/resolve -- confirms an account number belongs to a real person. */
+export async function resolveBankAccount(
+  accountNumber: string,
+  bankCode: string
+): Promise<ResolvedBankAccount> {
+  const res = await fetch(
+    `${PAYSTACK_BASE_URL}/bank/resolve?account_number=${encodeURIComponent(accountNumber)}&bank_code=${encodeURIComponent(bankCode)}`,
+    { headers: paystackHeaders() }
+  );
+  const json = await res.json();
+  if (!res.ok || !json.status) {
+    throw new Error(json.message ?? "Couldn't verify that bank account.");
+  }
+  return { accountName: json.data.account_name, accountNumber: json.data.account_number };
+}
+
+/** POST /transferrecipient -- created once per therapist, reused per transfer. */
+export async function createTransferRecipient(params: {
+  name: string;
+  accountNumber: string;
+  bankCode: string;
+}): Promise<string> {
+  const res = await fetch(`${PAYSTACK_BASE_URL}/transferrecipient`, {
+    method: "POST",
+    headers: paystackHeaders(),
+    body: JSON.stringify({
+      type: "nuban",
+      name: params.name,
+      account_number: params.accountNumber,
+      bank_code: params.bankCode,
+      currency: "NGN",
+    }),
+  });
+  const json = await res.json();
+  if (!res.ok || !json.status) {
+    throw new Error(json.message ?? "Couldn't set up the payout recipient.");
+  }
+  return json.data.recipient_code as string;
+}
+
+export interface TransferResult {
+  /** paystack status: "success" | "pending" | "otp" | ... */
+  status: string;
+  transferCode: string;
+  reference: string;
+}
+
+/** POST /transfer. In test mode (and live without OTP disabled) this can
+ *  return status "otp" -- the caller records it as processing and the admin
+ *  completes it in the Paystack dashboard. */
+export async function initiateTransfer(params: {
+  amountNaira: number;
+  recipientCode: string;
+  reason: string;
+  reference: string;
+}): Promise<TransferResult> {
+  const res = await fetch(`${PAYSTACK_BASE_URL}/transfer`, {
+    method: "POST",
+    headers: paystackHeaders(),
+    body: JSON.stringify({
+      source: "balance",
+      amount: Math.round(params.amountNaira * 100),
+      recipient: params.recipientCode,
+      reason: params.reason,
+      reference: params.reference,
+    }),
+  });
+  const json = await res.json();
+  if (!res.ok || !json.status) {
+    throw new Error(json.message ?? "Transfer failed to initiate.");
+  }
+  return {
+    status: json.data.status,
+    transferCode: json.data.transfer_code,
+    reference: json.data.reference ?? params.reference,
+  };
+}
+
 export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
   if (!signature) return false;
   const hash = crypto

@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { MIN_PAYOUT_NAIRA } from "@/lib/payouts/commission";
 
 export interface EarningsSummary {
   /** Net naira earned but not yet past the 72h hold. */
@@ -76,4 +78,114 @@ export async function getEarningRows(therapistProfileId: string): Promise<Earnin
     childFirstName:
       (e.bookings as unknown as { children: { first_name: string } | null } | null)?.children?.first_name ?? null,
   }));
+}
+
+// --- admin ---------------------------------------------------------------
+
+export interface PayoutPreviewRow {
+  therapistId: string;
+  name: string;
+  clearedNaira: number;
+  earningCount: number;
+  hasBank: boolean;
+  eligible: boolean;
+}
+
+/** Every therapist with cleared, unpaid earnings -- what a payout run would do. */
+export async function getPayoutPreview(): Promise<PayoutPreviewRow[]> {
+  const admin = createAdminClient();
+  const { data: earnings, error } = await admin
+    .from("therapist_earnings")
+    .select("therapist_id, net_amount")
+    .eq("status", "pending")
+    .is("payout_id", null)
+    .lte("payable_at", new Date().toISOString());
+  if (error || !earnings || earnings.length === 0) return [];
+
+  const byTherapist = new Map<string, { total: number; count: number }>();
+  for (const e of earnings) {
+    const g = byTherapist.get(e.therapist_id) ?? { total: 0, count: 0 };
+    g.total += e.net_amount;
+    g.count += 1;
+    byTherapist.set(e.therapist_id, g);
+  }
+
+  const ids = [...byTherapist.keys()];
+  const { data: profiles } = await admin
+    .from("therapist_profiles")
+    .select("id, bank_account_number, users(full_name)")
+    .in("id", ids);
+  const profById = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+  return ids
+    .map((id) => {
+      const g = byTherapist.get(id)!;
+      const p = profById.get(id);
+      const hasBank = !!p?.bank_account_number;
+      return {
+        therapistId: id,
+        name: (p?.users as unknown as { full_name: string } | null)?.full_name ?? "Unknown",
+        clearedNaira: g.total,
+        earningCount: g.count,
+        hasBank,
+        eligible: hasBank && g.total >= MIN_PAYOUT_NAIRA,
+      };
+    })
+    .sort((a, b) => b.clearedNaira - a.clearedNaira);
+}
+
+export interface PayoutHistoryRow {
+  id: string;
+  therapistName: string;
+  amount: number;
+  earningCount: number;
+  status: "pending" | "processing" | "paid" | "failed";
+  failureReason: string | null;
+  createdAt: string;
+  paidAt: string | null;
+}
+
+export async function getPayoutHistory(limit = 50): Promise<PayoutHistoryRow[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("payouts")
+    .select("id, amount, earning_count, status, failure_reason, created_at, paid_at, therapist_profiles(users(full_name))")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.map((p) => ({
+    id: p.id,
+    therapistName:
+      (p.therapist_profiles as unknown as { users: { full_name: string } | null } | null)?.users?.full_name ??
+      "Unknown",
+    amount: p.amount,
+    earningCount: p.earning_count,
+    status: p.status,
+    failureReason: p.failure_reason,
+    createdAt: p.created_at,
+    paidAt: p.paid_at,
+  }));
+}
+
+export interface BankDetails {
+  bankCode: string;
+  accountNumberMasked: string;
+  accountName: string;
+}
+
+/** The therapist's saved payout bank account. Resilient to a pre-0074 DB. */
+export async function getBankDetails(therapistProfileId: string): Promise<BankDetails | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("therapist_profiles")
+    .select("bank_code, bank_account_number, bank_account_name")
+    .eq("id", therapistProfileId)
+    .maybeSingle();
+  if (error || !data || !data.bank_account_number) return null;
+  const num = String(data.bank_account_number);
+  return {
+    bankCode: data.bank_code ?? "",
+    accountNumberMasked: num.length > 4 ? `••••${num.slice(-4)}` : num,
+    accountName: data.bank_account_name ?? "",
+  };
 }

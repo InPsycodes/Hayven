@@ -9,6 +9,8 @@ import { getSession } from "@/lib/auth/session";
 import { lagosWallClockToUtcIso } from "@/data/format";
 import { professionalBodyLabel } from "./professional-bodies";
 import { scanFileForViruses } from "@/lib/uploads/scan-file";
+import { resolveBankAccount } from "@/lib/payments/paystack";
+import { bankName } from "@/lib/payments/nigerian-banks";
 import { checkRateLimit } from "@/lib/rate-limit/check";
 import { logAuditEvent } from "@/lib/audit/log";
 import { createNotification } from "@/lib/notifications/create";
@@ -495,6 +497,54 @@ export async function updateTherapistPhoto(_prevState: FormState, formData: Form
   const { error } = await supabase
     .from("therapist_profiles")
     .update({ photo_url: photoUrl })
+    .eq("user_id", session.userId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/therapist/profile");
+  revalidatePath("/search");
+  return {};
+}
+
+/**
+ * Save the therapist's payout bank account. The account number is resolved
+ * against Paystack first so a typo can't strand a payout. Changing it
+ * clears the cached Paystack recipient code -- the next payout run creates
+ * a fresh one.
+ */
+export async function updateBankDetails(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") {
+    return { error: "You must be signed in as a therapist." };
+  }
+  if (!process.env.PAYSTACK_SECRET_KEY) {
+    return { error: "Payouts aren't set up yet. Try again later." };
+  }
+
+  const bankCode = formData.get("bankCode");
+  const accountNumber = formData.get("accountNumber");
+  if (typeof bankCode !== "string" || !bankName(bankCode)) {
+    return { error: "Choose your bank from the list." };
+  }
+  if (typeof accountNumber !== "string" || !/^\d{10}$/.test(accountNumber.trim())) {
+    return { error: "Enter your 10-digit account number." };
+  }
+
+  let resolved;
+  try {
+    resolved = await resolveBankAccount(accountNumber.trim(), bankCode);
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Couldn't verify that account." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("therapist_profiles")
+    .update({
+      bank_code: bankCode,
+      bank_account_number: resolved.accountNumber,
+      bank_account_name: resolved.accountName,
+      paystack_recipient_code: null,
+    })
     .eq("user_id", session.userId);
   if (error) return { error: error.message };
 

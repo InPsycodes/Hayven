@@ -27,6 +27,7 @@ export type AuditAction =
   | "booking.no_show_undo"
   | "dispute.open"
   | "dispute.resolve"
+  | "payout.run"
   | "booking.set_meeting_link"
   | "payment.mark_refunded"
   | "report_phrase.add"

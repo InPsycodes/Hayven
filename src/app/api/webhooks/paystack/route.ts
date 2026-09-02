@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { verifyWebhookSignature } from "@/lib/payments/paystack";
 import { finalizeBookingPayment } from "@/lib/booking/actions";
+import { finalizeTransfer } from "@/lib/payouts/webhook";
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
@@ -20,6 +21,16 @@ export async function POST(req: NextRequest) {
     if (typeof bookingId === "string" && typeof reference === "string" && typeof amountKobo === "number") {
       await finalizeBookingPayment(bookingId, reference, amountKobo);
     }
+  } else if (
+    event.event === "transfer.success" ||
+    event.event === "transfer.failed" ||
+    event.event === "transfer.reversed"
+  ) {
+    await finalizeTransfer(
+      event.event,
+      typeof event.data?.reference === "string" ? event.data.reference : undefined,
+      typeof event.data?.transfer_code === "string" ? event.data.transfer_code : undefined
+    );
   }
 
   return NextResponse.json({ received: true });
