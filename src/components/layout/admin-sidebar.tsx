@@ -11,6 +11,7 @@ import {
   IconHistory,
   IconUserX,
   IconReceiptRefund,
+  IconGavel,
   IconMessage2,
   IconLifebuoy,
   IconShieldLock,
@@ -36,6 +37,7 @@ const ADMIN_NAV = [
   { label: "Audit log", href: "/admin/audit-log", icon: IconHistory },
   { label: "Deletions", href: "/admin/deletion-requests", icon: IconUserX },
   { label: "Refunds", href: "/admin/refunds", icon: IconReceiptRefund },
+  { label: "Disputes", href: "/admin/disputes", icon: IconGavel },
   { label: "Support", href: "/admin/support", icon: IconLifebuoy },
   { label: "Settings", href: "/admin/settings", icon: IconShieldLock },
 ];

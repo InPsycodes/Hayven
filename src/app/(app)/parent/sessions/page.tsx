@@ -8,10 +8,15 @@ import type { VariantProps } from "class-variance-authority";
 import { CancelBookingButton } from "@/components/shared/cancel-booking-button";
 import { RescheduleBookingButton } from "@/components/booking/reschedule-booking-button";
 import { JoinSessionButton } from "@/components/booking/join-session-button";
+import { ReportProblemButton } from "@/components/booking/report-problem-button";
 import { getSession } from "@/lib/auth/session";
 import { getRealBookingsForParent, getBookingFinancials } from "@/lib/booking/queries";
+import { getMyDisputesByBooking } from "@/lib/disputes/queries";
 import { cancelBooking } from "@/lib/booking/actions";
 import { formatDateTime } from "@/data/format";
+
+const DISPUTABLE = new Set(["completed", "no_show", "cancelled"]);
+const DISPUTE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
 
@@ -29,6 +34,9 @@ export default async function ParentSessionsPage() {
 
   const bookings = await getRealBookingsForParent(session.userId);
   const financials = await getBookingFinancials(bookings.map((b) => b.id));
+  const disputes = await getMyDisputesByBooking(
+    bookings.filter((b) => DISPUTABLE.has(b.status)).map((b) => b.id)
+  );
   const now = new Date();
 
   return (
@@ -63,6 +71,12 @@ export default async function ParentSessionsPage() {
                   new Date(booking.slotStartTime).getTime() - now.getTime() > 24 * 60 * 60 * 1000;
                 const isVirtualConfirmed =
                   booking.sessionType === "virtual" && booking.status === "confirmed" && isUpcoming;
+                const dispute = disputes.get(booking.id) ?? null;
+                const showReport =
+                  DISPUTABLE.has(booking.status) &&
+                  (dispute !== null ||
+                    (!!booking.slotEndTime &&
+                      now.getTime() - new Date(booking.slotEndTime).getTime() < DISPUTE_WINDOW_MS));
                 return (
                   <div key={booking.id} className="flex flex-col gap-2 px-3 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -105,6 +119,7 @@ export default async function ParentSessionsPage() {
                           Your therapist will share the video link here before the session.
                         </p>
                       ))}
+                    {showReport && <ReportProblemButton bookingId={booking.id} dispute={dispute} />}
                   </div>
                 );
               })}
