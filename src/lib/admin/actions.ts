@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
 import { createNotification } from "@/lib/notifications/create";
+import { createRefund } from "@/lib/payments/paystack";
 import { isValidDomainBand } from "@/lib/reports/phrase-domains";
 
 export type VerificationDecision = "approved" | "rejected" | "needs_more_info";
@@ -215,6 +216,65 @@ export async function markPaymentRefunded(
     entityType: "payment",
     entityId: paymentId,
     metadata: { bookingId: payment.booking_id },
+  });
+
+  if (payment.booking_id) {
+    await supabase.from("bookings").update({ refund_status: "manual" }).eq("id", payment.booking_id);
+  }
+
+  revalidatePath("/admin/refunds");
+  return { ok: true };
+}
+
+/**
+ * Fires the Paystack refund for the amount the policy computed
+ * (bookings.refund_amount, or the full charge for a legacy cancellation).
+ * Paystack processes it asynchronously -- the refund.* webhook flips the
+ * payment to 'refunded' and notifies the parent. Falls back to a clear
+ * error if refunds aren't configured.
+ */
+export async function processRefund(
+  paymentId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+  if (!process.env.PAYSTACK_SECRET_KEY) {
+    return { ok: false, error: "Paystack isn't configured -- refund it manually and mark it done." };
+  }
+
+  const supabase = createAdminClient();
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("id, booking_id, amount, status, gateway_reference, bookings(refund_amount, refund_status)")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!payment) return { ok: false, error: "Payment not found." };
+  if (payment.status !== "successful") return { ok: false, error: "This payment can't be refunded." };
+
+  const booking = payment.bookings as unknown as { refund_amount: number | null; refund_status: string | null } | null;
+  if (booking?.refund_status === "processing" || booking?.refund_status === "processed") {
+    return { ok: false, error: "A refund for this is already in progress." };
+  }
+
+  const amountNaira = booking?.refund_amount ?? payment.amount;
+  if (amountNaira <= 0) return { ok: false, error: "The policy says nothing is owed on this booking." };
+
+  try {
+    await createRefund(payment.gateway_reference, amountNaira * 100);
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Paystack refused the refund." };
+  }
+
+  if (payment.booking_id) {
+    await supabase.from("bookings").update({ refund_status: "processing" }).eq("id", payment.booking_id);
+  }
+
+  await logAuditEvent({
+    actor: session,
+    action: "payment.refund_initiated",
+    entityType: "payment",
+    entityId: paymentId,
+    metadata: { bookingId: payment.booking_id, amountNaira },
   });
 
   revalidatePath("/admin/refunds");

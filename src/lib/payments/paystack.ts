@@ -63,6 +63,30 @@ export async function verifyTransaction(reference: string): Promise<VerifyTransa
   };
 }
 
+// --- Refunds --------------------------------------------------------------
+
+/**
+ * POST /refund. `amountKobo` omitted = full refund. Paystack keeps its
+ * processing fee; a partial `amountKobo` should already account for that.
+ * Returns the refund status ("pending" | "processed" | ...); `refund.*`
+ * webhooks confirm the final state.
+ */
+export async function createRefund(transactionReference: string, amountKobo?: number): Promise<{ status: string }> {
+  const res = await fetch(`${PAYSTACK_BASE_URL}/refund`, {
+    method: "POST",
+    headers: paystackHeaders(),
+    body: JSON.stringify({
+      transaction: transactionReference,
+      ...(amountKobo && amountKobo > 0 ? { amount: Math.round(amountKobo) } : {}),
+    }),
+  });
+  const json = await res.json();
+  if (!res.ok || !json.status) {
+    throw new Error(json.message ?? "Refund failed to initiate.");
+  }
+  return { status: json.data?.status ?? "pending" };
+}
+
 // --- Transfers (therapist payouts) -----------------------------------------
 
 export interface ResolvedBankAccount {

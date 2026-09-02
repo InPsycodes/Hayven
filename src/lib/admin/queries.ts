@@ -216,6 +216,8 @@ export interface RealRefundOwed {
   /** Naira to refund per the cancellation policy. Falls back to `amount`
    *  for bookings cancelled before the policy column existed. */
   refundAmount: number;
+  /** null | 'processing' | 'manual' | 'processed' -- see 0075. */
+  refundStatus: string | null;
   gatewayReference: string;
   cancelledAt: string | null;
   cancellationReason: string | null;
@@ -250,12 +252,18 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
   // Its own resilient query so a pre-0071 DB doesn't empty the whole queue.
   const bookingIds = data.map((r) => r.booking_id).filter((id): id is string => !!id);
   const policyAmounts = new Map<string, number | null>();
+  const refundStatuses = new Map<string, string | null>();
   if (bookingIds.length > 0) {
     const { data: refundRows, error: refundErr } = await supabase
       .from("bookings")
-      .select("id, refund_amount")
+      .select("id, refund_amount, refund_status")
       .in("id", bookingIds);
-    if (!refundErr) for (const b of refundRows ?? []) policyAmounts.set(b.id, b.refund_amount ?? null);
+    if (!refundErr) {
+      for (const b of refundRows ?? []) {
+        policyAmounts.set(b.id, b.refund_amount ?? null);
+        refundStatuses.set(b.id, (b as { refund_status?: string | null }).refund_status ?? null);
+      }
+    }
   }
 
   return data
@@ -277,6 +285,7 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
         bookingId: row.booking_id,
         amount: row.amount,
         refundAmount: policy ?? row.amount,
+        refundStatus: refundStatuses.get(row.booking_id) ?? null,
         gatewayReference: row.gateway_reference,
         cancelledAt: booking.cancelled_at,
         cancellationReason: booking.cancellation_reason,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { verifyWebhookSignature } from "@/lib/payments/paystack";
 import { finalizeBookingPayment } from "@/lib/booking/actions";
+import { finalizeRefund } from "@/lib/booking/webhook-refund";
 import { finalizeTransfer } from "@/lib/payouts/webhook";
 
 export async function POST(req: NextRequest) {
@@ -31,6 +32,16 @@ export async function POST(req: NextRequest) {
       typeof event.data?.reference === "string" ? event.data.reference : undefined,
       typeof event.data?.transfer_code === "string" ? event.data.transfer_code : undefined
     );
+  } else if (
+    event.event === "refund.processed" ||
+    event.event === "refund.failed" ||
+    event.event === "refund.pending"
+  ) {
+    const ref =
+      (typeof event.data?.transaction_reference === "string" && event.data.transaction_reference) ||
+      (typeof event.data?.transaction?.reference === "string" && event.data.transaction.reference) ||
+      undefined;
+    await finalizeRefund(event.event, ref);
   }
 
   return NextResponse.json({ received: true });

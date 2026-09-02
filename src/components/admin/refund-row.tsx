@@ -5,27 +5,30 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { formatDateTime, formatNaira } from "@/data/format";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
-import { markPaymentRefunded } from "@/lib/admin/actions";
+import { markPaymentRefunded, processRefund } from "@/lib/admin/actions";
 import type { RealRefundOwed } from "@/lib/admin/queries";
 
 export function RefundRow({ refund }: { refund: RealRefundOwed }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<"processing" | "manual" | null>(
+    refund.refundStatus === "processing" ? "processing" : null
+  );
   const { guard, reset } = useSubmitGuard();
 
-  const act = guard(() => {
-    setError(null);
-    startTransition(async () => {
-      const result = await markPaymentRefunded(refund.paymentId);
-      if (!result.ok) {
-        setError(result.error);
-        reset();
-        return;
-      }
-      setDone(true);
+  const run = (fn: () => Promise<{ ok: true } | { ok: false; error: string }>, outcome: "processing" | "manual") =>
+    guard(() => {
+      setError(null);
+      startTransition(async () => {
+        const result = await fn();
+        if (!result.ok) {
+          setError(result.error);
+          reset();
+          return;
+        }
+        setDone(outcome);
+      });
     });
-  });
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
@@ -49,12 +52,28 @@ export function RefundRow({ refund }: { refund: RealRefundOwed }) {
             </span>
           )}
         </span>
-        {done ? (
-          <span className="fade-in text-xs text-success-text">Refunded.</span>
+        {done === "processing" ? (
+          <span className="fade-in text-xs text-muted-foreground">Refund processing…</span>
+        ) : done === "manual" ? (
+          <span className="fade-in text-xs text-success-text">Marked done.</span>
         ) : (
-          <Button variant="outline" size="sm" disabled={isPending} onClick={act}>
-            {isPending ? "..." : "Mark refunded"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              disabled={isPending}
+              onClick={run(() => processRefund(refund.paymentId), "processing")}
+            >
+              {isPending ? "..." : "Process refund"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isPending}
+              onClick={run(() => markPaymentRefunded(refund.paymentId), "manual")}
+            >
+              Mark done manually
+            </Button>
+          </div>
         )}
       </div>
     </div>
