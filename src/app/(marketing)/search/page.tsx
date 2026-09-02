@@ -21,6 +21,24 @@ interface SearchPageProps {
 
 const AVAILABLE_DAYS: Record<string, number> = { "2w": 14, "30d": 30 };
 
+/** Same footprint as SearchFilters so the Suspense swap causes no layout shift. */
+function SearchFiltersSkeleton() {
+  return (
+    <div className="flex flex-col gap-3" aria-hidden>
+      <div className="h-9 max-w-md rounded-full bg-charcoal/5" />
+      <div className="flex flex-wrap gap-2">
+        {[68, 84, 76, 104, 96].map((w) => (
+          <div key={w} className="h-8 rounded-full bg-charcoal/5" style={{ width: w }} />
+        ))}
+      </div>
+      <div className="mt-1 flex items-center justify-between border-b border-border pb-2">
+        <div className="h-5 w-40 rounded bg-charcoal/5" />
+        <div className="h-8 w-28 rounded bg-charcoal/5" />
+      </div>
+    </div>
+  );
+}
+
 function nextAvailableMs(t: DiscoveryTherapist): number {
   return t.nextAvailable ? new Date(t.nextAvailable).getTime() : Number.POSITIVE_INFINITY;
 }
@@ -83,8 +101,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         Every specialist is admin-verified before their profile goes live.
       </p>
 
-      <div className="mt-6">
-        <Suspense>
+      {/* min-height reserves the filter bar's space so it doesn't shove the
+          results list down when SearchFilters (a useSearchParams client
+          component) hydrates in -- was a measurable CLS hit on /search. */}
+      <div className="mt-6 min-h-[168px] sm:min-h-[140px]">
+        <Suspense fallback={<SearchFiltersSkeleton />}>
           <SearchFilters specialties={specialties} resultCount={therapists.length} />
         </Suspense>
       </div>
