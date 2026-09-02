@@ -7,6 +7,7 @@ import { getDiscoveryTherapistById, type DiscoveryTherapist } from "@/lib/therap
 import { getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { bookingWindow } from "@/lib/booking/window";
+import { recordSessionEarnings } from "@/lib/payouts/earnings";
 import { toLagosWallClock } from "@/data/format";
 import type { AvailabilitySlot } from "@/data/types";
 
@@ -33,7 +34,13 @@ async function autoCompletePastBookings(therapistId: string): Promise<void> {
     .map((b) => b.id);
   if (pastIds.length === 0) return;
 
-  await admin.from("bookings").update({ status: "completed" }).in("id", pastIds).eq("status", "confirmed");
+  const { data: completed } = await admin
+    .from("bookings")
+    .update({ status: "completed" })
+    .in("id", pastIds)
+    .eq("status", "confirmed")
+    .select("id");
+  await recordSessionEarnings(admin, (completed ?? []).map((b) => b.id));
 }
 
 export interface RealBooking {

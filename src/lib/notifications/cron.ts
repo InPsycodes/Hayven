@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
+import { recordSessionEarnings } from "@/lib/payouts/earnings";
 import { formatDateTime, formatTime } from "@/data/format";
 
 type BookingRow = {
@@ -88,11 +89,13 @@ export async function notifySessionsFinished(): Promise<number> {
   const finished = data.filter((b) => b.availability_slots && new Date(b.availability_slots.end_time).getTime() <= nowMs);
   if (finished.length === 0) return 0;
 
-  await admin
+  const { data: nowCompleted } = await admin
     .from("bookings")
     .update({ status: "completed" })
     .in("id", finished.map((b) => b.id))
-    .eq("status", "confirmed");
+    .eq("status", "confirmed")
+    .select("id");
+  await recordSessionEarnings(admin, (nowCompleted ?? []).map((b) => b.id));
 
   const skip = await alreadyNotifiedIds(admin, "session_finished", finished.map((b) => b.id));
 

@@ -11,6 +11,12 @@ import { createNotification } from "@/lib/notifications/create";
 import { checkRateLimit } from "@/lib/rate-limit/check";
 import { bookingWindow } from "@/lib/booking/window";
 import { computeRefund, type RefundOutcome } from "@/lib/booking/refund-policy";
+import {
+  recordRetainedEarning,
+  recordNoShowEarning,
+  recordSessionEarnings,
+  releaseBookingEarnings,
+} from "@/lib/payouts/earnings";
 import { formatDateTime, formatNaira } from "@/data/format";
 
 type ActionResult<T> = { ok: true } & T | { ok: false; error: string };
@@ -353,6 +359,11 @@ export async function cancelBooking(
   const outcome = await applyRefundPolicy(admin, bookingId, "parent", slot?.start_time ?? null);
 
   if (outcome) {
+    // Late cancel: the therapist held the slot -> they earn their share of
+    // what was retained (excluding the non-earnable Paystack fee).
+    if (outcome.tier === "partial") {
+      await recordRetainedEarning(admin, bookingId, outcome.withheldNaira - outcome.feeNaira);
+    }
     const child = booking.children as unknown as { first_name: string } | null;
     const when = slot ? formatDateTime(slot.start_time) : "your session";
     await createNotification({
@@ -685,6 +696,8 @@ export async function markNoShow(
   // Policy: a no-show forfeits the session, nothing owed. Separate update so
   // a pre-0071 DB (no refund_amount column) doesn't fail the status change.
   await admin.from("bookings").update({ refund_amount: 0 }).eq("id", bookingId);
+  // The therapist earns their share of the forfeited charge.
+  await recordNoShowEarning(admin, bookingId);
 
   await logAuditEvent({
     actor: session,
@@ -735,6 +748,11 @@ export async function undoNoShow(bookingId: string): Promise<ActionResult<object
     .eq("id", bookingId)
     .eq("status", "no_show");
   if (updateError) return { ok: false, error: updateError.message };
+
+  // The session counts as having happened after all: drop the no-show
+  // retained earning, add the normal session earning.
+  await releaseBookingEarnings(admin, bookingId, true);
+  await recordSessionEarnings(admin, [bookingId]);
 
   await logAuditEvent({
     actor: session,

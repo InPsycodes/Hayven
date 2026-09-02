@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
 import { createNotification } from "@/lib/notifications/create";
+import { holdBookingEarnings, releaseBookingEarnings } from "@/lib/payouts/earnings";
 import { formatNaira } from "@/data/format";
 import type { DisputeResolution } from "@/lib/disputes/queries";
 
@@ -57,6 +58,7 @@ export async function openDispute(bookingId: string, reason: string): Promise<Re
 
   // Hold this session's therapist payout while it's disputed.
   await admin.from("bookings").update({ payout_hold: true }).eq("id", bookingId);
+  await holdBookingEarnings(admin, bookingId);
 
   await logAuditEvent({ actor: session, action: "dispute.open", entityType: "booking", entityId: bookingId });
 
@@ -130,6 +132,9 @@ export async function resolveDispute(
   const bookingPatch: Record<string, unknown> = { payout_hold: false };
   if (isRefund && refund !== null) bookingPatch.refund_amount = refund;
   await admin.from("bookings").update(bookingPatch).eq("id", dispute.booking_id);
+  // Refund -> the therapist earning for this session is reversed; otherwise
+  // the hold is simply released back to pending.
+  await releaseBookingEarnings(admin, dispute.booking_id, isRefund);
 
   await logAuditEvent({
     actor: session,
