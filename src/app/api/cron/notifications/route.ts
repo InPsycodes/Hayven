@@ -7,6 +7,7 @@ import {
   notifySessionsFinished,
   notifyUnreadReportReminders,
   notifyUpcomingSessions,
+  notifyOnboardingCheckins,
 } from "@/lib/notifications/cron";
 
 // Timing-safe, same reasoning as the Paystack webhook's signature check: a
@@ -35,11 +36,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [started, finished, reminders, upcoming] = await Promise.all([
+  const [started, finished, reminders, upcoming, checkins] = await Promise.all([
     notifySessionsStarted(),
     notifySessionsFinished(),
     notifyUnreadReportReminders(),
     notifyUpcomingSessions(),
+    notifyOnboardingCheckins(),
   ]);
 
   return NextResponse.json({
@@ -47,5 +49,6 @@ export async function GET(req: NextRequest) {
     sessionsFinished: finished,
     reportReminders: reminders,
     upcomingReminders: upcoming,
+    onboardingCheckins: checkins,
   });
 }

@@ -260,3 +260,48 @@ export async function notifyUnreadReportReminders(): Promise<number> {
   }
   return count;
 }
+
+/**
+ * A one-time nudge to a verified therapist 4-12 days after they joined:
+ * point them at the guides and how to reach support. Deduped by an
+ * entity_type marker so it fires once.
+ */
+export async function notifyOnboardingCheckins(): Promise<number> {
+  const admin = createAdminClient();
+  const now = Date.now();
+  const from = new Date(now - 12 * 24 * 60 * 60 * 1000).toISOString();
+  const to = new Date(now - 4 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: therapists } = await admin
+    .from("therapist_profiles")
+    .select("id, user_id, created_at")
+    .eq("verification_status", "verified")
+    .gte("created_at", from)
+    .lte("created_at", to);
+  if (!therapists || therapists.length === 0) return 0;
+
+  const ids = therapists.map((t) => t.id);
+  const { data: sent } = await admin
+    .from("notifications")
+    .select("entity_id")
+    .eq("type", "booking_confirmed")
+    .eq("entity_type", "therapist_checkin")
+    .in("entity_id", ids);
+  const skip = new Set((sent ?? []).map((s) => s.entity_id as string));
+
+  let count = 0;
+  for (const t of therapists) {
+    if (!t.user_id || skip.has(t.id)) continue;
+    await createNotification({
+      userId: t.user_id,
+      type: "booking_confirmed",
+      entityType: "therapist_checkin",
+      entityId: t.id,
+      title: "How's your first week on Hayven going?",
+      body: "The therapist guides in your Learning Center cover the essentials, and you can reach us any time from your Profile. Anything not working the way you expected?",
+      url: "/therapist/learn",
+    });
+    count++;
+  }
+  return count;
+}

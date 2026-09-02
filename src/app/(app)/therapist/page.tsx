@@ -20,8 +20,10 @@ import { CareStat } from "@/components/care/care-stat";
 import { CarePanel } from "@/components/care/care-panel";
 import { CareAreaChart } from "@/components/care/care-area-chart";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
+import { OnboardingChecklist } from "@/components/therapist/onboarding-checklist";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
+import { getOnboardingStatus } from "@/lib/therapist/onboarding";
 import { formatNaira, formatDate, formatTime, formatRelativeToNow, LAGOS_TZ } from "@/data/format";
 import {
   getRealActiveClientCountForTherapist,
@@ -41,13 +43,14 @@ export default async function TherapistDashboardPage() {
 
   const today = new Date();
 
-  const [todaysBookings, activeClients, reportSummary, earnings, threads, series] = await Promise.all([
+  const [todaysBookings, activeClients, reportSummary, earnings, threads, series, onboarding] = await Promise.all([
     getRealTodaysBookingsForTherapist(therapist.id),
     getRealActiveClientCountForTherapist(therapist.id),
     getReportWorkflowSummary(therapist.id),
     getRealEarningsForTherapist(session.userId),
     getRealMessageThreadsForTherapist(therapist.id),
     getTherapistMonthlySeries(session.userId, therapist.id, 6),
+    getOnboardingStatus(therapist.id),
   ]);
 
   const awaitingReplyThreads = threads.filter(
@@ -103,6 +106,8 @@ export default async function TherapistDashboardPage() {
           <span>{verificationBanner.text}</span>
         </div>
       )}
+
+      <OnboardingChecklist status={onboarding} />
 
       {session.isSupervisor && (
         <Link
