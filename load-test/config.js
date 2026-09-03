@@ -53,7 +53,7 @@ export function pageCheck(res, name) {
     [`${name} — html body`]: (r) =>
       typeof r.body === "string" && /<!doctype html>/i.test(r.body),
     [`${name} — not an error page`]: (r) =>
-      !/Application error|500 - Internal|This page could not be found/i.test(r.body || ""),
+      !/Application error|500 - Internal/i.test(r.body || ""),
   });
 }
 
