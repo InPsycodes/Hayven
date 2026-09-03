@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { logAuditEvent } from "@/lib/audit/log";
+import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -63,6 +64,7 @@ export async function submitReview(
 
   revalidatePath(`/therapists/${therapistId}`);
   revalidatePath("/search");
+  revalidateDiscoveryCache();
   return { ok: true };
 }
 
@@ -89,5 +91,6 @@ export async function deleteMyReview(therapistId: string): Promise<ActionResult>
 
   revalidatePath(`/therapists/${therapistId}`);
   revalidatePath("/search");
+  revalidateDiscoveryCache();
   return { ok: true };
 }

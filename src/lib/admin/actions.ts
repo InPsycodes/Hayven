@@ -8,6 +8,7 @@ import { logAuditEvent } from "@/lib/audit/log";
 import { createNotification } from "@/lib/notifications/create";
 import { createRefund } from "@/lib/payments/paystack";
 import { isValidDomainBand } from "@/lib/reports/phrase-domains";
+import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 
 export type VerificationDecision = "approved" | "rejected" | "needs_more_info";
 
@@ -117,6 +118,8 @@ export async function reviewVerificationRequestReal(
   }
 
   revalidatePath("/admin/verification");
+  // A verify/reject/flag decision changes who appears in public discovery.
+  revalidateDiscoveryCache();
   return { ok: true };
 }
 

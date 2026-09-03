@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/session";
@@ -50,11 +51,14 @@ export async function getTherapistReviewSummary(therapistId: string): Promise<Re
 }
 
 /** Batched summaries for a list of therapists -- one query for the search page. */
-export async function getReviewSummaries(therapistIds: string[]): Promise<Map<string, ReviewSummary>> {
+export async function getReviewSummaries(
+  therapistIds: string[],
+  db?: SupabaseClient
+): Promise<Map<string, ReviewSummary>> {
   const out = new Map<string, ReviewSummary>();
   if (therapistIds.length === 0) return out;
 
-  const supabase = await createClient();
+  const supabase = db ?? (await createClient());
   const { data } = await supabase
     .from("therapist_reviews")
     .select("therapist_id, rating")

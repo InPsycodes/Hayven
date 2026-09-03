@@ -1,21 +1,35 @@
 import "server-only";
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Specialty } from "@/data/types";
 
-/** Real specialties from Supabase (seeded, unlike the rest of the still-mock data layer). */
-export async function getRealSpecialties(): Promise<Specialty[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("specialties").select("id, name, governing_body");
-  if (error || !data) return [];
+/**
+ * Real specialties from Supabase. The list is tiny, public, and changes
+ * almost never, but it's read on every /search and every therapist profile
+ * page -- cache it hard. Service-role client because unstable_cache can't
+ * touch cookies(); the data is public either way.
+ */
+const loadSpecialties = unstable_cache(
+  async (): Promise<Specialty[]> => {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.from("specialties").select("id, name, governing_body");
+    if (error || !data) return [];
+    return data.map((row) => ({
+      id: row.id,
+      name: row.name,
+      governingBody: row.governing_body ?? undefined,
+    }));
+  },
+  ["specialties-v1"],
+  { revalidate: 3600, tags: ["specialties"] }
+);
 
-  return data.map((row) => ({
-    id: row.id,
-    name: row.name,
-    governingBody: row.governing_body ?? undefined,
-  }));
+export async function getRealSpecialties(): Promise<Specialty[]> {
+  return loadSpecialties();
 }
 
 export interface RealTherapistProfile {
@@ -81,9 +95,15 @@ export interface RealPublicTherapist {
   photoUrl: string | null;
 }
 
-/** Public discovery: verified therapists only, via the therapist_public_profiles view. */
-export async function getRealVerifiedTherapists(): Promise<RealPublicTherapist[]> {
-  const supabase = await createClient();
+/**
+ * Public discovery: verified therapists only, via the therapist_public_profiles
+ * view. Accepts an optional client so the cached discovery loader can pass a
+ * cookie-free service-role client (the view is granted to anon regardless).
+ */
+export async function getRealVerifiedTherapists(
+  db?: SupabaseClient
+): Promise<RealPublicTherapist[]> {
+  const supabase = db ?? (await createClient());
   const { data, error } = await supabase.from("therapist_public_profiles").select("*");
   if (error || !data) return [];
 
@@ -179,12 +199,13 @@ export async function getRealAvailabilityForTherapist(
  */
 export async function getNextAvailableSlots(
   therapistIds: string[],
-  range: { from: string; to: string }
+  range: { from: string; to: string },
+  db?: SupabaseClient
 ): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   if (therapistIds.length === 0) return out;
 
-  const supabase = await createClient();
+  const supabase = db ?? (await createClient());
   const { data } = await supabase
     .from("availability_slots")
     .select("therapist_id, start_time")

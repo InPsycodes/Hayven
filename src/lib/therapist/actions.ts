@@ -13,6 +13,7 @@ import { resolveBankAccount } from "@/lib/payments/paystack";
 import { bankName } from "@/lib/payments/nigerian-banks";
 import { checkRateLimit } from "@/lib/rate-limit/check";
 import { logAuditEvent } from "@/lib/audit/log";
+import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 import { createNotification } from "@/lib/notifications/create";
 
 export interface FormState {
@@ -316,6 +317,7 @@ export async function updateTherapistProfile(_prevState: FormState, formData: Fo
   }
 
   revalidatePath("/therapist/profile");
+  revalidateDiscoveryCache();
   return {};
 }
 
@@ -367,6 +369,7 @@ export async function addAvailabilitySlot(
   if (error) return { error: error.message };
 
   revalidatePath("/therapist/schedule");
+  revalidateDiscoveryCache();
   return {};
 }
 
@@ -388,6 +391,7 @@ export async function deleteAvailabilitySlot(
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/therapist/schedule");
+  revalidateDiscoveryCache();
   return { ok: true };
 }
 
@@ -502,6 +506,7 @@ export async function updateTherapistPhoto(_prevState: FormState, formData: Form
 
   revalidatePath("/therapist/profile");
   revalidatePath("/search");
+  revalidateDiscoveryCache();
   return {};
 }
 
@@ -550,5 +555,6 @@ export async function updateBankDetails(_prevState: FormState, formData: FormDat
 
   revalidatePath("/therapist/profile");
   revalidatePath("/search");
+  revalidateDiscoveryCache();
   return {};
 }

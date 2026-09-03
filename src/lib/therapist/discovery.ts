@@ -1,9 +1,13 @@
 import "server-only";
+import { revalidateTag, unstable_cache } from "next/cache";
 
 import { getRealVerifiedTherapists, getRealTherapistById, getNextAvailableSlots } from "./queries";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getReviewSummaries, getTherapistReviewSummary, type ReviewSummary } from "@/lib/reviews/queries";
 import { bookingWindow } from "@/lib/booking/window";
 import type { SessionType } from "@/data/types";
+
+const DISCOVERY_TAG = "discovery-therapists";
 
 /**
  * Public-discovery shape for a verified therapist, drawn entirely from
@@ -58,18 +62,32 @@ function matchesFilters(t: DiscoveryTherapist, filters: DiscoveryFilters): boole
   return true;
 }
 
-export async function searchDiscoveryTherapists(
-  filters: DiscoveryFilters = {}
-): Promise<DiscoveryTherapist[]> {
-  const results = await getRealVerifiedTherapists();
-  const ids = results.map((t) => t.id);
-  const [ratings, nextSlots] = await Promise.all([
-    getReviewSummaries(ids),
-    getNextAvailableSlots(ids, bookingWindow()),
-  ]);
+/**
+ * Every verified therapist as a DiscoveryTherapist, unfiltered. This is the
+ * expensive half of a search -- the view read plus a batched review-summary
+ * and next-slot query -- and it's byte-identical for every visitor, so it's
+ * cached for a short window and the per-request filter/sort runs off the
+ * cached array.
+ *
+ * Service-role client, not the request-scoped one: unstable_cache can't call
+ * cookies(), and every field here is already public (the view is granted to
+ * anon; reviews and slots are returned only as aggregates).
+ *
+ * The 120s TTL is the staleness backstop; mutations that change who appears
+ * or their ranking inputs call revalidateDiscoveryCache() for an immediate
+ * refresh.
+ */
+const loadAllDiscoveryTherapists = unstable_cache(
+  async (): Promise<DiscoveryTherapist[]> => {
+    const db = createAdminClient();
+    const results = await getRealVerifiedTherapists(db);
+    const ids = results.map((t) => t.id);
+    const [ratings, nextSlots] = await Promise.all([
+      getReviewSummaries(ids, db),
+      getNextAvailableSlots(ids, bookingWindow(), db),
+    ]);
 
-  return results
-    .map((t) => ({
+    return results.map((t) => ({
       id: t.id,
       displayName: t.displayName,
       bio: t.bio ?? "",
@@ -83,8 +101,29 @@ export async function searchDiscoveryTherapists(
       rating: ratings.get(t.id) ?? { average: 0, count: 0 },
       photoUrl: t.photoUrl,
       nextAvailable: nextSlots.get(t.id) ?? null,
-    }))
-    .filter((t) => matchesFilters(t, filters));
+    }));
+  },
+  ["discovery-therapists-v1"],
+  { revalidate: 120, tags: [DISCOVERY_TAG] }
+);
+
+/**
+ * Bust the cached discovery list. Call after anything that changes who shows
+ * in discovery or how they rank: verification decisions, availability edits,
+ * profile/photo/bank changes, new or removed reviews.
+ */
+export function revalidateDiscoveryCache(): void {
+  // profile "max" -> mark stale, serve stale-while-revalidate on the next
+  // /search hit rather than forcing a blocking cache miss. The bare
+  // single-arg form is deprecated in this Next version.
+  revalidateTag(DISCOVERY_TAG, "max");
+}
+
+export async function searchDiscoveryTherapists(
+  filters: DiscoveryFilters = {}
+): Promise<DiscoveryTherapist[]> {
+  const all = await loadAllDiscoveryTherapists();
+  return all.filter((t) => matchesFilters(t, filters));
 }
 
 export async function getDiscoveryTherapistById(id: string): Promise<DiscoveryTherapist | undefined> {
