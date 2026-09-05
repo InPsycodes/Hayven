@@ -65,13 +65,13 @@ export default async function TherapistDashboardPage() {
 
   const verificationBanner =
     therapist.verificationStatus === "rejected"
-      ? { tone: "error" as const, text: "Your verification wasn't approved — see your profile for details." }
+      ? { tone: "error" as const, text: "Your verification wasn't approved. See your profile for details." }
       : therapist.verificationStatus === "pending" || therapist.verificationStatus === "flagged"
         ? {
             tone: "amber" as const,
             text:
               therapist.verificationStatus === "flagged"
-                ? "We need more information on your application — check your profile."
+                ? "We need more information on your application. Check your profile."
                 : "Verification pending. Your credentials are being reviewed (2–5 business days).",
           }
         : null;
@@ -181,7 +181,7 @@ export default async function TherapistDashboardPage() {
             {nextBooking ? (
               <>
                 <h3 className="mt-2 font-heading text-lg font-medium text-care-ink">
-                  {nextBooking.childFirstName} — {nextBooking.sessionType.replace("_", " ")}
+                  {nextBooking.childFirstName} · {nextBooking.sessionType.replace("_", " ")}
                 </h3>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-care-ink-soft">
                   <span className="inline-flex items-center gap-1.5">
@@ -217,7 +217,7 @@ export default async function TherapistDashboardPage() {
                   <div key={b.id} className="flex items-center justify-between gap-3 py-2.5">
                     <div className="min-w-0">
                       <p className="truncate text-[13px] text-care-ink">
-                        {b.childFirstName} — <span className="capitalize">{b.sessionType.replace("_", " ")}</span>
+                        {b.childFirstName} · <span className="capitalize">{b.sessionType.replace("_", " ")}</span>
                       </p>
                       <p className="text-[11px] text-care-ink-faint">
                         {b.sessionType === "virtual" ? "Google Meet" : b.location ?? "In-person"}

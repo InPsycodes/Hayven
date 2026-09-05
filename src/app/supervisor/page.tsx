@@ -153,7 +153,7 @@ export default async function SupervisorTeamPage() {
                     <IconAlertTriangle size={15} stroke={1.75} className="mt-0.5 shrink-0 text-care-amber" />
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-care-ink">{t.name}</p>
-                      <p className="text-[11.5px] text-care-ink-faint">No active caseload — check in</p>
+                      <p className="text-[11.5px] text-care-ink-faint">No active caseload, check in</p>
                     </div>
                   </Link>
                 ))}

@@ -38,7 +38,7 @@ export function VerificationStatusBanner({ status }: { status: string }) {
           </p>
           <p className="mt-0.5 text-sm text-charcoal/70">
             {status === "flagged"
-              ? "Our team flagged something on your application -- check your profile for what's needed."
+              ? "Our team flagged something on your application. Check your profile for what's needed."
               : "Your credentials are currently being reviewed. This usually takes 2-5 business days. You'll be publicly discoverable once approved."}
           </p>
         </div>

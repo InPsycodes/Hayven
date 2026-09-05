@@ -40,12 +40,12 @@ export function emailFormatError(raw: string): string | null {
   if (value.length > MAX_EMAIL_LEN) return "That email address is too long.";
   if (/\s/.test(value)) return "Email addresses can't contain spaces.";
   const at = value.indexOf("@");
-  if (at === -1) return "That doesn't look like an email address -- it's missing an @.";
+  if (at === -1) return "That doesn't look like an email address. It's missing an @.";
   if (value.indexOf("@", at + 1) !== -1) return "An email address can only have one @.";
   if (at === 0) return "Add the part before the @ (your username).";
   const domain = value.slice(at + 1);
   if (!domain) return "Add the part after the @ (the domain, like gmail.com).";
-  if (!domain.includes(".")) return "The domain looks incomplete -- it should include a dot, like gmail.com.";
+  if (!domain.includes(".")) return "The domain looks incomplete. It should include a dot, like gmail.com.";
   if (domain.startsWith(".") || domain.endsWith(".")) return "The domain can't start or end with a dot.";
   if (domain.includes("..")) return "The domain has a double dot.";
   if (!SHAPE.test(value)) return "That doesn't look like a valid email address.";

@@ -43,7 +43,7 @@ export default async function TherapistLearnPage() {
       <div className="flex flex-col gap-5 px-5 py-6 md:px-10 md:py-8">
         {courses.length === 0 ? (
           <p className="rounded-2xl bg-canvas-white p-6 text-sm text-muted-foreground ring-1 ring-charcoal/10">
-            No courses published yet — check back soon.
+            No courses published yet. Check back soon.
           </p>
         ) : (
           <>
@@ -67,7 +67,7 @@ export default async function TherapistLearnPage() {
                 <div className="min-w-0">
                   <p className="label-micro text-rust-dark">Continue where you left off</p>
                   <h2 className="mt-1.5 font-heading text-base text-charcoal">
-                    {overview.resume.courseTitle} · Lesson {overview.resume.lessonNumber} — {overview.resume.lessonTitle}
+                    {overview.resume.courseTitle} · Lesson {overview.resume.lessonNumber}: {overview.resume.lessonTitle}
                   </h2>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {overview.resume.categoryName ? `${overview.resume.categoryName} · ` : ""}

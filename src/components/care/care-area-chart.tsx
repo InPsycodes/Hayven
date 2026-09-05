@@ -16,7 +16,7 @@ export function CareAreaChart({
   if (n < 2) {
     return (
       <p className="mt-6 py-8 text-center text-sm text-care-ink-faint">
-        Not enough history yet — this fills in as sessions are logged.
+        Not enough history yet. This fills in as sessions are logged.
       </p>
     );
   }

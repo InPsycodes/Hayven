@@ -15,7 +15,7 @@ const FIELDS: { key: keyof IntakeFormInput; label: string; helper: string; place
   {
     key: "sensoryProfile",
     label: "Sensory profile",
-    helper: "Anything that overwhelms or soothes them -- sounds, textures, lighting, movement.",
+    helper: "Anything that overwhelms or soothes them: sounds, textures, lighting, movement.",
     placeholder: "e.g. Covers ears around loud/sudden noises. Calms down with deep pressure (tight hugs, weighted blanket).",
   },
   {
@@ -33,7 +33,7 @@ const FIELDS: { key: keyof IntakeFormInput; label: string; helper: string; place
   {
     key: "homeRoutine",
     label: "Home routine survey",
-    helper: "A typical day -- sleep, meals, screen time, anything that helps a therapist meet them where they are.",
+    helper: "A typical day: sleep, meals, screen time, anything that helps a therapist meet them where they are.",
     placeholder: "e.g. Wakes around 7am, one nap after lunch, gets overwhelmed in the hour before bedtime.",
   },
 ];

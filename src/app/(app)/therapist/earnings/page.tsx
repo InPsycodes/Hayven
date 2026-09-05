@@ -65,7 +65,7 @@ export default async function TherapistEarningsPage() {
                       <p className="text-sm font-medium text-charcoal">
                         {row.source === "session"
                           ? `Session with ${row.childFirstName ?? "a client"}`
-                          : `Late cancellation — ${row.childFirstName ?? "a client"}`}
+                          : `Late cancellation: ${row.childFirstName ?? "a client"}`}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {formatDate(row.createdAt)} · {formatNaira(row.grossAmount)} charged, less{" "}

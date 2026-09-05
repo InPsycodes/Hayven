@@ -21,7 +21,7 @@ export const TRUST_SAFETY_POINTS: TrustSafetyPoint[] = [
   {
     icon: IconLock,
     title: "Private by design",
-    body: "Every account only ever sees the children and records it's actually authorized for -- enforced at the database level, not left to app-level trust.",
+    body: "Every account only ever sees the children and records it's actually authorized for, enforced at the database level, not left to app-level trust.",
   },
   {
     icon: IconMapPin,

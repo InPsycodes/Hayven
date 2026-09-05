@@ -111,7 +111,7 @@ export default async function TherapistCoursePage({
                 </Link>
               ) : (
                 <p className="text-sm text-ink-soft">
-                  Module complete — that&apos;s the end of the curriculum for now.
+                  Module complete. That&apos;s the end of the curriculum for now.
                 </p>
               )
             ) : (

@@ -21,7 +21,7 @@ export const LEARN_PATHS: LearnPath[] = [
   {
     slug: "just-noticed",
     title: "I've just noticed something",
-    blurb: "Speech, focus, sensory, social — what's typical at this age, and what's worth a closer look.",
+    blurb: "Speech, focus, sensory, social: what's typical at this age, and what's worth a closer look.",
     icon: IconEye,
     categories: ["Autism", "ADHD", "Dyslexia", "Sensory processing"],
   },

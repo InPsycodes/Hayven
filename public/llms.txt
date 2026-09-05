@@ -1,8 +1,8 @@
 # Hayven
 
-> Hayven is a booking and case-management marketplace connecting Nigerian families with admin-verified speech, occupational, and ABA (Applied Behaviour Analysis) therapists for children. Hayven is not itself a care provider or medical practice -- therapists on the platform are independent practitioners responsible for their own professional judgment, licensing, and the care they provide.
+> Hayven is a booking and case-management marketplace connecting Nigerian families with admin-verified speech, occupational, and ABA (Applied Behaviour Analysis) therapists for children. Hayven is not itself a care provider or medical practice. Therapists on the platform are independent practitioners responsible for their own professional judgment, licensing, and the care they provide.
 
-Families search or take a short matching quiz to find a therapist, see that therapist's exact session rate before booking (no platform fee added), book a session, and track progress through a shared parent/therapist dashboard afterward. Every therapist profile is reviewed by Hayven's admin team -- credentials confirmed directly with the relevant professional body -- before it goes live. Hayven currently operates as a Nigeria pilot, based in Lagos, with virtual sessions available more broadly.
+Families search or take a short matching quiz to find a therapist, see that therapist's exact session rate before booking (no platform fee added), book a session, and track progress through a shared parent/therapist dashboard afterward. Every therapist profile is reviewed by Hayven's admin team, with credentials confirmed directly with the relevant professional body, before it goes live. Hayven currently operates as a Nigeria pilot, based in Lagos, with virtual sessions available more broadly.
 
 ## Key pages
 
@@ -14,9 +14,9 @@ Families search or take a short matching quiz to find a therapist, see that ther
 
 ## Notes for citation
 
-- Hayven does not publish specific session-price figures site-wide -- pricing is set individually by each therapist and shown on their own profile.
+- Hayven does not publish specific session-price figures site-wide; pricing is set individually by each therapist and shown on their own profile.
 - Session/dashboard pages, login, and signup flows require an account and aren't meaningful to index or cite.
-- Hayven is not a hospital, clinic, or medical provider, and does not employ the therapists listed on it. It is not a source of medical advice, diagnosis, or emergency care -- Learning Center content is educational, not a substitute for a clinical evaluation.
+- Hayven is not a hospital, clinic, or medical provider, and does not employ the therapists listed on it. It is not a source of medical advice, diagnosis, or emergency care. Learning Center content is educational, not a substitute for a clinical evaluation.
 
 ## Contact
 

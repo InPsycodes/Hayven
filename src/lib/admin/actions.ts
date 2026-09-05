@@ -242,7 +242,7 @@ export async function processRefund(
   const session = await getSession();
   if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
   if (!process.env.PAYSTACK_SECRET_KEY) {
-    return { ok: false, error: "Paystack isn't configured -- refund it manually and mark it done." };
+    return { ok: false, error: "Paystack isn't configured. Refund it manually and mark it done." };
   }
 
   const supabase = createAdminClient();

@@ -97,6 +97,14 @@ export async function POST() {
     ...ARTICLES.filter((a) => !featuredSlugs.has(a.slug)).map((a) => ({ ...a, featured: false })),
   ];
 
+  // Which slugs already exist -- so a re-run (e.g. to push an edited fixture)
+  // updates content without resetting published_at, which drives the Article
+  // schema's datePublished and the sitemap's lastModified.
+  const { data: existingRows } = await admin.from("learning_articles").select("slug, published_at");
+  const publishedAtBySlug = new Map(
+    (existingRows ?? []).map((r) => [r.slug as string, r.published_at as string | null])
+  );
+
   for (const article of allArticles) {
     const categoryId = categoryIdByKey.get(`${article.audience}:${article.category}`) ?? null;
     const { error } = await admin.from("learning_articles").upsert(
@@ -112,7 +120,7 @@ export async function POST() {
         image_url: (article.imageSrc && STABLE_IMAGE_PATH.get(article.imageSrc)) ?? null,
         featured: article.featured,
         status: "published",
-        published_at: new Date().toISOString(),
+        published_at: publishedAtBySlug.get(article.slug) ?? new Date().toISOString(),
         created_by: session.userId,
       },
       { onConflict: "slug" }

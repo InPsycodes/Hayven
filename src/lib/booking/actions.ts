@@ -441,7 +441,7 @@ export async function setMeetingLink(
     return { ok: false, error: "Booking not found." };
   }
   if (booking.session_type !== "virtual") {
-    return { ok: false, error: "This is an in-person session -- it has no video link." };
+    return { ok: false, error: "This is an in-person session, so it has no video link." };
   }
   if (booking.status !== "confirmed") {
     return { ok: false, error: "You can add a video link once the session is confirmed." };
@@ -563,7 +563,7 @@ export async function rescheduleBooking(
     return { ok: false, error: "Only a confirmed session can be rescheduled." };
   }
   if (newSlotId === booking.availability_slot_id) {
-    return { ok: false, error: "That's the current time -- pick a different slot." };
+    return { ok: false, error: "That's the current time. Pick a different slot." };
   }
 
   const oldSlot = booking.availability_slots as unknown as { start_time: string } | null;
@@ -581,7 +581,7 @@ export async function rescheduleBooking(
     return { ok: false, error: "That slot isn't available for this session." };
   }
   if (new Date(newSlot.start_time).getTime() <= Date.now()) {
-    return { ok: false, error: "That time has already passed -- pick another." };
+    return { ok: false, error: "That time has already passed. Pick another." };
   }
 
   // Hold the new slot atomically before touching the booking.

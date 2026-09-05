@@ -12,7 +12,7 @@ export function OnboardingChecklist({ status }: { status: OnboardingStatus }) {
     {
       done: status.verified,
       pending: status.verificationPending,
-      label: status.verificationPending ? "Verification — under review" : "Get your credentials verified",
+      label: status.verificationPending ? "Verification: under review" : "Get your credentials verified",
       href: "/therapist/profile",
     },
     { done: status.hasAvailability, label: "Add your availability", href: "/therapist/schedule" },

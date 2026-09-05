@@ -109,7 +109,7 @@ export async function runPayouts(): Promise<PayoutRunResult> {
         const transfer = await initiateTransfer({
           amountNaira: group.total,
           recipientCode: recipient,
-          reason: `Hayven payout — ${group.ids.length} item${group.ids.length === 1 ? "" : "s"}`,
+          reason: `Hayven payout, ${group.ids.length} item${group.ids.length === 1 ? "" : "s"}`,
           reference,
         });
         const settled = transfer.status === "success";

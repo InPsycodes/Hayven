@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: TherapistPageProps): Promise<
   if (!therapist) return {};
 
   const specialty = therapist.specialtyNames[0];
-  const title = `${therapist.displayName}${specialty ? ` — ${specialty}` : ""}${
+  const title = `${therapist.displayName}${specialty ? `, ${specialty}` : ""}${
     therapist.location ? ` in ${therapist.location}` : ""
   }`;
   const description = therapist.bio?.trim()

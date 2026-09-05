@@ -46,7 +46,7 @@ export function GuideGrid({ guides }: { guides: GuideGridItem[] }) {
         <p className="mt-8 rounded-2xl bg-canvas-white p-10 text-center text-sm text-ink-soft ring-1 ring-charcoal/10">
           {query.trim()
             ? `No guides match “${query.trim()}” yet.`
-            : "No guides here yet — check back soon."}
+            : "No guides here yet. Check back soon."}
         </p>
       ) : (
         <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

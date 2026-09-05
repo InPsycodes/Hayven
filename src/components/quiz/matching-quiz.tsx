@@ -30,7 +30,7 @@ const SESSION_OPTIONS = [
   {
     value: "virtual",
     label: "Virtual",
-    hint: "Video call from home — good for busy weeks",
+    hint: "Video call from home, good for busy weeks",
     icon: IconVideo,
   },
   {
@@ -45,19 +45,19 @@ const BUDGET_OPTIONS = [
   { value: "15000", label: "Up to ₦15,000" },
   { value: "20000", label: "Up to ₦20,000" },
   { value: "25000", label: "Up to ₦25,000" },
-  { value: "", label: "No limit — show me everyone" },
+  { value: "", label: "No limit: show me everyone" },
 ] as const;
 
 const RAIL_NOTES = [
-  "This only narrows the list. You choose who to book — nothing is scheduled or paid until you decide.",
+  "This only narrows the list. You choose who to book; nothing is scheduled or paid until you decide.",
   "Most therapists offer both formats. This just sorts the order you see them in.",
   "Prices are per session and set by each therapist. You'll always see them before you book.",
   "Not quite right? Change an answer, or adjust the filters on the next page.",
 ];
 
 const STEP_META = [
-  { kicker: "Step 1 of 3 · about a minute left", title: "What have you noticed about your child?", sub: "Pick the closest fit — you can change it on the results page." },
-  { kicker: "Step 2 of 3", title: "How would sessions work best?", sub: "Most therapists offer both — this just sorts the order." },
+  { kicker: "Step 1 of 3 · about a minute left", title: "What have you noticed about your child?", sub: "Pick the closest fit. You can change it on the results page." },
+  { kicker: "Step 2 of 3", title: "How would sessions work best?", sub: "Most therapists offer both; this just sorts the order." },
   { kicker: "Step 3 of 3 · last one", title: "What works for your budget?", sub: "Per session. You can widen this later." },
 ];
 
@@ -435,7 +435,7 @@ function ResultsStep({
             <span className="text-rust-dark">
               {preview.count} verified therapist{preview.count === 1 ? "" : "s"}
             </span>{" "}
-            who fit — mostly in {specialtyLabel.toLowerCase()}.
+            who fit, mostly in {specialtyLabel.toLowerCase()}.
           </h1>
 
           <div className="flex flex-wrap gap-2">

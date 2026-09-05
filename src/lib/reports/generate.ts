@@ -415,7 +415,7 @@ function goalInterpretation(goal: GenerationGoalInput): string | null {
 
   if (delta === null) {
     return emerging
-      ? `${goal.title}: this goal is currently emerging, at ${goal.percentComplete}% complete. No trend is available yet -- will continue to be targeted.`
+      ? `${goal.title}: this goal is currently emerging, at ${goal.percentComplete}% complete. No trend is available yet; it will continue to be targeted.`
       : `${goal.title}: first recorded data point at ${goal.percentComplete}% complete. No trend is available yet.`;
   }
   if (delta >= 15) {
@@ -538,7 +538,7 @@ function skillInterpretation(skill: GenerationSkillInput): string | null {
   if (skill.domainType) return domainSkillInterpretation(skill);
   if (skill.percentThisSession === null) return null;
   const delta = skill.previousPercent === null ? null : skill.percentThisSession - skill.previousPercent;
-  const masteryNote = skill.percentThisSession >= 90 ? " -- consistently demonstrating this skill." : skill.percentThisSession >= 80 ? " -- trending toward the mastery criterion." : "";
+  const masteryNote = skill.percentThisSession >= 90 ? ", consistently demonstrating this skill." : skill.percentThisSession >= 80 ? ", trending toward the mastery criterion." : "";
   const emerging = skill.percentThisSession < EMERGING_THRESHOLD;
 
   if (delta === null) {
@@ -711,7 +711,7 @@ function goalHighlight(goal: GenerationGoalInput): string | null {
     return emerging
       ? pickVariant(
           [
-            `This is an early step for ${name} -- we'll keep building on it together.`,
+            `This is an early step for ${name}, we'll keep building on it together.`,
             `We're just getting started on ${name}. It's early days, and that's exactly where we'd expect to be.`,
           ],
           goal.id
@@ -726,7 +726,7 @@ function goalHighlight(goal: GenerationGoalInput): string | null {
       [
         `${CHILD} made wonderful progress on ${name} this session.`,
         `${CHILD} took a real step forward on ${name} today.`,
-        `Today was a strong one for ${name} -- real progress.`,
+        `Today was a strong one for ${name}, real progress.`,
       ],
       goal.id
     );
@@ -744,7 +744,7 @@ function goalHighlight(goal: GenerationGoalInput): string | null {
     return emerging
       ? pickVariant(
           [
-            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early goal for ${CHILD} -- we're continuing to build toward it step by step.`,
+            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early goal for ${CHILD}, we're continuing to build toward it step by step.`,
             `We're staying consistent with ${name}. This is still early progress, and that's expected at this stage.`,
           ],
           goal.id
@@ -776,7 +776,7 @@ function skillHighlight(skill: GenerationSkillInput): string | null {
     return emerging
       ? pickVariant(
           [
-            `This is an early stage for ${name} -- we'll keep practising and building on it.`,
+            `This is an early stage for ${name}, we'll keep practising and building on it.`,
             `We're just introducing ${name}. It's early days, which is exactly where we'd expect to be.`,
           ],
           skill.id
@@ -790,7 +790,7 @@ function skillHighlight(skill: GenerationSkillInput): string | null {
     return pickVariant(
       [
         `${CHILD} is getting noticeably more confident with ${name}.`,
-        `Real progress on ${name} today -- ${CHILD} needed less help than usual.`,
+        `Real progress on ${name} today: ${CHILD} needed less help than usual.`,
       ],
       skill.id
     );
@@ -799,7 +799,7 @@ function skillHighlight(skill: GenerationSkillInput): string | null {
     return emerging
       ? pickVariant(
           [
-            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early skill for ${CHILD} -- we're continuing to build on it with consistent practice.`,
+            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early skill for ${CHILD}, we're continuing to build on it with consistent practice.`,
             `We're staying consistent with ${name}. This is still early progress, and that's expected at this stage.`,
           ],
           skill.id
@@ -1243,17 +1243,17 @@ function domainSkillParentSentence(
       {
         warm: [
           `${CHILD} responded to ${CHILD}'s name several times today. We're continuing to build on this.`,
-          `${CHILD} is getting better at responding when we call ${CHILD}'s name -- it happened several times today.`,
+          `${CHILD} is getting better at responding when we call ${CHILD}'s name, and it happened several times today.`,
         ],
         direct: [
           `${CHILD} responded to ${CHILD}'s name in several opportunities today. We're continuing to build on this.`,
-          `${CHILD} responded to ${CHILD}'s name inconsistently today -- several correct responses, several missed.`,
+          `${CHILD} responded to ${CHILD}'s name inconsistently today, several correct responses, several missed.`,
         ],
       },
       {
         warm: [
-          `We're still working on ${CHILD}'s response to ${CHILD}'s name -- this is an early stage for this skill, and that's completely normal.`,
-          `Responding to ${CHILD}'s name is still an early skill we're building -- ${CHILD} is just starting to notice and turn toward us when called.`,
+          `We're still working on ${CHILD}'s response to ${CHILD}'s name. This is an early stage for this skill, and that's completely normal.`,
+          `Responding to ${CHILD}'s name is still an early skill we're building. ${CHILD} is just starting to notice and turn toward us when called.`,
         ],
         direct: [
           `${CHILD} is not yet consistently responding to ${CHILD}'s name. This is an early-stage skill we're building.`,
@@ -1295,7 +1295,7 @@ function domainSkillParentSentence(
       ctx,
       [
         `${CHILD} practised saying "${clean(d.wordOrSound)}" today${approximationPhrase}. Every attempt like this builds toward clearer speech.`,
-        `${CHILD} gave "${clean(d.wordOrSound)}" a try today${approximationPhrase} -- every attempt like this is a real step toward clearer speech.`,
+        `${CHILD} gave "${clean(d.wordOrSound)}" a try today${approximationPhrase}. Every attempt like this is a real step toward clearer speech.`,
       ],
       [
         `${CHILD} practised saying "${clean(d.wordOrSound)}" today${approximationPhrase}.`,
@@ -1318,7 +1318,7 @@ function domainSkillParentSentence(
       ctx,
       [
         `${CHILD} reached out to start communication today using ${joinList(modalities)}.`,
-        `${CHILD} reached out to communicate today using ${joinList(modalities)} -- using more than one way at once like this is a great sign.`,
+        `${CHILD} reached out to communicate today using ${joinList(modalities)}. Using more than one way at once like this is a great sign.`,
       ],
       [
         `${CHILD} initiated communication today using ${joinList(modalities)}.`,
@@ -1349,7 +1349,7 @@ function domainSkillParentSentence(
       {
         warm: [
           `${CHILD} followed instructions several times today${instructionPhrase}. We're continuing to build on this.`,
-          `${CHILD} followed instructions well several times today${instructionPhrase} -- we're keeping up the practice.`,
+          `${CHILD} followed instructions well several times today${instructionPhrase}. We're keeping up the practice.`,
         ],
         direct: [
           `${CHILD} followed instructions correctly in several opportunities today${instructionPhrase}.`,
@@ -1358,8 +1358,8 @@ function domainSkillParentSentence(
       },
       {
         warm: [
-          `We're still working on ${CHILD} following instructions consistently -- this is an early stage, and that's completely normal.`,
-          `${CHILD} is just starting to follow this kind of instruction${instructionPhrase} -- that's completely normal at this stage.`,
+          `We're still working on ${CHILD} following instructions consistently. This is an early stage, and that's completely normal.`,
+          `${CHILD} is just starting to follow this kind of instruction${instructionPhrase}, that's completely normal at this stage.`,
         ],
         direct: [
           `${CHILD} is not yet consistently following instructions${instructionPhrase}. This is an early-stage skill.`,
@@ -1400,7 +1400,7 @@ function domainSkillParentSentence(
       {
         warm: [
           `${CHILD} showed a strong understanding of ${conceptName} today.`,
-          `${CHILD} really understood ${conceptName} today -- great work.`,
+          `${CHILD} really understood ${conceptName} today, great work.`,
         ],
         direct: [
           `${CHILD} demonstrated a strong understanding of ${conceptName} today.`,
@@ -1414,13 +1414,13 @@ function domainSkillParentSentence(
         ],
         direct: [
           `${CHILD} showed a developing understanding of ${conceptName}, with several correct responses today.`,
-          `${CHILD}'s responses to ${conceptName} were inconsistent today -- some correct, some not.`,
+          `${CHILD}'s responses to ${conceptName} were inconsistent today, some correct, some not.`,
         ],
       },
       {
         warm: [
-          `We're just starting to introduce ${conceptName} -- this is an early stage for it.`,
-          `We're just starting to introduce ${conceptName} -- we'll go at ${CHILD}'s pace.`,
+          `We're just starting to introduce ${conceptName}. This is an early stage for it.`,
+          `We're just starting to introduce ${conceptName}. We'll go at ${CHILD}'s pace.`,
         ],
         direct: [
           `${CHILD} is not yet demonstrating understanding of ${conceptName}. This is an early-stage target.`,
@@ -1461,7 +1461,7 @@ function domainSkillParentSentence(
       ctx,
       [
         `${CHILD} used several different words to ask for things today, including ${joinList(cleanList(words))}.`,
-        `${CHILD} is expanding the words ${CHILD} uses to ask for things -- today that included ${joinList(cleanList(words))}.`,
+        `${CHILD} is expanding the words ${CHILD} uses to ask for things. Today that included ${joinList(cleanList(words))}.`,
       ],
       [
         `${CHILD} used ${joinList(cleanList(words))} to request items today.`,
@@ -1481,7 +1481,7 @@ function domainSkillParentSentence(
       ctx,
       [
         `${CHILD} practised saying ${joinList(cleanList(practised))} today.`,
-        `${CHILD} worked on saying ${joinList(cleanList(practised))} today -- steady practice like this builds toward clearer speech over time.`,
+        `${CHILD} worked on saying ${joinList(cleanList(practised))} today. Steady practice like this builds toward clearer speech over time.`,
       ],
       [
         `${CHILD} practised saying ${joinList(cleanList(practised))} today.`,
@@ -1505,7 +1505,7 @@ function domainSkillParentSentence(
             ctx,
             [
               ` This was a great example of ${CHILD}'s developing ability to do this independently.`,
-              ` ${CHILD} handled this completely independently today -- a real step forward.`,
+              ` ${CHILD} handled this completely independently today, a real step forward.`,
             ],
             [
               ` ${CHILD} completed this independently today.`,
@@ -1520,7 +1520,7 @@ function domainSkillParentSentence(
               ctx,
               [
                 ` ${CHILD} needed some support with this today, which is a normal part of learning.`,
-                ` ${CHILD} needed a bit of help with this today -- that's a normal part of the process.`,
+                ` ${CHILD} needed a bit of help with this today, that's a normal part of the process.`,
               ],
               [
                 ` ${CHILD} needed support with this today.`,
@@ -1549,7 +1549,7 @@ function domainSkillParentSentence(
 }
 
 const PRACTICE_TIP_VARIANTS: ((name: string) => string)[] = [
-  (name) => `Try creating small, relaxed chances to practise ${name} together this week -- it's what stood out most this session.`,
+  (name) => `Try creating small, relaxed chances to practise ${name} together this week. It's what stood out most this session.`,
   (name) => `${CHILD} is making real headway on ${name}. A few minutes of low-pressure practice at home goes a long way here.`,
   (name) => `Keep the momentum going on ${name}. Everyday moments like mealtime or playtime are great chances to reinforce it.`,
 ];
@@ -1567,7 +1567,7 @@ const CONSISTENCY_TIP_VARIANTS: ((name: string) => string)[] = [
 const HOME_PRACTICE_LEAD: ((text: string) => string)[] = [
   (t) => `${cap(t)}.`,
   (t) => `From your therapist: ${cap(t)}.`,
-  (t) => `To carry over at home this week — ${cap(t)}.`,
+  (t) => `To carry over at home this week: ${cap(t)}.`,
 ];
 
 function buildNextSteps(input: GenerationInput): ReportSection {
@@ -1639,9 +1639,9 @@ function buildNextSteps(input: GenerationInput): ReportSection {
       add(
         pickVariant(
           [
-            `This session focused on ${joinList(touched)}. Keep creating chances to practise these same things at home -- little and often helps most.`,
+            `This session focused on ${joinList(touched)}. Keep creating chances to practise these same things at home. Little and often helps most.`,
             `The most useful thing at home this week is giving ${CHILD} relaxed, low-pressure chances to practise ${joinList(touched)}.`,
-            `Everyday moments -- meals, play, getting ready -- are good openings to practise ${joinList(touched)} together at home.`,
+            `Everyday moments (meals, play, getting ready) are good openings to practise ${joinList(touched)} together at home.`,
           ],
           seed
         )
@@ -1651,7 +1651,7 @@ function buildNextSteps(input: GenerationInput): ReportSection {
         pickVariant(
           [
             "Keep up the consistent routines you're already using at home. Small, steady practice makes the biggest difference.",
-            "No new home practice this week -- just keep the routines you already have going. Consistency is what helps most.",
+            "No new home practice this week: just keep the routines you already have going. Consistency is what helps most.",
           ],
           seed
         )
@@ -1711,9 +1711,9 @@ export function generateTherapistReport(input: GenerationInput): ReportBody {
   };
 }
 
-/** Substitutes the real child name at render time, keeping the stored body stable across name edits. Also normalises the phrase-pool " -- " to a real em dash so the finished report reads like prose, not source. */
+/** Substitutes the real child name at render time, keeping the stored body stable across name edits. Also normalises any legacy phrase-pool " -- " (still possible in admin-added report_phrase_variants rows) to a comma so the finished report reads like prose, not source -- house style is no em dashes anywhere in user-facing copy. */
 export function renderReportBody(body: ReportBody, childFirstName: string): ReportBody {
-  const replace = (text: string) => text.split(CHILD).join(childFirstName).replace(/ -- /g, " — ");
+  const replace = (text: string) => text.split(CHILD).join(childFirstName).replace(/\s+--\s+/g, ", ");
   return {
     ...body,
     sections: body.sections.map((section) => ({

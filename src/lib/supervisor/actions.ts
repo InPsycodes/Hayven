@@ -49,7 +49,7 @@ export async function assignChildToTherapist(
     .limit(1)
     .maybeSingle();
   if (!existingClient) {
-    return { ok: false, error: "This child doesn't have a confirmed booking yet -- ask an admin to set up the first assignment." };
+    return { ok: false, error: "This child doesn't have a confirmed booking yet. Ask an admin to set up the first assignment." };
   }
 
   const { error } = await supabase.from("therapist_child_assignments").insert({

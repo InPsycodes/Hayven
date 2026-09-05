@@ -31,7 +31,7 @@ export function ReportProblemButton({
 
   if (dispute && !sent) {
     if (dispute.status === "open") {
-      return <span className="text-xs text-muted-foreground">Reported — under review</span>;
+      return <span className="text-xs text-muted-foreground">Reported, under review</span>;
     }
     return (
       <span className="text-xs text-muted-foreground">

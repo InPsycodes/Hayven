@@ -61,7 +61,7 @@ export function SupportRequestRow({ request }: { request: RealSupportRequest }) 
             rows={2}
             value={reply}
             onChange={(e) => setReply(e.target.value)}
-            placeholder="Write a reply -- sent to the requester by email and in-app."
+            placeholder="Write a reply. Sent to the requester by email and in-app."
           />
           <div className="flex items-center gap-3">
             <Button size="sm" variant="accent" disabled={isPending} onClick={handleResolve} className="w-fit">

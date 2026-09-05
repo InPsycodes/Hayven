@@ -27,9 +27,9 @@ interface LearnPageProps {
   searchParams: Promise<{ category?: string; audience?: string; path?: string }>;
 }
 
-const LEARN_TITLE = "Learning Center — Child Therapy Guides for Nigerian Families";
+const LEARN_TITLE = "Learning Center: Child Therapy Guides for Nigerian Families";
 const LEARN_DESCRIPTION =
-  "Practical, plain-language guides on speech, occupational, and ABA therapy for children -- what to expect, how to prepare, and how to support progress at home.";
+  "Practical, plain-language guides on speech, occupational, and ABA therapy for children: what to expect, how to prepare, and how to support progress at home.";
 
 export async function generateMetadata({ searchParams }: LearnPageProps): Promise<Metadata> {
   const { category, audience, path } = await searchParams;
@@ -96,7 +96,7 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-soft">
           {audience === "therapist"
             ? "Practical guidance on assessment, documentation, and working with families on Hayven."
-            : "Plain-language guides written with therapists. Start with what you’re noticing — not a diagnosis."}
+            : "Plain-language guides written with therapists. Start with what you’re noticing, not a diagnosis."}
         </p>
 
         <div className="mt-6 max-w-xs">
