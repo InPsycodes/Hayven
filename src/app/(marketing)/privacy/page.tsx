@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 
+import { canonicalFor } from "@/lib/seo/metadata";
+
 export const metadata: Metadata = {
   title: "Privacy Policy | Hayven",
   description: "How Hayven collects, uses, and protects your family's information.",
+  alternates: canonicalFor("/privacy"),
 };
 
 const EFFECTIVE_DATE = "13 August 2026";
@@ -78,8 +81,15 @@ export default function PrivacyPolicyPage() {
           </p>
           <p>
             <strong className="text-charcoal">Technical information.</strong> Basic device and access logs kept
-            by our hosting providers for security purposes (for example, sign-in timestamps). We do not run
-            third-party advertising trackers or sell any data to data brokers.
+            by our hosting providers for security purposes (for example, sign-in timestamps).
+          </p>
+          <p>
+            <strong className="text-charcoal">Product and site analytics.</strong> Which pages are visited, how
+            long a page takes to load, and coarse actions like &ldquo;search performed&rdquo; or &ldquo;booking
+            started&rdquo; &mdash; used to understand how the Service is used and to fix what&apos;s slow or
+            broken. These events never include a child&apos;s name, date of birth, presenting concern, session
+            notes, or report content &mdash; see Section 5. We do not run third-party advertising trackers, ad
+            pixels, or sell any data to data brokers.
           </p>
         </Section>
 
@@ -129,13 +139,20 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong className="text-charcoal">Supabase</strong> (database, authentication, and file storage) and{" "}
-              <strong className="text-charcoal">Netlify</strong> (application hosting) &mdash; our infrastructure
+              <strong className="text-charcoal">Vercel</strong> (application hosting) &mdash; our infrastructure
               providers, bound by their own security and confidentiality obligations.
             </li>
             <li>
               <strong className="text-charcoal">Paystack</strong> &mdash; to process payments. Paystack receives
               what&apos;s needed to complete your transaction directly; Hayven never sees or stores your full card
               number.
+            </li>
+            <li>
+              <strong className="text-charcoal">PostHog</strong> (product analytics, EU-hosted) and{" "}
+              <strong className="text-charcoal">Google Analytics</strong> (site-traffic analytics) &mdash; both
+              receive only your role, the page or action, and coarse timing/counts. Neither ever receives your
+              name, email, a child&apos;s details, session notes, or report content; we do not enable Google
+              Signals or ad personalisation on our Google Analytics property.
             </li>
             <li>
               <strong className="text-charcoal">Legal or safety exceptions.</strong> If required by law, or where
@@ -203,9 +220,10 @@ export default function PrivacyPolicyPage() {
 
         <Section heading="9. Cookies and local storage">
           <p>
-            Hayven uses only the cookies and on-device storage needed to keep you signed in and let the app work
-            offline as an installed PWA. We don&apos;t use third-party advertising or cross-site tracking
-            cookies.
+            Hayven uses the cookies and on-device storage needed to keep you signed in and let the app work
+            offline as an installed PWA, plus first-party analytics cookies set by PostHog and Google Analytics
+            (Section 5) to tell returning visits apart. We don&apos;t use third-party advertising or cross-site
+            tracking cookies.
           </p>
         </Section>
 

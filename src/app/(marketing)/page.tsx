@@ -15,6 +15,7 @@ import { TrustSafety } from "@/components/marketing/trust-safety";
 import { Faq } from "@/components/marketing/faq";
 import { FinalCta } from "@/components/marketing/final-cta";
 import { Reveal } from "@/components/marketing/reveal";
+import { canonicalFor } from "@/lib/seo/metadata";
 
 const TITLE = "Hayven: A calmer path to the right care for your child";
 const DESCRIPTION =
@@ -23,6 +24,7 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
+  alternates: canonicalFor("/"),
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,

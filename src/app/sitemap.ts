@@ -24,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${SITE_URL}/learn/${article.slug}`,
     changeFrequency: "monthly",
     priority: 0.6,
+    ...(article.publishedAt ? { lastModified: new Date(article.publishedAt) } : {}),
   }));
 
   // Public, admin-verified therapist profiles -- each one is an individually

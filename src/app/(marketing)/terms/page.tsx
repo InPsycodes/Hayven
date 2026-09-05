@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 
+import { canonicalFor } from "@/lib/seo/metadata";
+
 export const metadata: Metadata = {
   title: "Terms of Service | Hayven",
   description: "The terms that govern your use of Hayven.",
+  alternates: canonicalFor("/terms"),
 };
 
 const EFFECTIVE_DATE = "13 August 2026";

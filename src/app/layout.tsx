@@ -1,9 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, Geist_Mono } from "next/font/google";
 import { SerwistProvider } from "@serwist/turbopack/react";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
 import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
 import "./globals.css";
+
+// Google Analytics is separate from the PostHog product-analytics wrapper in
+// src/lib/analytics -- PostHog covers in-app funnels, GA4 exists specifically
+// because Search Console, Google Ads, and most SEO tooling expect it. Same
+// no-PII posture: no user id, no custom dimensions carrying child/session
+// data, GA4's own automatic pageview + Enhanced Measurement events only.
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 const fraunces = Fraunces({
   variable: "--font-serif",
@@ -21,14 +29,44 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const DEFAULT_TITLE = "Hayven: Verified child therapists you can trust";
+const DEFAULT_DESCRIPTION =
+  "Hayven connects parents with credential-verified child therapists: booking, payments, and progress tracking in one place.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "Hayven: Verified child therapists you can trust",
+    default: DEFAULT_TITLE,
     template: "%s · Hayven",
   },
-  description:
-    "Hayven connects parents with credential-verified child therapists: booking, payments, and progress tracking in one place.",
+  description: DEFAULT_DESCRIPTION,
+  // Per-page metadata (search, therapist profiles, learn articles, about)
+  // overrides this with its own title/description/canonical -- this is only
+  // the fallback for pages that don't set their own (and the source Open
+  // Graph consumers see if a page's own openGraph block omits a field).
+  alternates: { canonical: "/" },
+  openGraph: {
+    siteName: "Hayven",
+    type: "website",
+    locale: "en_NG",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [{ url: "/images/hero-family.jpg" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@hayvenmind",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: ["/images/hero-family.jpg"],
+  },
+  // Populated once a Google Search Console property exists -- paste the
+  // "content" value from the HTML-tag verification method into
+  // GOOGLE_SITE_VERIFICATION (no code change needed after that). Omitted
+  // entirely when unset, rather than emitting an empty meta tag.
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -75,6 +113,7 @@ export default function RootLayout({
           <PwaInstallPrompt />
           <AnalyticsProvider />
         </SerwistProvider>
+        {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
       </body>
     </html>
   );

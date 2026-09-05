@@ -25,6 +25,16 @@ const sentryHost = (() => {
   }
 })();
 
+// Google Analytics (gtag.js) is the only script this app loads straight from
+// a third party rather than through a same-origin proxy (unlike PostHog's
+// /ingest rewrite) -- @next/third-parties has no proxy option, and GA's
+// collect endpoint is regionalised, so a fixed host allowlist would drift.
+// Gated on the same env var that renders <GoogleAnalytics> in layout.tsx, so
+// a deploy without it configured keeps the tighter CSP.
+const gaHosts = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+  ? { script: "https://www.googletagmanager.com", connect: "https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com" }
+  : { script: "", connect: "" };
+
 // Next.js's App Router streams RSC payloads via inline `<script>` tags with
 // no nonce/hash by default, so script-src can't drop 'unsafe-inline'
 // without a nonce-plumbing change (a bigger, separate hardening step) --
@@ -34,11 +44,11 @@ const sentryHost = (() => {
 // websocket and eval-based source maps would otherwise break `next dev`.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${gaHosts.script ? ` ${gaHosts.script}` : ""}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob:${supabaseHost ? ` https://${supabaseHost}` : ""}`,
   "font-src 'self' data:",
-  `connect-src 'self'${supabaseHost ? ` https://${supabaseHost} wss://${supabaseHost}` : ""}${sentryHost ? ` https://${sentryHost}` : ""}`,
+  `connect-src 'self'${supabaseHost ? ` https://${supabaseHost} wss://${supabaseHost}` : ""}${sentryHost ? ` https://${sentryHost}` : ""}${gaHosts.connect ? ` ${gaHosts.connect}` : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

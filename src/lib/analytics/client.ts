@@ -1,6 +1,7 @@
 "use client";
 
 import posthog from "posthog-js";
+import { sendGAEvent } from "@next/third-parties/google";
 
 import { sanitizeProps, type AnalyticsEvent } from "./events";
 
@@ -9,6 +10,12 @@ import { sanitizeProps, type AnalyticsEvent } from "./events";
 // exists -- every function here is a no-op, so nothing has to be conditionally
 // rendered at the call sites.
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+
+// GA4 gets the same funnel events as PostHog, through the same
+// sanitizeProps allowlist -- one call site enforces the no-PII rule for both
+// destinations instead of trusting every call site twice over. Silently a
+// no-op when GA isn't configured (see layout.tsx / next.config.ts).
+const GA_ENABLED = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
 
 let initialised = false;
 
@@ -54,15 +61,42 @@ export function initAnalytics(): void {
 }
 
 export function trackEvent(event: AnalyticsEvent, props?: Record<string, unknown>): void {
-  if (!ready()) return;
-  initAnalytics();
-  posthog.capture(event, sanitizeProps(props));
+  const clean = sanitizeProps(props);
+  if (ready()) {
+    initAnalytics();
+    posthog.capture(event, clean);
+  }
+  if (GA_ENABLED) {
+    try {
+      sendGAEvent("event", event, clean);
+    } catch {
+      // GoogleAnalytics not mounted yet (e.g. called before hydration) -- a
+      // dropped marketing event is never worth surfacing an error over.
+    }
+  }
 }
 
 export function capturePageview(): void {
-  if (!ready()) return;
-  initAnalytics();
-  posthog.capture("$pageview");
+  if (ready()) {
+    initAnalytics();
+    posthog.capture("$pageview");
+  }
+  if (GA_ENABLED) {
+    // @next/third-parties's <GoogleAnalytics> only fires gtag's own
+    // automatic page_view once, on first script load -- it doesn't listen
+    // for client-side (App Router) navigations, so every route change after
+    // the first needs an explicit page_view or GA under-counts pageviews
+    // for the exact acquisition/Search Console reports this integration
+    // exists for.
+    try {
+      sendGAEvent("event", "page_view", {
+        page_location: window.location.href,
+        page_path: window.location.pathname,
+      });
+    } catch {
+      // not mounted yet -- see the note in trackEvent.
+    }
+  }
 }
 
 /** Tie the anonymous browser session to a user. Only role travels as a

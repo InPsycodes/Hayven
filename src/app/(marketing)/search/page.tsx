@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SearchFilters } from "@/components/search/search-filters";
@@ -6,6 +7,9 @@ import { SearchAnalytics } from "@/components/analytics/search-analytics";
 import { TherapistResultRow } from "@/components/shared/therapist-result-row";
 import { getRealSpecialties } from "@/lib/therapist/queries";
 import { searchDiscoveryTherapists, type DiscoveryTherapist } from "@/lib/therapist/discovery";
+import { canonicalFor, NOINDEX_FOLLOW } from "@/lib/seo/metadata";
+import { getBreadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
+import { safeJsonLdStringify } from "@/lib/seo/json-ld";
 
 interface SearchPageProps {
   searchParams: Promise<{
@@ -17,6 +21,37 @@ interface SearchPageProps {
     available?: string;
     sort?: string;
   }>;
+}
+
+const DEFAULT_TITLE = "Find a Verified Child Therapist in Nigeria";
+const DEFAULT_DESCRIPTION =
+  "Browse admin-verified speech, occupational, and ABA therapists for children across Nigeria. Filter by specialty, location, session type, and availability.";
+
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+  const params = await searchParams;
+
+  // A filtered view is real, useful content -- link equity should still
+  // flow to it (follow) -- but every specialty x location x price
+  // combination indexed as its own page would register as near-duplicate
+  // content and dilute ranking rather than help it. Only the bare,
+  // unfiltered page is indexed; canonical always points there regardless.
+  const hasFilters = Boolean(
+    params.query || params.specialty || params.location || params.priceMax || params.sessionType || params.available
+  );
+
+  const title = params.specialty
+    ? `${params.specialty}${params.location ? ` in ${params.location}` : ""} Therapists`
+    : params.location
+      ? `Child Therapists in ${params.location}`
+      : DEFAULT_TITLE;
+
+  return {
+    title,
+    description: DEFAULT_DESCRIPTION,
+    alternates: canonicalFor("/search"),
+    robots: hasFilters ? NOINDEX_FOLLOW : undefined,
+    openGraph: { title, description: DEFAULT_DESCRIPTION },
+  };
 }
 
 const AVAILABLE_DAYS: Record<string, number> = { "2w": 14, "30d": 30 };
@@ -86,6 +121,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: safeJsonLdStringify(
+          getBreadcrumbSchema([
+            { name: "Home", path: "/" },
+            { name: "Find a Therapist", path: "/search" },
+          ])
+        ),
+      }}
+    />
     <SearchAnalytics
       count={therapists.length}
       sort={params.sort}

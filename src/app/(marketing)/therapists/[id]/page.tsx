@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { IconCircleCheck } from "@tabler/icons-react";
 
@@ -13,7 +14,41 @@ import { getTherapistReviews, getMyReviewState } from "@/lib/reviews/queries";
 import { ReviewSection } from "@/components/reviews/review-section";
 import { getOrganizationSchema } from "@/lib/seo/organization-schema";
 import { safeJsonLdStringify } from "@/lib/seo/json-ld";
+import { canonicalFor } from "@/lib/seo/metadata";
+import { getBreadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 import type { AvailabilitySlot } from "@/data/types";
+
+interface TherapistPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: TherapistPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const therapist = await getDiscoveryTherapistById(id);
+  if (!therapist) return {};
+
+  const specialty = therapist.specialtyNames[0];
+  const title = `${therapist.displayName}${specialty ? ` — ${specialty}` : ""}${
+    therapist.location ? ` in ${therapist.location}` : ""
+  }`;
+  const description = therapist.bio?.trim()
+    ? therapist.bio.trim().slice(0, 155)
+    : `${therapist.displayName} is an admin-verified ${
+        specialty ?? "paediatric"
+      } therapist on Hayven${therapist.location ? `, based in ${therapist.location}` : ""}.`;
+
+  return {
+    title,
+    description,
+    alternates: canonicalFor(`/therapists/${id}`),
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      ...(therapist.photoUrl ? { images: [{ url: therapist.photoUrl }] } : {}),
+    },
+  };
+}
 
 /**
  * Person, not Physician/MedicalBusiness -- specialties here (speech,
@@ -38,11 +73,7 @@ function getTherapistPersonSchema(therapist: DiscoveryTherapist) {
   };
 }
 
-export default async function TherapistProfilePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function TherapistProfilePage({ params }: TherapistPageProps) {
   const { id } = await params;
   const therapist = await getDiscoveryTherapistById(id);
   if (!therapist) notFound();
@@ -83,6 +114,18 @@ export default async function TherapistProfilePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(getTherapistPersonSchema(therapist)) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: safeJsonLdStringify(
+            getBreadcrumbSchema([
+              { name: "Home", path: "/" },
+              { name: "Find a Therapist", path: "/search" },
+              { name: therapist.displayName, path: `/therapists/${therapist.id}` },
+            ])
+          ),
+        }}
       />
       <div className="mx-auto grid max-w-5xl gap-8 px-6 py-10 md:grid-cols-[3fr_2fr] md:px-10 md:py-14">
         <div className="flex flex-col gap-6">

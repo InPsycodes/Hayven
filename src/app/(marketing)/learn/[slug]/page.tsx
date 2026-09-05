@@ -14,6 +14,8 @@ import {
 } from "@/lib/learning/queries";
 import { getArticleSchema } from "@/lib/seo/article-schema";
 import { safeJsonLdStringify } from "@/lib/seo/json-ld";
+import { canonicalFor } from "@/lib/seo/metadata";
+import { getBreadcrumbSchema } from "@/lib/seo/breadcrumb-schema";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -27,6 +29,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   return {
     title: article.title,
     description: article.excerpt,
+    alternates: canonicalFor(`/learn/${slug}`),
     openGraph: {
       title: article.title,
       description: article.excerpt,
@@ -56,6 +59,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(getArticleSchema(article)) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: safeJsonLdStringify(
+            getBreadcrumbSchema([
+              { name: "Home", path: "/" },
+              { name: "Learning Center", path: "/learn" },
+              { name: article.title, path: `/learn/${article.slug}` },
+            ])
+          ),
+        }}
       />
 
       {/* Hero */}

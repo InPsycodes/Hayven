@@ -1,7 +1,10 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { IconArrowRight, IconSparkles, IconX } from "@tabler/icons-react";
+
+import { canonicalFor, NOINDEX_FOLLOW } from "@/lib/seo/metadata";
 
 import { AudienceToggle } from "@/components/learn/audience-toggle";
 import { TopicGrid } from "@/components/learn/topic-grid";
@@ -22,6 +25,22 @@ import {
 
 interface LearnPageProps {
   searchParams: Promise<{ category?: string; audience?: string; path?: string }>;
+}
+
+const LEARN_TITLE = "Learning Center — Child Therapy Guides for Nigerian Families";
+const LEARN_DESCRIPTION =
+  "Practical, plain-language guides on speech, occupational, and ABA therapy for children -- what to expect, how to prepare, and how to support progress at home.";
+
+export async function generateMetadata({ searchParams }: LearnPageProps): Promise<Metadata> {
+  const { category, audience, path } = await searchParams;
+  const filtered = Boolean(category || audience || path);
+  return {
+    title: LEARN_TITLE,
+    description: LEARN_DESCRIPTION,
+    alternates: canonicalFor("/learn"),
+    robots: filtered ? NOINDEX_FOLLOW : undefined,
+    openGraph: { title: LEARN_TITLE, description: LEARN_DESCRIPTION },
+  };
 }
 
 export default async function LearnPage({ searchParams }: LearnPageProps) {

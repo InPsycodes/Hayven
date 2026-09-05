@@ -6,12 +6,14 @@ import { FinalCta } from "@/components/marketing/final-cta";
 import { TrustStrip } from "@/components/marketing/trust-strip";
 import { Reveal } from "@/components/marketing/reveal";
 import { Icon } from "@/components/ui/icon";
+import { canonicalFor } from "@/lib/seo/metadata";
 
 import founderImage from "../../../../public/images/about-founder.jpg";
 
 export const metadata: Metadata = {
   title: "About Hayven",
   description: "Why Hayven exists, in our founder's own words.",
+  alternates: canonicalFor("/about"),
 };
 
 // The founder's letter, verbatim -- grouped into movements so the page can

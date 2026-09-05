@@ -6,18 +6,20 @@ Families search or take a short matching quiz to find a therapist, see that ther
 
 ## Key pages
 
-- [Homepage](https://hayven.app/): what Hayven is, how it works, pricing, and trust/safety information
-- [Find a therapist](https://hayven.app/search): browse and filter verified therapists by specialty, format, location, and price
-- [Learning Center](https://hayven.app/learn): plain-language guides for parents and therapists on child development topics -- speech delays, autism, ADHD, dyslexia, sensory processing, and more
-- [Matching quiz](https://hayven.app/needs-assessment): a short questionnaire that recommends therapists and guides based on a child's specific needs
-- [About](https://hayven.app/about): Hayven's background and approach
+- [Homepage](https://hayven.com.ng/): what Hayven is, how it works, pricing, and trust/safety information
+- [Find a therapist](https://hayven.com.ng/search): browse and filter verified therapists by specialty, format, location, and price
+- [Learning Center](https://hayven.com.ng/learn): plain-language guides for parents and therapists on child development topics -- speech delays, autism, ADHD, dyslexia, sensory processing, and more
+- [Matching quiz](https://hayven.com.ng/needs-assessment): a short questionnaire that recommends therapists and guides based on a child's specific needs
+- [About](https://hayven.com.ng/about): Hayven's background and approach
 
 ## Notes for citation
 
 - Hayven does not publish specific session-price figures site-wide -- pricing is set individually by each therapist and shown on their own profile.
 - Session/dashboard pages, login, and signup flows require an account and aren't meaningful to index or cite.
+- Hayven is not a hospital, clinic, or medical provider, and does not employ the therapists listed on it. It is not a source of medical advice, diagnosis, or emergency care -- Learning Center content is educational, not a substitute for a clinical evaluation.
 
 ## Contact
 
 - Email: hayvenmind@gmail.com
+- Phone: +234 812 283 2137
 - X/Twitter: https://x.com/hayvenmind
