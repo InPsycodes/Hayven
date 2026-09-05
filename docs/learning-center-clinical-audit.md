@@ -177,4 +177,122 @@ Findings are graded:
 | **First weeks** | Add the SPD / broader-screen note to `sensory-overload-what-it-looks-like`. |
 | **First weeks** | Clinical reviewer verifies the Module 1.4 red-flag age cutoffs against a primary paediatric source. |
 | **Backlog** | Light localisation pass for Nigerian service context. Name "structured literacy" in the dyslexia article. Hedge the "word gap" reference. |
-| **Next audit pass** | Modules 2–5 + the four practical-strategy articles. |
+
+---
+
+# Pass 2 — Modules 2–5 + practical-strategy articles
+
+**Date:** 2026-09-06
+**Sources this pass:** Iwata et al. (1982/1994) functional-analysis
+methodology and Cooper, Heron & Heward *Applied Behavior Analysis* (the
+field textbook); ASHA/AAP; StatPearls (SOAP notes); three-level
+meta-analyses on the alliance–outcome association in child and adolescent
+psychotherapy (Springer, *Research on Child and Adolescent Psychopathology*
+2022; *Clinical Child and Family Psychology Review* 2017).
+
+## Headline
+
+**Modules 2–5 are professionally sound and the practical-strategy articles
+are all safe, evidence-aligned advice.** Module 2 (ABA / behavioural
+assessment) and Module 3 (assessment methods, SOAP, cognitive biases) hold
+up against primary sources. The one claim that overstates its evidence is
+in **Module 4.7** (therapeutic alliance). No article gives unsafe or
+incorrect guidance.
+
+The recurring issue is **citation quality**, not accuracy: several modules
+cite ABA-provider blogs or commercial CPD sites where the field textbook or
+a peer-reviewed source exists and says the same thing.
+
+## Module 2 — Behavioural Assessment
+
+| Claim | Verdict |
+| --- | --- |
+| ABC model (Antecedent–Behaviour–Consequence), attributed to the IRIS Center at Vanderbilt. | **OK.** IRIS is a legitimate, widely used special-education training resource; the description is standard. |
+| The four functions of behaviour: escape/avoidance, attention, access to tangibles, sensory/automatic. | **OK.** Matches the standard ABA framework, which traces to Iwata et al.'s functional-analysis research (attention / escape / tangible / alone conditions). **Refine citation:** the article cites CrossRiver Therapy / Leafwing / Action Behavior Centers (provider blogs); upgrade to Cooper, Heron & Heward *Applied Behavior Analysis* or Iwata et al. (1982/1994). |
+| Operant conditioning quadrant: "reinforcement (positive or negative) always increases the future likelihood of a behaviour, and punishment (positive or negative) always decreases it. 'Negative' = removed, 'positive' = added." | **OK.** Definitionally correct in behaviour analysis. The seatbelt-alarm example for negative reinforcement is the classic textbook example. The article also correctly notes elsewhere that whether a consequence *functions* as reinforcement is only known from its effect. |
+| "many challenging behaviours persist… because [caregivers] are unknowingly reinforcing the very behaviour they want to reduce, usually through escape or attention." | **OK.** A core, well-supported ABA insight (the "coercion trap" / inadvertent negative reinforcement). |
+| FBA combines indirect assessment (interviews/rating scales), descriptive assessment (direct ABC observation), and functional analysis (experimental manipulation); functional analysis is "typically conducted by a BCBA." | **OK.** Matches the standard FBA methodology (IRIS Center; Cooper/Heron/Heward). Functional analysis being reserved for BCBA-level practitioners is accurate. |
+| "Multiple sources of information… should agree, or 'triangulate,' before you feel confident." | **OK.** Sound methodology. |
+| Operational definitions: "so precise that two independent observers watching the same moment would agree." | **OK.** This is the inter-observer-agreement principle, correctly stated. |
+
+**Module 2 verdict:** accurate. Only action is upgrading the four-functions
+citation.
+
+## Module 3 — Conducting Effective Child Assessments
+
+| Claim | Verdict |
+| --- | --- |
+| Developmental history components (prenatal/birth, early medical, milestone attainment incl. regression, family history, psychosocial, current supports), attributed to AMBOSS. | **OK.** Standard paediatric history structure. AMBOSS is a reputable medical-education reference. |
+| "a symptom is the patient's/family's subjective description of a problem, while a sign is an objective, observable finding" (attributed to StatPearls "SOAP Notes"). | **OK.** Standard medical terminology, correctly applied. |
+| SOAP (Subjective / Objective / Assessment / Plan) and BIRP (Behaviour / Intervention / Response / Plan) as note structures. | **OK.** Both are real, widely used documentation frameworks. |
+| Play taxonomy: sensory/exploratory → functional → constructive → symbolic/pretend; "symbolic pretend play typically emerges in the second year of life and becomes richer through the preschool years." | **OK.** Consistent with developmental-play research (pretend play emerges ~18–24 months). Different frameworks name the categories slightly differently, but the progression and the age anchor are sound. |
+| Assessment biases: confirmation bias, halo effect, anchoring, cultural bias, single-source overreliance. | **OK.** All are well-documented cognitive biases; the cultural-bias point correctly links back to over- and under-identification in children from backgrounds different from the clinician's. Sources cited (JAAPL, ScienceDirect) are legitimate. |
+| "always check that [a tool] is standardized and validated for the child's age and… language and cultural background; a tool normed on one population can produce misleading results." | **OK.** Core psychometric principle; especially important for a Nigerian population where most standardised tools are normed on Western samples — this point is well made and locally relevant. |
+| "some instruments require formal training… using them without that training… in some cases violates professional and ethical guidelines." | **OK.** Accurate (test-user qualification levels, e.g. Pearson's A/B/C system). |
+| Communicating findings: schedule dedicated time, explain purpose first, lead with strengths, plain language, check understanding actively, follow up in writing. | **OK.** Matches best-practice guidance (cited: Kaplan Early Learning, ECTA Center — the ECTA Center is a credible federally-funded technical-assistance centre). |
+
+**Module 3 verdict:** accurate and, in the tool-selection section,
+genuinely well-targeted to the Nigerian context.
+
+## Module 4 — Working with Parents & Caregivers
+
+| Claim | Verdict |
+| --- | --- |
+| "Therapy outcomes for children are strongly influenced by the quality of the relationship and communication between the therapist and the caregiver." | **OK.** Well supported for family-involved and parent-mediated intervention. |
+| **4.7:** "The therapeutic relationship… is one of the most consistently supported predictors of positive outcomes across many forms of therapy, and this holds true in pediatric therapy as much as anywhere else." | **Refine — overstates the paediatric evidence.** In *adult* psychotherapy the alliance–outcome link is a robust moderate effect (one of the field's most replicated findings). In *child and adolescent* therapy, recent three-level meta-analyses put the child–therapist alliance–outcome association at **small** (r ≈ 0.14–0.19), and the parent–therapist alliance at **r ≈ 0.13**. Suggested rewrite: "The alliance predicts outcomes in child therapy too, though the research effect is smaller and less consistent than in adult therapy — and for younger children, the alliance with the caregiver is what matters most." The article's instinct to extend the relationship "to the whole family system" is correct and consistent with that caregiver-alliance data. |
+| Parent coaching / high caregiver participation "showed significantly greater developmental progress than children whose caregivers had lower involvement" (attributed to Medbridge). | **OK (evidence-aligned), refine citation.** Parent-mediated intervention improving child outcomes is well supported across autism early intervention, PCIT, and the Hanen approach. Medbridge is a commercial CPD vendor; a peer-reviewed parent-mediated-intervention review would be a stronger cite. |
+| "distinguish between process goals… and outcome goals… you can commit fully to the process while outcomes… cannot be guaranteed on a fixed timeline." | **OK.** Sound, ethical expectation-setting. |
+| SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound), attributed to Mentalyc. | **OK.** Standard; Mentalyc is a commercial notes tool but the framework is universal and correctly described. |
+| Handling disagreement: understand the underlying concern first, reflect it back, look for partial agreement, know when to hold a boundary (safety/legal) vs flex (specific home strategy). | **OK.** Sound, and the boundary examples (mandatory safety concern = non-negotiable) are appropriate. |
+
+**Module 4 verdict:** sound practice guidance. Fix the 4.7 alliance
+overstatement; optionally upgrade the parent-coaching citation.
+
+## Module 5 — Clinical Documentation
+
+| Claim | Verdict |
+| --- | --- |
+| Five qualities of a good note: specific, objective, complete, consistent, timely. | **OK.** Standard documentation guidance. |
+| Objective vs subjective language; "'Client was anxious' is not objective — anxiety is an internal state you cannot directly observe"; the interpretation belongs in Assessment. | **OK.** Correctly stated and genuinely useful for new writers. |
+| Behavioural observation notes structured around ABC, quantified, observation separated from interpretation; the weak-vs-strong worked example. | **OK.** Consistent with Module 2 and with good documentation practice. |
+| "It is also worth documenting negative findings" (an expected behaviour that did *not* occur). | **OK.** Correct — absence of an expected problem is meaningful progress data. |
+| Interpreting single-case graphs: slope/direction, level, variability, change points. | **OK.** This is standard single-case-design visual-analysis methodology (What Works Clearinghouse single-case standards; Kazdin). **Refine citation:** the article cites "PowerBack Pediatrics" (commercial); WWC or Kazdin's *Single-Case Research Designs* is the primary source. |
+| "converting raw counts into percentages or rates often makes data more interpretable and comparable across sessions of different lengths." | **OK.** Correct — rate/percentage controls for opportunity, a basic measurement principle. |
+| Common documentation mistakes: vagueness, incompleteness, inconsistency, interpretation-as-fact, copy-paste redundancy, vague plans, delayed documentation. | **OK.** All are real, recognised documentation failure modes. The copy-paste warning ("creates a false record… can raise concerns during any external review") is accurate. |
+
+**Module 5 verdict:** accurate. Only action is upgrading the graph-analysis
+citation.
+
+## Practical-strategy articles (parent-facing)
+
+| Article | Verdict |
+| --- | --- |
+| `after-autism-screening-next-steps` | **OK.** Screening ≠ diagnosis; full evaluation by a developmental paediatrician / psychologist / multidisciplinary team; three-outcome framing. The key claim — **"speech and occupational therapy don't require an autism diagnosis to begin"** — is accurate and important. Minor: "sub-threshold" is informal; "features present but full criteria not met" is clearer. |
+| `adhd-strategies-that-work-at-home` | **OK.** Every strategy is evidence-aligned: externalising working-memory load (visual schedules, visible timers), single-step instructions, movement breaks, *immediate* specific praise (ADHD's reduced sensitivity to delayed consequences is well documented), consistency over perfection. Correct disclaimer that this doesn't replace professional support or medication where prescribed. |
+| `supporting-dyslexic-child-nigerian-school` | **OK.** Accurately notes Nigeria has no mandated accommodation system; the accommodations listed (extra time, oral testing, not reading cold aloud, text in advance) are standard; correctly points to structured, systematic phonics for dyslexic readers (i.e. structured literacy) as distinct from general tutoring. Well localised. |
+| `sensory-friendly-routine-at-home` | **OK**, with the **same SPD note as pass 1**: "occupational therapist who specializes in sensory processing" and "sensory profile" are fine (the Sensory Profile 2 / SPM are real OT instruments), but the article should carry the same one-line caveat that a frequent sensory-overload pattern also warrants a broader developmental check, since sensory reactivity spans autism, ADHD, and anxiety. "Sensory sensitivities are usually real physiological responses, not preferences to be trained away" is a good, accurate framing. |
+
+## Updated recommended actions (both passes)
+
+| Priority | Action |
+| --- | --- |
+| **Before pilot** | Confirm the `reviewedBy` / "Clinically reviewed" labels reflect a real review; if not, remove them. |
+| **Before pilot** | Clinician reviews the two threshold claims from pass 1 (age-3 speech intelligibility; age-12 pointing). |
+| **Before pilot** | Fix the **Module 4.7 alliance overstatement** — one sentence (see above). It's the only claim in the whole curriculum that overstates its evidence. |
+| **First weeks** | Add the SPD / broader-screen note to **both** sensory articles (`sensory-overload-what-it-looks-like`, `sensory-friendly-routine-at-home`). |
+| **First weeks** | Clinician verifies the Module 1.4 red-flag age cutoffs against a primary paediatric source. |
+| **Backlog** | Upgrade citations from provider/commercial blogs to primary sources where one exists and says the same thing: four functions of behaviour (Module 2.4 → Cooper/Heron/Heward or Iwata), single-case graph analysis (Module 5.6 → WWC or Kazdin), parent coaching (Module 4.8 → a parent-mediated-intervention review). No wording change needed, just the reference line. |
+| **Backlog** | Light localisation pass for Nigerian service context (referrals, IEP/504, insurance). Name "structured literacy" explicitly in the dyslexia articles. Hedge the "word gap" reference (Module 1.5). |
+
+## Overall conclusion
+
+Across both passes — ~60 articles, five modules, nine parent-facing clinical
+guides — **the Learning Center is clinically sound.** One claim overstates
+its evidence (Module 4.7), a few phrasings are looser than current source
+framing, the sensory articles need one shared caveat, and a batch of
+citations should be upgraded from blogs to primary sources without any
+wording change. Nothing in it is unsafe or wrong.
+
+This still needs a licensed clinician's sign-off before the labels can say
+"clinically reviewed" — but the reviewer is confirming and polishing solid
+work, not repairing it.
