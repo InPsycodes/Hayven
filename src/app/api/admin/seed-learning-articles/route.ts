@@ -1,50 +1,24 @@
 import { NextResponse } from "next/server";
-import type { StaticImageData } from "next/image";
 
 import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ARTICLES, FEATURED_ARTICLE, FEATURED_THERAPIST_ARTICLE, PARENT_CATEGORIES, THERAPIST_CATEGORIES } from "@/data/articles";
 
-import sessionNotesImage from "../../../../../public/images/learn-therapist-session-notes.jpg";
-import verificationImage from "../../../../../public/images/learn-therapist-verification.jpg";
-import profileNoticedImage from "../../../../../public/images/learn-therapist-profile-noticed.jpg";
-import messagingBoundariesImage from "../../../../../public/images/learn-therapist-messaging-boundaries.jpg";
-import settingAvailabilityImage from "../../../../../public/images/learn-therapist-setting-availability.jpg";
-import bookingConfirmedImage from "../../../../../public/images/learn-therapist-booking-confirmed.jpg";
-import supervisorImage from "../../../../../public/images/learn-therapist-supervisor.jpg";
-import cancellationsImage from "../../../../../public/images/learn-therapist-cancellations.jpg";
-import endingCareImage from "../../../../../public/images/learn-therapist-ending-care.jpg";
-
-// article.imageSrc is a Next.js static import -- its .src is a build-hashed
-// path (/_next/static/media/...hash....jpg) that changes on every deploy,
-// not something safe to store. The same import of the same file resolves to
-// the same cached module object, so this maps each StaticImageData back to
-// its real, stable public/ path by reference rather than by the hash.
-const STABLE_IMAGE_PATH = new Map<StaticImageData, string>([
-  [sessionNotesImage, "/images/learn-therapist-session-notes.jpg"],
-  [verificationImage, "/images/learn-therapist-verification.jpg"],
-  [profileNoticedImage, "/images/learn-therapist-profile-noticed.jpg"],
-  [messagingBoundariesImage, "/images/learn-therapist-messaging-boundaries.jpg"],
-  [settingAvailabilityImage, "/images/learn-therapist-setting-availability.jpg"],
-  [bookingConfirmedImage, "/images/learn-therapist-booking-confirmed.jpg"],
-  [supervisorImage, "/images/learn-therapist-supervisor.jpg"],
-  [cancellationsImage, "/images/learn-therapist-cancellations.jpg"],
-  [endingCareImage, "/images/learn-therapist-ending-care.jpg"],
-]);
-
 /**
- * One-time migration: moves the ~60 hardcoded articles in
- * src/data/articles.ts into the learning_articles/learning_categories
- * tables added by migration 0057. Runs as a real Next.js route (not a
- * standalone script) specifically so the existing `imageSrc` static
- * imports resolve the normal way -- outside Next's module pipeline those
- * imports don't work at all.
+ * Syncs src/data/articles.ts into the learning_articles/learning_categories
+ * tables (added by migration 0057). Originally a one-time migration off the
+ * static fixture file; kept because it's the only way to push a fixture edit
+ * (content fix, new article, thumbnail change) to the live DB from this env.
  *
  * Idempotent: upserts articles by slug and categories by (name, audience),
- * so it's safe to call more than once (e.g. if a new article is added to
- * the fixture file later and this needs a re-run). Delete this route once
- * the migration has been run and confirmed -- it has no reason to exist
- * afterward.
+ * and preserves each existing article's published_at (see below). Thumbnails
+ * come from article.imagePath ("/images/learn-<audience>-<slug>.jpg"), which
+ * lives in the fixture -- so a re-run always restores them, unlike the old
+ * direct-DB image_url update this replaced.
+ *
+ * WARNING: a re-run overwrites any edit made through the /admin/learning CMS
+ * with the fixture's version. Only run it when the fixture is the source of
+ * truth.
  */
 export async function POST() {
   const session = await getSession();
@@ -117,7 +91,7 @@ export async function POST() {
         body: article.body,
         read_time: article.readTime,
         reviewed_by: article.reviewedBy ?? null,
-        image_url: (article.imageSrc && STABLE_IMAGE_PATH.get(article.imageSrc)) ?? null,
+        image_url: article.imagePath ?? null,
         featured: article.featured,
         status: "published",
         published_at: publishedAtBySlug.get(article.slug) ?? new Date().toISOString(),

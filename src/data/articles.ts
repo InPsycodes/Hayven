@@ -3,17 +3,6 @@
  * Center is a public content library, not an API-spec entity) -- kept as
  * static editorial fixtures separate from src/data/fixtures/.
  */
-import type { StaticImageData } from "next/image";
-
-import sessionNotesImage from "../../public/images/learn-therapist-session-notes.jpg";
-import verificationImage from "../../public/images/learn-therapist-verification.jpg";
-import profileNoticedImage from "../../public/images/learn-therapist-profile-noticed.jpg";
-import messagingBoundariesImage from "../../public/images/learn-therapist-messaging-boundaries.jpg";
-import settingAvailabilityImage from "../../public/images/learn-therapist-setting-availability.jpg";
-import bookingConfirmedImage from "../../public/images/learn-therapist-booking-confirmed.jpg";
-import supervisorImage from "../../public/images/learn-therapist-supervisor.jpg";
-import cancellationsImage from "../../public/images/learn-therapist-cancellations.jpg";
-import endingCareImage from "../../public/images/learn-therapist-ending-care.jpg";
 
 export type Audience = "parent" | "therapist";
 
@@ -26,8 +15,8 @@ export interface Article {
   excerpt: string;
   body: string[];
   reviewedBy?: string;
-  /** Real photo for the article thumbnail, where one exists -- falls back to the category icon tile otherwise (see LEARN_TOPIC_META). */
-  imageSrc?: StaticImageData;
+  /** Article thumbnail, served from public/images. Falls back to the category icon tile (see LEARN_TOPIC_META) when absent. */
+  imagePath?: string;
 }
 
 export const PARENT_CATEGORIES = [
@@ -127,6 +116,7 @@ export const ARTICLES: Article[] = [
     category: "Dyslexia",
     title: "Warning signs of dyslexia before a formal diagnosis",
     readTime: "7 min read",
+    imagePath: "/images/learn-parent-dyslexia-warning-signs.jpg",
     excerpt: "Reading struggles that are developmentally normal, and ones that aren't.",
     body: [
       "Learning to read is genuinely hard, and most children stumble through parts of it. That alone isn't a sign of anything. Dyslexia-specific signs tend to show up earlier than reading itself, in how a child hears and plays with the sounds inside words.",
@@ -142,6 +132,7 @@ export const ARTICLES: Article[] = [
     category: "Sensory processing",
     title: "What sensory overload actually looks like in young children",
     readTime: "6 min read",
+    imagePath: "/images/learn-parent-sensory-overload-what-it-looks-like.jpg",
     excerpt: "Meltdowns, shutdowns, and the sensory triggers parents often miss.",
     body: [
       "Sensory overload happens when a child's brain is taking in more sound, light, touch, or movement than it can process at once, and it can look like two very different things depending on the child.",
@@ -158,6 +149,7 @@ export const ARTICLES: Article[] = [
     category: "Getting started",
     title: "What to expect at your child's first therapy session",
     readTime: "4 min read",
+    imagePath: "/images/learn-parent-first-therapy-session-what-to-expect.jpg",
     excerpt: "A walkthrough of what actually happens in the room, so nothing feels unfamiliar.",
     body: [
       "Once you've found a therapist on Hayven and booked a time, you'll get a confirmation once payment goes through: for a virtual session, a meeting link appears on that booking; for in-person, you'll have the therapist's location.",
@@ -173,6 +165,7 @@ export const ARTICLES: Article[] = [
     category: "Lagos resources",
     title: "How credential verification works for therapists practicing in Lagos",
     readTime: "5 min read",
+    imagePath: "/images/learn-parent-finding-verified-therapists-lagos.jpg",
     excerpt: "Why Nigeria's verification landscape is different, and what Hayven actually checks.",
     body: [
       "Therapy credentialing in Nigeria doesn't work through one single national registry the way it does in some other countries. Professional bodies vary by discipline, and verifying a practitioner often means checking the right body for their specific specialty.",
@@ -187,6 +180,7 @@ export const ARTICLES: Article[] = [
     category: "Getting started",
     title: "How to talk to your child about starting therapy",
     readTime: "5 min read",
+    imagePath: "/images/learn-parent-talking-to-your-child-about-therapy.jpg",
     excerpt: "Age-appropriate language that keeps the first session from feeling scary.",
     body: [
       "How you introduce therapy matters almost as much as the therapy itself: children pick up on tone quickly, and if it's framed as a consequence or a fix for something \"wrong\" with them, that framing tends to stick.",
@@ -203,7 +197,7 @@ export const ARTICLES: Article[] = [
     title: "Writing session notes parents will actually read",
     readTime: "4 min read",
     excerpt: "Plain language over clinical shorthand: what to translate, and what to keep precise.",
-    imageSrc: sessionNotesImage,
+    imagePath: "/images/learn-therapist-session-notes.jpg",
     body: [
       "A note written for your own clinical record and a note written for a parent to actually read aren't the same document, even when they're describing the same session. Hayven's parent-facing report is a separate, plain-language summary from your own clinical notes for exactly this reason.",
       "Target-behaviour labels are the clearest example. \"Elopement\" or \"tantrum duration\" are precise, useful shorthand for your own records, but they read as cold or even alarming to a parent seeing them for the first time. Translate the behaviour into what it actually looked like and why it matters, not the clinical term for it.",
@@ -219,7 +213,7 @@ export const ARTICLES: Article[] = [
     title: "What Hayven's verification process checks, and why",
     readTime: "4 min read",
     excerpt: "What to submit, what a decision actually means, and when your profile goes live.",
-    imageSrc: verificationImage,
+    imagePath: "/images/learn-therapist-verification.jpg",
     body: [
       "Your profile stays hidden from parent search until your credentials have been reviewed and approved. This applies to every therapist on Hayven, regardless of experience or specialty, since it's the thing parents are trusting when they book with someone they've never met.",
       "What to submit: your membership or license number, the professional body that issued it, and supporting documentation. Be specific about which professional body applies to your discipline. Nigeria doesn't have one single registry, so the review is only as accurate as what you submit.",
@@ -235,7 +229,7 @@ export const ARTICLES: Article[] = [
     title: "Getting your profile noticed by the right parents",
     readTime: "4 min read",
     excerpt: "What your bio, price, and location actually do for how parents find and choose you.",
-    imageSrc: profileNoticedImage,
+    imagePath: "/images/learn-therapist-profile-noticed.jpg",
     body: [
       "Once you're verified, three fields do most of the work in how parents find and choose you: your bio, your session price, and your location, all editable anytime from your Profile page.",
       "Your bio is the first thing a parent reads after your name and badge, and it's the part most therapists under-invest in. A bio that names specific specialties and the kind of family you work best with (\"I work mostly with early-elementary kids navigating a new diagnosis\") gives a parent something to match themselves against, far more than a general statement of credentials they've already seen in your badge.",
@@ -251,7 +245,7 @@ export const ARTICLES: Article[] = [
     title: "Setting messaging boundaries that protect your time",
     readTime: "3 min read",
     excerpt: "Generic, practical advice on response-time expectations that keeps messaging sustainable.",
-    imageSrc: messagingBoundariesImage,
+    imagePath: "/images/learn-therapist-messaging-boundaries.jpg",
     body: [
       "Messaging access is one of the things parents value most about working with a therapist directly, but without some structure it can quietly expand to fill every hour you're awake. A few boundaries that tend to hold up over time.",
       "Set an expectation early, not reactively. Mentioning in your first session or first message thread roughly when parents can expect a reply (\"I check messages once a day, usually in the evening\") heads off both anxious follow-ups and the assumption that you're always reachable.",
@@ -266,6 +260,7 @@ export const ARTICLES: Article[] = [
     category: "Autism",
     title: "What happens after an autism screening: understanding the next steps",
     readTime: "6 min read",
+    imagePath: "/images/learn-parent-after-autism-screening-next-steps.jpg",
     excerpt:
       "A screening isn't a diagnosis. Here's what the process from screening to support actually looks like, and what to expect at each stage.",
     body: [
@@ -282,6 +277,7 @@ export const ARTICLES: Article[] = [
     category: "ADHD",
     title: "ADHD strategies that actually work at home",
     readTime: "5 min read",
+    imagePath: "/images/learn-parent-adhd-strategies-that-work-at-home.jpg",
     excerpt:
       "Beyond the therapy room: the specific, low-drama adjustments that make the biggest difference to a child with ADHD, day to day.",
     body: [
@@ -299,6 +295,7 @@ export const ARTICLES: Article[] = [
     category: "Dyslexia",
     title: "Supporting a dyslexic child at school in Nigeria: what to ask for",
     readTime: "6 min read",
+    imagePath: "/images/learn-parent-supporting-dyslexic-child-nigerian-school.jpg",
     excerpt:
       "Formal accommodations vary school to school here. What's actually worth asking for, and how to have that conversation productively.",
     body: [
@@ -316,6 +313,7 @@ export const ARTICLES: Article[] = [
     category: "Sensory processing",
     title: "Building a simple sensory-friendly routine at home",
     readTime: "5 min read",
+    imagePath: "/images/learn-parent-sensory-friendly-routine-at-home.jpg",
     excerpt: "You don't need special equipment to start. A few practical, low-cost adjustments that reduce overload before it happens.",
     body: [
       "A lot of sensory support gets framed around expensive equipment, weighted blankets, therapy swings, sensory rooms, which can make it feel out of reach. Most of what actually helps day to day costs nothing: it's about noticing patterns and adjusting the ordinary parts of your routine around them.",
@@ -332,6 +330,7 @@ export const ARTICLES: Article[] = [
     category: "Getting started",
     title: "How payments work when you book a session on Hayven",
     readTime: "4 min read",
+    imagePath: "/images/learn-parent-how-payments-work-on-hayven.jpg",
     excerpt: "What actually happens between choosing a time and your session being confirmed, and what to do if a payment doesn't go through.",
     body: [
       "Booking a session on Hayven has a specific order to it that's worth knowing before you start, mostly so nothing feels unexpected partway through. You choose a therapist and an available time slot, and that slot is held for you temporarily while you complete payment, it isn't confirmed as yours until payment actually goes through.",
@@ -348,7 +347,7 @@ export const ARTICLES: Article[] = [
     title: "Setting availability that actually gets booked",
     readTime: "4 min read",
     excerpt: "How the slot system actually works, and the small habits that keep your calendar realistic instead of stale.",
-    imageSrc: settingAvailabilityImage,
+    imagePath: "/images/learn-therapist-setting-availability.jpg",
     body: [
       "Availability on Hayven works as individual slots you add directly, each with its own date, start and end time, and session type (in-person or virtual), not a recurring weekly pattern you set once and forget. That's a deliberate tradeoff: more control over exactly when you're open, but it also means a calendar you set up once and never touch again will quietly go stale.",
       "A slot you don't remove stays visible and bookable until someone books it or the date passes, so the main maintenance task on your end is removing slots you no longer want to offer, not adding new ones. If your actual availability changes (a new commitment, a personal conflict), deleting the now-inaccurate slot is what keeps your calendar trustworthy to parents browsing it.",
@@ -364,7 +363,7 @@ export const ARTICLES: Article[] = [
     title: "What happens when a slot gets booked: holds, payment, and confirmation",
     readTime: "3 min read",
     excerpt: "The exact sequence between a parent clicking your slot and it showing up as a confirmed session, and why a slot sometimes reappears.",
-    imageSrc: bookingConfirmedImage,
+    imagePath: "/images/learn-therapist-booking-confirmed.jpg",
     body: [
       "It's worth knowing the actual sequence behind a booking, mostly because it explains a couple of things that can otherwise look like bugs: a slot briefly disappearing then reappearing, or a booking that doesn't show up on your schedule right away.",
       "When a parent selects your slot, it's marked as held, not booked, while they go through payment. During this window, the slot won't show as available to anyone else searching, but it also isn't a confirmed session yet, nothing has happened on your end, and it won't appear on your schedule as confirmed.",
@@ -380,7 +379,7 @@ export const ARTICLES: Article[] = [
     title: "Working with a supervisor on Hayven: what they can see, and why",
     readTime: "4 min read",
     excerpt: "Supervisor visibility isn't opt-in, and it's more than a summary view. What that actually means for your day-to-day practice.",
-    imageSrc: supervisorImage,
+    imagePath: "/images/learn-therapist-supervisor.jpg",
     body: [
       "If you're assigned a supervisor on Hayven, that assignment is made on the admin side, not something you opt into or configure yourself, and it's worth understanding what it actually gives them access to rather than assuming.",
       "A supervisor assigned to you can see your active caseload: which children you're currently working with, and can open individual session detail within that caseload, not just a high-level summary. This is closer to a clinical oversight relationship than a purely administrative one, so it's worth writing session notes with the same care whether or not you expect them to be reviewed.",
@@ -396,7 +395,7 @@ export const ARTICLES: Article[] = [
     title: "When a session doesn't happen: cancellations and no-shows on Hayven",
     readTime: "4 min read",
     excerpt: "What the platform does and doesn't handle automatically when a session falls through, and what's worth doing yourself.",
-    imageSrc: cancellationsImage,
+    imagePath: "/images/learn-therapist-cancellations.jpg",
     body: [
       "Either you or the parent can cancel a confirmed or pending-payment booking up until the session's scheduled start time, and that cancellation is recorded with a reason. It's worth knowing, though, that this is where the platform's automation currently stops: cancelling a paid booking doesn't itself trigger a refund.",
       "If a parent needs a refund after a cancellation, that's handled by Hayven's team directly rather than automatically, so if a family raises it with you, the honest and useful answer is to point them to reach out to Hayven about the refund specifically, rather than promising something the platform doesn't yet do on its own.",
@@ -413,7 +412,7 @@ export const ARTICLES: Article[] = [
     readTime: "4 min read",
     excerpt:
       "This isn't something you close out yourself from your dashboard, and that's by design. How to think about the conversation, and who to loop in.",
-    imageSrc: endingCareImage,
+    imagePath: "/images/learn-therapist-ending-care.jpg",
     body: [
       "Ending a therapist-child relationship well, whether because goals were met, a family is relocating, or care needs to transition elsewhere, is a distinct decision from simply not booking further sessions, and it's worth treating it as one rather than letting a relationship quietly go inactive.",
       "On Hayven specifically, this isn't a self-service action from your own dashboard: formally ending an active therapist-child assignment goes through your supervisor if you have one, or Hayven's admin team if you don't. That's a deliberate design choice, not a gap, closure is treated as something with enough weight to involve a second person, not a single click.",
@@ -438,6 +437,7 @@ export const ARTICLES: Article[] = [
     category: "Child Development",
     title: "1.1 Developmental Milestones",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module1-developmental-milestones.jpg",
     excerpt: "What a milestone actually is, the CDC framework therapists use, and why formal screening matters beyond a checklist.",
     body: [
       "This is the first topic in Module 1 of Hayven's therapist training curriculum, Understanding Child Development. The goal of this module is to give you a strong foundation for recognizing typical and atypical development; by the end of it, you should be able to identify developmental concerns and understand when further assessment may be appropriate.",
@@ -454,6 +454,7 @@ export const ARTICLES: Article[] = [
     category: "Child Development",
     title: "1.2 Cognitive, Emotional, Social, and Language Development",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module1-cognitive-emotional-social-language.jpg",
     excerpt: "Four developmental tracks that develop in parallel, and why separating them prevents misdiagnosis.",
     body: [
       "Children develop across several parallel \"tracks,\" and it helps to understand each one separately, even though in real life they are constantly interacting with each other.",
@@ -470,6 +471,7 @@ export const ARTICLES: Article[] = [
     category: "Child Development",
     title: "1.3 Developmental Variations vs. Developmental Concerns",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module1-variations-vs-concerns.jpg",
     excerpt: "A three-question decision aid for telling healthy variation apart from a pattern that warrants referral.",
     body: [
       "Not every child who is \"different\" from the milestone chart has a problem. This is one of the most important distinctions a new therapist must learn, because over-pathologizing normal variation causes unnecessary anxiety for families, while under-recognizing a true concern delays help a child needs.",
@@ -486,6 +488,7 @@ export const ARTICLES: Article[] = [
     category: "Child Development",
     title: "1.4 Red Flags That Warrant Further Assessment",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module1-red-flags.jpg",
     excerpt: "A working red-flag checklist by age band, plus the flags that are serious at any age.",
     body: [
       "Red flags are specific, well-established warning signs that should prompt a referral for formal evaluation rather than a \"wait and see\" approach. Below is a working list, organized by age band and drawn from pediatric developmental screening resources (Skillpoint Therapy, \"Developmental Delay: Red Flags by Age\"; NCBI/StatPearls, \"Developmental Delay\").",
@@ -504,6 +507,7 @@ export const ARTICLES: Article[] = [
     category: "Child Development",
     title: "1.5 How Culture and Environment Influence Development",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module1-culture-and-environment.jpg",
     excerpt: "Why the same behavior can be a cultural norm in one family and a genuine red flag in another, and how to tell the difference.",
     body: [
       "Development does not happen in a vacuum. It happens inside a family, a community, and a culture, and all three shape what \"normal\" looks like. A therapist who applies one cultural yardstick to every child risks misreading healthy variation as a deficit.",
@@ -520,6 +524,7 @@ export const ARTICLES: Article[] = [
     category: "Child Development",
     title: "1.6 Understanding Developmental Trajectories",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module1-developmental-trajectories.jpg",
     excerpt: "Why the direction a child is heading matters more than any single snapshot, and the four trajectory patterns worth recognizing.",
     body: [
       "A developmental trajectory is the path a child's development follows over time, not just their position at a single point in time. Two children can look identical at age 3 and have completely different trajectories: one steadily catching up, the other steadily falling further behind. That difference in direction matters more clinically than the single snapshot.",
@@ -537,6 +542,7 @@ export const ARTICLES: Article[] = [
     category: "Behavioral Assessment",
     title: "2.1 What Is Behavioral Assessment?",
     readTime: "4 min read",
+    imagePath: "/images/learn-therapist-module2-what-is-behavioral-assessment.jpg",
     excerpt: "The shift from labeling a behavior to asking what's actually maintaining it, and why that shift is the whole point.",
     body: [
       "This is the first topic in Module 2 of Hayven's therapist training curriculum, Behavioral Assessment & Understanding Behavior. The goal of this module is to teach you how to understand why a child behaves a certain way rather than simply labeling the behavior; by the end of it, you should be able to observe a behavior, identify potential triggers and functions, and document it appropriately.",
@@ -553,6 +559,7 @@ export const ARTICLES: Article[] = [
     category: "Behavioral Assessment",
     title: "2.2 The Antecedent-Behavior-Consequence (ABC) Model",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module2-abc-model.jpg",
     excerpt: "The single most useful tool in behavioral assessment, and simple enough to use from week one.",
     body: [
       "The ABC model is the single most useful tool in behavioral assessment, and it is simple enough to use from your very first week on the job. It breaks any behavioral episode into three parts.",
@@ -568,6 +575,7 @@ export const ARTICLES: Article[] = [
     category: "Behavioral Assessment",
     title: "2.3 Identifying Triggers",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module2-identifying-triggers.jpg",
     excerpt: "Task, social, sensory, and setting-event triggers, and why the same antecedent can land completely differently on different days.",
     body: [
       "A trigger is simply a specific type of antecedent: the particular event, demand, or condition that reliably comes before a behavior of interest. Identifying triggers is really about looking for patterns across many ABC data points rather than relying on any single observation.",
@@ -584,6 +592,7 @@ export const ARTICLES: Article[] = [
     category: "Behavioral Assessment",
     title: "2.4 Understanding the Function of Behavior",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module2-function-of-behavior.jpg",
     excerpt: "The four functions every challenging behavior serves, and why \"attention-seeking\" is guessed far more often than it's actually verified.",
     body: [
       "The \"function\" of a behavior is the purpose it serves for the child: what the child gets, or avoids, by doing it. Understanding function is the single most important shift a new therapist can make, because two behaviors that look identical on the surface can have completely different functions, and effective intervention absolutely depends on getting the function right.",
@@ -601,6 +610,7 @@ export const ARTICLES: Article[] = [
     category: "Behavioral Assessment",
     title: "2.5 Reinforcement vs. Punishment",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module2-reinforcement-vs-punishment.jpg",
     excerpt: "Why \"negative\" doesn't mean \"bad,\" and how well-meaning adults routinely reinforce the exact behavior they're trying to reduce.",
     body: [
       "Once you understand the function of a behavior, the next building block is understanding how consequences shape whether a behavior increases or decreases over time. In psychology, this comes from the principles of operant conditioning, and it is one of the most misunderstood pairs of terms in everyday language, largely because \"negative\" is often mistaken for \"bad\" or \"punishing,\" when in this context it simply means \"removing something.\"",
@@ -617,6 +627,7 @@ export const ARTICLES: Article[] = [
     category: "Behavioral Assessment",
     title: "2.6 Functional Behavior Assessment Basics",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module2-functional-behavior-assessment.jpg",
     excerpt: "How a formal FBA combines interview, direct observation, and (sometimes) functional analysis into one testable hypothesis.",
     body: [
       "A Functional Behavior Assessment (FBA) is the formal process that ties everything in this module together. It is a structured method for figuring out the function of a specific, significant behavior so that an effective, individualized intervention plan can be built. An FBA is typically used for behaviors that are frequent, intense, or interfering enough with learning, safety, or relationships that informal observation is not sufficient.",
@@ -633,6 +644,7 @@ export const ARTICLES: Article[] = [
     category: "Behavioral Assessment",
     title: "2.7 Turning Observations into Useful Clinical Information",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module2-observations-into-clinical-information.jpg",
     excerpt: "Five habits that turn a session's worth of raw observation into something a supervisor and a family can actually use.",
     body: [
       "The final skill in this module is translation: converting a session's worth of raw observation into something that is actually useful to you, to a supervisor, and to the family. Raw observation notes are only clinically valuable if they are specific, organized, and connected to a purpose.",
@@ -651,6 +663,7 @@ export const ARTICLES: Article[] = [
     category: "Child Assessments",
     title: "3.1 Preparing for an Assessment",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module3-preparing-for-assessment.jpg",
     excerpt: "Assessment quality is often decided before the child ever enters the room: reviewing records, clarifying the referral question, and setting up the space.",
     body: [
       "This is the first topic in Module 3 of Hayven's therapist training curriculum, Conducting Effective Child Assessments. The goal of this module is to teach you how to approach assessment systematically; by the end of it, you should understand the assessment process from intake through interpretation and reporting.",
@@ -668,6 +681,7 @@ export const ARTICLES: Article[] = [
     category: "Child Assessments",
     title: "3.2 Taking a Developmental and Psychosocial History",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module3-developmental-psychosocial-history.jpg",
     excerpt: "The six categories a thorough developmental history covers, and the two things caregivers most often forget to volunteer.",
     body: [
       "The developmental and psychosocial history is the backbone of any child assessment. It gives you the context needed to correctly interpret everything you observe afterward. Without it, you risk assessing a child's current behavior in a vacuum, disconnected from the factors that actually explain it.",
@@ -684,6 +698,7 @@ export const ARTICLES: Article[] = [
     category: "Child Assessments",
     title: "3.3 Interviewing Parents and Caregivers",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module3-interviewing-parents-caregivers.jpg",
     excerpt: "Starting broad before narrowing down, and treating disagreement between caregiver report and your own observation as data, not an inconvenience.",
     body: [
       "The caregiver interview is where most of your developmental and psychosocial history is actually gathered, and doing it well is a distinct skill from simply asking a checklist of questions.",
@@ -700,6 +715,7 @@ export const ARTICLES: Article[] = [
     category: "Child Assessments",
     title: "3.4 Observing Children",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module3-observing-children.jpg",
     excerpt: "What to systematically watch for, why play observation deserves special attention, and why a single session is only ever a snapshot.",
     body: [
       "Direct observation of the child is the piece of assessment that cannot be substituted by parent report or standardized testing alone. It is where you see, first-hand, how the child actually engages with people, materials, and demands.",
@@ -716,6 +732,7 @@ export const ARTICLES: Article[] = [
     category: "Child Assessments",
     title: "3.5 Selecting Appropriate Assessment Tools",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module3-selecting-assessment-tools.jpg",
     excerpt: "Matching the tool to the referral question (not the other way around), and why a tool normed on the wrong population can mislead you.",
     body: [
       "Not every concern calls for the same tool, and using the wrong tool (even a good one) for the wrong question wastes time and can produce misleading results. Tool selection starts with the referral question (Module 3.1): a concern about possible autism calls for different tools than a concern about a specific learning difficulty, which calls for different tools again than a general developmental screening.",
@@ -732,6 +749,7 @@ export const ARTICLES: Article[] = [
     category: "Child Assessments",
     title: "3.6 Interpreting Assessment Results",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module3-interpreting-assessment-results.jpg",
     excerpt: "Norms, convergence, alternative explanations, and the difference between a delay in degree and a difference in kind.",
     body: [
       "Collecting data is only half the job; interpreting it correctly is what turns raw scores and observations into something clinically useful. Interpretation means synthesizing information across sources (history, interview, direct observation, and any formal tools used) rather than reading any single piece in isolation.",
@@ -748,6 +766,7 @@ export const ARTICLES: Article[] = [
     category: "Child Assessments",
     title: "3.7 Avoiding Common Assessment Biases",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module3-avoiding-assessment-biases.jpg",
     excerpt: "Confirmation bias, halo effect, anchoring, cultural bias, and single-source overreliance, and the practical safeguards against each.",
     body: [
       "Bias is not a sign of a bad clinician. It is a normal feature of human judgment that every clinician is vulnerable to, and the goal of training is not to eliminate it entirely but to recognize it and build in safeguards against it.",
@@ -764,6 +783,7 @@ export const ARTICLES: Article[] = [
     category: "Child Assessments",
     title: "3.8 Communicating Findings Professionally",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module3-communicating-findings-professionally.jpg",
     excerpt: "The structure that prevents the two most common feedback mistakes: jargon overload and an ambiguous ending.",
     body: [
       "An assessment's clinical value is only realized if its findings are communicated in a way the receiving audience (usually caregivers, sometimes other professionals) can actually understand and act on. Communicating findings well is a distinct skill from gathering and interpreting them.",
@@ -781,6 +801,7 @@ export const ARTICLES: Article[] = [
     category: "Parents & Caregivers",
     title: "4.1 Parent-Therapist Communication",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module4-parent-therapist-communication.jpg",
     excerpt: "Why consistent, proactive two-way communication matters more than any single well-crafted update.",
     body: [
       "This is the first topic in Module 4 of Hayven's therapist training curriculum, Working with Parents & Caregivers. The goal of this module is to build your skills beyond working directly with the child; by the end of it, you should be able to communicate clinical information clearly while keeping parents actively involved in the intervention process.",
@@ -798,6 +819,7 @@ export const ARTICLES: Article[] = [
     category: "Parents & Caregivers",
     title: "4.2 Explaining Difficult Concepts in Simple Language",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module4-explaining-difficult-concepts.jpg",
     excerpt: "Translate, don't dumb down. The \"explain it like a friend\" test, and why checking understanding beats asking \"does that make sense?\"",
     body: [
       "Every clinical field develops its own shorthand. Terms like \"sensory regulation,\" \"expressive language delay,\" \"escape-maintained behavior,\" or \"joint attention\" are precise and efficient among professionals but often meaningless, or even alarming, to caregivers hearing them for the first time.",
@@ -814,6 +836,7 @@ export const ARTICLES: Article[] = [
     category: "Parents & Caregivers",
     title: "4.3 Managing Parent Expectations",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module4-managing-parent-expectations.jpg",
     excerpt: "Setting realistic pace and non-linearity expectations proactively, before disappointment has a chance to build.",
     body: [
       "Unmanaged expectations are one of the most common sources of friction between therapists and families, not because caregivers are unreasonable, but because therapy progress is often slower, less linear, and less dramatic than families initially hope, especially when a family is newly navigating a diagnosis or concern.",
@@ -830,6 +853,7 @@ export const ARTICLES: Article[] = [
     category: "Parents & Caregivers",
     title: "4.4 Delivering Feedback",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module4-delivering-feedback.jpg",
     excerpt: "Leading with strengths, staying specific and behavioral, and treating feedback as a dialogue rather than a report delivery.",
     body: [
       "Delivering feedback to caregivers, whether about assessment findings, session progress, or a difficult behavioral pattern, requires a distinct set of skills from simply having good clinical information to share. Feedback delivered poorly, even when clinically accurate, can damage trust and reduce a family's engagement; feedback delivered well can strengthen the therapeutic relationship even when the content is difficult.",
@@ -846,6 +870,7 @@ export const ARTICLES: Article[] = [
     category: "Parents & Caregivers",
     title: "4.5 Collaborative Goal-Setting",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module4-collaborative-goal-setting.jpg",
     excerpt: "Anchoring goals to a family's actual daily routines, and treating them as living agreements rather than a one-time contract.",
     body: [
       "Goals set unilaterally by a therapist, without real caregiver input, are less likely to be understood, valued, or followed through on at home, which matters enormously given how much of a child's practice and generalization of new skills happens outside the therapy room. Collaborative goal-setting treats caregivers as genuine partners and experts on their own child and family life, not just as recipients of a plan.",
@@ -862,6 +887,7 @@ export const ARTICLES: Article[] = [
     category: "Parents & Caregivers",
     title: "4.6 Handling Disagreement with Caregivers",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module4-handling-disagreement.jpg",
     excerpt: "Understanding the reasonable basis behind disagreement before responding to it, and knowing when to hold a boundary versus when to flex.",
     body: [
       "Disagreement between therapists and caregivers is normal and should be expected occasionally, not treated as a sign that something has gone wrong. It can arise over many things: a caregiver may disagree with a recommendation, may feel a concern is overstated (or understated), may have a different cultural or personal view on discipline and development, or may simply be overwhelmed and resistant to adding another responsibility to their plate.",
@@ -878,6 +904,7 @@ export const ARTICLES: Article[] = [
     category: "Parents & Caregivers",
     title: "4.7 Building Therapeutic Relationships with Families",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module4-building-therapeutic-relationships.jpg",
     excerpt: "Rapport-building with both the child and the caregiver, and why a rupture in the relationship is normal and repairable.",
     body: [
       "The therapeutic relationship, sometimes called the therapeutic alliance, is one of the most consistently supported predictors of positive outcomes across many forms of therapy, and this holds true in pediatric therapy as much as anywhere else (StatPearls, \"Psychotherapy and Therapeutic Relationship\"). For children specifically, this relationship extends beyond the child to the whole family system, since caregivers are the ones implementing strategies day to day.",
@@ -894,6 +921,7 @@ export const ARTICLES: Article[] = [
     category: "Parents & Caregivers",
     title: "4.8 Parent Coaching",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module4-parent-coaching.jpg",
     excerpt: "Shifting from doing the intervention yourself to building caregiver competence and confidence, and why that shift produces better outcomes.",
     body: [
       "Parent coaching is a specific therapeutic approach in which the therapist's primary role shifts from directly performing all intervention with the child to actively teaching, guiding, and supporting caregivers to carry out strategies themselves, especially within everyday routines. It represents a meaningful shift from a purely therapist-led model toward a family-centered model of care (Medbridge, \"How Parent Coaching Enhances Pediatric Occupational Therapy\").",
@@ -910,6 +938,7 @@ export const ARTICLES: Article[] = [
     category: "Clinical Documentation",
     title: "5.1 What Makes a Good Clinical Note?",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module5-what-makes-good-clinical-note.jpg",
     excerpt: "The SOAP framework, and the five qualities every good note shares: specific, objective, complete, consistent, and timely.",
     body: [
       "This is the first topic in Module 5 of Hayven's therapist training curriculum, Writing Better Clinical & Progress Reports. The goal of this module is to help you turn observations and session information into useful documentation; by the end of it, you should be able to produce clear, objective, and useful clinical documentation.",
@@ -926,6 +955,7 @@ export const ARTICLES: Article[] = [
     category: "Clinical Documentation",
     title: "5.2 Objective vs. Subjective Language",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module5-objective-vs-subjective-language.jpg",
     excerpt: "The most common documentation error new therapists make: writing an interpretation as if it were a raw observation.",
     body: [
       "The distinction between objective and subjective language is one of the most important, and most commonly blurred, skills in clinical writing. Getting this right protects the accuracy and credibility of your documentation.",
@@ -942,6 +972,7 @@ export const ARTICLES: Article[] = [
     category: "Clinical Documentation",
     title: "5.3 Documenting Behavioral Observations",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module5-documenting-behavioral-observations.jpg",
     excerpt: "A weak note versus a strong note for the same event, side by side, and why documenting a negative finding is still a finding.",
     body: [
       "This subtopic connects directly back to Module 2.7 and applies it specifically to formal written documentation. A behavioral observation note is only as useful as it is specific, and the ABC framework from Module 2.2 provides the natural structure for writing these notes well.",
@@ -958,6 +989,7 @@ export const ARTICLES: Article[] = [
     category: "Clinical Documentation",
     title: "5.4 Writing Measurable Goals",
     readTime: "6 min read",
+    imagePath: "/images/learn-therapist-module5-writing-measurable-goals.jpg",
     excerpt: "The SMART framework and the \"cold colleague\" test: could someone who's never met the child score this goal from the words alone?",
     body: [
       "A goal that cannot be measured cannot be tracked, and a goal that cannot be tracked cannot demonstrate progress, which makes it functionally useless for clinical, family communication, and often insurance/funding purposes alike.",
@@ -974,6 +1006,7 @@ export const ARTICLES: Article[] = [
     category: "Clinical Documentation",
     title: "5.5 Tracking Progress Over Time",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module5-tracking-progress-over-time.jpg",
     excerpt: "Why a stable measurement method matters as much as consistent frequency, and how to read a single \"bad\" session correctly.",
     body: [
       "Tracking progress is the direct, practical application of the trajectory concept introduced in Module 1.6, applied at the level of individual documented goals and behaviors rather than overall development.",
@@ -990,6 +1023,7 @@ export const ARTICLES: Article[] = [
     category: "Clinical Documentation",
     title: "5.6 Interpreting Graphs and Progress Data",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module5-interpreting-graphs-progress-data.jpg",
     excerpt: "Slope, level, variability, and change points: what to actually look for in a progress graph, and why context always matters.",
     body: [
       "Graphs are one of the most powerful tools for both clinical decision-making and family communication, because they make a trend visible at a glance in a way that a table of numbers or a page of notes often cannot.",
@@ -1005,6 +1039,7 @@ export const ARTICLES: Article[] = [
     category: "Clinical Documentation",
     title: "5.7 Common Documentation Mistakes",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module5-common-documentation-mistakes.jpg",
     excerpt: "Seven predictable documentation traps, from vagueness to copy-paste redundancy, and a final quality checklist for every note.",
     body: [
       "Even well-trained clinicians fall into predictable documentation traps, especially under time pressure. Recognizing these patterns early helps you avoid building them into habit.",
@@ -1021,6 +1056,7 @@ export const ARTICLES: Article[] = [
     category: "Clinical Documentation",
     title: "5.8 Turning Clinical Information into Parent-Friendly Language",
     readTime: "5 min read",
+    imagePath: "/images/learn-therapist-module5-clinical-information-parent-friendly.jpg",
     excerpt: "Translating a clinical note into a short, prioritized, action-oriented family summary. Closes the training curriculum.",
     body: [
       "The final skill in this course ties directly back to Module 4: the clinical documentation you produce is not only an internal record. Much of it eventually needs to be translated into something a caregiver, who has no clinical training, can genuinely understand and use.",
