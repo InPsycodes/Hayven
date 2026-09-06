@@ -111,12 +111,12 @@ export function MobileNavMenu({
               role="dialog"
               aria-modal="true"
               className={cn(
-                "absolute inset-y-0 left-0 flex w-[82%] max-w-sm flex-col border-r border-white/50 bg-[linear-gradient(180deg,rgba(250,248,246,0.92)_0%,rgba(250,248,246,0.82)_100%)] shadow-[inset_-1px_0_0_rgba(255,255,255,0.5),8px_0_40px_-14px_rgba(26,18,12,0.4)] backdrop-blur-2xl backdrop-saturate-150",
+                "absolute inset-y-0 left-0 flex w-[72%] max-w-xs flex-col border-r border-white/50 bg-[linear-gradient(180deg,rgba(250,248,246,0.92)_0%,rgba(250,248,246,0.82)_100%)] shadow-[inset_-1px_0_0_rgba(255,255,255,0.5),8px_0_40px_-14px_rgba(26,18,12,0.4)] backdrop-blur-2xl backdrop-saturate-150",
                 "motion-safe:animate-in motion-safe:slide-in-from-left-full motion-safe:duration-[280ms] motion-safe:ease-out",
                 "motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]"
               )}
             >
-              <div className="flex h-20 items-center justify-between px-6">
+              <div className="flex h-20 items-center justify-between px-5">
                 <BrandMark dark={false} />
                 <button
                   type="button"
@@ -128,20 +128,20 @@ export function MobileNavMenu({
                 </button>
               </div>
 
-              <nav className="flex flex-col gap-6 px-6 pt-4">
+              <nav className="flex flex-col gap-5 px-5 pt-4 sm:gap-6">
                 {links.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => onOpenChange(false)}
-                    className="font-heading text-2xl text-charcoal"
+                    className="font-heading text-lg text-charcoal sm:text-2xl"
                   >
                     {link.label}
                   </Link>
                 ))}
               </nav>
 
-              <div className="mt-auto flex flex-col gap-3 border-t border-charcoal/10 px-6 py-6">
+              <div className="mt-auto flex flex-col gap-3 border-t border-charcoal/10 px-5 py-6">
                 {session ? (
                   <Button asChild variant="accent" size="lg" className="w-full">
                     <Link href={session.dashboardHref} onClick={() => onOpenChange(false)}>
