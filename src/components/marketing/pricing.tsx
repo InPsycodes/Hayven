@@ -1,8 +1,11 @@
 import Link from "next/link";
 import {
   IconArrowRight,
+  IconCheck,
   IconRosetteDiscountCheckFilled,
   IconShieldCheck,
+  IconSparkles,
+  IconVideo,
 } from "@tabler/icons-react";
 
 import { PRICING_POINTS } from "@/content/marketing/pricing";
@@ -46,58 +49,97 @@ export function Pricing() {
           </p>
         </div>
 
-        {/* sample profile card */}
+        {/* sample "credential card" -- illustrative only, redacted rate */}
         <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
-          <div className="rounded-3xl border border-black/5 bg-canvas-white p-6 text-charcoal shadow-[0_2px_4px_rgba(0,0,0,0.18),0_40px_72px_-34px_rgba(0,0,0,0.55)] sm:p-7">
-            <div className="flex items-center gap-3.5">
-              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-terracotta to-[#6b7a5e] font-serif text-base font-semibold text-white">
-                AO
+          <div className="mx-auto max-w-[380px] overflow-hidden rounded-[22px] border border-black/5 bg-canvas-white text-charcoal shadow-[0_2px_4px_rgba(0,0,0,0.22),0_46px_80px_-34px_rgba(0,0,0,0.62)]">
+            <div className="flex items-center justify-between bg-gradient-to-r from-terracotta to-rust-dark px-[18px] py-3 text-white">
+              <span className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] uppercase">
+                <span aria-hidden className="size-2 rounded-[2px] bg-white/90" />
+                Hayven
               </span>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 font-serif text-[15px] font-semibold text-charcoal">
-                  Dr. Adaeze Okwu
-                  <IconRosetteDiscountCheckFilled size={15} className="shrink-0 text-success" />
+              <span className="flex items-center gap-1.5 text-[9.5px] font-bold tracking-[0.08em] uppercase opacity-90">
+                <IconCheck size={11} stroke={3.2} />
+                Verified therapist
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center px-6 pt-6 pb-5 text-center">
+              <span className="grid size-[118px] place-items-center rounded-[20px] border border-white/50 bg-gradient-to-br from-[#cdd3bd] via-[#9aac82] to-[#6b7a5e] text-[#33402a] shadow-[0_10px_24px_-12px_rgba(28,24,19,0.4)]">
+                <svg
+                  viewBox="0 0 56 56"
+                  className="size-[60px]"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M16 31c-3-2-4-7-3-12C15 10 21 6 28 6s13 4 15 13c1 5 0 10-3 12" />
+                  <path d="M18 23c0 7 4 13 10 13s10-6 10-13" />
+                  <path d="M16 19v13M40 19v13" />
+                  <path d="M11 50c1-8 8-13 17-13s16 5 17 13" />
+                </svg>
+              </span>
+              <p className="mt-4 flex items-center gap-1.5 font-serif text-[1.24rem] font-semibold text-charcoal">
+                Dr. Adaeze Okwu
+                <IconRosetteDiscountCheckFilled size={17} className="shrink-0 text-success" />
+              </p>
+              <p className="mt-1 text-[12.5px] text-muted-foreground">
+                Speech &amp; Language Therapist · 8 yrs
+              </p>
+            </div>
+
+            <div className="px-6 pt-1 pb-6">
+              <div
+                aria-hidden
+                className="mb-4 h-px bg-[repeating-linear-gradient(90deg,rgba(28,24,19,0.12)_0_4px,transparent_4px_8px)]"
+              />
+
+              <div className="flex gap-3 py-2.5">
+                <span className="grid size-[30px] shrink-0 place-items-center rounded-[9px] bg-success/15 text-success-text">
+                  <IconSparkles size={16} stroke={1.9} />
+                </span>
+                <div>
+                  <p className="text-[9.5px] font-bold tracking-[0.1em] text-charcoal/50 uppercase">
+                    Focus areas
+                  </p>
+                  <p className="mt-0.5 text-[12.5px] text-ink-soft">
+                    Speech &amp; language, ABA, early intervention
+                  </p>
                 </div>
-                <p className="mt-0.5 text-[12px] text-muted-foreground">
-                  Speech &amp; Language Therapist · Lagos
+              </div>
+
+              <div className="flex gap-3 border-t border-charcoal/[0.07] py-2.5">
+                <span className="grid size-[30px] shrink-0 place-items-center rounded-[9px] bg-success/15 text-success-text">
+                  <IconVideo size={16} stroke={1.9} />
+                </span>
+                <div>
+                  <p className="text-[9.5px] font-bold tracking-[0.1em] text-charcoal/50 uppercase">
+                    Sessions
+                  </p>
+                  <p className="mt-0.5 text-[12.5px] text-ink-soft">Video · Home visits · Lagos</p>
+                </div>
+              </div>
+
+              <div className="mt-3.5 rounded-[14px] border border-terracotta/15 bg-terracotta/[0.07] px-[15px] py-3.5">
+                <p className="text-[9.5px] font-bold tracking-[0.11em] text-rust-dark uppercase">
+                  Session rate
+                </p>
+                <p className="mt-1.5 flex items-baseline gap-2">
+                  <span className="font-serif text-[1.7rem] font-semibold text-charcoal">₦</span>
+                  <span
+                    aria-hidden
+                    className="inline-block h-[15px] w-[84px] rounded-[3px] bg-[repeating-linear-gradient(90deg,rgba(28,24,19,0.17)_0_5px,transparent_5px_9px)]"
+                  />
+                  <span className="sr-only">rate set by the therapist, shown on their profile</span>
+                  <span className="text-[12px] text-ink-soft">/ 50-min session</span>
+                </p>
+                <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-ink-soft">
+                  <IconShieldCheck size={13} stroke={2} className="shrink-0 text-success" />
+                  What you see is what you pay. No platform fee.
                 </p>
               </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              <span className="rounded-full border border-terracotta/20 bg-terracotta/10 px-2.5 py-1 text-[11px] font-medium text-rust-dark">
-                Speech &amp; language
-              </span>
-              <span className="rounded-full border border-terracotta/20 bg-terracotta/10 px-2.5 py-1 text-[11px] font-medium text-rust-dark">
-                ABA
-              </span>
-              <span className="rounded-full border border-charcoal/10 bg-charcoal/5 px-2.5 py-1 text-[11px] font-medium text-ink-soft">
-                Video
-              </span>
-              <span className="rounded-full border border-charcoal/10 bg-charcoal/5 px-2.5 py-1 text-[11px] font-medium text-ink-soft">
-                Home visits
-              </span>
-            </div>
-
-            <div className="mt-5 border-t border-dashed border-charcoal/15 pt-4">
-              <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                Session rate
-              </p>
-              <p className="mt-1.5 flex items-baseline gap-2">
-                <span className="font-serif text-[1.9rem] font-semibold tracking-tight text-charcoal">
-                  ₦
-                </span>
-                <span
-                  aria-hidden
-                  className="inline-block h-5 w-24 rounded bg-[repeating-linear-gradient(90deg,rgba(26,26,26,0.16)_0_5px,transparent_5px_9px)]"
-                />
-                <span className="sr-only">rate set by the therapist, shown on their profile</span>
-                <span className="text-[13px] text-ink-soft">/ 50-min session</span>
-              </p>
-              <p className="mt-3 flex items-center gap-2 text-[12px] text-ink-soft">
-                <IconShieldCheck size={14} stroke={1.75} className="shrink-0 text-success" />
-                What you see is what you pay. No platform fee.
-              </p>
             </div>
           </div>
           <p className="mt-3.5 text-center text-[11px] text-canvas-white/45 lg:text-left">
