@@ -225,11 +225,11 @@ function FloatHead({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="flex items-center gap-1.5 text-[12px] font-semibold">
-        <I size={13} stroke={1.9} className={dark ? "text-[#bcc9a6]" : "text-terracotta"} />
+      <span className="flex items-center gap-2 text-[13px] font-semibold">
+        <I size={15} stroke={1.9} className={dark ? "text-[#bcc9a6]" : "text-terracotta"} />
         {label}
       </span>
-      <IconArrowRight size={12} stroke={2} className={dark ? "text-[#e8ecdb]/45" : "text-charcoal/40"} />
+      <IconArrowRight size={13} stroke={2} className={dark ? "text-[#e8ecdb]/45" : "text-charcoal/40"} />
     </div>
   );
 }
@@ -246,7 +246,7 @@ function Float({
   return (
     <div
       className={cn(
-        "rounded-[15px] border p-[18px] shadow-[0_2px_4px_rgba(30,22,15,0.09),0_32px_58px_-26px_rgba(30,22,15,0.4)]",
+        "rounded-[16px] border p-5 shadow-[0_2px_4px_rgba(30,22,15,0.09),0_34px_60px_-26px_rgba(30,22,15,0.42)]",
         dark
           ? "border-white/5 bg-[#363f2b] text-[#e8ecdb]"
           : "border-charcoal/[0.06] bg-canvas-white text-charcoal",
@@ -268,7 +268,7 @@ export function DashboardPreview() {
       <div className="mx-auto max-w-7xl">
         {/* Illustrative-only mock of the parent dashboard -- not a live
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
-        <div className="relative lg:min-h-[560px]">
+        <div className="relative lg:min-h-[660px]">
           {/* pitch */}
           <div className="lg:absolute lg:top-1 lg:left-[3%] lg:w-[27%]">
             <div className="flex items-center gap-3.5">
@@ -319,71 +319,71 @@ export function DashboardPreview() {
           {/* floating cards -- stacked on mobile, absolute on lg */}
           <div className="mt-4 flex flex-col gap-3 lg:mt-0 lg:contents">
             {/* Communication (left) */}
-            <Float className="lg:absolute lg:top-[238px] lg:left-[24.5%] lg:w-[20.5%]">
+            <Float className="lg:absolute lg:top-[230px] lg:left-[22%] lg:w-[23%]">
               <FloatHead icon={IconMessageCircle} label="Communication" />
-              <p className="mt-3 flex items-baseline gap-1.5 font-serif text-[26px] font-semibold">
-                {p.communication.value}% <span className="text-[13px] text-success">↗</span>
+              <p className="mt-3.5 flex items-baseline gap-1.5 font-serif text-[30px] font-semibold">
+                {p.communication.value}% <span className="text-[14px] text-success">↗</span>
               </p>
-              <div className="mt-2.5 h-[5px] overflow-hidden rounded-full bg-charcoal/[0.09]">
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-charcoal/[0.09]">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-[#7f9560] to-[#a0b47c]"
                   style={{ width: `${p.communication.value}%` }}
                 />
               </div>
-              <p className="mt-3 text-[10.5px] leading-relaxed text-ink-soft">{p.communication.note}</p>
-              <div className="mt-3 flex gap-1.5 rounded-[9px] bg-[#eee5d4] px-2.5 py-2.5 text-[10px] leading-snug text-ink-soft">
-                <IconBulb size={12} stroke={1.8} className="mt-px shrink-0 text-terracotta" />
+              <p className="mt-3.5 text-[11.5px] leading-relaxed text-ink-soft">{p.communication.note}</p>
+              <div className="mt-3.5 flex gap-2 rounded-[10px] bg-[#eee5d4] px-3 py-3 text-[11px] leading-snug text-ink-soft">
+                <IconBulb size={13} stroke={1.8} className="mt-px shrink-0 text-terracotta" />
                 {p.communication.highlight}
               </div>
-              <p className="mt-3 text-[9px] text-charcoal/45">
+              <p className="mt-3.5 text-[10px] text-charcoal/45">
                 Last month <b className="font-semibold text-ink-soft">{p.communication.lastMonth}%</b>
                 &nbsp;&nbsp;This month <b className="font-semibold text-ink-soft">{p.communication.value}%</b>
               </p>
             </Float>
 
             {/* Next session (right, top) */}
-            <Float className="lg:absolute lg:top-[52px] lg:right-[10%] lg:w-[16.8%]">
+            <Float className="lg:absolute lg:top-[52px] lg:right-[9%] lg:w-[19.5%]">
               <FloatHead icon={IconCalendarEvent} label="Next session" />
-              <p className="mt-3.5 font-serif text-[14px] font-semibold">{p.nextSession.label}</p>
-              <p className="mt-1 text-[10.5px] text-ink-soft">{p.nextSession.time}</p>
-              <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#eee5d4] px-2.5 py-1 text-[9.5px] text-ink-soft">
-                <IconVideo size={10} stroke={1.9} />
+              <p className="mt-4 font-serif text-[15.5px] font-semibold">{p.nextSession.label}</p>
+              <p className="mt-1 text-[11.5px] text-ink-soft">{p.nextSession.time}</p>
+              <span className="mt-3.5 inline-flex items-center gap-1.5 rounded-full bg-[#eee5d4] px-3 py-1 text-[10.5px] text-ink-soft">
+                <IconVideo size={11} stroke={1.9} />
                 {p.nextSession.mode}
               </span>
-              <div className="mt-4 flex items-center gap-2.5 border-t border-charcoal/[0.07] pt-3.5">
-                <span className="size-[30px] shrink-0 rounded-full bg-gradient-to-br from-terracotta to-[#8b9a6b]" />
+              <div className="mt-4 flex items-center gap-3 border-t border-charcoal/[0.07] pt-4">
+                <span className="size-[34px] shrink-0 rounded-full bg-gradient-to-br from-terracotta to-[#8b9a6b]" />
                 <div className="min-w-0">
-                  <p className="flex items-center gap-1 text-[11px] font-semibold">
+                  <p className="flex items-center gap-1 text-[12px] font-semibold">
                     {p.nextSession.therapist}
-                    <IconRosetteDiscountCheckFilled size={11} className="shrink-0 text-success" />
+                    <IconRosetteDiscountCheckFilled size={12} className="shrink-0 text-success" />
                   </p>
-                  <p className="mt-0.5 text-[9.5px] text-charcoal/45">{p.nextSession.therapistRole}</p>
+                  <p className="mt-0.5 text-[10.5px] text-charcoal/45">{p.nextSession.therapistRole}</p>
                 </div>
               </div>
             </Float>
 
             {/* Latest therapist note (right, mid) */}
-            <Float dark className="lg:absolute lg:top-[258px] lg:right-[11.5%] lg:w-[16%]">
+            <Float dark className="lg:absolute lg:top-[278px] lg:right-[9%] lg:w-[18.5%]">
               <FloatHead icon={IconFileText} label="Latest therapist note" dark />
-              <p className="mt-3.5 text-[11.5px] leading-relaxed">&ldquo;{p.note.quote}&rdquo;</p>
-              <p className="mt-3 text-[9px] text-[#e8ecdb]/55">
+              <p className="mt-4 text-[12.5px] leading-relaxed">&ldquo;{p.note.quote}&rdquo;</p>
+              <p className="mt-3.5 text-[10px] text-[#e8ecdb]/55">
                 {p.note.author} · {p.note.date}
               </p>
             </Float>
 
             {/* Recent report (right, bottom) */}
-            <Float className="lg:absolute lg:top-[418px] lg:right-[10%] lg:w-[16.8%]">
+            <Float className="lg:absolute lg:top-[456px] lg:right-[9%] lg:w-[19.5%]">
               <FloatHead icon={IconFileText} label="Recent report" />
-              <div className="mt-3.5 flex items-start justify-between gap-2.5">
+              <div className="mt-4 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-semibold">{p.report.label}</p>
-                  <p className="mt-0.5 text-[9.5px] text-charcoal/45">{p.report.meta}</p>
-                  <span className="mt-2 inline-block rounded-[5px] bg-terracotta/[0.13] px-1.5 py-0.5 text-[8.5px] font-bold tracking-[0.04em] text-rust-dark">
+                  <p className="text-[13px] font-semibold">{p.report.label}</p>
+                  <p className="mt-1 text-[10.5px] text-charcoal/45">{p.report.meta}</p>
+                  <span className="mt-2.5 inline-block rounded-[5px] bg-terracotta/[0.13] px-2 py-0.5 text-[9px] font-bold tracking-[0.04em] text-rust-dark">
                     New
                   </span>
                 </div>
-                <span className="grid h-[42px] w-8 shrink-0 place-items-center rounded border border-charcoal/[0.07] bg-[#eee5d4] text-charcoal/40">
-                  <IconFileText size={15} stroke={1.7} />
+                <span className="grid h-[48px] w-9 shrink-0 place-items-center rounded border border-charcoal/[0.07] bg-[#eee5d4] text-charcoal/40">
+                  <IconFileText size={17} stroke={1.7} />
                 </span>
               </div>
             </Float>
@@ -391,7 +391,7 @@ export function DashboardPreview() {
         </div>
 
         {/* the three supports */}
-        <div className="mt-14 grid gap-10 sm:grid-cols-3 lg:mt-4">
+        <div className="mt-14 grid gap-10 sm:grid-cols-3 lg:mt-6">
           {SUPPORT_POINTS.map((point) => (
             <div key={point.title}>
               <span className="grid size-11 place-items-center rounded-full bg-terracotta/12 text-terracotta">
