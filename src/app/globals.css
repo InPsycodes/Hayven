@@ -302,6 +302,22 @@
   }
   html {
     @apply font-sans scroll-smooth;
+    /* Base type scale nudged down from the 16px UA default. Everything
+       rem-based (text utilities, spacing, radius) scales with this, so the
+       whole app gets a touch smaller in proportion. Percentage, not a px
+       value, so a reader's own browser font-size setting is still honoured. */
+    font-size: 93.75%;
+  }
+
+  /* Keep real text fields at 16px on phones so iOS Safari doesn't zoom the
+     viewport on focus -- the reduced root above would otherwise land them
+     at 15px. The [data-slot] attribute lifts specificity over the
+     component's own text-base / text-sm utility. */
+  @media (max-width: 767px) {
+    input[data-slot="input"],
+    textarea[data-slot="textarea"] {
+      font-size: 16px;
+    }
   }
 
   /* Reserves real space for the fixed-position PWA install toast (see
