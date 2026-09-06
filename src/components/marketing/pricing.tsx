@@ -4,7 +4,7 @@ import { Reveal } from "@/components/marketing/reveal";
 
 export function Pricing() {
   return (
-    <section id="pricing" className="px-6 py-16 sm:py-20 lg:px-10 lg:py-36">
+    <section id="pricing" className="px-6 py-16 sm:py-20 lg:px-10 lg:pt-36 lg:pb-16">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
           <span className="eyebrow text-rust-dark">Pricing</span>
