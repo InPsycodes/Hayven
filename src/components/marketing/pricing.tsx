@@ -36,12 +36,7 @@ export function Pricing() {
       <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.04fr)] lg:items-center lg:gap-x-16">
         {/* --- left: the pitch --- */}
         <div>
-          <div className="flex items-center gap-3">
-            <span className="eyebrow text-rust-light">Pricing</span>
-            <span aria-hidden className="h-px w-10 bg-rust-light/50" />
-          </div>
-
-          <h2 className="mt-4 font-serif text-[1.7rem] leading-[1.06] tracking-tight text-canvas-white sm:text-[2.5rem] lg:text-[3.3rem]">
+          <h2 className="font-serif text-[1.7rem] leading-[1.06] tracking-tight text-canvas-white sm:text-[2.5rem] lg:text-[3.3rem]">
             You see the price.
             <br />
             <em className="not-italic text-rust-light">Before you commit.</em>
