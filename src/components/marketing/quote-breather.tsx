@@ -33,7 +33,7 @@ export function QuoteBreather() {
           >
             &ldquo;
           </span>
-          <p className="mt-2 font-serif text-[1.7rem] leading-snug text-canvas-white sm:text-4xl lg:text-[2.75rem]">
+          <p className="mt-2 font-serif text-[1.3rem] leading-snug text-canvas-white sm:text-4xl lg:text-[2.75rem]">
             Every child deserves a therapist who is not just qualified, but genuinely{" "}
             <em className="font-normal not-italic text-rust-light">known and trusted</em>{" "}
             by their family.
