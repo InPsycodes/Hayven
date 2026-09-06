@@ -51,6 +51,7 @@ export type AuditAction =
   | "learning_category.create"
   | "learning_category.delete"
   | "intake_form.save"
+  | "intake_form.consent"
   | "learning_course.create"
   | "learning_course.update"
   | "learning_course.publish"

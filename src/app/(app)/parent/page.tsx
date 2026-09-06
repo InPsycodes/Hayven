@@ -21,7 +21,8 @@ import { CareBarChart } from "@/components/care/care-bar-chart";
 import { ChildSwitcher } from "@/components/dashboard/child-switcher";
 import { getSession } from "@/lib/auth/session";
 import { ageFromDob, formatDateTime, formatRelativeToNow, formatShortDate } from "@/data/format";
-import { getIntakeFormForChild, intakeSectionStatuses } from "@/lib/intake/queries";
+import { getIntakeFormForChild } from "@/lib/intake/queries";
+import { intakeProgress } from "@/lib/intake/schema";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealNextUpcomingBookingForChild, getRealBookingsForParent } from "@/lib/booking/queries";
 import { getPublishedReportsForChild } from "@/lib/reports/queries";
@@ -50,8 +51,13 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
     activeChild ? getChildGoalsForParent(activeChild.id) : [],
   ]);
 
-  const intakeSections = intakeSectionStatuses(intakeForm);
-  const intakeDone = intakeSections.filter((s) => s.complete).length;
+  const intakeProg = intakeProgress(
+    intakeForm?.details ?? {},
+    intakeForm?.consents ?? [],
+    activeChild?.firstName
+  );
+  const intakeDone = intakeProg.complete;
+  const intakeTotal = intakeProg.total;
 
   const childBookings = activeChild ? allBookings.filter((b) => b.childId === activeChild.id) : [];
   const nowMs = new Date().getTime();
@@ -74,7 +80,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
   const statusPill =
     goals.length > 0 && goalsOnTrack === goals.length
       ? ({ label: "On track", tone: "ok" } as const)
-      : intakeDone < 4
+      : intakeDone < intakeTotal
         ? ({ label: "Intake pending", tone: "warn" } as const)
         : undefined;
 
@@ -141,9 +147,13 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
             <CareStat
               icon={IconClipboardCheck}
               label="Intake form"
-              value={`${intakeDone}/4`}
-              sub={intakeDone < 4 ? `${4 - intakeDone} section${4 - intakeDone === 1 ? "" : "s"} left` : "complete"}
-              bar={{ pct: (intakeDone / 4) * 100, tone: intakeDone === 4 ? "sage" : "accent" }}
+              value={`${intakeDone}/${intakeTotal}`}
+              sub={
+                intakeDone < intakeTotal
+                  ? `${intakeTotal - intakeDone} section${intakeTotal - intakeDone === 1 ? "" : "s"} left`
+                  : "complete"
+              }
+              bar={{ pct: (intakeDone / intakeTotal) * 100, tone: intakeDone === intakeTotal ? "sage" : "accent" }}
               href={intakeHref}
             />
           </div>
@@ -272,20 +282,22 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
           label="Intake form"
           href={intakeHref}
           className="md:col-span-4"
-          right={<span className="text-[11px] text-care-ink-faint">{intakeDone} of 4</span>}
+          right={<span className="text-[11px] text-care-ink-faint">{intakeDone} of {intakeTotal}</span>}
         >
           <ul className="mt-3 flex flex-col divide-y divide-care-line/60">
-            {intakeSections.map((s) => (
-              <li key={s.key} className="flex items-center justify-between py-2.5 text-[13px]">
-                <span className="text-care-ink">{s.label}</span>
+            {intakeProg.sections.map((s) => (
+              <li key={s.id} className="flex items-center justify-between py-2.5 text-[13px]">
+                <span className="text-care-ink">{s.title}</span>
                 <span
                   className={
-                    s.complete
+                    s.state === "complete"
                       ? "inline-flex items-center gap-1 text-[11px] font-semibold text-care-sage"
-                      : "text-[11px] font-semibold text-care-amber"
+                      : s.state === "in_progress"
+                        ? "text-[11px] font-semibold text-care-amber"
+                        : "text-[11px] font-semibold text-care-ink-faint"
                   }
                 >
-                  {s.complete ? "Complete" : "Due"}
+                  {s.state === "complete" ? "Complete" : s.state === "in_progress" ? "In progress" : "To do"}
                 </span>
               </li>
             ))}

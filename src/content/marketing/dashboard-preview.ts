@@ -67,10 +67,14 @@ export const DASHBOARD_PREVIEW = {
     { quote: "Good engagement in group play, still needs prompting to take turns.", author: "Dr. Adebayo", date: "1 Aug" },
   ],
   intakeForms: [
+    { label: "About Bimpe", status: "complete" as const },
+    { label: "What brings you here", status: "complete" as const },
     { label: "Sensory profile", status: "complete" as const },
-    { label: "Medical history", status: "complete" as const },
+    { label: "Health", status: "complete" as const },
+    { label: "Therapy so far", status: "complete" as const },
+    { label: "A day at home", status: "due" as const },
+    { label: "School or daycare", status: "complete" as const },
     { label: "Consent & sharing", status: "complete" as const },
-    { label: "Home routine survey", status: "due" as const },
   ],
   reports: [
     { label: "August progress report", meta: "9 pages · new", isNew: true },

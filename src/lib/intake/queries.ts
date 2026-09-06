@@ -1,61 +1,71 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  CONSENT_TYPES,
+  type ConsentState,
+  type ConsentType,
+  type IntakeDetails,
+} from "./schema";
 
 export interface RealIntakeForm {
   childId: string;
-  sensoryProfile: string | null;
-  medicalHistory: string | null;
-  consentSharing: string | null;
-  homeRoutine: string | null;
+  details: IntakeDetails;
+  consents: ConsentState[];
   updatedAt: string;
 }
 
-export interface IntakeSectionStatus {
-  key: "sensoryProfile" | "medicalHistory" | "consentSharing" | "homeRoutine";
-  label: string;
-  complete: boolean;
-}
-
-const SECTION_LABELS: Record<IntakeSectionStatus["key"], string> = {
-  sensoryProfile: "Sensory profile",
-  medicalHistory: "Medical history",
-  consentSharing: "Consent & sharing",
-  homeRoutine: "Home routine survey",
-};
-
 /**
- * RLS-scoped read -- works for both a parent reading their own child's form
- * and an assigned therapist reading a client's form, since 0058's two select
- * policies (is_parent_of_child / is_assigned_therapist) cover both cases.
- * Returns null both when no form exists yet and when the caller isn't
- * authorized -- same "not found" shape either way, nothing to disambiguate.
+ * RLS-scoped read: works for a parent reading their own child's form and for
+ * an assigned therapist reading a client's, since 0058/0077's select policies
+ * (is_parent_of_child / is_assigned_therapist) cover both. Returns null both
+ * when nothing exists yet and when the caller isn't authorised, same "not
+ * found" shape either way.
  */
 export async function getIntakeFormForChild(childId: string): Promise<RealIntakeForm | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("intake_forms")
-    .select("child_id, sensory_profile, medical_history, consent_sharing, home_routine, updated_at")
-    .eq("child_id", childId)
-    .maybeSingle();
-  if (error || !data) return null;
+
+  const [{ data: form }, { data: consentRows }] = await Promise.all([
+    supabase
+      .from("intake_forms")
+      .select("child_id, details, updated_at")
+      .eq("child_id", childId)
+      .maybeSingle(),
+    supabase
+      .from("intake_consents")
+      .select("consent_type, granted, detail, recorded_at")
+      .eq("child_id", childId)
+      .order("recorded_at", { ascending: false }),
+  ]);
+
+  // Latest row per consent type is the current state.
+  const latest = new Map<ConsentType, ConsentState>();
+  for (const row of consentRows ?? []) {
+    const type = row.consent_type as ConsentType;
+    if (!latest.has(type)) {
+      latest.set(type, {
+        type,
+        granted: row.granted,
+        detail: row.detail,
+        recordedAt: row.recorded_at,
+      });
+    }
+  }
+  const consents: ConsentState[] = CONSENT_TYPES.map(
+    (type) => latest.get(type) ?? { type, granted: false, detail: null, recordedAt: null }
+  );
+
+  if (!form) {
+    // A form row that doesn't exist yet still shows any consent already
+    // recorded (e.g. migrated from the old free-text field).
+    if (!consentRows || consentRows.length === 0) return null;
+    return { childId, details: {}, consents, updatedAt: new Date(0).toISOString() };
+  }
 
   return {
-    childId: data.child_id,
-    sensoryProfile: data.sensory_profile,
-    medicalHistory: data.medical_history,
-    consentSharing: data.consent_sharing,
-    homeRoutine: data.home_routine,
-    updatedAt: data.updated_at,
+    childId: form.child_id,
+    details: (form.details ?? {}) as IntakeDetails,
+    consents,
+    updatedAt: form.updated_at,
   };
-}
-
-/** Per-section complete/due status, same shape the homepage's dashboard-preview mockup has always shown. */
-export function intakeSectionStatuses(form: RealIntakeForm | null): IntakeSectionStatus[] {
-  const keys: IntakeSectionStatus["key"][] = ["sensoryProfile", "medicalHistory", "consentSharing", "homeRoutine"];
-  return keys.map((key) => ({
-    key,
-    label: SECTION_LABELS[key],
-    complete: Boolean(form?.[key]?.trim()),
-  }));
 }
