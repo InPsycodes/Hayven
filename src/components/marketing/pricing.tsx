@@ -51,7 +51,7 @@ export function Pricing() {
 
         {/* sample "credential card" -- illustrative only, redacted rate */}
         <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
-          <div className="mx-auto max-w-[380px] overflow-hidden rounded-[22px] border border-black/5 bg-ivory text-charcoal shadow-[0_2px_4px_rgba(0,0,0,0.22),0_46px_80px_-34px_rgba(0,0,0,0.62)]">
+          <div className="mx-auto max-w-[380px] overflow-hidden rounded-[22px] border border-black/5 bg-paper text-charcoal shadow-[0_2px_4px_rgba(0,0,0,0.22),0_46px_80px_-34px_rgba(0,0,0,0.62)]">
             <div className="flex items-center justify-between bg-gradient-to-r from-terracotta to-rust-dark px-[18px] py-3 text-white">
               <span className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] uppercase">
                 <span aria-hidden className="size-2 rounded-[2px] bg-white/90" />
@@ -122,7 +122,7 @@ export function Pricing() {
                 </div>
               </div>
 
-              <div className="mt-3.5 rounded-[14px] border border-terracotta/15 bg-terracotta/[0.07] px-[15px] py-3.5">
+              <div className="mt-3.5 rounded-[14px] border border-terracotta/20 bg-terracotta/[0.1] px-[15px] py-3.5">
                 <p className="text-[9.5px] font-bold tracking-[0.11em] text-rust-dark uppercase">
                   Session rate
                 </p>
@@ -142,9 +142,6 @@ export function Pricing() {
               </div>
             </div>
           </div>
-          <p className="mt-3.5 text-center text-[11px] text-canvas-white/45 lg:text-left">
-            A sample profile. Every therapist sets and shows their own rate.
-          </p>
         </div>
 
         {/* the three points + link */}
