@@ -48,19 +48,23 @@ export function Faq() {
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
         <div>
           <span className="eyebrow text-rust-dark">Questions</span>
-          <h2 className="mt-3 max-w-xl font-serif text-[1.02rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
+          <h2 className="mt-3 max-w-xl font-serif text-[1.3rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             Frequently asked questions.
           </h2>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
+          <p className="mt-4 max-w-xl text-[0.8rem] leading-relaxed text-ink-soft sm:text-base">
             The things most parents want to know before they book their first session.
           </p>
 
-          <div className="mt-8 max-w-3xl sm:mt-12">
+          <div className="mt-5 max-w-3xl sm:mt-12">
             <Accordion type="single" collapsible>
               {MARKETING_FAQS.map((faq) => (
                 <AccordionItem key={faq.question} value={faq.question}>
-                  <AccordionTrigger>{faq.question}</AccordionTrigger>
-                  <AccordionContent>{faq.answer}</AccordionContent>
+                  <AccordionTrigger className="text-[0.75rem] sm:text-base">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-[0.66rem] sm:text-sm">
+                    {faq.answer}
+                  </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
