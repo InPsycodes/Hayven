@@ -268,7 +268,7 @@ export function DashboardPreview() {
       <div className="mx-auto max-w-7xl">
         {/* Illustrative-only mock of the parent dashboard -- not a live
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
-        <div className="relative lg:min-h-[720px]">
+        <div className="relative lg:min-h-[560px]">
           {/* pitch */}
           <div className="lg:absolute lg:top-1 lg:left-[3%] lg:w-[27%]">
             <div className="flex items-center gap-3.5">
@@ -372,7 +372,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Recent report (right, bottom) */}
-            <Float className="lg:absolute lg:top-[450px] lg:right-[10%] lg:w-[16.8%]">
+            <Float className="lg:absolute lg:top-[418px] lg:right-[10%] lg:w-[16.8%]">
               <FloatHead icon={IconFileText} label="Recent report" />
               <div className="mt-3.5 flex items-start justify-between gap-2.5">
                 <div>
@@ -391,7 +391,7 @@ export function DashboardPreview() {
         </div>
 
         {/* the three supports */}
-        <div className="mt-16 grid gap-10 sm:grid-cols-3 lg:mt-8">
+        <div className="mt-14 grid gap-10 sm:grid-cols-3 lg:mt-4">
           {SUPPORT_POINTS.map((point) => (
             <div key={point.title}>
               <span className="grid size-11 place-items-center rounded-full bg-terracotta/12 text-terracotta">
