@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { NextResponse } from "next/server";
 
-const VALID_SIZES = ["192", "512", "512-maskable"] as const;
+const VALID_SIZES = ["192", "512", "512-maskable", "badge"] as const;
 
 export async function GET(
   _request: Request,
@@ -15,10 +15,15 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const px = size.startsWith("512") ? 512 : 192;
+  // The Android notification badge is masked to its alpha channel and drawn
+  // in the system's monochrome tint -- it needs a transparent background and
+  // generous safe-area padding, not the filled dark square the app icons use
+  // (that would render as a solid blob).
+  const isBadge = size === "badge";
+  const px = isBadge ? 96 : size.startsWith("512") ? 512 : 192;
   const isMaskable = size.endsWith("maskable");
-  // Maskable icons need safe-area padding so platform masks don't clip the glyph.
-  const pad = isMaskable ? Math.round(px * 0.16) : 0;
+  const padRatio = isBadge ? 0.22 : isMaskable ? 0.16 : 0;
+  const pad = Math.round(px * padRatio);
 
   const logo = await readFile(join(process.cwd(), "public/images/logo-icon.png"));
   const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
@@ -32,7 +37,7 @@ export async function GET(
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#17140F",
+          background: isBadge ? "transparent" : "#17140F",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
