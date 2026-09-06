@@ -5,6 +5,31 @@ import { usePathname } from "next/navigation";
 import { IconDownload, IconShare2, IconX } from "@tabler/icons-react";
 
 const DISMISS_KEY = "hayven-install-dismissed";
+const SNOOZE_KEY = "hayven-install-snoozed-at";
+// Once the prompt has been shown (or snoozed with "Not now"), stay quiet for
+// this long before offering it again -- it was reappearing on every
+// navigation and every back-button press.
+const SNOOZE_MS = 14 * 24 * 60 * 60 * 1000;
+
+/** True when the prompt should stay hidden: permanently dismissed, or shown
+ *  recently enough to still be snoozed. Guarded for private-mode throws. */
+function isSuppressed(): boolean {
+  try {
+    if (localStorage.getItem(DISMISS_KEY)) return true;
+    const snoozedAt = Number(localStorage.getItem(SNOOZE_KEY) ?? 0);
+    return snoozedAt > 0 && Date.now() - snoozedAt < SNOOZE_MS;
+  } catch {
+    return false;
+  }
+}
+
+function markShown(): void {
+  try {
+    localStorage.setItem(SNOOZE_KEY, String(Date.now()));
+  } catch {
+    /* private mode -- prompt will just reappear next session */
+  }
+}
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -55,7 +80,7 @@ export function PwaInstallPrompt() {
     // than synchronously in the effect body (avoids cascading renders on
     // mount for the common case where nothing ends up shown at all).
     const timer = setTimeout(() => {
-      if (localStorage.getItem(DISMISS_KEY)) return;
+      if (isSuppressed()) return;
 
       const standalone =
         window.matchMedia("(display-mode: standalone)").matches ||
@@ -72,6 +97,7 @@ export function PwaInstallPrompt() {
     function handleBeforeInstallPrompt(e: Event) {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      if (isSuppressed()) return;
       setVisible(true);
     }
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -107,6 +133,9 @@ export function PwaInstallPrompt() {
   // for as long as the toast is actually showing.
   useEffect(() => {
     document.body.classList.toggle("pwa-prompt-reserved", showing);
+    // Start the snooze the moment it actually appears on screen, so a back
+    // navigation or the next page load doesn't bring it straight back.
+    if (showing) markShown();
     return () => {
       document.body.classList.remove("pwa-prompt-reserved");
     };

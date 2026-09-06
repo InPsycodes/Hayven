@@ -3,8 +3,8 @@ import type { ComponentType } from "react";
 import type { IconProps } from "@tabler/icons-react";
 import type { StaticImageData } from "next/image";
 
-import speechTherapyImage from "../../../public/images/specialty-speech-therapy.png";
-import occupationalTherapyImage from "../../../public/images/specialty-occupational-therapy.png";
+import speechTherapyImage from "../../../public/images/specialty-speech-therapy.jpg";
+import occupationalTherapyImage from "../../../public/images/specialty-occupational-therapy.jpg";
 import abaTherapyImage from "../../../public/images/specialty-aba-therapy.jpg";
 import developmentalPsychologyImage from "../../../public/images/specialty-developmental-psychology.jpg";
 

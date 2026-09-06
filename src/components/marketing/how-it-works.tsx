@@ -7,7 +7,7 @@ export function HowItWorks() {
     <section id="how-it-works" className="bg-terracotta px-6 py-16 sm:py-20 lg:px-10 lg:py-36">
       <div className="mx-auto max-w-7xl">
         <span className="eyebrow text-canvas-white/95">How it works</span>
-        <h2 className="mt-3 max-w-xl font-serif text-3xl leading-tight text-canvas-white sm:text-4xl lg:text-[2.75rem]">
+        <h2 className="mt-3 max-w-xl font-serif text-[1.7rem] leading-tight text-canvas-white sm:text-4xl lg:text-[2.75rem]">
           Four calm steps, start to finish.
         </h2>
 

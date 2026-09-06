@@ -69,7 +69,7 @@ export function TherapistResultRow({ therapist }: { therapist: DiscoveryTherapis
   return (
     <Link
       href={`/therapists/${therapist.id}`}
-      className="group grid grid-cols-[auto_1fr] items-start gap-x-4 gap-y-3 rounded-2xl bg-charcoal p-4 text-canvas-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_22px_46px_-26px_rgba(26,18,12,0.55)] ring-1 ring-white/10 transition-all hover:-translate-y-0.5 hover:ring-white/20 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-x-5 sm:p-5"
+      className="group grid grid-cols-[auto_1fr] items-start gap-x-4 gap-y-3 rounded-2xl bg-charcoal p-4 text-canvas-white shadow-[0_1px_2px_rgba(0,0,0,0.16),0_10px_24px_-16px_rgba(26,18,12,0.4)] ring-1 ring-white/10 transition-all hover:-translate-y-0.5 hover:ring-white/20 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-x-5 sm:p-5"
     >
       <TherapistAvatar
         name={therapist.displayName}

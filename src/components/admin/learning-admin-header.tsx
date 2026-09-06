@@ -103,7 +103,7 @@ function StatTile({
   tone?: "amber";
 }) {
   return (
-    <div className="rounded-sm bg-white p-4 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)]">
+    <div className="rounded-sm bg-white p-4 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)]">
       <p className="label-micro text-muted-foreground">{label}</p>
       <p className="mt-1.5 font-heading text-2xl text-charcoal tabular-nums">{value}</p>
       <p className={cn("mt-1 text-[11px]", tone === "amber" ? "text-amber-text" : "text-muted-foreground")}>

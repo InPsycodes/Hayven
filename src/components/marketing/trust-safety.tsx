@@ -8,7 +8,7 @@ export function TrustSafety() {
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
           <span className="eyebrow text-rust-dark">Trust &amp; safety</span>
-          <h2 className="mt-3 font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
+          <h2 className="mt-3 font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             Care you can trust.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
@@ -25,7 +25,7 @@ export function TrustSafety() {
                   taller at any card width -- no fixed-height guess needed.
                   The title fades out and the body fades in on hover, so the
                   card's footprint never changes and no sibling card shifts. */}
-              <div className="group relative flex h-full scale-100 flex-col items-center gap-4 rounded-[1.25rem] border-[1.5px] border-terracotta/70 bg-canvas-white p-8 text-center shadow-[0_20px_60px_-15px_rgba(26,18,12,0.3),0_0_70px_-8px_rgba(156,89,52,0.45)] transition-all duration-300 ease-out hover:z-20 hover:scale-[1.04] hover:border-terracotta hover:shadow-[0_24px_64px_-14px_rgba(26,18,12,0.32),0_0_80px_-6px_rgba(156,89,52,0.55)]">
+              <div className="group relative flex h-full scale-100 flex-col items-center gap-4 rounded-[1.25rem] border-[1.5px] border-terracotta/70 bg-canvas-white p-8 text-center shadow-[0_10px_30px_-16px_rgba(26,18,12,0.22),0_0_40px_-16px_rgba(156,89,52,0.25)] transition-all duration-300 ease-out hover:z-20 hover:scale-[1.04] hover:border-terracotta hover:shadow-[0_14px_36px_-16px_rgba(26,18,12,0.26),0_0_48px_-14px_rgba(156,89,52,0.32)]">
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-terracotta/25 bg-terracotta/12 text-terracotta">
                   <Icon icon={point.icon} size="md" />
                 </span>

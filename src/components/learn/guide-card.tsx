@@ -26,7 +26,7 @@ export function GuideCard({ guide, compact = false }: { guide: GuideCardData; co
   return (
     <Link
       href={guide.href}
-      className="group flex flex-col overflow-hidden rounded-2xl bg-canvas-white ring-1 ring-charcoal/10 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)] transition-all hover:-translate-y-0.5 hover:ring-charcoal/20"
+      className="group flex flex-col overflow-hidden rounded-2xl bg-canvas-white ring-1 ring-charcoal/10 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)] transition-all hover:-translate-y-0.5 hover:ring-charcoal/20"
     >
       <div className={`relative shrink-0 overflow-hidden ${compact ? "aspect-[16/9]" : "aspect-3/2"}`}>
         {guide.imageUrl ? (

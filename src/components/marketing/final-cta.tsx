@@ -4,7 +4,7 @@ export function FinalCta() {
   return (
     <section className="bg-terracotta px-6 py-16 sm:py-20 lg:px-10">
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center">
-        <h2 className="font-serif text-3xl leading-tight text-canvas-white sm:text-4xl lg:text-[2.75rem]">
+        <h2 className="font-serif text-[1.7rem] leading-tight text-canvas-white sm:text-4xl lg:text-[2.75rem]">
           Ready to find the right support for your child?
         </h2>
         <p className="text-lg text-canvas-white/95">

@@ -36,7 +36,7 @@ export async function CareHeader({
           {initials}
         </span>
         <div className="min-w-0">
-          <h1 className="flex flex-wrap items-center gap-2.5 font-heading text-xl font-medium text-care-ink md:text-2xl">
+          <h1 className="flex flex-wrap items-center gap-2.5 font-heading text-xl font-medium text-care-ink lg:text-2xl">
             {title}
             {status && (
               <span
@@ -56,13 +56,13 @@ export async function CareHeader({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2.5">
+      <div className="flex shrink-0 items-center gap-2">
         {actions.map((a) => (
           <Link
             key={a.href + a.label}
             href={a.href}
             className={cn(
-              "rounded-lg px-4 py-2 text-[12.5px] font-semibold whitespace-nowrap transition-colors",
+              "rounded-lg px-3 py-1.5 text-[12.5px] font-semibold whitespace-nowrap transition-colors sm:px-4 sm:py-2",
               a.variant === "ghost"
                 ? "border border-care-line text-care-ink hover:bg-care-surface"
                 : "bg-care-accent text-white hover:bg-care-accent-deep"

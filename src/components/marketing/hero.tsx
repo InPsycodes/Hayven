@@ -42,7 +42,7 @@ export function Hero() {
             </span>
 
             <h1
-              className="font-serif text-[2.75rem] leading-[1.08] tracking-tight text-canvas-white [text-wrap:balance] sm:text-6xl lg:text-[4rem]"
+              className="font-serif text-[2rem] leading-[1.12] tracking-tight text-canvas-white [text-wrap:balance] sm:text-5xl lg:text-[4rem]"
               style={{ textShadow: TEXT_SHADOW }}
             >
               A calmer path to the{" "}
@@ -51,7 +51,7 @@ export function Hero() {
             </h1>
 
             <p
-              className="max-w-lg text-lg text-canvas-white/85"
+              className="max-w-lg text-base text-canvas-white/85 sm:text-lg"
               style={{ textShadow: TEXT_SHADOW }}
             >
               Hayven connects Nigerian families with verified speech, occupational and ABA
@@ -68,17 +68,17 @@ export function Hero() {
               <IconArrowRight size={14} stroke={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
 
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-nowrap items-center gap-2.5 sm:gap-4">
               <Link
                 href="/signup?role=parent"
-                className="group inline-flex items-center gap-2 rounded-full bg-terracotta px-6 py-3.5 text-sm font-semibold text-canvas-white transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-rust-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
+                className="group inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-terracotta px-4 py-3 text-[13px] font-semibold text-canvas-white transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-rust-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta sm:px-6 sm:py-3.5 sm:text-sm"
               >
                 I&apos;m a parent
                 <IconArrowRight size={16} stroke={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
               <Link
                 href="/signup?role=therapist"
-                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-semibold text-canvas-white backdrop-blur-sm transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/30 bg-white/10 px-4 py-3 text-[13px] font-semibold text-canvas-white backdrop-blur-sm transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6 sm:py-3.5 sm:text-sm"
               >
                 I&apos;m a therapist
               </Link>

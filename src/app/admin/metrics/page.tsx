@@ -2,7 +2,7 @@ import { getPlatformMetrics } from "@/lib/admin/queries";
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)]">
+    <div className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)]">
       <p className="label-micro text-muted-foreground">{label}</p>
       <p className="mt-2 font-heading text-3xl text-charcoal">{value.toLocaleString()}</p>
     </div>

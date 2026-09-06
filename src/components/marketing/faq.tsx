@@ -10,7 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-import faqConsultationImage from "../../../public/images/faq-consultation.png";
+import faqConsultationImage from "../../../public/images/faq-consultation.jpg";
 import faqIconBubbleImage from "../../../public/images/faq-icon-bubble.png";
 import faqIconQuestionImage from "../../../public/images/faq-icon-question.png";
 import faqIconHeartImage from "../../../public/images/faq-icon-heart.png";
@@ -48,7 +48,7 @@ export function Faq() {
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
         <div>
           <span className="eyebrow text-rust-dark">Questions</span>
-          <h2 className="mt-3 max-w-xl font-serif text-3xl leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
+          <h2 className="mt-3 max-w-xl font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             Frequently asked questions.
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">

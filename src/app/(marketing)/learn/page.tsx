@@ -191,7 +191,7 @@ function FeaturedHero({ article }: { article: RealLearningArticle }) {
   return (
     <Link
       href={`/learn/${article.slug}`}
-      className="group mt-10 grid overflow-hidden rounded-[1.25rem] bg-charcoal text-canvas-white shadow-[0_20px_60px_-15px_rgba(26,18,12,0.35)] md:grid-cols-[1.1fr_1fr]"
+      className="group mt-10 grid overflow-hidden rounded-[1.25rem] bg-charcoal text-canvas-white shadow-[0_10px_30px_-18px_rgba(26,18,12,0.28)] md:grid-cols-[1.1fr_1fr]"
     >
       <div className="flex flex-col justify-between gap-6 p-8 md:p-10">
         <div className="flex flex-col gap-3">

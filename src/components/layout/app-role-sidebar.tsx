@@ -32,7 +32,7 @@ export function AppRoleSidebar({
   const items = SIDEBAR_NAV[role];
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col justify-between gap-6 border-r border-care-line/60 bg-care-bg px-4 py-5 text-care-ink md:flex">
+    <aside className="hidden w-52 shrink-0 flex-col justify-between gap-6 border-r border-care-line/60 bg-care-bg px-3 py-5 text-care-ink md:flex lg:w-60 lg:px-4">
       <div className="flex flex-col gap-6">
         <div className="px-2">
           <BrandMark />

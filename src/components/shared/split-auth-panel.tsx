@@ -72,7 +72,7 @@ export function SplitAuthPanel({
       </div>
 
       <div className="flex w-full flex-1 items-start justify-center bg-paper px-6 py-10 md:w-[48%] md:items-center md:px-12">
-        <div className="w-full max-w-sm rounded-2xl bg-canvas-white p-6 shadow-[0_1px_2px_rgba(26,26,26,.05),0_24px_50px_-30px_rgba(26,26,26,.35)] ring-1 ring-charcoal/10 sm:p-8">
+        <div className="w-full max-w-sm rounded-2xl bg-canvas-white p-6 shadow-[0_1px_2px_rgba(26,26,26,.04),0_10px_24px_-16px_rgba(26,26,26,.22)] ring-1 ring-charcoal/10 sm:p-8">
           {children}
         </div>
       </div>

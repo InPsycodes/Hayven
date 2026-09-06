@@ -61,10 +61,10 @@ export default function AboutPage() {
         <div className="mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-[1fr_0.82fr] md:gap-20">
           <div>
             <span className="eyebrow text-rust-light">About Hayven</span>
-            <h1 className="mt-5 font-serif text-4xl leading-[1.08] text-canvas-white sm:text-5xl lg:text-[3.35rem]">
+            <h1 className="mt-5 font-serif text-[1.9rem] leading-[1.12] text-canvas-white sm:text-4xl md:text-5xl lg:text-[3.35rem]">
               We started Hayven so no parent has to figure it out alone.
             </h1>
-            <p className="mt-6 max-w-md text-lg leading-relaxed text-canvas-white/65">
+            <p className="mt-6 max-w-md text-base leading-relaxed text-canvas-white/65 sm:text-lg">
               A calmer path from the first worried question, through assessment and therapy,
               to everyday progress you can actually see.
             </p>
@@ -76,7 +76,7 @@ export default function AboutPage() {
             />
             <Image
               src={founderImage}
-              alt="Ademola, founder of Hayven"
+              alt="Ademola Yusuf, founder of Hayven"
               placeholder="blur"
               priority
               sizes="(max-width: 768px) 90vw, 440px"
@@ -121,11 +121,11 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-10 flex items-center gap-3.5 border-t border-charcoal/10 pt-6">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-terracotta font-serif text-base font-semibold text-white">
-              A
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-terracotta font-serif text-sm font-semibold text-white">
+              AY
             </span>
             <div>
-              <p className="text-sm font-semibold text-charcoal">Ademola</p>
+              <p className="text-sm font-semibold text-charcoal">Ademola Yusuf</p>
               <p className="text-[13px] text-muted-foreground">Founder, Hayven</p>
             </div>
           </div>

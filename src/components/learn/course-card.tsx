@@ -23,7 +23,7 @@ export function CourseCard({ course }: { course: RealCourse }) {
   return (
     <Link
       href={`/therapist/learn/${course.slug}`}
-      className={`group flex flex-col gap-3 rounded-2xl bg-canvas-white p-5 ring-1 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)] transition-all hover:-translate-y-0.5 ${
+      className={`group flex flex-col gap-3 rounded-2xl bg-canvas-white p-5 ring-1 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)] transition-all hover:-translate-y-0.5 ${
         current ? "ring-terracotta/50" : "ring-charcoal/10 hover:ring-charcoal/20"
       }`}
     >

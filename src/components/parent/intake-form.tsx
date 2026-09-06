@@ -196,14 +196,16 @@ export function IntakeForm({
         );
       })}
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-care-line pt-6">
-        <Button type="button" variant="accent" onClick={flush} disabled={status === "saving"}>
-          {status === "saving" ? "Saving…" : "Save intake form"}
-        </Button>
-        <Button type="button" variant="outline" onClick={() => router.push("/parent")}>
-          Save &amp; finish later
-        </Button>
-        <span className="ml-auto text-xs text-care-ink-faint">
+      <div className="flex flex-col gap-3 border-t border-care-line pt-6">
+        <div className="flex flex-nowrap items-center gap-2.5">
+          <Button type="button" variant="accent" onClick={flush} disabled={status === "saving"}>
+            {status === "saving" ? "Saving…" : "Save intake form"}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => router.push("/parent")}>
+            Save &amp; finish later
+          </Button>
+        </div>
+        <span className="text-xs text-care-ink-faint">
           {savedAt ? `Last saved ${relativeTime(savedAt)}` : "Not saved yet"} · auto-saves as you type
         </span>
       </div>

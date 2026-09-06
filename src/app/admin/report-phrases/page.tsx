@@ -18,14 +18,14 @@ export default async function AdminReportPhrasesPage() {
       </div>
 
       <div className="flex flex-col gap-6 px-6 pb-8 md:px-8">
-        <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)] md:p-6">
+        <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)] md:p-6">
           <h2 className="label-micro text-rust-dark">Add a phrase</h2>
           <div className="mt-5">
             <PhraseVariantForm onSubmit={addReportPhraseVariant} />
           </div>
         </section>
 
-        <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.05),0_14px_34px_-22px_rgba(26,26,26,.3)] md:p-6">
+        <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)] md:p-6">
           <h2 className="label-micro text-rust-dark">Existing phrases</h2>
           <div className="mt-5 flex flex-col gap-2">
             {variants.length === 0 ? (

@@ -51,7 +51,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const backHref = isTherapist ? "/learn?audience=therapist" : "/learn";
 
   return (
-    <article>
+    <article className="bg-canvas-white">
       <ReadingProgress />
       {/* Admin-authored content (see /admin/learning), not user input --
           still run through safeJsonLdStringify for consistency with the
@@ -74,10 +74,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       />
 
       {/* Hero */}
-      <header className="relative isolate overflow-hidden bg-charcoal text-canvas-white">
+      <header className="relative isolate overflow-hidden bg-[#6b3f26] text-canvas-white">
         <div
           className="absolute inset-0 -z-10"
-          style={{ background: "linear-gradient(135deg, #9c5934 0%, #7c4527 38%, #1a1a1a 100%)" }}
+          style={{ background: "linear-gradient(135deg, #a5622f 0%, #8a4d2b 45%, #5f3a23 100%)" }}
         />
         {article.imageUrl && (
           <Image
@@ -86,10 +86,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             fill
             priority
             sizes="100vw"
-            className="photo-treatment -z-10 object-cover opacity-40"
+            className="photo-treatment -z-10 object-cover opacity-55"
           />
         )}
-        <div className="mx-auto max-w-3xl px-6 pt-10 pb-14 md:px-10 md:pt-12 md:pb-16">
+        <div className="mx-auto max-w-3xl px-6 pt-8 pb-10 md:px-10 md:pt-10 md:pb-12">
           <Link
             href={backHref}
             className="mb-8 inline-flex items-center gap-1.5 text-sm text-canvas-white/75 hover:text-canvas-white"
@@ -100,7 +100,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           {article.categoryName && (
             <span className="label-micro block text-canvas-white/70">{article.categoryName}</span>
           )}
-          <h1 className="mt-3 max-w-2xl font-serif text-3xl leading-tight md:text-[2.5rem]">
+          <h1 className="mt-3 max-w-2xl font-serif text-[1.7rem] leading-tight sm:text-3xl md:text-[2.5rem]">
             {article.title}
           </h1>
           <p className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-canvas-white/75">
