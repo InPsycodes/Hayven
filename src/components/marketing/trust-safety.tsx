@@ -1,6 +1,5 @@
 import { TRUST_SAFETY_POINTS } from "@/content/marketing/trust-safety";
 import { Icon } from "@/components/ui/icon";
-import { Reveal } from "@/components/marketing/reveal";
 
 export function TrustSafety() {
   return (
@@ -18,8 +17,8 @@ export function TrustSafety() {
         </div>
 
         <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-3">
-          {TRUST_SAFETY_POINTS.map((point, index) => (
-            <Reveal key={point.title} delayMs={index * 80} className="h-full">
+          {TRUST_SAFETY_POINTS.map((point) => (
+            <div key={point.title} className="h-full">
               {/* Title and body are stacked in the same grid cell (both
                   col/row-start-1), so the cell auto-sizes to whichever is
                   taller at any card width -- no fixed-height guess needed.
@@ -39,7 +38,7 @@ export function TrustSafety() {
                   </p>
                 </div>
               </div>
-            </Reveal>
+            </div>
           ))}
         </div>
       </div>

@@ -4,7 +4,6 @@ import { IconArrowRight } from "@tabler/icons-react";
 
 import { SPECIALTY_CARDS } from "@/content/marketing/specialties";
 import { Icon } from "@/components/ui/icon";
-import { Reveal } from "@/components/marketing/reveal";
 
 // Fallback for cards without real photography yet (see imageSrc on SPECIALTY_CARDS):
 // a distinct brand-toned gradient, sized/positioned identically to a photo.
@@ -32,7 +31,7 @@ export function Specialties() {
 
         <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-8">
           {SPECIALTY_CARDS.map((card, index) => (
-            <Reveal key={card.title} delayMs={index * 60} className="h-full">
+            <div key={card.title} className="h-full">
               <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-charcoal/10 bg-canvas-white transition-colors hover:border-charcoal/20">
                 <div className="relative aspect-4/3 shrink-0 overflow-hidden">
                   {card.imageSrc ? (
@@ -59,7 +58,7 @@ export function Specialties() {
                   <p className="mt-2 text-sm leading-relaxed text-ink-soft">{card.description}</p>
                 </div>
               </div>
-            </Reveal>
+            </div>
           ))}
         </div>
 

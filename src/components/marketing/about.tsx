@@ -34,7 +34,7 @@ export function About() {
 
         <div className="min-w-0">
           <span className="eyebrow text-rust-dark">About Hayven</span>
-          <h2 className="mt-3 font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
+          <h2 className="mt-3 font-serif text-[1.4rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             Helping families understand, connect, and feel supported.
           </h2>
           <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-soft">

@@ -24,7 +24,9 @@ export function useReveal<T extends HTMLElement>() {
           }
         }
       },
-      { rootMargin: "0px 0px -10% 0px", threshold: 0.1 }
+      // Fire as soon as the top edge comes into view (minus a small margin),
+      // not partway through the section -- keeps the fade calm and one-shot.
+      { rootMargin: "0px 0px -80px 0px", threshold: 0 }
     );
 
     observer.observe(el);

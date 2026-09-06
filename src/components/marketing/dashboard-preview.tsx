@@ -7,7 +7,6 @@ import {
   DASHBOARD_FEATURE_CARDS,
 } from "@/content/marketing/dashboard-preview";
 import { Icon } from "@/components/ui/icon";
-import { Reveal } from "@/components/marketing/reveal";
 
 const CHART_WIDTH = 200;
 const CHART_HEIGHT = 90;
@@ -152,8 +151,8 @@ export function DashboardPreview() {
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
           <span className="eyebrow text-rust-dark">Progress & support</span>
-          <h2 className="mt-3 font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
-            Everything about your child&apos;s care, on one screen.
+          <h2 className="mt-3 font-serif text-[1.4rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
+            Everything about your child&apos;s care, on one screen. 
           </h2>
           <Link
             href="/parent"
@@ -166,10 +165,10 @@ export function DashboardPreview() {
         {/* Illustrative-only mock of parent-dashboard features -- not a live
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
         <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-2 sm:gap-8">
-          {DASHBOARD_FEATURE_CARDS.map((card, index) => {
+          {DASHBOARD_FEATURE_CARDS.map((card) => {
             const Preview = PREVIEWS[card.key];
             return (
-              <Reveal key={card.key} delayMs={index * 60} className="h-full">
+              <div key={card.key} className="h-full">
                 <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-charcoal/10 bg-canvas-white transition-colors hover:border-charcoal/20">
                   <div className="relative aspect-[16/10] shrink-0 overflow-hidden bg-charcoal">
                     <Preview />
@@ -182,7 +181,7 @@ export function DashboardPreview() {
                     <p className="mt-2 text-sm leading-relaxed text-ink-soft">{card.description}</p>
                   </div>
                 </div>
-              </Reveal>
+              </div>
             );
           })}
         </div>

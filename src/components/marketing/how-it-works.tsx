@@ -1,6 +1,5 @@
 import { HOW_IT_WORKS_STEPS } from "@/content/marketing/steps";
 import { cn } from "@/lib/utils";
-import { Reveal } from "@/components/marketing/reveal";
 
 export function HowItWorks() {
   return (
@@ -15,7 +14,7 @@ export function HowItWorks() {
           {HOW_IT_WORKS_STEPS.map((step, index) => {
             const isLast = index === HOW_IT_WORKS_STEPS.length - 1;
             return (
-              <Reveal key={step.title} delayMs={index * 80}>
+              <div key={step.title}>
                 <div className={cn("flex flex-col gap-3", isLast && "md:-m-5 md:rounded-lg md:border md:border-white/20 md:p-5")}>
                   <span className="font-serif text-4xl leading-none text-canvas-white/70">
                     {String(index + 1).padStart(2, "0")}
@@ -28,7 +27,7 @@ export function HowItWorks() {
                     </span>
                   )}
                 </div>
-              </Reveal>
+              </div>
             );
           })}
         </div>
