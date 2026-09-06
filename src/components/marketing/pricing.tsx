@@ -1,6 +1,4 @@
-import Link from "next/link";
 import {
-  IconArrowRight,
   IconCheck,
   IconRosetteDiscountCheckFilled,
   IconShieldCheck,
@@ -144,7 +142,7 @@ export function Pricing() {
           </div>
         </div>
 
-        {/* the three points + link */}
+        {/* the three points */}
         <div className="lg:col-start-1 lg:row-start-2">
           <ul className="flex flex-col">
             {PRICING_POINTS.map((point) => (
@@ -166,17 +164,6 @@ export function Pricing() {
               </li>
             ))}
           </ul>
-          <Link
-            href="/search"
-            className="group mt-7 inline-flex items-center gap-2 rounded-full bg-terracotta px-5 py-3 text-[13px] font-semibold text-canvas-white transition-colors hover:bg-rust-dark"
-          >
-            Browse verified therapists
-            <IconArrowRight
-              size={15}
-              stroke={2}
-              className="transition-transform duration-200 group-hover:translate-x-0.5"
-            />
-          </Link>
         </div>
       </div>
     </section>
