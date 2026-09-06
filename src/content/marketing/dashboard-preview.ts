@@ -1,117 +1,79 @@
-import {
-  IconLayoutDashboard,
-  IconCalendarCheck,
-  IconClipboardText,
-  IconFileText,
-  IconMessageCircle,
-  IconUsers,
-  IconHome,
-  IconActivity,
-} from "@tabler/icons-react";
+import { IconArrowUpRight, IconUsers, IconFileText } from "@tabler/icons-react";
+import type { ComponentType } from "react";
+import type { IconProps } from "@tabler/icons-react";
 
 /**
- * Illustrative-only content for the landing page's dashboard mock. This is
- * marketing collateral, not real data -- it has no connection to the actual
- * parent dashboard at /parent (see src/lib/parent/queries.ts for that).
- * Sidebar labels and sections are kept close to the real app's own nav
- * (see src/components/layout/nav-config.ts) and feature set -- nothing
- * shown here is a feature Hayven doesn't actually have.
+ * Illustrative-only content for the homepage "Progress & Support" section
+ * (src/components/marketing/dashboard-preview.tsx). Marketing collateral, not
+ * a live screenshot -- no connection to the real parent dashboard at /parent
+ * (see src/lib/parent/queries.ts). "Bimpe" and the figures are a sample,
+ * the same posture the section has always had.
  */
 
 export const DASHBOARD_NAV = [
-  { label: "Dashboard", icon: IconLayoutDashboard, active: true },
-  { label: "Sessions", icon: IconCalendarCheck },
-  { label: "Intake form", icon: IconClipboardText },
-  { label: "Reports", icon: IconFileText },
-];
-
-export const DASHBOARD_CHILDREN = [
-  { initials: "BA", name: "Bimpe", active: true },
-  { initials: "TA", name: "Tunde" },
-];
-
-export const DASHBOARD_CARE_TEAM = {
-  initials: "FA",
-  name: "Dr. Adebayo",
-  role: "Speech therapist",
-};
-
-export const DASHBOARD_PREVIEW = {
-  url: "hayven.com.ng/parent/children/bimpe",
-  childInitials: "BA",
-  childName: "Bimpe Adewale",
-  meta: "Age 6 · Speech Therapy · 14 sessions · started 12 Mar 2026",
-  statusLabel: "On track",
-  stats: [
-    { label: "Communication", value: 82, delta: "+9", icon: IconMessageCircle, tone: "strong" as const },
-    { label: "Social interaction", value: 64, delta: "+4", icon: IconUsers, tone: "default" as const },
-    { label: "Daily living skills", value: 71, delta: "+6", icon: IconHome, tone: "default" as const },
-    { label: "Attendance", value: 93, delta: "13/14", icon: IconActivity, tone: "strong" as const },
-  ],
-  goalProgress: {
-    months: ["Mar", "Apr", "May", "Jun", "Jul", "Aug"],
-    communication: [28, 41, 52, 61, 74, 82],
-    social: [15, 22, 31, 38, 52, 64],
-  },
-  nextAppointment: {
-    label: "Therapy review",
-    time: "Wed 27 Aug · 10:00 AM",
-    location: "Virtual session",
-  },
-  attendance: {
-    weeks: [1, 1, 1, 0, 1, 1, 1, 1, 0.5, 1, 1, 1, 1, 1],
-    footnote: "1 session missed · rescheduled 4 Jul",
-  },
-  sessionNotes: [
-    { quote: "Bimpe used a 4-word sentence unprompted today. Try the picture cards at home.", author: "Dr. Adebayo", date: "11 Aug" },
-    { quote: "Good engagement in group play, still needs prompting to take turns.", author: "Dr. Adebayo", date: "1 Aug" },
-  ],
-  intakeForms: [
-    { label: "About Bimpe", status: "complete" as const },
-    { label: "What brings you here", status: "complete" as const },
-    { label: "Sensory profile", status: "complete" as const },
-    { label: "Health", status: "complete" as const },
-    { label: "Therapy so far", status: "complete" as const },
-    { label: "A day at home", status: "due" as const },
-    { label: "School or daycare", status: "complete" as const },
-    { label: "Consent & sharing", status: "complete" as const },
-  ],
-  reports: [
-    { label: "August progress report", meta: "9 pages · new", isNew: true },
-    { label: "Quarterly review · Q2", meta: "7 pages" },
-    { label: "Initial assessment", meta: "6 pages" },
-  ],
-};
-
-export const DASHBOARD_CHECKLIST = [
-  "Upcoming appointments & reminders",
-  "Intake form status at a glance",
-  "Assigned therapist & session notes",
-];
-
-export const DASHBOARD_FEATURE_CARDS = [
-  {
-    key: "dashboard",
-    title: "Dashboard",
-    description: "Goal progress, attendance and what's next, all at a glance.",
-    icon: IconLayoutDashboard,
-  },
-  {
-    key: "sessions",
-    title: "Sessions",
-    description: "Every upcoming and past session, with notes from your child's therapist.",
-    icon: IconCalendarCheck,
-  },
-  {
-    key: "intake",
-    title: "Intake form",
-    description: "What's complete and what's still needed before the first session.",
-    icon: IconClipboardText,
-  },
-  {
-    key: "reports",
-    title: "Reports",
-    description: "Progress reports shared by the therapist, ready to read anytime.",
-    icon: IconFileText,
-  },
+  "Home",
+  "Progress",
+  "Sessions",
+  "Reports",
+  "Messages",
+  "Settings",
 ] as const;
+
+export const PROGRESS_PREVIEW = {
+  child: { name: "Bimpe", meta: "5 years · Autism", status: "On track" },
+  communication: {
+    value: 82,
+    lastMonth: 76,
+    note: "Bimpe is using longer phrases more consistently during sessions.",
+    highlight: "This shows great progress in expressive language.",
+  },
+  social: {
+    value: 64,
+    lastMonth: 58,
+    note: "Showing more interest in peer interactions.",
+  },
+  trend: {
+    months: ["Apr", "May", "Jun", "Jul", "Aug"],
+    communication: [52, 62, 70, 76, 82],
+    social: [38, 45, 52, 58, 64],
+  },
+  goal: { done: 8, total: 10 },
+  attendance: 94,
+  nextSession: {
+    label: "Therapy review",
+    time: "Wed, 27 Aug · 10:00 AM",
+    mode: "Virtual session",
+    therapist: "Dr. Adebayo",
+    therapistRole: "Speech & Language Therapist",
+  },
+  note: {
+    quote: "Bimpe used a 4-word sentence unprompted today. Try the picture cards at home.",
+    author: "Dr. Adebayo",
+    date: "11 Aug",
+  },
+  report: { label: "August progress report", meta: "9 pages · PDF" },
+};
+
+export interface SupportPoint {
+  icon: ComponentType<IconProps>;
+  title: string;
+  body: string;
+}
+
+export const SUPPORT_POINTS: SupportPoint[] = [
+  {
+    icon: IconArrowUpRight,
+    title: "See progress",
+    body: "Understand how your child is progressing without decoding clinical charts.",
+  },
+  {
+    icon: IconUsers,
+    title: "Stay connected",
+    body: "Keep up with sessions, therapist notes and what's happening next.",
+  },
+  {
+    icon: IconFileText,
+    title: "Keep everything together",
+    body: "Reports, appointments and care information live in one place.",
+  },
+];
