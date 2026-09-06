@@ -51,7 +51,7 @@ export function Pricing() {
 
         {/* sample "credential card" -- illustrative only, redacted rate */}
         <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
-          <div className="mx-auto max-w-[380px] overflow-hidden rounded-[22px] border border-black/5 bg-paper text-charcoal shadow-[0_2px_4px_rgba(0,0,0,0.22),0_46px_80px_-34px_rgba(0,0,0,0.62)]">
+          <div className="mx-auto max-w-[380px] overflow-hidden rounded-[22px] border border-black/5 bg-[#e5ddc9] text-charcoal shadow-[0_2px_4px_rgba(0,0,0,0.22),0_46px_80px_-34px_rgba(0,0,0,0.62)]">
             <div className="flex items-center justify-between bg-gradient-to-r from-terracotta to-rust-dark px-[18px] py-3 text-white">
               <span className="flex items-center gap-2 text-[11px] font-bold tracking-[0.12em] uppercase">
                 <span aria-hidden className="size-2 rounded-[2px] bg-white/90" />
