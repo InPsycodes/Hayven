@@ -6,8 +6,7 @@ import type { IconProps } from "@tabler/icons-react";
  * Illustrative-only content for the homepage "Progress & Support" section
  * (src/components/marketing/dashboard-preview.tsx). Marketing collateral, not
  * a live screenshot -- no connection to the real parent dashboard at /parent
- * (see src/lib/parent/queries.ts). "Bimpe" and the figures are a sample,
- * the same posture the section has always had.
+ * (see src/lib/parent/queries.ts). "Bimpe" and the figures are a sample.
  */
 
 export const DASHBOARD_NAV = [
@@ -25,7 +24,7 @@ export const PROGRESS_PREVIEW = {
     value: 82,
     lastMonth: 76,
     note: "Bimpe is using longer phrases more consistently during sessions.",
-    highlight: "This shows great progress in expressive language.",
+    highlight: "This shows great progress in expressive language!",
   },
   social: {
     value: 64,
