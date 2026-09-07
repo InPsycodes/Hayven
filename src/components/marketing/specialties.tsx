@@ -19,8 +19,7 @@ export function Specialties() {
     <section id="specialties" className="px-6 pt-6 pb-16 sm:pt-8 sm:pb-20 lg:px-10 lg:pt-3 lg:pb-36">
       <div className="mx-auto max-w-7xl">
         <div className="text-center">
-          <span className="eyebrow text-rust-dark">Find the right therapist</span>
-          <h2 className="mx-auto mt-3 max-w-2xl font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:max-w-none lg:text-[2.75rem] lg:whitespace-nowrap">
+          <h2 className="mx-auto max-w-2xl font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:max-w-none lg:text-[2.75rem] lg:whitespace-nowrap">
             A diverse team, matched to your child&apos;s needs.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-soft lg:max-w-none lg:whitespace-nowrap">
