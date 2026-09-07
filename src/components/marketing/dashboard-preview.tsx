@@ -287,11 +287,11 @@ export function DashboardPreview() {
   const p = PROGRESS_PREVIEW;
 
   return (
-    <section className="bg-ivory px-6 py-16 sm:py-20 lg:px-10 lg:py-24">
+    <section className="bg-ivory px-6 py-16 sm:py-20 lg:px-10 lg:pt-24 lg:pb-12">
       <div className="mx-auto max-w-7xl">
         {/* Illustrative-only mock of the parent dashboard -- not a live
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
-        <div className="relative lg:min-h-[720px]">
+        <div className="relative lg:min-h-[680px]">
           {/* pitch -- left rail */}
           <div className="lg:absolute lg:top-[10px] lg:left-0 lg:w-[34%]">
             <h2 className="font-serif text-[2rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.75rem] lg:text-[3.2rem]">
@@ -410,7 +410,7 @@ export function DashboardPreview() {
         </div>
 
         {/* three pillars */}
-        <div className="mt-16 grid gap-x-[46px] gap-y-10 sm:grid-cols-3 lg:mt-10 lg:px-[3%]">
+        <div className="mt-14 grid gap-x-[46px] gap-y-10 sm:grid-cols-3 lg:mt-6 lg:px-[3%]">
           {SUPPORT_POINTS.map((point) => (
             <div key={point.title}>
               <span className="grid size-[46px] place-items-center rounded-full bg-terracotta/12 text-terracotta">
