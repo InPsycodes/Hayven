@@ -16,7 +16,7 @@ const PLACEHOLDER_GRADIENTS = [
 
 export function Specialties() {
   return (
-    <section id="specialties" className="px-6 py-16 sm:py-20 lg:px-10 lg:py-36">
+    <section id="specialties" className="px-6 py-16 sm:py-20 lg:px-10 lg:pt-14 lg:pb-36">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
           <span className="eyebrow text-rust-dark">Find the right therapist</span>
