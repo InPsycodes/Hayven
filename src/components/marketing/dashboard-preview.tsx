@@ -365,7 +365,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Next session (right rail, below Recent report) */}
-            <Float className="lg:absolute lg:top-[155px] lg:left-[80%] lg:w-[20%]">
+            <Float className="lg:absolute lg:top-[155px] lg:left-[83%] lg:w-[20%]">
               <FloatHead icon={IconCalendarEvent} label="Next session" />
               <p className="mt-[15px] font-serif text-[15.5px] font-semibold">{p.nextSession.label}</p>
               <p className="mt-1 text-[11.5px] text-ink-soft">{p.nextSession.time}</p>
@@ -388,7 +388,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Latest therapist note (right, mid) */}
-            <Float dark className="lg:absolute lg:top-[378px] lg:left-[80%] lg:w-[19%]">
+            <Float dark className="lg:absolute lg:top-[378px] lg:left-[83%] lg:w-[19%]">
               <FloatHead icon={IconFileText} label="Latest therapist note" dark />
               <p className="mt-[15px] text-[12.5px] leading-[1.6]">&ldquo;{p.note.quote}&rdquo;</p>
               <p className="mt-3.5 text-[10px] text-[#e8ecdb]/55">
@@ -397,7 +397,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Recent report (top-right corner of the dashboard) */}
-            <Float className="lg:absolute lg:top-[8px] lg:left-[80%] lg:w-[20%]">
+            <Float className="lg:absolute lg:top-[8px] lg:left-[83%] lg:w-[20%]">
               <FloatHead icon={IconFileText} label="Recent report" />
               <div className="mt-[15px] flex items-start justify-between gap-2.5">
                 <div>
