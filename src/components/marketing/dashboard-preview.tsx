@@ -291,7 +291,7 @@ export function DashboardPreview() {
       <div className="mx-auto max-w-7xl">
         {/* Illustrative-only mock of the parent dashboard -- not a live
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
-        <div className="relative lg:min-h-[740px]">
+        <div className="relative lg:min-h-[700px]">
           {/* pitch -- left rail */}
           <div className="lg:absolute lg:top-[10px] lg:left-0 lg:w-[31%]">
             <div className="flex items-center gap-3.5">
@@ -396,8 +396,8 @@ export function DashboardPreview() {
               </p>
             </Float>
 
-            {/* Recent report (hangs off the dashboard's bottom) */}
-            <Float className="lg:absolute lg:top-[600px] lg:left-[50%] lg:w-[20%]">
+            {/* Recent report (top-left corner of the dashboard) */}
+            <Float className="lg:absolute lg:top-[18px] lg:left-[24%] lg:w-[20%]">
               <FloatHead icon={IconFileText} label="Recent report" />
               <div className="mt-[15px] flex items-start justify-between gap-2.5">
                 <div>
