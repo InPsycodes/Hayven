@@ -364,8 +364,8 @@ export function DashboardPreview() {
               </p>
             </Float>
 
-            {/* Next session (top, over the dashboard) */}
-            <Float className="lg:absolute lg:top-[-6px] lg:left-[62%] lg:w-[20%]">
+            {/* Next session (top-left corner of the dashboard) */}
+            <Float className="lg:absolute lg:top-[8px] lg:left-[33%] lg:w-[20%]">
               <FloatHead icon={IconCalendarEvent} label="Next session" />
               <p className="mt-[15px] font-serif text-[15.5px] font-semibold">{p.nextSession.label}</p>
               <p className="mt-1 text-[11.5px] text-ink-soft">{p.nextSession.time}</p>
@@ -396,8 +396,8 @@ export function DashboardPreview() {
               </p>
             </Float>
 
-            {/* Recent report (top-left corner of the dashboard) */}
-            <Float className="lg:absolute lg:top-[18px] lg:left-[24%] lg:w-[20%]">
+            {/* Recent report (top-right corner of the dashboard) */}
+            <Float className="lg:absolute lg:top-[8px] lg:left-[80%] lg:w-[20%]">
               <FloatHead icon={IconFileText} label="Recent report" />
               <div className="mt-[15px] flex items-start justify-between gap-2.5">
                 <div>
