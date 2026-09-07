@@ -299,7 +299,7 @@ export function DashboardPreview() {
               <span className="block text-terracotta">your child&apos;s care.</span>
             </h2>
             <p className="mt-4 max-w-[22em] text-[16.5px] leading-[1.5] text-ink-soft sm:text-[17px]">
-              Progress, sessions, reports and therapist updates &mdash; all in one calm place.
+              Progress, sessions, reports and therapist updates, all in one calm place.
             </p>
             <Link
               href="/parent"
