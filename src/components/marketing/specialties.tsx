@@ -23,11 +23,11 @@ export function Specialties() {
           <h2 className="mt-3 font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
             A diverse team, matched to your child&apos;s needs.
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-            Every specialist on Hayven is admin-verified before their profile goes live, across the
-            therapy types families ask for most.
-          </p>
         </div>
+        <p className="mx-auto mt-4 max-w-xl text-center text-base leading-relaxed text-ink-soft lg:max-w-none lg:whitespace-nowrap">
+          Every specialist on Hayven is admin-verified before their profile goes live, across the
+          therapy types families ask for most.
+        </p>
 
         <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-8">
           {SPECIALTY_CARDS.map((card, index) => (
