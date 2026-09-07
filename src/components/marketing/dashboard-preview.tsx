@@ -270,7 +270,7 @@ export function DashboardPreview() {
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
         <div className="relative lg:min-h-[660px]">
           {/* pitch */}
-          <div className="lg:absolute lg:top-1 lg:left-[3%] lg:w-[27%]">
+          <div className="lg:absolute lg:top-1 lg:left-[9%] lg:w-[27%]">
             <div className="flex items-center gap-3.5">
               <span className="text-[11px] font-semibold tracking-[0.17em] whitespace-nowrap text-rust-dark uppercase">
                 Progress &amp; Support
@@ -294,7 +294,7 @@ export function DashboardPreview() {
           </div>
 
           {/* dashboard */}
-          <div className="relative mt-10 lg:absolute lg:top-[34px] lg:left-[35%] lg:mt-0 lg:w-[47%]">
+          <div className="relative mt-10 lg:absolute lg:top-[34px] lg:left-[37%] lg:mt-0 lg:w-[47%]">
             <span
               aria-hidden
               className="absolute -right-6 -bottom-6 -z-10 hidden h-[88%] w-[78%] rounded-[22px] bg-[#e0cdb4] lg:block"
@@ -319,7 +319,7 @@ export function DashboardPreview() {
           {/* floating cards -- stacked on mobile, absolute on lg */}
           <div className="mt-4 flex flex-col gap-3 lg:mt-0 lg:contents">
             {/* Communication (left) */}
-            <Float className="lg:absolute lg:top-[230px] lg:left-[22%] lg:w-[23%]">
+            <Float className="lg:absolute lg:top-[276px] lg:left-[28%] lg:w-[23%]">
               <FloatHead icon={IconMessageCircle} label="Communication" />
               <p className="mt-3.5 flex items-baseline gap-1.5 font-serif text-[30px] font-semibold">
                 {p.communication.value}% <span className="text-[14px] text-success">↗</span>
