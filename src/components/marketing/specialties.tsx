@@ -16,18 +16,18 @@ const PLACEHOLDER_GRADIENTS = [
 
 export function Specialties() {
   return (
-    <section id="specialties" className="px-6 pt-8 pb-16 sm:pt-10 sm:pb-20 lg:px-10 lg:pt-6 lg:pb-36">
+    <section id="specialties" className="px-6 pt-6 pb-16 sm:pt-8 sm:pb-20 lg:px-10 lg:pt-3 lg:pb-36">
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-2xl text-center">
+        <div className="text-center">
           <span className="eyebrow text-rust-dark">Find the right therapist</span>
-          <h2 className="mt-3 font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:text-[2.75rem]">
+          <h2 className="mx-auto mt-3 max-w-2xl font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:max-w-none lg:text-[2.75rem] lg:whitespace-nowrap">
             A diverse team, matched to your child&apos;s needs.
           </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-soft lg:max-w-none lg:whitespace-nowrap">
+            Every specialist on Hayven is admin-verified before their profile goes live, across the
+            therapy types families ask for most.
+          </p>
         </div>
-        <p className="mx-auto mt-4 max-w-xl text-center text-base leading-relaxed text-ink-soft lg:max-w-none lg:whitespace-nowrap">
-          Every specialist on Hayven is admin-verified before their profile goes live, across the
-          therapy types families ask for most.
-        </p>
 
         <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-8">
           {SPECIALTY_CARDS.map((card, index) => (
