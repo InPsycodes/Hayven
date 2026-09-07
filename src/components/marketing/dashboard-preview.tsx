@@ -291,7 +291,7 @@ export function DashboardPreview() {
       <div className="mx-auto max-w-7xl">
         {/* Illustrative-only mock of the parent dashboard -- not a live
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
-        <div className="relative lg:min-h-[730px]">
+        <div className="relative lg:min-h-[720px]">
           {/* pitch -- left rail */}
           <div className="lg:absolute lg:top-[10px] lg:left-0 lg:w-[34%]">
             <div className="flex items-center gap-3.5">
@@ -342,7 +342,7 @@ export function DashboardPreview() {
           {/* floating cards -- stacked on mobile, absolute on lg */}
           <div className="mt-4 flex flex-col gap-3 lg:mt-0 lg:contents">
             {/* Communication (left) */}
-            <Float className="lg:absolute lg:top-[320px] lg:left-[24%] lg:w-[21%] lg:origin-top-left lg:scale-[1.15]">
+            <Float className="lg:absolute lg:top-[320px] lg:left-[24%] lg:w-[21%] lg:origin-top-left lg:scale-[1.1]">
               <FloatHead icon={IconMessageCircle} label="Communication" />
               <p className="mt-3 flex items-baseline gap-[5px] font-serif text-[29px] font-semibold">
                 {p.communication.value}% <span className="text-[14px] text-success">↗</span>
@@ -365,7 +365,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Next session (right rail, bottom) */}
-            <Float className="lg:absolute lg:top-[350px] lg:left-[87%] lg:w-[20%] lg:origin-bottom-right lg:scale-[1.15]">
+            <Float className="lg:absolute lg:top-[398px] lg:left-[87%] lg:w-[20%] lg:origin-top-right lg:scale-[1.1]">
               <FloatHead icon={IconCalendarEvent} label="Next session" />
               <p className="mt-[15px] font-serif text-[15.5px] font-semibold">{p.nextSession.label}</p>
               <p className="mt-1 text-[11.5px] text-ink-soft">{p.nextSession.time}</p>
@@ -388,7 +388,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Latest therapist note (right, mid) */}
-            <Float dark className="lg:absolute lg:top-[156px] lg:left-[87%] lg:w-[19%] lg:origin-right lg:scale-[1.15]">
+            <Float dark className="lg:absolute lg:top-[178px] lg:left-[87%] lg:w-[19%] lg:origin-top-right lg:scale-[1.1]">
               <FloatHead icon={IconFileText} label="Latest therapist note" dark />
               <p className="mt-[15px] text-[12.5px] leading-[1.6]">&ldquo;{p.note.quote}&rdquo;</p>
               <p className="mt-3.5 text-[10px] text-[#e8ecdb]/55">
@@ -397,7 +397,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Recent report (top-right corner of the dashboard) */}
-            <Float className="lg:absolute lg:top-[8px] lg:left-[87%] lg:w-[20%] lg:origin-top-right lg:scale-[1.15]">
+            <Float className="lg:absolute lg:top-[8px] lg:left-[87%] lg:w-[20%] lg:origin-top-right lg:scale-[1.1]">
               <FloatHead icon={IconFileText} label="Recent report" />
               <div className="mt-[15px] flex items-start justify-between gap-2.5">
                 <div>
