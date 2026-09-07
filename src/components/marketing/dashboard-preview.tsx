@@ -331,7 +331,7 @@ export function DashboardPreview() {
           </span>
 
           {/* dashboard -- wide, reaching the right edge */}
-          <div className="relative mt-10 lg:absolute lg:top-[40px] lg:left-[34%] lg:mt-0 lg:w-[66%]">
+          <div className="relative mt-10 lg:absolute lg:top-[40px] lg:left-[33%] lg:mt-0 lg:w-[68%]">
             <span
               aria-hidden
               className="absolute -right-7 -bottom-6 -z-10 hidden h-[82%] w-[74%] rounded-[22px] bg-[#e2d2bb] lg:block"
