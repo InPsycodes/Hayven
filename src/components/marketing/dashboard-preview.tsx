@@ -269,9 +269,9 @@ function Float({
   return (
     <div
       className={cn(
-        "rounded-[16px] border p-[19px] shadow-[0_2px_4px_rgba(30,22,15,0.09),0_34px_62px_-26px_rgba(30,22,15,0.42)] lg:z-30",
+        "rounded-[16px] border p-[17px] shadow-[0_2px_4px_rgba(30,22,15,0.09),0_34px_62px_-26px_rgba(30,22,15,0.42)] lg:z-30",
         dark
-          ? "border-white/5 bg-[#363f2b] text-[#e8ecdb]"
+          ? "border-white/5 bg-[#37402c] text-[#e8ecdb]"
           : "border-[#201c16]/[0.07] bg-[#faf7f2] text-[#201c16]",
         className
       )}
@@ -291,21 +291,21 @@ export function DashboardPreview() {
       <div className="mx-auto max-w-7xl">
         {/* Illustrative-only mock of the parent dashboard -- not a live
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
-        <div className="relative lg:min-h-[700px]">
+        <div className="relative lg:min-h-[720px]">
           {/* pitch */}
-          <div className="lg:absolute lg:top-0 lg:left-0 lg:w-[28%]">
+          <div className="lg:absolute lg:top-0 lg:left-0 lg:w-[37%]">
             <div className="flex items-center gap-3.5">
               <span className="text-[11px] font-semibold tracking-[0.2em] whitespace-nowrap text-rust-dark uppercase">
                 Progress &amp; Support
               </span>
               <span aria-hidden className="h-px flex-1 bg-rust-light/70" />
             </div>
-            <h2 className="mt-5 font-serif text-[1.7rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.3rem] lg:text-[2.7rem] lg:whitespace-nowrap">
+            <h2 className="mt-5 font-serif text-[1.7rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.4rem] lg:text-[3.1rem] lg:whitespace-nowrap">
               A clearer view of
               <span className="block text-terracotta">your child&apos;s care.</span>
             </h2>
-            <p className="mt-4 max-w-[19em] text-sm leading-[1.5] text-ink-soft sm:text-[14.5px]">
-              Progress, sessions, reports and therapist updates, all in one calm place.
+            <p className="mt-4 max-w-[21em] text-sm leading-[1.5] text-ink-soft sm:text-[14.5px]">
+              Progress, sessions, reports and therapist updates &mdash; all in one calm place.
             </p>
             <Link
               href="/parent"
@@ -319,52 +319,34 @@ export function DashboardPreview() {
           {/* blob */}
           <span
             aria-hidden
-            className="hidden lg:absolute lg:top-[380px] lg:left-[17%] lg:z-0 lg:block lg:size-[190px] lg:rounded-full lg:bg-[radial-gradient(circle,rgba(184,115,76,0.32),rgba(184,115,76,0.04)_70%)]"
+            className="hidden lg:absolute lg:top-[420px] lg:left-[18%] lg:z-0 lg:block lg:size-[185px] lg:rounded-full lg:bg-[radial-gradient(circle,rgba(184,115,76,0.32),rgba(184,115,76,0.04)_70%)]"
           />
 
+          {/* leaf -- sits behind the right-hand cards */}
+          <span
+            aria-hidden
+            className="hidden lg:absolute lg:top-[112px] lg:right-[1%] lg:z-0 lg:block lg:h-[150px] lg:w-[86px]"
+          >
+            {Leaf}
+          </span>
+
           {/* dashboard */}
-          <div className="relative mt-10 lg:absolute lg:top-[30px] lg:left-[37%] lg:mt-0 lg:w-[46%]">
+          <div className="relative mt-10 lg:absolute lg:top-[36px] lg:left-[38%] lg:mt-0 lg:w-[44%]">
             <span
               aria-hidden
               className="absolute -right-7 -bottom-6 -z-10 hidden h-[82%] w-[74%] rounded-[22px] bg-[#e2d2bb] lg:block"
             />
-            <span aria-hidden className="absolute top-[90px] -right-1.5 hidden h-[150px] w-[90px] lg:block">
-              {Leaf}
-            </span>
             <Dashboard />
           </div>
 
           {/* floating cards -- stacked on mobile, absolute on lg */}
           <div className="mt-4 flex flex-col gap-3 lg:mt-0 lg:contents">
             {/* Communication (left) */}
-            <Float className="lg:absolute lg:top-[318px] lg:left-[22%] lg:w-[21%]">
+            <Float className="lg:absolute lg:top-[318px] lg:left-[24%] lg:w-[18.5%]">
               <FloatHead icon={IconMessageCircle} label="Communication" />
-              <div className="mt-[9px] flex items-start justify-between gap-2.5">
-                <p className="flex items-baseline gap-[5px] font-serif text-[29px] font-semibold">
-                  {p.communication.value}% <span className="text-[14px] text-success">↗</span>
-                </p>
-                <svg
-                  viewBox="0 0 62 30"
-                  preserveAspectRatio="none"
-                  aria-hidden
-                  className="mt-1 h-7 w-[60px] shrink-0 overflow-visible"
-                >
-                  <polyline
-                    points={line(p.trend.communication)
-                      .split(" ")
-                      .map((pt) => {
-                        const [x, y] = pt.split(",").map(Number);
-                        return `${(x / 200) * 62},${(y / 120) * 30}`;
-                      })
-                      .join(" ")}
-                    fill="none"
-                    stroke="#7f9560"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
+              <p className="mt-3 flex items-baseline gap-[5px] font-serif text-[29px] font-semibold">
+                {p.communication.value}% <span className="text-[14px] text-success">↗</span>
+              </p>
               <div className="mt-[9px] h-1.5 overflow-hidden rounded-[3px] bg-[#201c16]/[0.09]">
                 <div
                   className="h-full rounded-[3px] bg-gradient-to-r from-[#7f9560] to-[#a0b47c]"
@@ -383,7 +365,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Next session (right, top) */}
-            <Float className="lg:absolute lg:top-[60px] lg:left-[78%] lg:w-[21%]">
+            <Float className="lg:absolute lg:top-[130px] lg:left-[80%] lg:w-[20%]">
               <FloatHead icon={IconCalendarEvent} label="Next session" />
               <p className="mt-[15px] font-serif text-[15.5px] font-semibold">{p.nextSession.label}</p>
               <p className="mt-1 text-[11.5px] text-ink-soft">{p.nextSession.time}</p>
@@ -406,7 +388,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Latest therapist note (right, mid) */}
-            <Float dark className="lg:absolute lg:top-[330px] lg:left-[79%] lg:w-[18.5%]">
+            <Float dark className="lg:absolute lg:top-[346px] lg:left-[80%] lg:w-[17.5%]">
               <FloatHead icon={IconFileText} label="Latest therapist note" dark />
               <p className="mt-[15px] text-[12.5px] leading-[1.6]">&ldquo;{p.note.quote}&rdquo;</p>
               <p className="mt-3.5 text-[10px] text-[#e8ecdb]/55">
@@ -415,7 +397,7 @@ export function DashboardPreview() {
             </Float>
 
             {/* Recent report (right, bottom) */}
-            <Float className="lg:absolute lg:top-[500px] lg:left-[78%] lg:w-[20%]">
+            <Float className="lg:absolute lg:top-[502px] lg:left-[80%] lg:w-[18.5%]">
               <FloatHead icon={IconFileText} label="Recent report" />
               <div className="mt-[15px] flex items-start justify-between gap-2.5">
                 <div>
@@ -434,25 +416,25 @@ export function DashboardPreview() {
         </div>
 
         {/* three pillars */}
-        <div className="mt-14 grid gap-x-[46px] gap-y-10 sm:grid-cols-3 lg:mt-6">
+        <div className="mt-16 grid gap-x-[46px] gap-y-10 sm:grid-cols-3 lg:mt-10 lg:px-[3%]">
           {SUPPORT_POINTS.map((point) => (
             <div key={point.title}>
               <span className="grid size-[46px] place-items-center rounded-full bg-terracotta/12 text-terracotta">
                 <Icon icon={point.icon} size="md" />
               </span>
               <h3 className="mt-4 font-serif text-[1.2rem] font-medium text-charcoal">{point.title}</h3>
-              <p className="mt-2 max-w-[25em] text-[13.5px] leading-[1.55] text-ink-soft">{point.body}</p>
+              <p className="mt-2 max-w-[24em] text-[13.5px] leading-[1.55] text-ink-soft">{point.body}</p>
             </div>
           ))}
         </div>
 
         {/* closing line */}
-        <div className="mt-14 flex items-center gap-[18px]">
-          <span aria-hidden className="h-px flex-1 bg-rust-light/45" />
+        <div className="mt-14 flex items-center justify-center gap-4">
+          <span aria-hidden className="h-px w-12 bg-rust-light/50 sm:w-16" />
           <span className="text-center text-[11px] font-semibold tracking-[0.16em] text-rust-dark uppercase sm:whitespace-nowrap">
             Less searching. Less guessing. More confidence in their care.
           </span>
-          <span aria-hidden className="h-px flex-1 bg-rust-light/45" />
+          <span aria-hidden className="h-px w-12 bg-rust-light/50 sm:w-16" />
         </div>
       </div>
     </section>

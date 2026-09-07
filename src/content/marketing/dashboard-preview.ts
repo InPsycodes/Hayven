@@ -33,8 +33,8 @@ export const PROGRESS_PREVIEW = {
   },
   trend: {
     months: ["Apr", "May", "Jun", "Jul", "Aug"],
-    communication: [52, 62, 70, 76, 82],
-    social: [38, 45, 52, 58, 64],
+    communication: [68, 72, 76, 79, 82],
+    social: [50, 54, 58, 61, 64],
   },
   goal: { done: 8, total: 10 },
   attendance: 94,
@@ -42,7 +42,7 @@ export const PROGRESS_PREVIEW = {
     label: "Therapy review",
     time: "Wed, 27 Aug · 10:00 AM",
     mode: "Virtual session",
-    therapist: "Dr. Adebayo",
+    therapist: "Dr. Adaeze Okwu",
     therapistRole: "Speech & Language Therapist",
   },
   note: {
