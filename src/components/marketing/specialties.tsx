@@ -16,7 +16,7 @@ const PLACEHOLDER_GRADIENTS = [
 
 export function Specialties() {
   return (
-    <section id="specialties" className="px-6 pt-6 pb-16 sm:pt-8 sm:pb-20 lg:px-10 lg:pt-3 lg:pb-36">
+    <section id="specialties" className="px-6 pt-5 pb-16 sm:pt-6 sm:pb-20 lg:px-10 lg:pt-2 lg:pb-36">
       <div className="mx-auto max-w-7xl">
         <div className="text-center">
           <h2 className="mx-auto max-w-2xl font-serif text-[1.7rem] leading-tight text-charcoal sm:text-4xl lg:max-w-none lg:text-[2.75rem] lg:whitespace-nowrap">
