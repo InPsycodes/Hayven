@@ -294,19 +294,19 @@ export function DashboardPreview() {
         <div className="relative lg:min-h-[720px]">
           {/* pitch -- left rail */}
           <div className="lg:absolute lg:top-[10px] lg:left-0 lg:w-[34%]">
-            <h2 className="font-serif text-[1.85rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.5rem] lg:text-[2.9rem]">
+            <h2 className="font-serif text-[2rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.75rem] lg:text-[3.2rem]">
               A clearer view of
               <span className="block text-terracotta">your child&apos;s care.</span>
             </h2>
-            <p className="mt-4 max-w-[22em] text-[15px] leading-[1.5] text-ink-soft sm:text-[15.5px]">
+            <p className="mt-4 max-w-[22em] text-[16.5px] leading-[1.5] text-ink-soft sm:text-[17px]">
               Progress, sessions, reports and therapist updates &mdash; all in one calm place.
             </p>
             <Link
               href="/parent"
-              className="mt-7 inline-flex items-center gap-2 rounded-full bg-terracotta px-[24px] py-[14px] text-[13.5px] font-semibold text-white transition-colors hover:bg-rust-dark"
+              className="mt-7 inline-flex items-center gap-2 rounded-full bg-terracotta px-[26px] py-[15px] text-[15px] font-semibold text-white transition-colors hover:bg-rust-dark"
             >
               Explore the parent dashboard
-              <IconArrowRight size={14} stroke={2.2} />
+              <IconArrowRight size={15} stroke={2.2} />
             </Link>
           </div>
 
