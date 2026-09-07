@@ -293,23 +293,23 @@ export function DashboardPreview() {
             screenshot, see src/content/marketing/dashboard-preview.ts. */}
         <div className="relative lg:min-h-[710px]">
           {/* pitch -- left rail */}
-          <div className="lg:absolute lg:top-[10px] lg:left-0 lg:w-[31%]">
+          <div className="lg:absolute lg:top-[10px] lg:left-0 lg:w-[34%]">
             <div className="flex items-center gap-3.5">
-              <span className="text-[11px] font-semibold tracking-[0.2em] whitespace-nowrap text-rust-dark uppercase">
+              <span className="text-[11.5px] font-semibold tracking-[0.2em] whitespace-nowrap text-rust-dark uppercase">
                 Progress &amp; Support
               </span>
               <span aria-hidden className="h-px flex-1 bg-rust-light/70" />
             </div>
-            <h2 className="mt-5 font-serif text-[1.7rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.4rem] lg:text-[2.6rem]">
+            <h2 className="mt-5 font-serif text-[1.85rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.5rem] lg:text-[2.9rem]">
               A clearer view of
               <span className="block text-terracotta">your child&apos;s care.</span>
             </h2>
-            <p className="mt-4 max-w-[21em] text-sm leading-[1.5] text-ink-soft sm:text-[14.5px]">
+            <p className="mt-4 max-w-[22em] text-[15px] leading-[1.5] text-ink-soft sm:text-[15.5px]">
               Progress, sessions, reports and therapist updates &mdash; all in one calm place.
             </p>
             <Link
               href="/parent"
-              className="mt-7 inline-flex items-center gap-2 rounded-full bg-terracotta px-[22px] py-[13px] text-[12.5px] font-semibold text-white transition-colors hover:bg-rust-dark"
+              className="mt-7 inline-flex items-center gap-2 rounded-full bg-terracotta px-[24px] py-[14px] text-[13.5px] font-semibold text-white transition-colors hover:bg-rust-dark"
             >
               Explore the parent dashboard
               <IconArrowRight size={14} stroke={2.2} />
