@@ -294,13 +294,7 @@ export function DashboardPreview() {
         <div className="relative lg:min-h-[720px]">
           {/* pitch -- left rail */}
           <div className="lg:absolute lg:top-[10px] lg:left-0 lg:w-[34%]">
-            <div className="flex items-center gap-3.5">
-              <span className="text-[11.5px] font-semibold tracking-[0.2em] whitespace-nowrap text-rust-dark uppercase">
-                Progress &amp; Support
-              </span>
-              <span aria-hidden className="h-px flex-1 bg-rust-light/70" />
-            </div>
-            <h2 className="mt-5 font-serif text-[1.85rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.5rem] lg:text-[2.9rem]">
+            <h2 className="font-serif text-[1.85rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.5rem] lg:text-[2.9rem]">
               A clearer view of
               <span className="block text-terracotta">your child&apos;s care.</span>
             </h2>
