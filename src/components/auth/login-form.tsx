@@ -17,7 +17,7 @@ import { identifyUser } from "@/lib/analytics/client";
 import { roleHomePath } from "@/lib/auth/role-path";
 import type { UserRole } from "@/data/types";
 
-export function LoginForm({ justReset = false }: { justReset?: boolean }) {
+export function LoginForm({ justReset = false, next }: { justReset?: boolean; next?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +30,11 @@ export function LoginForm({ justReset = false }: { justReset?: boolean }) {
   const [mfaCode, setMfaCode] = useState("");
 
   function goHome(role: UserRole) {
-    router.push(roleHomePath(role));
+    // A validated `next` (already relative-path-checked server-side in
+    // page.tsx) wins over the role's default dashboard, so someone bounced
+    // off a deep link to log in lands back on it instead of losing their
+    // place -- e.g. mid-booking on /book/[id]/payment.
+    router.push(next ?? roleHomePath(role));
     router.refresh();
   }
 

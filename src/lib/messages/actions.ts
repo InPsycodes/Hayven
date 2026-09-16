@@ -14,6 +14,12 @@ export async function sendRealMessage(
   const session = await getSession();
   if (!session) return { ok: false, error: "You must be signed in to send a message." };
   if (!content.trim()) return { ok: false, error: "Message can't be empty." };
+  // content had no length cap at all (a multi-MB body was possible) --
+  // generous but bounded, matching the composer's practical use as a chat
+  // message rather than a document (L-16, production audit 2026-09-03).
+  if (content.length > 5000) {
+    return { ok: false, error: "Message is too long (5,000 character limit)." };
+  }
 
   // No natural cap otherwise -- each message also fires an email + push
   // notification to the recipient, so an unthrottled sender can flood both

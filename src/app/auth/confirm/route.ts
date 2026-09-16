@@ -16,7 +16,14 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const tokenHash = searchParams.get("token_hash");
   const code = searchParams.get("code");
-  const type = searchParams.get("type") ?? "recovery";
+  const OTP_TYPES = ["recovery", "email", "signup", "invite", "magiclink", "email_change"] as const;
+  const rawType = searchParams.get("type") ?? "recovery";
+  // rawType is attacker-controlled (a query param) -- validate against the
+  // allowlist instead of casting straight into verifyOtp's union type. A
+  // mismatched type just fails verification either way, but this closes the
+  // gap between the TS type and what's actually trusted at runtime (L-16,
+  // production audit 2026-09-03).
+  const type = (OTP_TYPES as readonly string[]).includes(rawType) ? (rawType as (typeof OTP_TYPES)[number]) : "recovery";
 
   const nextParam = searchParams.get("next") ?? "/";
   const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
@@ -28,10 +35,7 @@ export async function GET(request: NextRequest) {
   let verified = false;
 
   if (tokenHash) {
-    const { error } = await supabase.auth.verifyOtp({
-      type: type as "recovery" | "email" | "signup" | "invite" | "magiclink" | "email_change",
-      token_hash: tokenHash,
-    });
+    const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
     verified = !error;
   } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);

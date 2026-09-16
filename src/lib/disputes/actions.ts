@@ -30,7 +30,7 @@ export async function openDispute(bookingId: string, reason: string): Promise<Re
   const admin = createAdminClient();
   const { data: booking } = await admin
     .from("bookings")
-    .select("id, parent_id, status, availability_slots(start_time, end_time), cancelled_at")
+    .select("id, parent_id, status, availability_slots(start_time, end_time), cancelled_at, created_at")
     .eq("id", bookingId)
     .maybeSingle();
   if (!booking || booking.parent_id !== session.userId) {
@@ -41,8 +41,12 @@ export async function openDispute(bookingId: string, reason: string): Promise<Re
   }
 
   const slot = booking.availability_slots as unknown as { start_time: string; end_time: string } | null;
-  const reference = slot?.end_time ?? booking.cancelled_at ?? null;
-  if (reference && Date.now() - new Date(reference).getTime() > DISPUTE_WINDOW_MS) {
+  // Falls back to created_at (always present) rather than booking.created_at
+  // ?? null, which used to skip the 7-day check entirely whenever both
+  // slot.end_time and cancelled_at were absent (L-12, production audit
+  // 2026-09-03).
+  const reference = slot?.end_time ?? booking.cancelled_at ?? booking.created_at;
+  if (Date.now() - new Date(reference).getTime() > DISPUTE_WINDOW_MS) {
     return { ok: false, error: "The 7-day window to report a problem with this session has passed. Contact Hayven support." };
   }
 
@@ -89,6 +93,9 @@ export async function resolveDispute(
   if (!session || session.role !== "admin") {
     return { ok: false, error: "Not authorized." };
   }
+  if (!["full_refund", "partial_refund", "no_action"].includes(resolution)) {
+    return { ok: false, error: "Invalid resolution." };
+  }
   const cleanNote = note.trim();
   if (!cleanNote) return { ok: false, error: "Add a short note explaining the outcome (the parent sees it)." };
 
@@ -104,11 +111,25 @@ export async function resolveDispute(
   const admin = createAdminClient();
   const { data: dispute } = await admin
     .from("booking_disputes")
-    .select("id, booking_id, parent_id, status, bookings(children(first_name))")
+    .select("id, booking_id, parent_id, status, bookings(children(first_name), payments(amount, status))")
     .eq("id", disputeId)
     .maybeSingle();
   if (!dispute) return { ok: false, error: "Dispute not found." };
   if (dispute.status !== "open") return { ok: false, error: "This dispute is already resolved." };
+
+  // Clamp to what was actually charged -- Paystack itself rejects a refund
+  // bigger than the original transaction, so this was never a way to move
+  // more money than was paid, but the displayed "refund owed" and any
+  // downstream reporting weren't bounded (L-13, production audit
+  // 2026-09-03).
+  if (isRefund) {
+    const payments = ((dispute.bookings as unknown as { payments: { amount: number; status: string }[] | null } | null)
+      ?.payments ?? []) as { amount: number; status: string }[];
+    const paidAmount = payments.find((p) => p.status === "successful")?.amount ?? 0;
+    if (paidAmount > 0 && refund !== null && refund > paidAmount) {
+      return { ok: false, error: `The refund can't exceed what was paid (${formatNaira(paidAmount)}).` };
+    }
+  }
 
   const { data: updated, error } = await admin
     .from("booking_disputes")

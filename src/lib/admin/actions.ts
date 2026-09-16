@@ -12,6 +12,7 @@ import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 import { releaseBookingEarnings } from "@/lib/payouts/earnings";
 
 export type VerificationDecision = "approved" | "rejected" | "needs_more_info";
+const VERIFICATION_DECISIONS: readonly VerificationDecision[] = ["approved", "rejected", "needs_more_info"];
 
 export async function reviewVerificationRequestReal(
   requestId: string,
@@ -21,6 +22,14 @@ export async function reviewVerificationRequestReal(
   const session = await getSession();
   if (!session || session.role !== "admin") {
     return { ok: false, error: "Not authorized." };
+  }
+  // status is trusted at runtime past the TS type -- a crafted call with an
+  // out-of-range value would otherwise fall through every branch below and,
+  // on the notification-copy lookup further down, spread an
+  // undefined-keyed object into createNotification (L-14, production audit
+  // 2026-09-03).
+  if (!VERIFICATION_DECISIONS.includes(status)) {
+    return { ok: false, error: "Invalid decision." };
   }
 
   const supabase = createAdminClient();
@@ -541,6 +550,9 @@ export async function setUserAccountStatus(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await getSession();
   if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+  if (status !== "active" && status !== "suspended") {
+    return { ok: false, error: "Invalid status." };
+  }
 
   // Suspending yourself through this UI is never the intent -- it's either a
   // misclick or a real incident, and a real incident needs the out-of-band

@@ -28,7 +28,7 @@ export async function initiatePaystackPayment(
 
   const { data: booking } = await admin
     .from("bookings")
-    .select("id, parent_id, therapist_id, status")
+    .select("id, parent_id, therapist_id, status, price_naira")
     .eq("id", bookingId)
     .maybeSingle();
   if (!booking || booking.parent_id !== session.userId) {
@@ -62,11 +62,19 @@ export async function initiatePaystackPayment(
     };
   }
 
+  // Charge the price snapshotted onto the booking at hold time, not a fresh
+  // read of therapist_profiles.price_per_session -- otherwise a price
+  // change between the hold and payment silently changes what the parent
+  // is charged (L-10, production audit 2026-09-03). Falls back to the live
+  // price only for a booking created before the price_naira column existed.
   const [{ data: parentUser }, { data: therapistProfile }] = await Promise.all([
     admin.from("users").select("email").eq("id", session.userId).maybeSingle(),
-    admin.from("therapist_profiles").select("price_per_session").eq("id", booking.therapist_id).maybeSingle(),
+    booking.price_naira == null
+      ? admin.from("therapist_profiles").select("price_per_session").eq("id", booking.therapist_id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
-  if (!parentUser || !therapistProfile) {
+  const amountNaira = booking.price_naira ?? therapistProfile?.price_per_session;
+  if (!parentUser || amountNaira == null) {
     return { ok: false, error: "Couldn't load payment details. Please try again." };
   }
 
@@ -75,7 +83,7 @@ export async function initiatePaystackPayment(
   try {
     const result = await initializeTransaction({
       email: parentUser.email,
-      amountNaira: therapistProfile.price_per_session,
+      amountNaira,
       reference,
       callbackUrl: `${SITE_URL}/book/${therapistId}/confirmation?bookingId=${bookingId}`,
       metadata: { booking_id: bookingId, parent_id: session.userId },

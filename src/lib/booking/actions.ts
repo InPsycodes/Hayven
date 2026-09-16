@@ -10,7 +10,7 @@ import { logAuditEvent } from "@/lib/audit/log";
 import { getRealTherapistProfileByUserId, getRealAvailabilityForTherapist } from "@/lib/therapist/queries";
 import { createNotification } from "@/lib/notifications/create";
 import { checkRateLimit } from "@/lib/rate-limit/check";
-import { bookingWindow } from "@/lib/booking/window";
+import { bookingWindow, MIN_BOOKING_NOTICE_MS } from "@/lib/booking/window";
 import { computeRefund, type RefundOutcome } from "@/lib/booking/refund-policy";
 import {
   recordRetainedEarning,
@@ -91,8 +91,8 @@ export async function createPendingBooking(input: {
   if (!slot || slot.therapist_id !== input.therapistId) {
     return { ok: false, error: "That slot is no longer available." };
   }
-  if (new Date(slot.start_time).getTime() <= Date.now()) {
-    return { ok: false, error: "That time has already passed. Please pick another." };
+  if (new Date(slot.start_time).getTime() < Date.now() + MIN_BOOKING_NOTICE_MS) {
+    return { ok: false, error: "That time is too soon to book. Please pick a slot at least 2 hours out." };
   }
 
   const { data: heldSlot, error: holdError } = await admin
@@ -108,7 +108,7 @@ export async function createPendingBooking(input: {
 
   const { data: therapistProfile } = await admin
     .from("therapist_profiles")
-    .select("location")
+    .select("location, price_per_session")
     .eq("id", input.therapistId)
     .maybeSingle();
 
@@ -123,6 +123,11 @@ export async function createPendingBooking(input: {
       session_type: input.sessionType,
       location: input.sessionType === "in_person" ? (therapistProfile?.location ?? null) : null,
       expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      // Snapshot the price now -- initiatePaystackPayment charges this, not
+      // a fresh read of therapist_profiles.price_per_session, so a price
+      // change during the 15-minute hold window can't silently change what
+      // the parent pays (L-10, production audit 2026-09-03).
+      price_naira: therapistProfile?.price_per_session ?? null,
     })
     .select("id")
     .single();
@@ -581,8 +586,8 @@ export async function rescheduleBooking(
   if (!newSlot || newSlot.therapist_id !== booking.therapist_id || newSlot.session_type !== booking.session_type) {
     return { ok: false, error: "That slot isn't available for this session." };
   }
-  if (new Date(newSlot.start_time).getTime() <= Date.now()) {
-    return { ok: false, error: "That time has already passed. Pick another." };
+  if (new Date(newSlot.start_time).getTime() < Date.now() + MIN_BOOKING_NOTICE_MS) {
+    return { ok: false, error: "That time is too soon to move into. Please pick a slot at least 2 hours out." };
   }
 
   // Hold the new slot atomically before touching the booking.
