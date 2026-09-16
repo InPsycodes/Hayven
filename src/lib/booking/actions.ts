@@ -123,11 +123,6 @@ export async function createPendingBooking(input: {
       session_type: input.sessionType,
       location: input.sessionType === "in_person" ? (therapistProfile?.location ?? null) : null,
       expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      // Snapshot the price now -- initiatePaystackPayment charges this, not
-      // a fresh read of therapist_profiles.price_per_session, so a price
-      // change during the 15-minute hold window can't silently change what
-      // the parent pays (L-10, production audit 2026-09-03).
-      price_naira: therapistProfile?.price_per_session ?? null,
     })
     .select("id")
     .single();
@@ -135,6 +130,18 @@ export async function createPendingBooking(input: {
   if (bookingError || !booking) {
     await admin.from("availability_slots").update({ is_booked: false }).eq("id", input.slotId);
     return { ok: false, error: bookingError?.message ?? "Couldn't create the booking. Please try again." };
+  }
+
+  // Snapshot the price now, as a separate best-effort update -- initiatePaystackPayment
+  // charges this, not a fresh read of therapist_profiles.price_per_session,
+  // so a price change during the 15-minute hold window can't silently
+  // change what the parent pays (L-10, production audit 2026-09-03). Split
+  // out from the insert above, and its error ignored, so a pre-0080
+  // database (no price_naira column yet) still creates the booking --
+  // initiatePaystackPayment already falls back to the live price when this
+  // is null, same pattern as recordSessionEarnings' pre-0073 fallback.
+  if (therapistProfile?.price_per_session != null) {
+    await admin.from("bookings").update({ price_naira: therapistProfile.price_per_session }).eq("id", booking.id);
   }
 
   return { ok: true, bookingId: booking.id };
