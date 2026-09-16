@@ -103,13 +103,52 @@ export async function runPayouts(): Promise<PayoutRunResult> {
         continue;
       }
 
-      await admin.from("therapist_earnings").update({ payout_id: payout.id }).in("id", group.ids);
+      // Atomic claim: the WHERE clause (payout_id is null) is re-checked
+      // against committed data, so if a second concurrent run already
+      // claimed one of these rows for its own payout, it won't come back
+      // here -- closing the double-pay race two simultaneous runs used to
+      // hit (H-1, production audit 2026-09-03). Build the transfer from
+      // what was actually claimed, never the original planned group.
+      const { data: claimed, error: claimErr } = await admin
+        .from("therapist_earnings")
+        .update({ payout_id: payout.id })
+        .in("id", group.ids)
+        .is("payout_id", null)
+        .select("id, net_amount");
+      if (claimErr) {
+        errors.push(`${name}: ${claimErr.message}`);
+        await admin.from("payouts").delete().eq("id", payout.id);
+        continue;
+      }
+
+      const claimedIds = (claimed ?? []).map((e) => e.id);
+      const claimedTotal = (claimed ?? []).reduce((sum, e) => sum + e.net_amount, 0);
+
+      if (claimedIds.length === 0) {
+        // Every one of these earnings was already claimed by a concurrent run.
+        await admin.from("payouts").delete().eq("id", payout.id);
+        skipped.push({ name, reason: "Already claimed by a concurrent payout run" });
+        continue;
+      }
+      if (claimedTotal < MIN_PAYOUT_NAIRA) {
+        // A concurrent run took some of these earnings; what's left doesn't clear the minimum.
+        await admin.from("therapist_earnings").update({ payout_id: null }).in("id", claimedIds);
+        await admin.from("payouts").delete().eq("id", payout.id);
+        skipped.push({ name, reason: "Remaining balance fell below the payout minimum after a concurrent run" });
+        continue;
+      }
+      if (claimedIds.length !== group.ids.length) {
+        await admin
+          .from("payouts")
+          .update({ amount: claimedTotal, earning_count: claimedIds.length })
+          .eq("id", payout.id);
+      }
 
       try {
         const transfer = await initiateTransfer({
-          amountNaira: group.total,
+          amountNaira: claimedTotal,
           recipientCode: recipient,
-          reason: `Hayven payout, ${group.ids.length} item${group.ids.length === 1 ? "" : "s"}`,
+          reason: `Hayven payout, ${claimedIds.length} item${claimedIds.length === 1 ? "" : "s"}`,
           reference,
         });
         const settled = transfer.status === "success";
@@ -129,12 +168,12 @@ export async function runPayouts(): Promise<PayoutRunResult> {
             userId: p.user_id,
             type: "payment_receipt",
             title: "Payout sent",
-            body: `A payout of ${formatNaira(group.total)} is on its way to your bank account.`,
+            body: `A payout of ${formatNaira(claimedTotal)} is on its way to your bank account.`,
             url: "/therapist/earnings",
           });
         }
         created++;
-        paidNaira += group.total;
+        paidNaira += claimedTotal;
       } catch (transferErr) {
         await admin.from("therapist_earnings").update({ payout_id: null }).eq("payout_id", payout.id);
         await admin

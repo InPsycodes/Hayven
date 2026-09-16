@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import * as Sentry from "@sentry/nextjs";
 
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -677,8 +678,15 @@ export async function markNoShow(
   if (!booking || booking.therapist_id !== therapist.id) {
     return { ok: false, error: "Booking not found." };
   }
-  if (booking.status !== "completed" && booking.status !== "confirmed") {
-    return { ok: false, error: "Only a past confirmed session can be marked as a no-show." };
+  // Only "confirmed" -- a session already "completed" was, by definition,
+  // attended, and recordSessionEarnings has already credited the therapist
+  // for it. Allowing "completed" -> "no_show" let a therapist retroactively
+  // zero the parent's refund *and* collect a second, non-deduplicated
+  // earning on the same booking (M-5a, production audit 2026-09-03). A
+  // genuine "we said completed but nobody actually came" correction should
+  // go through support, which can reverse the session earning first.
+  if (booking.status !== "confirmed") {
+    return { ok: false, error: "Only a session that's still marked confirmed can be reported as a no-show. If it's already marked completed, contact Hayven support." };
   }
 
   const slot = booking.availability_slots as unknown as { start_time: string; end_time: string } | null;
@@ -694,7 +702,7 @@ export async function markNoShow(
       no_show_note: note && note.trim() ? note.trim() : null,
     })
     .eq("id", bookingId)
-    .in("status", ["completed", "confirmed"])
+    .eq("status", "confirmed")
     .select("id")
     .maybeSingle();
   if (updateError) return { ok: false, error: updateError.message };
@@ -712,6 +720,25 @@ export async function markNoShow(
     entityType: "booking",
     entityId: bookingId,
   });
+
+  // Anomaly signal: no single-request guard on volume (a verified therapist
+  // could mark every past session no_show, zeroing every parent's refund),
+  // so alert when one therapist's rate looks abnormal instead (M-5b,
+  // production audit 2026-09-03).
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { count: recentNoShows } = await admin
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("therapist_id", therapist.id)
+    .eq("status", "no_show")
+    .gte("no_show_at", thirtyDaysAgo);
+  if ((recentNoShows ?? 0) >= 5) {
+    Sentry.captureMessage("Therapist no-show rate looks abnormal", {
+      level: "warning",
+      tags: { anomaly: "no_show_rate" },
+      extra: { therapistId: therapist.id, recentNoShows },
+    });
+  }
 
   const child = booking.children as unknown as { first_name: string } | null;
   const when = slot ? formatDateTime(slot.start_time) : "a recent session";

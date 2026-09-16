@@ -11,6 +11,7 @@ import { ProfessionalProfileForm } from "@/components/therapist/professional-pro
 import { TherapistPhotoCard } from "@/components/therapist/photo-card";
 import { TherapistBankCard } from "@/components/therapist/bank-card";
 import { EmailPreferenceToggles } from "@/components/shared/email-preference-toggles";
+import { PushNotificationsToggle } from "@/components/shared/push-notifications-toggle";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { MfaSection } from "@/components/shared/mfa-section";
@@ -103,6 +104,8 @@ export default async function TherapistProfilePage() {
             </Link>
           </div>
         </Card>
+
+        <PushNotificationsToggle description="Get alerted on this device for new messages, and when a session is about to start or a client reports a problem." />
 
         <Card className="p-5">
           <h2 className="font-heading text-base text-charcoal">Notification emails</h2>

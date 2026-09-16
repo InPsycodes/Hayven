@@ -9,6 +9,7 @@ import { createNotification } from "@/lib/notifications/create";
 import { createRefund } from "@/lib/payments/paystack";
 import { isValidDomainBand } from "@/lib/reports/phrase-domains";
 import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
+import { releaseBookingEarnings } from "@/lib/payouts/earnings";
 
 export type VerificationDecision = "approved" | "rejected" | "needs_more_info";
 
@@ -223,6 +224,12 @@ export async function markPaymentRefunded(
 
   if (payment.booking_id) {
     await supabase.from("bookings").update({ refund_status: "manual" }).eq("id", payment.booking_id);
+    // A refund handled outside Paystack (dashboard/bank transfer) still
+    // means the parent got their money back -- the therapist's earning on
+    // this booking must be reversed the same as any other refund path, or
+    // Hayven pays it out on top of the refund (M-2, production audit
+    // 2026-09-03).
+    await releaseBookingEarnings(supabase, payment.booking_id, true);
   }
 
   revalidatePath("/admin/refunds");
@@ -270,6 +277,11 @@ export async function processRefund(
 
   if (payment.booking_id) {
     await supabase.from("bookings").update({ refund_status: "processing" }).eq("id", payment.booking_id);
+    // Reverse the therapist's earning now, at initiation, the same moment a
+    // dispute resolution does it -- don't wait on the refund.processed
+    // webhook, which is also covered as a defensive backstop (M-2,
+    // production audit 2026-09-03).
+    await releaseBookingEarnings(supabase, payment.booking_id, true);
   }
 
   await logAuditEvent({
@@ -560,11 +572,30 @@ export async function resetUserAccountPassword(
   const session = await getSession();
   if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
 
+  // Unlike setUserAccountStatus/setUserSupervisorFlag, this action had no
+  // self/peer guard: any admin could set *any* account's password --
+  // including another admin's -- to a value only they know, then log in as
+  // them, with the target never notified (L-15, production audit
+  // 2026-09-03). Block self (use the normal change-password flow) and block
+  // targeting another admin account outright -- there's no legitimate
+  // in-app reason to know a fellow admin's password; a genuinely locked-out
+  // admin needs an out-of-band Supabase recovery link, not a peer setting
+  // one they know.
+  if (userId === session.userId) {
+    return { ok: false, error: "You can't reset your own password here -- use the normal change-password flow." };
+  }
+
+  const supabase = createAdminClient();
+  const { data: target } = await supabase.from("users").select("role, email, full_name").eq("id", userId).maybeSingle();
+  if (!target) return { ok: false, error: "Account not found." };
+  if (target.role === "admin") {
+    return { ok: false, error: "Admin accounts can't be reset this way. Use a Supabase recovery link instead." };
+  }
+
   if (newPassword.length < 8) {
     return { ok: false, error: "Password must be at least 8 characters." };
   }
 
-  const supabase = createAdminClient();
   const { error } = await supabase.auth.admin.updateUserById(userId, { password: newPassword });
   if (error) return { ok: false, error: error.message };
 
@@ -575,6 +606,14 @@ export async function resetUserAccountPassword(
     action: "account.reset_password",
     entityType: "user",
     entityId: userId,
+  });
+
+  // The target wasn't previously told this happened at all.
+  await createNotification({
+    userId,
+    type: "verification_update",
+    title: "Your password was reset",
+    body: "A Hayven administrator reset your account password. If this wasn't expected, contact support immediately.",
   });
 
   return { ok: true };

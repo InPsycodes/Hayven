@@ -97,11 +97,19 @@ export async function createNotification(params: {
     } catch (err) {
       console.error("notification email threw", params.type, err);
     }
+  }
 
-    try {
-      await sendPushToUser(params.userId, { title: params.title, body: params.body, url: params.url });
-    } catch (err) {
-      console.error("notification push threw", params.type, err);
-    }
+  // Push has its own opt-in (a device subscription created via the "Turn on"
+  // toggle) and sendPushToUser already no-ops when there's no subscription
+  // -- it doesn't need or want the email preference gate above. Nesting it
+  // inside `if (optedIn)` meant turning off an *email* preference (e.g.
+  // "email_messages") silently stopped push too, even for a user who never
+  // touched the push toggle and has an active subscription. Runs
+  // unconditionally so it's reached even for notification types with no
+  // email preference at all (prefKey undefined).
+  try {
+    await sendPushToUser(params.userId, { title: params.title, body: params.body, url: params.url });
+  } catch (err) {
+    console.error("notification push threw", params.type, err);
   }
 }

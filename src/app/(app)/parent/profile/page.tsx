@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ProfileForm } from "@/components/shared/profile-form";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
 import { MfaSection } from "@/components/shared/mfa-section";
-import { PushNotificationsToggle } from "@/components/parent/push-notifications-toggle";
+import { PushNotificationsToggle } from "@/components/shared/push-notifications-toggle";
 import { EmailPreferenceToggles } from "@/components/shared/email-preference-toggles";
 import { getSession } from "@/lib/auth/session";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
@@ -84,7 +84,7 @@ export default async function ParentProfilePage() {
           </div>
         </Card>
 
-        <PushNotificationsToggle />
+        <PushNotificationsToggle description="Get alerted on this device for new reports and when your child's session starts or ends." />
 
         <Card className="p-5">
           <h2 className="font-heading text-base text-charcoal">Notification emails</h2>

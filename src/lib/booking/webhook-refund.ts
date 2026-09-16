@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
+import { releaseBookingEarnings } from "@/lib/payouts/earnings";
 import { formatNaira } from "@/data/format";
 
 /**
@@ -26,6 +27,13 @@ export async function finalizeRefund(
   if (event === "refund.processed") {
     await admin.from("payments").update({ status: "refunded" }).eq("id", payment.id);
     await admin.from("bookings").update({ refund_status: "processed" }).eq("id", payment.booking_id);
+    // Only the dispute-resolve path used to reverse the therapist's earning
+    // on a refund -- a refund from the Refunds queue or this webhook left
+    // Hayven paying the therapist in full while also refunding the parent
+    // (M-2, production audit 2026-09-03). releaseBookingEarnings only
+    // touches held/pending rows, so this is a safe no-op if the earning was
+    // already reversed by the admin action below, or never existed.
+    await releaseBookingEarnings(admin, payment.booking_id, true);
 
     const booking = payment.bookings as unknown as {
       children: { first_name: string } | null;

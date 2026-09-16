@@ -22,7 +22,11 @@ type Status = "unsupported" | "checking" | "off" | "on" | "denied";
  * button click below), never on page load -- browsers silently ignore or
  * auto-deny a permission prompt fired without one.
  */
-export function PushNotificationsToggle() {
+export function PushNotificationsToggle({
+  description = "Get alerted on this device for new messages, reports, and session updates.",
+}: {
+  description?: string;
+}) {
   const [status, setStatus] = useState<Status>("checking");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -105,9 +109,7 @@ export function PushNotificationsToggle() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="font-heading text-base text-charcoal">Push notifications</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Get alerted on this device for new reports and when your child&apos;s session starts or ends.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         </div>
         {status !== "checking" && (
           <StatusBadge tone={status === "on" ? "sage" : "grey"}>

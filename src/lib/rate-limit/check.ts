@@ -18,11 +18,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * Fails open on an infrastructure error (DB unreachable, migration not yet
  * applied): a rate limiter that takes the whole app down when its own
  * storage has a hiccup is a worse outcome than a brief window of
- * unthrottled requests.
+ * unthrottled requests. That fail-open path is otherwise invisible (every
+ * limit in the app -- login brute-force, signup spam, payment-init, message
+ * flood, credential-upload quota -- would silently stop being enforced), so
+ * it fires its own Sentry alert distinct from a tripped bucket's.
  *
- * A tripped bucket also fires a Sentry alert -- this is the app's only
- * behavioral anomaly signal (Sentry otherwise only sees crashes, never
- * patterns like a burst of failed logins or one account hammering an
+ * A tripped bucket also fires a Sentry alert -- together these are the
+ * app's only behavioral anomaly signal (Sentry otherwise only sees crashes,
+ * never patterns like a burst of failed logins or one account hammering an
  * endpoint). Callers that want detection without blocking (e.g. a bulk-read
  * admin query) can call this and simply ignore the returned boolean; the
  * alert still fires on trip either way. Only the bucket's type prefix goes
@@ -39,6 +42,11 @@ export async function checkRateLimit(bucketKey: string, limit: number, windowSec
     });
     if (error) {
       console.error("checkRateLimit RPC failed, failing open", bucketKey, error.message);
+      Sentry.captureMessage(`Rate limit fail-open: ${bucketKey.split(":")[0]}`, {
+        level: "error",
+        tags: { anomaly: "rate_limit_unavailable" },
+        extra: { rpcError: error.message },
+      });
       return true;
     }
     const allowed = data === true;
@@ -51,6 +59,11 @@ export async function checkRateLimit(bucketKey: string, limit: number, windowSec
     return allowed;
   } catch (err) {
     console.error("checkRateLimit threw, failing open", bucketKey, err);
+    Sentry.captureMessage(`Rate limit fail-open: ${bucketKey.split(":")[0]}`, {
+      level: "error",
+      tags: { anomaly: "rate_limit_unavailable" },
+      extra: { thrown: err instanceof Error ? err.message : String(err) },
+    });
     return true;
   }
 }
