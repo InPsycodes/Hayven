@@ -194,7 +194,12 @@ export async function runPayouts(): Promise<PayoutRunResult> {
     actor: session,
     action: "payout.run",
     entityType: "payout",
-    entityId: "batch",
+    // No single entity for a batch run -- entity_id is a uuid column, and
+    // the literal "batch" previously written here failed that type check on
+    // every single call (caught silently by logAuditEvent's own try/catch),
+    // meaning payout runs have never actually had an audit log entry in
+    // production. Found via the money-flow integration test. The batch
+    // detail already lives in metadata below.
     metadata: { created, paidNaira, skipped: skipped.length, errors: errors.length },
   });
   revalidatePath("/admin/payouts");
