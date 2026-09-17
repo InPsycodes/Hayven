@@ -28,7 +28,7 @@ export function BehaviourTrendChart({
           strokeWidth={1}
           dot={false}
           connectNulls={false}
-          animationDuration={800}
+          animationDuration={300}
           animationEasing="ease-out"
         />
         <Line
@@ -37,7 +37,7 @@ export function BehaviourTrendChart({
           strokeWidth={2}
           dot
           connectNulls={false}
-          animationDuration={800}
+          animationDuration={300}
           animationEasing="ease-out"
         />
       </LineChart>

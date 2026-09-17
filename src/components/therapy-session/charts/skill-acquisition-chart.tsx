@@ -32,7 +32,7 @@ export function SkillAcquisitionChart({
           strokeWidth={2}
           dot
           connectNulls={false}
-          animationDuration={800}
+          animationDuration={300}
           animationEasing="ease-out"
         />
       </LineChart>

@@ -17,7 +17,7 @@ export function AttendanceChart({ data }: { data: { weekStart: string; sessions:
         <XAxis dataKey="weekStart" tickFormatter={(d) => formatShortDate(d)} tickLine={false} axisLine={false} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={30} />
         <ChartTooltip content={<ChartTooltipContent labelFormatter={(d) => formatShortDate(String(d))} />} />
-        <Bar dataKey="sessions" fill="var(--color-sessions)" radius={2} animationDuration={800} animationEasing="ease-out" />
+        <Bar dataKey="sessions" fill="var(--color-sessions)" radius={2} animationDuration={300} animationEasing="ease-out" />
       </BarChart>
     </ChartContainer>
   );

@@ -40,8 +40,23 @@ export function StaffMobileSidebar({
   roleLabel: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  // Lets the exit animation actually play: closing sets isClosing instead
+  // of unmounting immediately, and onAnimationEnd is what actually flips
+  // isOpen to false once the exit animation finishes.
+  const [isClosing, setIsClosing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+
+  function close() {
+    setIsClosing(true);
+  }
+
+  function handleAnimationEnd() {
+    if (isClosing) {
+      setIsOpen(false);
+      setIsClosing(false);
+    }
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -58,7 +73,7 @@ export function StaffMobileSidebar({
 
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        setIsOpen(false);
+        close();
         return;
       }
       if (e.key === "Tab" && focusable && focusable.length > 0) {
@@ -73,7 +88,7 @@ export function StaffMobileSidebar({
     }
 
     function handleResize() {
-      if (window.innerWidth >= 768) setIsOpen(false);
+      if (window.innerWidth >= 768) close();
     }
 
     document.addEventListener("keydown", handleKeyDown);
@@ -105,16 +120,19 @@ export function StaffMobileSidebar({
       </button>
       <BrandMark />
 
-      {isOpen &&
+      {(isOpen || isClosing) &&
         createPortal(
           <div className="fixed inset-0 z-[60] md:hidden">
             <div
               aria-hidden
-              onClick={() => setIsOpen(false)}
+              onClick={close}
+              onAnimationEnd={handleAnimationEnd}
               className={cn(
                 "absolute inset-0 bg-charcoal/40 backdrop-blur-sm",
-                "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-[250ms]",
-                "motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]"
+                !isClosing &&
+                  "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-[250ms] motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]",
+                isClosing &&
+                  "motion-safe:animate-out motion-safe:fade-out motion-safe:duration-[200ms] motion-reduce:animate-out motion-reduce:fade-out motion-reduce:duration-[200ms]"
               )}
             />
             <div
@@ -122,10 +140,13 @@ export function StaffMobileSidebar({
               ref={panelRef}
               role="dialog"
               aria-modal="true"
+              onAnimationEnd={handleAnimationEnd}
               className={cn(
                 "absolute inset-y-0 left-0 flex w-[82%] max-w-sm flex-col justify-between px-4 py-8 shadow-[inset_-1px_0_0_rgba(255,255,255,0.25),8px_0_40px_-14px_rgba(26,18,12,0.45)] backdrop-blur-2xl backdrop-saturate-150",
-                "motion-safe:animate-in motion-safe:slide-in-from-left-full motion-safe:duration-[280ms] motion-safe:ease-out",
-                "motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]"
+                !isClosing &&
+                  "motion-safe:animate-in motion-safe:slide-in-from-left-full motion-safe:duration-[280ms] motion-safe:ease-out motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]",
+                isClosing &&
+                  "motion-safe:animate-out motion-safe:slide-out-to-left-full motion-safe:duration-[220ms] motion-safe:ease-in motion-reduce:animate-out motion-reduce:fade-out motion-reduce:duration-[200ms]"
               )}
               style={{
                 background:
@@ -138,7 +159,7 @@ export function StaffMobileSidebar({
                   <button
                     type="button"
                     aria-label="Close menu"
-                    onClick={() => setIsOpen(false)}
+                    onClick={close}
                     className="flex size-11 items-center justify-center text-canvas-white/90"
                   >
                     <IconX size={22} stroke={1.75} />
@@ -149,7 +170,7 @@ export function StaffMobileSidebar({
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={() => setIsOpen(false)}
+                      onClick={close}
                       className={cn(
                         "flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition-colors",
                         item.active

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { IconMenu2, IconX } from "@tabler/icons-react";
@@ -29,6 +29,24 @@ export function MobileNavMenu({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  // isOpen is a controlled prop -- the parent owns it. To play an exit
+  // animation before the portal unmounts, closing here is a two-step
+  // handoff: mark isClosing (keeps rendering with the exit classes applied,
+  // isOpen prop still true), then only call onOpenChange(false) once the
+  // animation actually finishes (onAnimationEnd), which is what makes the
+  // isOpen prop go false and the portal unmount.
+  const [isClosing, setIsClosing] = useState(false);
+
+  function close() {
+    setIsClosing(true);
+  }
+
+  function handleAnimationEnd() {
+    if (isClosing) {
+      onOpenChange(false);
+      setIsClosing(false);
+    }
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -47,7 +65,7 @@ export function MobileNavMenu({
 
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        onOpenChange(false);
+        close();
         return;
       }
       if (e.key === "Tab" && focusable && focusable.length > 0) {
@@ -62,7 +80,7 @@ export function MobileNavMenu({
     }
 
     function handleResize() {
-      if (window.innerWidth >= 1024) onOpenChange(false);
+      if (window.innerWidth >= 1024) close();
     }
 
     document.addEventListener("keydown", handleKeyDown);
@@ -93,16 +111,19 @@ export function MobileNavMenu({
         {isOpen ? <IconX size={22} stroke={1.75} /> : <IconMenu2 size={22} stroke={1.75} />}
       </button>
 
-      {isOpen &&
+      {(isOpen || isClosing) &&
         createPortal(
           <div className="fixed inset-0 z-[60] lg:hidden">
             <div
               aria-hidden
-              onClick={() => onOpenChange(false)}
+              onClick={close}
+              onAnimationEnd={handleAnimationEnd}
               className={cn(
                 "absolute inset-0 bg-charcoal/40 backdrop-blur-sm",
-                "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-[250ms]",
-                "motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]"
+                !isClosing &&
+                  "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-[250ms] motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]",
+                isClosing &&
+                  "motion-safe:animate-out motion-safe:fade-out motion-safe:duration-[200ms] motion-reduce:animate-out motion-reduce:fade-out motion-reduce:duration-[200ms]"
               )}
             />
             <div
@@ -110,10 +131,13 @@ export function MobileNavMenu({
               ref={panelRef}
               role="dialog"
               aria-modal="true"
+              onAnimationEnd={handleAnimationEnd}
               className={cn(
                 "absolute inset-y-0 left-0 flex w-[72%] max-w-xs flex-col border-r border-white/50 bg-[linear-gradient(180deg,rgba(250,248,246,0.92)_0%,rgba(250,248,246,0.82)_100%)] shadow-[inset_-1px_0_0_rgba(255,255,255,0.5),8px_0_40px_-14px_rgba(26,18,12,0.4)] backdrop-blur-2xl backdrop-saturate-150",
-                "motion-safe:animate-in motion-safe:slide-in-from-left-full motion-safe:duration-[280ms] motion-safe:ease-out",
-                "motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]"
+                !isClosing &&
+                  "motion-safe:animate-in motion-safe:slide-in-from-left-full motion-safe:duration-[280ms] motion-safe:ease-out motion-reduce:animate-in motion-reduce:fade-in motion-reduce:duration-[250ms]",
+                isClosing &&
+                  "motion-safe:animate-out motion-safe:slide-out-to-left-full motion-safe:duration-[220ms] motion-safe:ease-in motion-reduce:animate-out motion-reduce:fade-out motion-reduce:duration-[200ms]"
               )}
             >
               <div className="flex h-20 items-center justify-between px-5">
@@ -121,7 +145,7 @@ export function MobileNavMenu({
                 <button
                   type="button"
                   aria-label="Close menu"
-                  onClick={() => onOpenChange(false)}
+                  onClick={close}
                   className="flex size-11 items-center justify-center text-charcoal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
                 >
                   <IconX size={22} stroke={1.75} />
@@ -133,7 +157,7 @@ export function MobileNavMenu({
                   <Link
                     key={link.href}
                     href={link.href}
-                    onClick={() => onOpenChange(false)}
+                    onClick={close}
                     className="font-heading text-lg text-charcoal sm:text-2xl"
                   >
                     {link.label}
@@ -144,7 +168,7 @@ export function MobileNavMenu({
               <div className="mt-auto flex flex-col gap-3 border-t border-charcoal/10 px-5 py-6">
                 {session ? (
                   <Button asChild variant="accent" size="lg" className="w-full">
-                    <Link href={session.dashboardHref} onClick={() => onOpenChange(false)}>
+                    <Link href={session.dashboardHref} onClick={close}>
                       Go to dashboard
                     </Link>
                   </Button>
@@ -152,13 +176,13 @@ export function MobileNavMenu({
                   <>
                     <Link
                       href="/login"
-                      onClick={() => onOpenChange(false)}
+                      onClick={close}
                       className="py-2 text-center text-sm text-charcoal"
                     >
                       Log in
                     </Link>
                     <Button asChild variant="accent" size="lg" className="w-full">
-                      <Link href="/signup" onClick={() => onOpenChange(false)}>
+                      <Link href="/signup" onClick={close}>
                         Get started
                       </Link>
                     </Button>

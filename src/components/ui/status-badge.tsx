@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
  * size. These are re-tuned specifically for that tinted-background case.
  */
 const statusBadgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap",
+  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap transition-[color,background-color] duration-(--duration-dropdown) ease-(--ease-out)",
   {
     variants: {
       tone: {

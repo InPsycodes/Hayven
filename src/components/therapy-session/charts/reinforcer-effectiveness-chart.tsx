@@ -22,7 +22,7 @@ export function ReinforcerEffectivenessChart({ data }: { data: { name: string; m
             />
           }
         />
-        <Bar dataKey="mean" fill="var(--color-mean)" radius={2} animationDuration={800} animationEasing="ease-out" />
+        <Bar dataKey="mean" fill="var(--color-mean)" radius={2} animationDuration={300} animationEasing="ease-out" />
       </BarChart>
     </ChartContainer>
   );

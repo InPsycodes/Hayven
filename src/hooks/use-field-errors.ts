@@ -38,7 +38,8 @@ export function useFieldErrors() {
       requestAnimationFrame(() => {
         const el = document.getElementById(firstBad);
         if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          el.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "center" });
           (el as HTMLElement).focus({ preventScroll: true });
         }
       });
