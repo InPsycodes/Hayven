@@ -107,9 +107,9 @@ Coarse product events (role, action, timing — never PII/clinical content) -> P
 | Paystack | Payment processing | Nigeria |
 | PostHog | Product analytics | EU Cloud |
 | Google Analytics | Site-traffic analytics | Google's global infrastructure — **not confirmed EU/UK-restricted; see open item in §10** |
-| Resend | Transactional email | **Region not confirmed in this draft; see §10** |
-| Cloudmersive | Virus scanning of uploaded credential documents | **Region not confirmed in this draft; see §10** |
-| Sentry | Error monitoring | `sendDefaultPii: false` explicitly set on both client and server — Sentry does not receive PII by default. **Region not confirmed; see §10** |
+| Resend | Transactional email | US by default (Resend stores account data, email metadata, and API logs in the US regardless of sending region, per their own documentation; an EU *sending* region exists on higher tiers but doesn't change where account data lives, and this codebase shows no evidence of that being configured). Email content sent through it includes notification titles/bodies, which can echo user-facing text but never raw clinical data (see `src/lib/email/send.ts` — the template only ever receives the same escaped title/body already shown in-app). |
+| Cloudmersive | Virus scanning of uploaded credential documents | Likely US by default — the code calls `api.cloudmersive.com` (`src/lib/uploads/scan-file.ts:3`), Cloudmersive's default global endpoint, not an EU-specific one (they offer EU regions — Frankfurt, London — but reaching them requires an account-level region setting on a paid tier, which isn't visible from the code or this draft). The file itself is scanned, not stored, by this call. |
+| Sentry | Error monitoring | **Confirmed EU (Frankfurt, Germany)** — the ingest hostname (`ingest.de.sentry.io`) is Sentry's dedicated EU data-residency region, not their US default. `sendDefaultPii: false` is also explicitly set on both client and server config, so Sentry does not receive PII by default regardless of region. |
 
 Most of the system's core data (the database itself, and the servers that query it) is
 UK-based, which is the most consequential fact for a transfer assessment — the
@@ -254,7 +254,7 @@ methodology — recalibrate with whoever formally owns this document.
 | 5 | A therapist's payout is paid twice due to a concurrency bug, corrupting the financial/audit record | Therapist, platform | Was Medium; now fixed and integration-tested | Medium | Atomic claim + real concurrent-request test (6.6) | Low |
 | 6 | A safeguarding concern about a child is raised but has no defined, working path to a responsible person | Child | **Currently High — no DSL is named yet** | **High** | Draft procedure exists (`safeguarding-procedure.md`) but is explicitly not operative | **High — open, see §10** |
 | 7 | A data subject rights request (access/correction/deletion) has nowhere specific to go, or no defined SLA is met | Parent, therapist | Medium | Medium | A contact email exists; NDPA-timeframe commitment stated in the Privacy Policy | Medium — no DPO named yet to own this in practice |
-| 8 | A cross-border transfer (e.g. via Google Analytics) has no documented legal basis | All users | Medium (process gap, not a technical one) | Medium | Most core data stays UK-based; GA's basis is undocumented | Medium — open, see §10 |
+| 8 | Cross-border transfers (confirmed: Resend and likely Cloudmersive process in the US by default; Google Analytics unconfirmed) have no documented NDPA transfer mechanism | All users (Resend: anyone who receives a notification email); Therapists (Cloudmersive: credential-scan requests) | Medium (process gap, not a technical one — the transfers themselves are already happening) | Medium | Most core data (the database, session notes, reports) stays UK-based; only email metadata and a credential file's scan request reach the US | Medium — open, see §10; now a documentation gap specifically, not an unknown one |
 | 9 | A therapist's professional liability isn't clearly allocated, and a clinical incident becomes a platform liability question with no contract backing the "independent practitioner" framing | Child, therapist, platform | Medium | High | Terms of Service frames therapists as independent contractors | Medium-High — no standalone Therapist Agreement exists yet; flagged separately as the platform's highest non-technical legal gap |
 | 10 | No verified backup/restore process exists, and a data-loss incident has no tested recovery path | All users | Unknown — not verified in this draft | High if it occurred | Supabase provides managed backups by default | Unknown — needs verification, see §10 |
 
@@ -307,10 +307,14 @@ governance control.
 
 - [ ] Name a DPO/privacy owner and a Designated Safeguarding Lead — referenced
       throughout this document and blocking its own sign-off (§9).
-- [ ] Confirm processing location and documented transfer basis for Google Analytics,
-      Resend, Cloudmersive, and Sentry (§3.1) — feed the answer back into the Privacy
-      Policy's international-transfers section, which currently has the same open
-      question.
+- [ ] Confirm Google Analytics' processing location (the one processor still genuinely
+      unknown — Sentry is confirmed EU/Germany, Resend and Cloudmersive are confirmed/
+      likely US by default; see §3.1). Then get a lawyer to confirm the actual NDPA
+      transfer mechanism relied on for each non-Nigeria, non-UK processor (Resend,
+      Cloudmersive, and GA once its region is known) — the *locations* are now
+      documented in this draft, but the *legal basis* for transferring to them still
+      needs counsel, not more research. Feed the answer back into the Privacy Policy's
+      international-transfers section, which currently has the same open question.
 - [ ] Verify Supabase's backup configuration and run a real restore drill; record the
       result here (risk #10).
 - [ ] Decide whether MFA becomes mandatory for therapist/supervisor/admin roles (§8.6).

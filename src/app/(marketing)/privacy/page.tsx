@@ -163,13 +163,14 @@ export default function PrivacyPolicyPage() {
           <p>
             <strong className="text-charcoal">International transfers.</strong> Our database, authentication, and
             file storage (Supabase) and our application hosting (Vercel) are located in the United Kingdom. Our
-            product analytics provider (PostHog) is EU-hosted. Google Analytics may process information on
+            product analytics provider (PostHog) and our error-monitoring provider (Sentry) are both EU-hosted.
+            Our email provider (Resend) and our credential-document virus-scanning provider (Cloudmersive)
+            process data in the United States by default. Google Analytics may process information on
             infrastructure located outside Nigeria and the UK/EU.{" "}
             <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
               [counsel to confirm: the specific safeguard relied on for each transfer outside Nigeria under the
               NDPA (e.g. an adequacy finding, standard contractual clauses, or another recognised transfer
-              mechanism), and whether Google Analytics&apos; transfer basis needs separate disclosure or a
-              narrower configuration]
+              mechanism), and Google Analytics&apos; exact processing location]
             </span>
             .
           </p>
