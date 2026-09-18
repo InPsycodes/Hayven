@@ -160,6 +160,19 @@ export default function PrivacyPolicyPage() {
               others.
             </li>
           </ul>
+          <p>
+            <strong className="text-charcoal">International transfers.</strong> Our database, authentication, and
+            file storage (Supabase) and our application hosting (Vercel) are located in the United Kingdom. Our
+            product analytics provider (PostHog) is EU-hosted. Google Analytics may process information on
+            infrastructure located outside Nigeria and the UK/EU.{" "}
+            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
+              [counsel to confirm: the specific safeguard relied on for each transfer outside Nigeria under the
+              NDPA (e.g. an adequacy finding, standard contractual clauses, or another recognised transfer
+              mechanism), and whether Google Analytics&apos; transfer basis needs separate disclosure or a
+              narrower configuration]
+            </span>
+            .
+          </p>
         </Section>
 
         <Section heading="6. How long we keep it">
@@ -234,6 +247,14 @@ export default function PrivacyPolicyPage() {
               hayvenmind@gmail.com
             </a>
             .
+          </p>
+          <p>
+            <strong className="text-charcoal">Data Protection Officer.</strong>{" "}
+            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
+              [counsel to confirm whether Hayven is required to designate a Data Protection Officer under the
+              NDPA at its current scale, and if so, the DPO&apos;s name and direct contact details to publish
+              here]
+            </span>
           </p>
         </Section>
 
