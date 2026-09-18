@@ -1,6 +1,6 @@
 # 012 — Reveal the MFA enroll/disable panels instead of teleporting them in
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: 0d3c9c8
 - **Severity**: Delight opportunity (from `find-animation-opportunities`, not an `improve-animations` audit finding -- previously flagged as a MEDIUM cohesion finding in that audit's auth-flow subagent report, but not selected for one of the 10 implemented plans)
 - **Category**: 4. Interruptibility / 8. Missed opportunities

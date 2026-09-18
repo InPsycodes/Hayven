@@ -1,6 +1,6 @@
 # 011 — Stagger the booking/signup confirmation panel's entrance
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: 0d3c9c8
 - **Severity**: Delight opportunity (from `find-animation-opportunities`, not an `improve-animations` audit finding)
 - **Category**: 8. Missed opportunities / Delight

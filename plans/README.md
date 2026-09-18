@@ -32,8 +32,8 @@ after a Tailwind upgrade).
 
 | # | Title | Severity | Depends on | Status |
 |---|---|---|---|---|
-| [011](011-confirmation-panel-entrance.md) | Stagger the booking/signup confirmation panel's entrance | Delight | — | TODO |
-| [012](012-mfa-panel-reveal.md) | Reveal the MFA enroll/disable panels instead of teleporting them in | Delight | — | TODO |
+| [011](011-confirmation-panel-entrance.md) | Stagger the booking/signup confirmation panel's entrance | Delight | — | DONE |
+| [012](012-mfa-panel-reveal.md) | Reveal the MFA enroll/disable panels instead of teleporting them in | Delight | — | DONE |
 
 Written 2026-09-18, same session, from a separate `find-animation-opportunities` sweep targeting
 rare/high-stakes moments specifically (the improve-animations audit deliberately didn't spend
