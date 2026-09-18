@@ -54,7 +54,7 @@ export async function AppShell({
     // min-h-[calc(...)], not min-h-screen -- see the --pwa-reserve comment
     // in globals.css. A live audit found the install toast fully blocking
     // the therapist profile page's price input on mobile.
-    <div className="care-theme flex min-h-[calc(100vh-var(--pwa-reserve,0px))] w-full flex-col bg-care-bg md:flex-row">
+    <div className="care-theme flex min-h-[calc(100dvh-var(--pwa-reserve,0px))] w-full flex-col bg-care-bg md:flex-row">
       {/* full-bleed dark backdrop so no light body shows below short pages */}
       <div aria-hidden className="fixed inset-0 -z-10 bg-care-bg" />
       <AppRoleSidebar session={session} role={role} counts={counts} />

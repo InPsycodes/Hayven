@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function NeedsAssessmentPage() {
   return (
-    <main id="main" className="min-h-[calc(100vh-var(--pwa-reserve,0px))] bg-charcoal">
+    <main id="main" className="min-h-[calc(100dvh-var(--pwa-reserve,0px))] bg-charcoal">
       <MatchingQuiz />
     </main>
   );

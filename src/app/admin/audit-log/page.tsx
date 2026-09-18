@@ -37,7 +37,7 @@ export default async function AdminAuditLogPage() {
   const entries = await getAuditLogEntries();
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-offwhite">
+    <div className="min-h-dvh overflow-y-auto bg-offwhite">
       <div className="p-6 md:p-8">
         <h1 className="font-heading text-xl text-charcoal">Audit log</h1>
         <p className="mt-1 text-sm text-muted-foreground">

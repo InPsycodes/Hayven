@@ -121,7 +121,7 @@ export function MatchingQuiz() {
   const canAdvance = step !== 0 || Boolean(concern);
 
   return (
-    <div className="grid min-h-[calc(100vh-var(--pwa-reserve,0px))] grid-rows-[auto_1fr] md:grid-cols-[minmax(0,320px)_1fr] md:grid-rows-[1fr]">
+    <div className="grid min-h-[calc(100dvh-var(--pwa-reserve,0px))] grid-rows-[auto_1fr] md:grid-cols-[minmax(0,320px)_1fr] md:grid-rows-[1fr]">
       {/* Rail */}
       <aside className="flex flex-col gap-5 bg-charcoal px-5 py-5 text-offwhite md:gap-7 md:px-7 md:py-8">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">

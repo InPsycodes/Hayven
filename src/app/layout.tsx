@@ -76,6 +76,24 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#17140F",
+  // viewport-fit=cover lets the page draw under the notch/Dynamic
+  // Island/home-indicator instead of letterboxing inside the safe area --
+  // without it, every env(safe-area-inset-*) already used in
+  // message-thread-view.tsx, bottom-tab-nav.tsx, and
+  // supervisor-bottom-nav.tsx resolves to 0px and does nothing.
+  viewportFit: "cover",
+  // Android Chrome otherwise shrinks the *visual* viewport when the
+  // software keyboard opens and leaves the *layout* viewport (what
+  // 100dvh/fixed-bottom elements measure against) unchanged, so a
+  // bottom-pinned composer or CTA stays hidden behind the keyboard.
+  // iOS already behaves this way natively.
+  interactiveWidget: "resizes-content",
+  // Marketing/auth/admin are fixed-light; the two care-theme route groups
+  // ((app)/layout.tsx, supervisor/layout.tsx) declare their own "dark"
+  // override. Neither follows the OS's prefers-color-scheme -- Hayven's
+  // themes are route-based, not OS-toggle-based -- so this is a fixed
+  // value per section, not `light dark`.
+  colorScheme: "light",
 };
 
 export default function RootLayout({

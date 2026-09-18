@@ -6,7 +6,7 @@ export default async function AdminCoursesPage() {
   const courses = await getAllCoursesForAdmin();
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-offwhite">
+    <div className="min-h-dvh overflow-y-auto bg-offwhite">
       <LearningAdminHeader active="courses" action={{ label: "New course", href: "/admin/learning/courses/new" }} />
 
       <div className="px-6 py-6 md:px-8">

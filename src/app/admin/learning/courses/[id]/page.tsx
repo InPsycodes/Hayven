@@ -11,7 +11,7 @@ export default async function EditCoursePage({ params }: { params: Promise<{ id:
   if (!result) notFound();
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-offwhite">
+    <div className="min-h-dvh overflow-y-auto bg-offwhite">
       <div className="p-6 md:p-8">
         <h1 className="font-heading text-xl text-charcoal">Edit course</h1>
         <p className="mt-1 text-sm text-muted-foreground">/therapist/learn/{result.course.slug}</p>

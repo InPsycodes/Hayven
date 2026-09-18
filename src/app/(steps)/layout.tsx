@@ -6,7 +6,7 @@ export default function StepsLayout({ children }: { children: React.ReactNode })
     // consent checkbox.
     <main
       id="main"
-      className="flex min-h-[calc(100vh-var(--pwa-reserve,0px))] items-start justify-center bg-offwhite p-4 py-10 md:items-center md:p-10"
+      className="flex min-h-[calc(100dvh-var(--pwa-reserve,0px))] items-start justify-center bg-offwhite p-4 py-10 md:items-center md:p-10"
     >
       <div className="w-full max-w-[640px] overflow-hidden rounded-md bg-paper">
         {children}

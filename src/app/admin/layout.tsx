@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col md:flex-row">
+    <div className="flex min-h-dvh w-full flex-col md:flex-row">
       <AdminSidebar
         session={session}
         counts={{

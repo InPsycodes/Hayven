@@ -21,7 +21,7 @@ export default async function AdminPayoutsPage() {
   const eligible = preview.filter((p) => p.eligible);
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-offwhite">
+    <div className="min-h-dvh overflow-y-auto bg-offwhite">
       <div className="p-6 md:p-8">
         <h1 className="font-heading text-xl text-charcoal">Payouts</h1>
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">

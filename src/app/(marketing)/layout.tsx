@@ -24,7 +24,14 @@ export default async function MarketingLayout({ children }: { children: React.Re
   const session = await getSession();
 
   return (
-    <div className="flex min-h-screen flex-col">
+    // min-h-[calc(...)] instead of min-h-screen -- see the --pwa-reserve
+    // comment in globals.css. Marketing pages are exactly where the PWA
+    // install toast can show (pwa-install-prompt.tsx only excludes staff
+    // areas and a handful of critical flows), so a short page (e.g.
+    // /privacy) needs the same toast-aware min-height the auth/steps
+    // layouts already use, or the footer's bottom links can end up
+    // sitting under the toast on a short page.
+    <div className="flex min-h-[calc(100dvh-var(--pwa-reserve,0px))] flex-col">
       {/* Static, developer-authored JSON from getOrganizationSchema() -- never user input.
           Still run through safeJsonLdStringify for consistency with therapists/[id]/page.tsx,
           so this stays safe if the schema ever grows a user-editable field. */}

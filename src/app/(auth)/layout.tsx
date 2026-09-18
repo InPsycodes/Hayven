@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     // comment in globals.css. A plain min-h-screen here doesn't shrink
     // just because the page gained bottom padding for the install toast,
     // which left the "Sign up" link genuinely unclickable underneath it.
-    <main id="main" className="flex min-h-[calc(100vh-var(--pwa-reserve,0px))] flex-col md:flex-row">
+    <main id="main" className="flex min-h-[calc(100dvh-var(--pwa-reserve,0px))] flex-col md:flex-row">
       {children}
     </main>
   );

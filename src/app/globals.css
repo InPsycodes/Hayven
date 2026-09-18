@@ -307,6 +307,14 @@
        never sticks. `clip` clips the same overflow without establishing
        a scroll container at all. */
     overflow-x: clip;
+    /* Without this, dragging past the top/bottom on Android triggers
+       pull-to-refresh and iOS rubber-bands the whole page -- both read as
+       "this is a browser tab", not an installed app. Inner scroll
+       containers that want their own bounce (e.g. the message thread,
+       message-thread-view.tsx) opt back in locally with
+       overscroll-behavior: contain, which keeps that container's bounce
+       without letting it chain up to the page behind it. */
+    overscroll-behavior: none;
   }
   body {
     @apply bg-background text-foreground relative;
@@ -318,6 +326,25 @@
        whole app gets a touch smaller in proportion. Percentage, not a px
        value, so a reader's own browser font-size setting is still honoured. */
     font-size: 93.75%;
+    /* Kills the gray/blue flash Safari and Chrome paint over a tapped
+       element -- the loudest single "this is a website" tell on mobile.
+       Every tappable element below gets its own :active feedback instead. */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Baseline mobile-app feel for every tappable element: skip the ~300ms
+     tap-delay browsers otherwise wait out for a possible double-tap
+     (touch-action: manipulation), and stop long-press from popping the
+     text-selection/callout menu a native control never shows. Deliberately
+     not on body text -- users copy addresses, error messages, order
+     numbers, and that's content, not a control. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   /* Keep real text fields at 16px on phones so iOS Safari doesn't zoom the
@@ -339,14 +366,17 @@
      Two mechanisms, because one alone doesn't cover every layout shape:
      padding-bottom pushes down content that naturally flows past the
      toast's height (most pages); the --pwa-reserve custom property is for
-     the handful of screens sized with min-h-screen/h-screen (the auth and
-     booking-step layouts) -- a fixed viewport-height section doesn't
-     shrink just because an ancestor gained padding, so those containers
-     use `min-height: calc(100vh - var(--pwa-reserve))` instead of the
-     plain Tailwind min-h-screen utility. Confirmed via live audit: without
-     this, the login page's "Sign up" link and the signup consent
-     checkbox were both genuinely unclickable under the toast, not just
-     visually covered. */
+     the handful of screens sized as a viewport-height section (the auth,
+     booking-step, and marketing layouts, plus needs-assessment and the
+     matching quiz) -- a fixed viewport-height section doesn't shrink just
+     because an ancestor gained padding, so those containers use
+     `min-height: calc(100dvh - var(--pwa-reserve))` instead of the plain
+     Tailwind min-h-screen/h-screen utilities (100dvh, not 100vh -- vh is
+     the largest viewport, chrome collapsed, so a plain 100vh section
+     overflows the actually-visible area by the URL bar's height on load).
+     Confirmed via live audit: without the reserve, the login page's "Sign
+     up" link and the signup consent checkbox were both genuinely
+     unclickable under the toast, not just visually covered. */
   body.pwa-prompt-reserved {
     padding-bottom: 152px;
     --pwa-reserve: 152px;

@@ -6,7 +6,7 @@ export default async function AdminLearningCategoriesPage() {
   const categories = await getAllLearningCategoriesForAdmin();
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-offwhite">
+    <div className="min-h-dvh overflow-y-auto bg-offwhite">
       <LearningAdminHeader active="categories" />
 
       <div className="px-6 py-6 md:px-8">

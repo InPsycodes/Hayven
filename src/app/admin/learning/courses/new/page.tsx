@@ -5,7 +5,7 @@ export default async function NewCoursePage() {
   const categories = await getAllLearningCategoriesForAdmin();
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-offwhite">
+    <div className="min-h-dvh overflow-y-auto bg-offwhite">
       <div className="p-6 md:p-8">
         <h1 className="font-heading text-xl text-charcoal">New course</h1>
         <p className="mt-1 text-sm text-muted-foreground">Saved as a draft -- add lessons and publish from the course page.</p>

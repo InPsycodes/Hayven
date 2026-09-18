@@ -11,7 +11,7 @@ export default async function AdminSettingsPage() {
   const mfaStatus = await getMfaStatus();
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-offwhite">
+    <div className="min-h-dvh overflow-y-auto bg-offwhite">
       <div className="p-6 md:p-8">
         <h1 className="font-heading text-xl text-charcoal">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">Your account security.</p>

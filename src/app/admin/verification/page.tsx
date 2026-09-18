@@ -27,7 +27,7 @@ export default async function AdminVerificationPage({
     filteredRequests.find((r) => r.id === applicationId) ?? filteredRequests[0];
 
   return (
-    <div className="flex h-screen w-full flex-col md:flex-row">
+    <div className="flex h-dvh w-full flex-col md:flex-row">
       <VerificationQueueList
         requests={filteredRequests}
         allRequests={allRequests}
