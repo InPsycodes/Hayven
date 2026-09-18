@@ -8,7 +8,7 @@ import { getSession } from "@/lib/auth/session";
 export interface FormState {
   error?: string;
   /** Which field the error belongs to, so the form can highlight + focus it. */
-  field?: "firstName" | "dateOfBirth" | "presentingConcern";
+  field?: "firstName" | "dateOfBirth" | "presentingConcern" | "guardianConsent";
 }
 
 export async function addChild(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -41,6 +41,12 @@ export async function addChild(_prevState: FormState, formData: FormData): Promi
   if (dob.getTime() < earliestPlausible.getTime()) {
     return { error: "That date of birth doesn't look right. Please double-check it.", field: "dateOfBirth" };
   }
+  if (formData.get("guardianConsent") !== "on") {
+    return {
+      error: "Please confirm you're this child's parent or legal guardian to continue.",
+      field: "guardianConsent",
+    };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.from("children").insert({
@@ -51,6 +57,7 @@ export async function addChild(_prevState: FormState, formData: FormData): Promi
       typeof presentingConcern === "string" && presentingConcern.trim()
         ? presentingConcern.trim()
         : null,
+    guardian_consent_at: new Date().toISOString(),
   });
 
   if (error) {

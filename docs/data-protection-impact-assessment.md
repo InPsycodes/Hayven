@@ -179,6 +179,26 @@ what's actually implemented today, not aspirational.
   at the login form.
 - Signup role is server-validated against an allowlist (parent/therapist only) — there
   is no self-service path to an admin or supervisor account.
+- As of 2026-09-19: adding a child now requires a separate, explicit checkbox — distinct
+  from the blanket Privacy Policy/Terms acceptance at account signup — confirming the
+  parent is that child's parent or legal guardian and consents to Hayven processing what
+  they share, including health/developmental information (migration `0081`,
+  `children.guardian_consent_at`; `src/components/parent/add-child-form.tsx`,
+  `src/lib/parent/actions.ts`). This targets the two most concrete gaps a 2026-09-19
+  compliance review raised: explicit/separate consent for sensitive data (NDPA s.30) and
+  guardian-status confirmation (NDPA s.31), at the actual point a presenting concern is
+  first typed in — before the later, already-solid granular intake-consent system
+  (below) is ever reached. It does not by itself verify the claim (see §10).
+- Separately, and pre-existing (not new this pass): once a child is added, the intake
+  form's "Consent & sharing" section (migration `0077`, table `intake_consents`) already
+  asks for granular, per-purpose, revocable consent — therapist access to the form and
+  session records (required), sharing updates with named others, session photos/video,
+  and de-identified data use for product improvement — each recorded with a timestamp
+  and kept as history when changed, not overwritten (`src/lib/intake/schema.ts`,
+  `CONSENT_COPY`). This compliance review's own review of the platform apparently missed
+  this system, likely because it only had visibility into the static Privacy Policy/Terms
+  text, not the in-app intake flow — worth surfacing to counsel directly rather than
+  re-deriving requirements the app has already substantially met here.
 
 ### 6.2 Data minimisation and integrity in transit/storage
 
@@ -257,6 +277,7 @@ methodology — recalibrate with whoever formally owns this document.
 | 8 | Cross-border transfers (confirmed: Resend and likely Cloudmersive process in the US by default; Google Analytics unconfirmed) have no documented NDPA transfer mechanism | All users (Resend: anyone who receives a notification email); Therapists (Cloudmersive: credential-scan requests) | Medium (process gap, not a technical one — the transfers themselves are already happening) | Medium | Most core data (the database, session notes, reports) stays UK-based; only email metadata and a credential file's scan request reach the US | Medium — open, see §10; now a documentation gap specifically, not an unknown one |
 | 9 | A therapist's professional liability isn't clearly allocated, and a clinical incident becomes a platform liability question with no contract backing the "independent practitioner" framing | Child, therapist, platform | Medium | High | Terms of Service frames therapists as independent contractors | Medium-High — no standalone Therapist Agreement exists yet; flagged separately as the platform's highest non-technical legal gap |
 | 10 | No verified backup/restore process exists, and a data-loss incident has no tested recovery path | All users | **Confirmed, not just suspected: Point-in-Time Recovery is disabled** (`pitr_enabled: false`, checked via the Supabase CLI against the production project) — the database can likely only be restored to whatever daily snapshot exists, not to a specific moment, and no restore has ever been tested | High if it occurred | None confirmed beyond whatever Supabase's plan tier includes by default (not itself verified) | **High — this is now a known gap, not an unknown one; see §10** |
+| 11 | Hayven has not registered with the Nigeria Data Protection Commission (NDPC), and it's not confirmed whether the platform meets the "data controller/processor of major importance" threshold that would make registration mandatory (NDPA s.44) | Regulator relationship, all users indirectly | Not assessed — a compliance-process gap flagged externally on 2026-09-19, not something this codebase can determine on its own | Medium — a regulatory filing gap, not a data-safety one, but one the NDPC could act on directly | Not mitigated | Medium — open, see §10; needs a "major importance" determination from counsel before the registration question itself can even be answered |
 
 ---
 
@@ -288,6 +309,9 @@ In priority order, matching the ratings in §7:
 6. **Consider making MFA mandatory, not opt-in**, for any account with access to
    clinical data (therapists, supervisors, admins) — currently available but not
    required (risk #1).
+7. **Determine "data controller of major importance" status and register with the NDPC
+   if required** (risk #11) — a threshold and filing question for counsel, not
+   something derivable from the codebase.
 
 ---
 
@@ -325,6 +349,22 @@ governance control.
       *and* has an unambiguous next action, not a decision to make. Then run a real
       restore drill and record the result here.
 - [ ] Decide whether MFA becomes mandatory for therapist/supervisor/admin roles (§8.6).
+- [ ] Determine whether Hayven is a "data controller/processor of major importance"
+      under the NDPA and, if so, register with the NDPC (§8.7, risk #11) — flagged by a
+      2026-09-19 external compliance review; this document can record the gap but not
+      resolve it.
+- [x] ~~Explicit, separate consent for a child's sensitive data at the point it's first
+      collected, and confirmation the person adding a child is their parent/guardian~~ —
+      addressed 2026-09-19 for the "Add a child" form specifically (see §6.1); the
+      platform's existing intake-form consent system already covered the fuller,
+      granular version of this once a child exists. Still needs counsel's sign-off that
+      the checkbox copy itself satisfies NDPA s.30/s.31, not just that a checkbox exists.
+- [ ] Get an actual Data Processing Agreement (incorporating SCCs or an equivalent NDPA
+      transfer mechanism) in place with each non-Nigeria processor (Supabase, Vercel,
+      PostHog, Sentry, Resend, Cloudmersive, and Google once its region is known) — most
+      of these vendors publish a standard, clickthrough DPA; confirming and executing
+      each one is real (if usually fast) work, not just a documentation update to this
+      file or the Privacy Policy.
 - [ ] Draft the standalone Therapist Agreement (§8.4) — tracked as a separate document,
       not part of this DPIA, but this risk entry should be closed once it exists and is
       in use.

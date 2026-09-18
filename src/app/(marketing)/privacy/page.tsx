@@ -230,6 +230,17 @@ export default function PrivacyPolicyPage() {
             record access, payment corrections) are recorded in an internal audit trail.
           </p>
           <p>No system is perfectly secure, and we can&apos;t guarantee absolute security of any transmission.</p>
+          <p>
+            <strong className="text-charcoal">If a breach happens.</strong> If we become aware of a security
+            breach that risks your or your child&apos;s personal data, we will notify the Nigeria Data Protection
+            Commission (NDPC){" "}
+            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
+              [counsel to confirm the exact notification window the NDPA requires]
+            </span>{" "}
+            of becoming aware of it, and where the breach is likely to result in a high risk to you, we will also
+            notify you directly and without undue delay, explaining what happened and what we&apos;re doing about
+            it.
+          </p>
         </Section>
 
         <Section heading="9. Cookies and local storage">

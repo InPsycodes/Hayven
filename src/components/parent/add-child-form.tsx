@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FieldError } from "@/components/ui/field-error";
 import { addChild, type FormState } from "@/lib/parent/actions";
 
@@ -73,6 +74,23 @@ export function AddChildForm() {
           placeholder="e.g. Speech delay, mostly around forming full sentences."
         />
       </div>
+
+      <label className="flex items-start gap-2.5 text-sm text-muted-foreground">
+        <Checkbox
+          id="guardianConsent"
+          name="guardianConsent"
+          required
+          aria-invalid={fieldError("guardianConsent") ? true : undefined}
+          aria-describedby={fieldError("guardianConsent") ? "guardianConsent-error" : undefined}
+          className="mt-0.5"
+        />
+        <span>
+          I confirm I&apos;m this child&apos;s parent or legal guardian (or otherwise have
+          parental responsibility for them), and I consent to Hayven processing what I share
+          here, including any health or developmental information, to arrange and provide care.
+        </span>
+      </label>
+      <FieldError id="guardianConsent-error">{fieldError("guardianConsent")}</FieldError>
 
       {state.error && !state.field && <p className="text-sm text-error-text">{state.error}</p>}
 
