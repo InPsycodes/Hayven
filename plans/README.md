@@ -28,6 +28,19 @@ Tailwind-built CSS in a real browser (confirmed my tokens correctly win over Tai
 built-in defaults of the same name — see plan 001's execution notes if this needs re-verifying
 after a Tailwind upgrade).
 
+## Plans 011-012 (from `find-animation-opportunities`, not the original audit)
+
+| # | Title | Severity | Depends on | Status |
+|---|---|---|---|---|
+| [011](011-confirmation-panel-entrance.md) | Stagger the booking/signup confirmation panel's entrance | Delight | — | TODO |
+| [012](012-mfa-panel-reveal.md) | Reveal the MFA enroll/disable panels instead of teleporting them in | Delight | — | TODO |
+
+Written 2026-09-18, same session, from a separate `find-animation-opportunities` sweep targeting
+rare/high-stakes moments specifically (the improve-animations audit deliberately didn't spend
+the app's "delight budget" — that was never its brief). Both reuse only existing `.reveal`/
+`.pop-in` utility classes from `globals.css`; no new CSS. Independent of each other and of
+001-010.
+
 ## Not turned into plans
 
 Four "missed opportunities" from the audit (destructive confirms using `window.confirm()`
