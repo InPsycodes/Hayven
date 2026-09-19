@@ -170,7 +170,7 @@ export default function PediatriciansPage() {
           </div>
 
           {/* sm+: the original composed collage, with room for the circles to overlap the card tastefully */}
-          <div className="pop-in relative hidden sm:block sm:h-[380px] md:h-[500px]" style={{ animationDelay: "300ms" }}>
+          <div className="pop-in relative hidden sm:block sm:h-[380px] xl:h-[500px]" style={{ animationDelay: "300ms" }}>
             <svg className="absolute inset-0 size-full" viewBox="0 0 560 500" fill="none" aria-hidden>
               <path
                 d="M 150 100 C 220 60, 300 60, 360 90"
@@ -192,7 +192,7 @@ export default function PediatriciansPage() {
               <circle cx="400" cy="260" r="4" fill="#b8734c" />
             </svg>
 
-            <div className="reveal absolute top-0 right-[18%] z-[2] w-[260px] rounded-2xl border border-white/60 bg-canvas-white p-5 shadow-[0_30px_70px_-30px_rgba(33,27,24,0.45)] md:w-[320px] md:p-6">
+            <div className="reveal absolute top-0 right-[18%] z-[2] w-[260px] rounded-2xl border border-white/60 bg-canvas-white p-5 shadow-[0_30px_70px_-30px_rgba(33,27,24,0.45)] xl:w-[320px] xl:p-6">
               <div className="mb-4 flex items-center gap-2.5 border-b border-offwhite pb-4">
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#4f6146] text-[0.82rem] text-white">
                   ✓
@@ -218,33 +218,33 @@ export default function PediatriciansPage() {
               </div>
             </div>
 
-            <div className="absolute top-[2%] left-0 z-[3] size-[170px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] md:size-[210px]">
+            <div className="absolute top-[2%] left-0 z-[3] size-[170px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] xl:size-[210px]">
               <Image
                 src={doctorImage}
                 alt="Illustrated portrait of a referring pediatrician"
                 fill
                 placeholder="blur"
-                sizes="(min-width: 768px) 210px, 170px"
+                sizes="(min-width: 1280px) 210px, 170px"
                 className="scale-[1.25] object-cover"
               />
             </div>
-            <div className="absolute bottom-[-2%] left-[22%] z-[4] size-[220px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] md:size-[280px]">
+            <div className="absolute bottom-[-2%] left-[22%] z-[4] size-[220px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] xl:size-[280px]">
               <Image
                 src={parentChildImage}
                 alt="Illustrated portrait of a parent and child"
                 fill
                 placeholder="blur"
-                sizes="(min-width: 768px) 280px, 220px"
+                sizes="(min-width: 1280px) 280px, 220px"
                 className="scale-[1.25] object-cover"
               />
             </div>
-            <div className="absolute top-[6%] right-[-2%] z-[3] size-[190px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] md:size-[236px]">
+            <div className="absolute top-[6%] right-[-2%] z-[3] size-[190px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] xl:size-[236px]">
               <Image
                 src={therapistImage}
                 alt="Illustrated portrait of a Hayven care professional"
                 fill
                 placeholder="blur"
-                sizes="(min-width: 768px) 236px, 190px"
+                sizes="(min-width: 1280px) 236px, 190px"
                 className="scale-[1.25] object-cover"
               />
             </div>
