@@ -10,6 +10,7 @@ const EXPLORE_LINKS = [
   { label: "Find a therapist", href: "/search" },
   { label: "Learning Center", href: "/learn" },
   { label: "For therapists", href: "/signup?role=therapist" },
+  { label: "For pediatricians", href: "/pediatricians" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "About", href: "/about" },
 ];

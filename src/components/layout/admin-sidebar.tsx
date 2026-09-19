@@ -17,6 +17,7 @@ import {
   IconLifebuoy,
   IconShieldLock,
   IconBooks,
+  IconStethoscope,
 } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
@@ -31,6 +32,7 @@ const ADMIN_NAV = [
   { label: "Verification", href: "/admin/verification", icon: IconShieldCheck },
   { label: "Accounts", href: "/admin/accounts", icon: IconUserCog },
   { label: "Assignments", href: "/admin/users", icon: IconUsers },
+  { label: "Referrals", href: "/admin/referrals", icon: IconStethoscope },
   { label: "Reports", href: "/admin/reports", icon: IconReportAnalytics },
   { label: "Report phrases", href: "/admin/report-phrases", icon: IconMessage2 },
   { label: "Learning", href: "/admin/learning", icon: IconBooks },

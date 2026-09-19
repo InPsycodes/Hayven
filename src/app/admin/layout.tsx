@@ -13,6 +13,7 @@ import {
   getPendingSupervisorRequestCount,
 } from "@/lib/admin/queries";
 import { getOpenDisputeCount } from "@/lib/disputes/queries";
+import { getOpenReferralCount } from "@/lib/referrals/queries";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -28,6 +29,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     openSupportRequestCount,
     pendingSupervisorRequestCount,
     openDisputeCount,
+    openReferralCount,
   ] = await Promise.all([
     getPendingVerificationCount(),
     getPendingDeletionRequestCount(),
@@ -35,6 +37,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     getOpenSupportRequestCount(),
     getPendingSupervisorRequestCount(),
     getOpenDisputeCount(),
+    getOpenReferralCount(),
   ]);
 
   return (
@@ -48,6 +51,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           "/admin/disputes": openDisputeCount,
           "/admin/support": openSupportRequestCount,
           "/admin/users": pendingSupervisorRequestCount,
+          "/admin/referrals": openReferralCount,
         }}
       />
       <main id="main" className="flex-1 overflow-hidden">{children}</main>

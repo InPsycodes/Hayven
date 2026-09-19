@@ -22,7 +22,8 @@ export type NotificationType =
   | "session_finished"
   | "supervisor_request_new"
   | "supervisor_request_approved"
-  | "supervisor_request_denied";
+  | "supervisor_request_denied"
+  | "referral_new";
 
 /**
  * Fire-and-forget: a notification failing to write must never roll back the
