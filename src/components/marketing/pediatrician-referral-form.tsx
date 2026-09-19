@@ -27,7 +27,7 @@ export function PediatricianReferralForm() {
 
   if (state.referenceCode) {
     return (
-      <div className="reveal mx-auto flex w-full max-w-[760px] flex-col items-center gap-3 rounded-2xl border border-offwhite bg-canvas-white p-10 text-center shadow-[0_1px_2px_rgba(26,26,26,.04),0_10px_24px_-16px_rgba(26,26,26,.22)]">
+      <div className="reveal mx-auto flex w-full max-w-[640px] flex-col items-center gap-3 rounded-2xl border border-offwhite bg-canvas-white p-10 text-center shadow-[0_1px_2px_rgba(26,26,26,.04),0_10px_24px_-16px_rgba(26,26,26,.22)]">
         <span className="flex size-12 items-center justify-center rounded-full bg-success/15 text-success-text">
           <IconCheck size={22} stroke={2} />
         </span>
@@ -47,7 +47,7 @@ export function PediatricianReferralForm() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[760px]">
+    <div className="mx-auto w-full max-w-[640px]">
       <h1 className="font-heading text-[1.9rem] text-charcoal">Refer a child to Hayven</h1>
       <p className="mt-2 mb-9 text-sm text-ink-soft">
         This isn&apos;t shared with the family until you submit. Takes about a minute.
