@@ -41,13 +41,48 @@ the app's "delight budget" — that was never its brief). Both reuse only existi
 `.pop-in` utility classes from `globals.css`; no new CSS. Independent of each other and of
 001-010.
 
-## Not turned into plans
+## Plans 013-016 (from a late-reporting parallel-audit subagent, 2026-09-19)
 
-Four "missed opportunities" from the audit (destructive confirms using `window.confirm()`
-instead of the app's own `Dialog`; message-thread/booking-flow content swaps; the PWA install
-prompt's missing transition; inconsistent "Saved" confirmation treatment) were flagged as
-additive, not corrective, per the skill's own distinction — they're documented in the audit
-conversation but have no plan file here. Ask for one if any should be built.
+| # | Title | Severity | Depends on | Status |
+|---|---|---|---|---|
+| [013](013-save-confirmation-retrigger.md) | Make "Saved."/"Sent." confirmations retarget instead of restarting | MEDIUM | 001, 006 (pattern) | TODO |
+| [014](014-pwa-prompt-entrance.md) | Give the PWA install prompt an entrance instead of teleporting in | LOW-MEDIUM | — | TODO |
+| [015](015-delete-account-confirm-reveal.md) | Reveal the account-deletion confirm form instead of hard-swapping it in | LOW-MEDIUM | — | TODO |
+| [016](016-incomplete-profile-fade-in.md) | Fade in the incomplete-profile notice on first render | LOW | — | TODO |
+
+One of the parallel subagents from the original 2026-09-18 audit fan-out reported back roughly
+34 hours later (background task, not re-run). Most of its findings duplicated work already
+covered by plans 001/002/004/005/006 above (confirmed stale against current code — e.g. it
+claimed no `--ease-*`/`--duration-*` tokens exist, which plan 001 already added). Two of its
+findings are the same items this file's own "Not turned into plans" section already named
+(the PWA prompt's missing transition, inconsistent "Saved" treatment) — now written up as 013
+and 014. 015 and 016 are genuinely new missed-opportunity findings from that report. Not yet
+implemented — written during an autonomous check while the user was away, per the standing
+"write plans, don't implement without a go-ahead" split established earlier for this exact
+finding.
+
+## Flagged, deliberately not planned
+
+**The FAQ accordion's expand/collapse restarts from zero on rapid toggling**
+(`src/components/ui/accordion.tsx:58`, `data-[state=closed]:animate-accordion-up
+data-[state=open]:animate-accordion-down`) — a real finding from the same late-reporting
+subagent, Category 4 (interruptibility) — but the obvious fix (swap the `@keyframes`-driven
+Tailwind animation classes for a plain CSS `transition` on `height`, retargetable mid-flight)
+would break Radix's exit-animation handling: verified in
+`node_modules/@radix-ui/react-presence/dist/index.js` that `Presence` only listens for
+`animationend`/`animationcancel`, not `transitionend`, to know when to unmount closing content.
+Switching to a transition would make Radix unmount the panel immediately on close instead of
+waiting for the animation, or never properly complete the close sequence. A correct fix needs
+either a JS/WAAPI-driven interruption strategy (read the current computed height and start the
+reverse keyframe from there) or accepting the restart-on-rapid-toggle as a low-real-world-impact
+edge case for an FAQ accordion. Deliberately not written up as a mechanical plan — the "one
+concrete edit per step" plan format this skill requires isn't honest for a fix this open-ended.
+Worth a real design decision before anyone attempts it.
+
+Four other "missed opportunities" from the original 2026-09-18 audit (destructive confirms using
+`window.confirm()` instead of the app's own `Dialog`; message-thread/booking-flow content swaps)
+remain flagged as additive, not corrective, per the skill's own distinction — documented in the
+audit conversation but with no plan file here. Ask for one if any should be built.
 
 ## Notes
 
