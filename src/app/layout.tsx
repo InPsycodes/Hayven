@@ -3,6 +3,7 @@ import { Fraunces, Inter, Geist_Mono } from "next/font/google";
 import { SerwistProvider } from "@serwist/turbopack/react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
+import { ServiceWorkerUpdater } from "@/components/shared/service-worker-updater";
 import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
 import "./globals.css";
 
@@ -129,6 +130,7 @@ export default function RootLayout({
         <SerwistProvider swUrl="/serwist/sw.js" disable={process.env.NODE_ENV === "development"}>
           {children}
           <PwaInstallPrompt />
+          <ServiceWorkerUpdater />
           <AnalyticsProvider />
         </SerwistProvider>
         {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
