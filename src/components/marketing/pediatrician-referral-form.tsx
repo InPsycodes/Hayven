@@ -27,7 +27,7 @@ export function PediatricianReferralForm() {
 
   if (state.referenceCode) {
     return (
-      <div className="reveal mx-auto flex max-w-md flex-col items-center gap-3 rounded-sm bg-offwhite/60 p-8 text-center">
+      <div className="reveal mx-auto flex w-full max-w-[760px] flex-col items-center gap-3 rounded-2xl border border-offwhite bg-canvas-white p-10 text-center shadow-[0_1px_2px_rgba(26,26,26,.04),0_10px_24px_-16px_rgba(26,26,26,.22)]">
         <span className="flex size-12 items-center justify-center rounded-full bg-success/15 text-success-text">
           <IconCheck size={22} stroke={2} />
         </span>
@@ -35,7 +35,7 @@ export function PediatricianReferralForm() {
         <p className="max-w-sm text-sm text-ink-soft">
           We&apos;ll reach out to the family within one business day. Save this code to check status any time.
         </p>
-        <div className="mt-1 rounded-md border border-dashed border-terracotta/40 bg-canvas-white px-5 py-2.5 font-mono text-lg font-semibold text-terracotta">
+        <div className="mt-1 rounded-md border border-dashed border-terracotta/40 bg-offwhite/40 px-5 py-2.5 font-mono text-lg font-semibold text-terracotta">
           {state.referenceCode}
         </div>
         <p className="text-xs text-muted-foreground">Also sent to your email, if you gave us one.</p>
@@ -47,16 +47,18 @@ export function PediatricianReferralForm() {
   }
 
   return (
-    <form action={formAction} className="mx-auto flex max-w-md flex-col gap-5">
-      <div>
-        <h1 className="font-heading text-2xl text-charcoal">Refer a child to Hayven</h1>
-        <p className="mt-1.5 text-sm text-ink-soft">
-          This isn&apos;t shared with the family until you submit. Takes about a minute.
-        </p>
-      </div>
+    <div className="mx-auto w-full max-w-[760px]">
+      <h1 className="font-heading text-[1.9rem] text-charcoal">Refer a child to Hayven</h1>
+      <p className="mt-2 mb-9 text-sm text-ink-soft">
+        This isn&apos;t shared with the family until you submit. Takes about a minute.
+      </p>
 
+      <form
+        action={formAction}
+        className="flex flex-col gap-6 rounded-2xl border border-offwhite bg-canvas-white p-10 shadow-[0_1px_2px_rgba(26,26,26,.04),0_10px_24px_-16px_rgba(26,26,26,.22)]"
+      >
       <fieldset className="flex flex-col gap-4">
-        <legend className="label-micro text-rust-dark">Child</legend>
+        <legend className="label-micro w-full border-b border-offwhite pb-3.5 text-rust-dark">Child</legend>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-2">
             <Label htmlFor="childName">Child&apos;s name</Label>
@@ -102,7 +104,7 @@ export function PediatricianReferralForm() {
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">
-        <legend className="label-micro text-rust-dark">You</legend>
+        <legend className="label-micro w-full border-b border-offwhite pb-3.5 text-rust-dark">You</legend>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-2">
             <Label htmlFor="referrerName">Your name</Label>
@@ -142,7 +144,7 @@ export function PediatricianReferralForm() {
       </fieldset>
 
       <fieldset className="flex flex-col gap-3">
-        <legend className="label-micro text-rust-dark">Reason for referral</legend>
+        <legend className="label-micro w-full border-b border-offwhite pb-3.5 text-rust-dark">Reason for referral</legend>
         <div className="flex flex-wrap gap-2" role="group" aria-describedby={fieldError("reasonTags") ? "reasonTags-error" : undefined}>
           {REFERRAL_REASON_TAGS.map((tag) => {
             const on = reasonTags.includes(tag);
@@ -188,6 +190,7 @@ export function PediatricianReferralForm() {
       <p className="text-center text-xs text-muted-foreground">
         We&apos;ll send you a reference code to track this referral.
       </p>
-    </form>
+      </form>
+    </div>
   );
 }
