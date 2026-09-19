@@ -19,6 +19,7 @@ const LINKS = [
   { label: "Learning Center", href: "/learn" },
   { label: "About Us", href: "/about" },
   { label: "For therapists", href: "/signup?role=therapist" },
+  { label: "For pediatricians", href: "/pediatricians" },
 ];
 
 export interface NavSession {
