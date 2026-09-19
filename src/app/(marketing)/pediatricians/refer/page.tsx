@@ -19,8 +19,8 @@ const TIMELINE = [
 
 export default function ReferChildPage() {
   return (
-    <div className="border-b border-rust-light/30 md:grid md:grid-cols-[5fr_7fr]">
-      <div className="flex flex-col justify-between gap-10 border-b border-rust-light/30 bg-charcoal px-8 py-12 text-offwhite md:sticky md:top-24 md:self-start md:border-r md:border-b-0 md:px-14 md:py-14">
+    <div className="border-b border-rust-light/30 md:grid md:h-dvh md:grid-cols-[5fr_7fr] md:overflow-hidden">
+      <div className="flex flex-col justify-between gap-10 border-b border-rust-light/30 bg-charcoal px-8 py-12 text-offwhite md:border-r md:border-b-0 md:px-14 md:py-14">
         <div>
           <BrandMark />
           <span className="label-micro mt-10 block text-rust-light">For pediatricians</span>
@@ -53,7 +53,7 @@ export default function ReferChildPage() {
         </div>
       </div>
 
-      <div className="flex min-w-0 justify-center bg-paper px-6 py-16 md:px-14 md:py-16">
+      <div className="flex min-w-0 justify-center bg-paper px-6 py-16 md:h-full md:overflow-y-auto md:px-14 md:py-16">
         <PediatricianReferralForm />
       </div>
     </div>
