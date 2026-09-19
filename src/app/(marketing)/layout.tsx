@@ -49,7 +49,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
           nowhere to travel before it unsticks. */}
       <TopNav session={session ? { role: session.role, name: session.name } : null} />
       <main id="main" className="flex-1">{children}</main>
-      <footer className="bg-charcoal px-6 py-16 text-canvas-white/70 lg:px-10 [@media(display-mode:standalone)]:hidden">
+      <footer className="bg-charcoal px-6 py-16 text-canvas-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] lg:px-10 [@media(display-mode:standalone)]:hidden">
         <div className="mx-auto grid max-w-7xl gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <BrandMark />
