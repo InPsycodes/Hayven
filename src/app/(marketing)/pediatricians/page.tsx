@@ -401,22 +401,22 @@ export default function PediatriciansPage() {
 
             {/* -- multi-child -- */}
             <div>
-              <div className="relative flex min-h-[300px] items-start overflow-hidden rounded-2xl bg-offwhite p-9 pb-11">
-                <div className="relative h-[190px] w-full">
-                  <div className="absolute top-0 left-0 z-[1] w-[200px] rounded-[10px] border border-offwhite bg-canvas-white p-3.5 opacity-55 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)]">
-                    <b className="block font-heading text-[1.05rem] text-charcoal">Sarah</b>
-                    <span className="text-[0.74rem] text-ink-soft">Age 3</span>
+              <div className="relative flex min-h-[240px] items-start overflow-hidden rounded-2xl bg-offwhite p-5 pb-8 sm:min-h-[300px] sm:p-9 sm:pb-11">
+                <div className="relative h-[150px] w-full sm:h-[190px]">
+                  <div className="absolute top-0 left-0 z-[1] w-[132px] rounded-[10px] border border-offwhite bg-canvas-white p-2.5 opacity-55 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)] sm:w-[200px] sm:p-3.5">
+                    <b className="block font-heading text-[0.88rem] text-charcoal sm:text-[1.05rem]">Sarah</b>
+                    <span className="text-[0.66rem] text-ink-soft sm:text-[0.74rem]">Age 3</span>
                   </div>
-                  <div className="absolute top-7 left-10 z-[2] w-[200px] rounded-[10px] border border-offwhite bg-canvas-white p-3.5 opacity-80 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)]">
-                    <b className="block font-heading text-[1.05rem] text-charcoal">Tobi</b>
-                    <span className="text-[0.74rem] text-ink-soft">Age 6</span>
+                  <div className="absolute top-5 left-6 z-[2] w-[132px] rounded-[10px] border border-offwhite bg-canvas-white p-2.5 opacity-80 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)] sm:top-7 sm:left-10 sm:w-[200px] sm:p-3.5">
+                    <b className="block font-heading text-[0.88rem] text-charcoal sm:text-[1.05rem]">Tobi</b>
+                    <span className="text-[0.66rem] text-ink-soft sm:text-[0.74rem]">Age 6</span>
                   </div>
-                  <div className="absolute top-14 left-20 z-[3] w-[200px] rounded-[10px] border border-offwhite bg-canvas-white p-3.5 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)]">
-                    <b className="block font-heading text-[1.05rem] text-charcoal">Zainab</b>
-                    <span className="text-[0.74rem] text-ink-soft">Age 4</span>
-                    <div className="mt-2 flex items-center gap-1.5 border-t border-offwhite pt-2 text-[0.74rem] text-charcoal">
-                      <span className="size-1.5 rounded-full bg-terracotta" />
-                      Speech therapy &middot; Tuesday, 3:00 PM
+                  <div className="absolute top-10 left-12 z-[3] w-[150px] rounded-[10px] border border-offwhite bg-canvas-white p-2.5 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)] sm:top-14 sm:left-20 sm:w-[200px] sm:p-3.5">
+                    <b className="block font-heading text-[0.88rem] text-charcoal sm:text-[1.05rem]">Zainab</b>
+                    <span className="text-[0.66rem] text-ink-soft sm:text-[0.74rem]">Age 4</span>
+                    <div className="mt-1.5 flex items-center gap-1.5 border-t border-offwhite pt-1.5 text-[0.62rem] text-charcoal sm:mt-2 sm:pt-2 sm:text-[0.74rem]">
+                      <span className="size-1.5 shrink-0 rounded-full bg-terracotta" />
+                      <span className="truncate">Speech therapy &middot; Tue, 3:00 PM</span>
                     </div>
                   </div>
                 </div>

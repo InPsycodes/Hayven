@@ -10,7 +10,7 @@ import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import type { RealLearningArticle } from "@/lib/learning/queries";
 import { setLearningArticleStatus, deleteLearningArticle } from "@/lib/learning/actions";
 
-const ROW_COLS = "sm:grid-cols-[1fr_88px_140px_96px_auto]";
+const ROW_COLS = "md:grid-cols-[1fr_88px_140px_96px_auto]";
 
 function ArticleRow({ article }: { article: RealLearningArticle }) {
   const [status, setStatus] = useState(article.status);
@@ -140,7 +140,7 @@ export function LearningArticlesList({ articles }: { articles: RealLearningArtic
 
       <div className="mt-4">
         <div
-          className={`hidden gap-3 border-b border-charcoal/10 px-3 pb-2 sm:grid ${ROW_COLS}`}
+          className={`hidden gap-3 border-b border-charcoal/10 px-3 pb-2 md:grid ${ROW_COLS}`}
         >
           {["Title", "Audience", "Category", "Status", ""].map((h, i) => (
             <span

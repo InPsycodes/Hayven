@@ -9,7 +9,7 @@ import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import type { RealCourse } from "@/lib/courses/queries";
 import { setCourseStatus, deleteCourse } from "@/lib/courses/actions";
 
-const ROW_COLS = "sm:grid-cols-[1fr_140px_92px_96px_auto]";
+const ROW_COLS = "md:grid-cols-[1fr_140px_92px_96px_auto]";
 
 function CourseRow({ course }: { course: RealCourse }) {
   const [status, setStatus] = useState(course.status);
@@ -88,7 +88,7 @@ function CourseRow({ course }: { course: RealCourse }) {
 export function CourseList({ courses }: { courses: RealCourse[] }) {
   return (
     <div className="rounded-sm bg-white p-4 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)] md:p-5">
-      <div className={`hidden gap-3 border-b border-charcoal/10 px-3 pb-2 sm:grid ${ROW_COLS}`}>
+      <div className={`hidden gap-3 border-b border-charcoal/10 px-3 pb-2 md:grid ${ROW_COLS}`}>
         {["Title", "Category", "Lessons", "Status", ""].map((h, i) => (
           <span key={i} className={`label-micro text-muted-foreground ${i === 4 ? "text-right" : ""}`}>
             {h}

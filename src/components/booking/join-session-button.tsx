@@ -60,7 +60,7 @@ export function JoinSessionButton({
 
   if (now < start - OPENS_BEFORE_MS) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground">
+      <span className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground">
         <IconVideo size={13} stroke={1.75} />
         Join opens 10 min before
       </span>
@@ -72,7 +72,7 @@ export function JoinSessionButton({
       href={meetingLink}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+      className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
     >
       <IconVideo size={13} stroke={2} />
       Join session

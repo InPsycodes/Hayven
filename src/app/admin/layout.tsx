@@ -54,7 +54,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           "/admin/referrals": openReferralCount,
         }}
       />
-      <main id="main" className="flex-1 overflow-hidden">{children}</main>
+      <main id="main" className="min-w-0 flex-1 overflow-hidden">{children}</main>
     </div>
   );
 }

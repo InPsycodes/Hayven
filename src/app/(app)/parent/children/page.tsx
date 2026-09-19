@@ -44,11 +44,17 @@ export default async function ParentChildrenPage() {
                       {child.presentingConcern ? ` · ${child.presentingConcern}` : ""}
                     </p>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1 text-xs font-medium">
-                    <Link href={`/parent/children/${child.id}/reports`} className="text-terracotta hover:underline">
+                  <div className="flex shrink-0 flex-col items-end text-xs font-medium">
+                    <Link
+                      href={`/parent/children/${child.id}/reports`}
+                      className="py-1.5 text-terracotta hover:underline"
+                    >
                       Progress reports
                     </Link>
-                    <Link href={`/parent/children/${child.id}/intake`} className="text-terracotta hover:underline">
+                    <Link
+                      href={`/parent/children/${child.id}/intake`}
+                      className="py-1.5 text-terracotta hover:underline"
+                    >
                       Intake form
                     </Link>
                   </div>

@@ -43,8 +43,8 @@ export default async function AdminPayoutsPage() {
             <Card lift className="p-2">
               <div className="flex flex-col divide-y divide-border">
                 {preview.map((p) => (
-                  <div key={p.therapistId} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
-                    <span className="text-charcoal">
+                  <div key={p.therapistId} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 text-sm">
+                    <span className="min-w-0 text-charcoal">
                       {p.name} <span className="text-xs text-muted-foreground">· {p.earningCount} item{p.earningCount === 1 ? "" : "s"}</span>
                     </span>
                     <span className="flex items-center gap-2">

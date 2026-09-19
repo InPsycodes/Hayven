@@ -10,16 +10,16 @@ export function FinalCta() {
         <p className="text-lg text-canvas-white/95">
           Join families and therapists already using Hayven.
         </p>
-        <div className="mt-2 flex flex-nowrap items-center justify-center gap-2.5 sm:gap-4">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-2.5 sm:flex-nowrap sm:gap-4">
           <Link
             href="/signup?role=parent"
-            className="whitespace-nowrap rounded-full bg-charcoal px-3.5 py-2.5 text-[11px] font-semibold text-canvas-white transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-charcoal/85 sm:px-6 sm:py-3.5 sm:text-sm"
+            className="rounded-full bg-charcoal px-3.5 py-2.5 text-[11px] font-semibold whitespace-nowrap text-canvas-white transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-charcoal/85 sm:px-6 sm:py-3.5 sm:text-sm"
           >
             Get started as a parent
           </Link>
           <Link
             href="/signup?role=therapist"
-            className="whitespace-nowrap rounded-full bg-canvas-white px-3.5 py-2.5 text-[11px] font-semibold text-charcoal transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-canvas-white/85 sm:px-6 sm:py-3.5 sm:text-sm"
+            className="rounded-full bg-canvas-white px-3.5 py-2.5 text-[11px] font-semibold whitespace-nowrap text-charcoal transition-all duration-200 ease-out hover:scale-[1.02] hover:bg-canvas-white/85 sm:px-6 sm:py-3.5 sm:text-sm"
           >
             Join as a therapist
           </Link>

@@ -354,7 +354,7 @@ function ConsentBlock({
               aria-label={copy.title.replace(/\{child\}/g, childName)}
               onClick={() => onToggle(type, !state.granted, state.detail ?? undefined)}
               className={cn(
-                "mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border transition-colors",
+                "relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border transition-colors after:absolute after:-inset-3",
                 state.granted ? "border-care-accent bg-care-accent" : "border-care-ink-faint/50 bg-care-raised"
               )}
             >

@@ -37,8 +37,8 @@ export function CareStat({
         <span className="truncate">{label}</span>
         <Icon size={16} stroke={1.7} aria-hidden className="shrink-0 text-care-ink-faint" />
       </div>
-      <div className="mt-2.5 flex items-baseline gap-2">
-        <span className="text-[28px] font-bold leading-none tracking-tight text-care-ink">{value}</span>
+      <div className="mt-2.5 flex min-w-0 items-baseline gap-2">
+        <span className="truncate text-[28px] font-bold leading-none tracking-tight text-care-ink">{value}</span>
         {delta && (
           <span className={cn("text-xs font-semibold", delta.good === false ? "text-care-amber" : "text-care-sage")}>
             {delta.text}

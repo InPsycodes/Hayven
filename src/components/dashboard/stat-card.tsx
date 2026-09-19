@@ -13,11 +13,11 @@ export function StatCard({
   emphasis?: boolean;
 }) {
   return (
-    <div className="rounded-sm bg-card p-[18px] ring-1 ring-border">
+    <div className="min-w-0 rounded-sm bg-card p-[18px] ring-1 ring-border">
       <span className="label-micro text-muted-foreground">{label}</span>
       <p
         className={cn(
-          "mt-1.5 font-medium",
+          "mt-1.5 truncate font-medium",
           emphasis ? "font-heading text-3xl font-semibold" : "text-2xl",
           urgent ? "text-terracotta" : "text-charcoal"
         )}

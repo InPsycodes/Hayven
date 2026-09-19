@@ -108,7 +108,7 @@ export function MessageThreadView({
       <header className="flex shrink-0 items-center gap-3 border-b border-care-line/60 bg-care-surface px-3 py-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:pt-3">
         <Link
           href={backHref}
-          className="-ml-1 flex size-9 items-center justify-center rounded-full text-care-ink-soft hover:bg-care-raised hover:text-care-ink"
+          className="-ml-1 flex size-11 items-center justify-center rounded-full text-care-ink-soft hover:bg-care-raised hover:text-care-ink"
           aria-label="Back to messages"
         >
           <IconArrowLeft size={20} />

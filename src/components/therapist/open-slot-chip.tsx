@@ -53,7 +53,7 @@ export function OpenSlotChip({
           onClick={remove}
           disabled={isPending}
           aria-label={`Remove the ${label} open slot`}
-          className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-error-text focus-visible:opacity-100 group-hover/slot:opacity-100"
+          className="shrink-0 rounded p-0.5 text-muted-foreground opacity-60 transition-opacity hover:text-error-text focus-visible:opacity-100 group-hover/slot:opacity-100 pointer-fine:opacity-0"
         >
           <IconX size={11} stroke={2.5} />
         </button>
