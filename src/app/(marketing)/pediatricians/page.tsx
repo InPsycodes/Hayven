@@ -103,8 +103,11 @@ export default function PediatriciansPage() {
           </div>
 
           {/* ---- referral journey visual ---- */}
-          <div className="pop-in relative h-[420px] md:h-[500px]" style={{ animationDelay: "300ms" }}>
-            <svg className="absolute inset-0 size-full" viewBox="0 0 560 500" fill="none" aria-hidden>
+          <div
+            className="pop-in relative h-[300px] overflow-hidden sm:h-[380px] sm:overflow-visible md:h-[500px]"
+            style={{ animationDelay: "300ms" }}
+          >
+            <svg className="absolute inset-0 hidden size-full sm:block" viewBox="0 0 560 500" fill="none" aria-hidden>
               <path
                 d="M 150 100 C 220 60, 300 60, 360 90"
                 stroke="rgba(184,115,76,0.55)"
@@ -126,61 +129,61 @@ export default function PediatriciansPage() {
             </svg>
 
             <div
-              className="reveal absolute top-0 right-[18%] z-[2] w-[320px] rounded-2xl border border-white/60 bg-canvas-white p-6 shadow-[0_30px_70px_-30px_rgba(33,27,24,0.45)]"
+              className="reveal absolute top-0 right-[6%] z-[2] w-[190px] rounded-2xl border border-white/60 bg-canvas-white p-4 shadow-[0_30px_70px_-30px_rgba(33,27,24,0.45)] sm:right-[18%] sm:w-[260px] sm:p-5 md:w-[320px] md:p-6"
               style={{ animationDelay: "800ms" }}
             >
-              <div className="mb-4 flex items-center gap-2.5 border-b border-offwhite pb-4">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#4f6146] text-[0.82rem] text-white">
+              <div className="mb-3 flex items-center gap-2 border-b border-offwhite pb-3 sm:mb-4 sm:gap-2.5 sm:pb-4">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#4f6146] text-[0.72rem] text-white sm:size-7 sm:text-[0.82rem]">
                   ✓
                 </span>
                 <div>
-                  <b className="block text-[0.96rem] text-charcoal">Referral submitted</b>
-                  <span className="text-[0.76rem] text-muted-foreground">Ref # HV-2487</span>
+                  <b className="block text-[0.8rem] text-charcoal sm:text-[0.96rem]">Referral submitted</b>
+                  <span className="text-[0.66rem] text-muted-foreground sm:text-[0.76rem]">Ref # HV-2487</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 py-1.5 text-[0.84rem] text-charcoal">
+              <div className="flex items-center gap-2 py-1 text-[0.72rem] text-charcoal sm:py-1.5 sm:text-[0.84rem]">
                 <span className="size-1.5 shrink-0 rounded-full bg-[#4f6146]" />
                 Family contacted
-                <span className="ml-auto text-[0.74rem] text-muted-foreground">2 min</span>
+                <span className="ml-auto text-[0.64rem] text-muted-foreground sm:text-[0.74rem]">2 min</span>
               </div>
-              <div className="flex items-center gap-2 py-1.5 text-[0.84rem] text-charcoal">
+              <div className="flex items-center gap-2 py-1 text-[0.72rem] text-charcoal sm:py-1.5 sm:text-[0.84rem]">
                 <span className="size-1.5 shrink-0 rounded-full bg-[#4f6146]" />
                 Appointment scheduled
-                <span className="ml-auto text-[0.74rem] text-muted-foreground">1 day</span>
+                <span className="ml-auto text-[0.64rem] text-muted-foreground sm:text-[0.74rem]">1 day</span>
               </div>
-              <div className="flex items-center gap-2 py-1.5 text-[0.84rem] text-muted-foreground">
+              <div className="flex items-center gap-2 py-1 text-[0.72rem] text-muted-foreground sm:py-1.5 sm:text-[0.84rem]">
                 <span className="size-1.5 shrink-0 rounded-full border border-offwhite" />
                 In care
               </div>
             </div>
 
-            <div className="absolute top-[2%] left-0 z-[3] size-[210px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)]">
+            <div className="absolute top-[2%] left-0 z-[3] size-[120px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] sm:size-[170px] md:size-[210px]">
               <Image
                 src={doctorImage}
                 alt="Illustrated portrait of a referring pediatrician"
                 fill
                 placeholder="blur"
-                sizes="210px"
+                sizes="(min-width: 768px) 210px, (min-width: 640px) 170px, 120px"
                 className="scale-[1.25] object-cover"
               />
             </div>
-            <div className="absolute bottom-[-2%] left-[22%] z-[4] size-[280px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)]">
+            <div className="absolute bottom-[-2%] left-[16%] z-[4] size-[160px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] sm:left-[22%] sm:size-[220px] md:size-[280px]">
               <Image
                 src={parentChildImage}
                 alt="Illustrated portrait of a parent and child"
                 fill
                 placeholder="blur"
-                sizes="280px"
+                sizes="(min-width: 768px) 280px, (min-width: 640px) 220px, 160px"
                 className="scale-[1.25] object-cover"
               />
             </div>
-            <div className="absolute top-[6%] right-[-2%] z-[3] size-[236px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)]">
+            <div className="absolute top-[6%] right-0 z-[3] size-[130px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] sm:right-[-2%] sm:size-[190px] md:size-[236px]">
               <Image
                 src={therapistImage}
                 alt="Illustrated portrait of a Hayven care professional"
                 fill
                 placeholder="blur"
-                sizes="236px"
+                sizes="(min-width: 768px) 236px, (min-width: 640px) 190px, 130px"
                 className="scale-[1.25] object-cover"
               />
             </div>
