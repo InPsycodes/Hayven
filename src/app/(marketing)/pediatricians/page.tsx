@@ -1,8 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { IconStethoscope, IconMailForward, IconChecklist } from "@tabler/icons-react";
+import Image from "next/image";
+import {
+  IconChecklist,
+  IconMailForward,
+  IconUsers,
+  IconShieldCheck,
+  IconStethoscope,
+  IconArrowRight,
+} from "@tabler/icons-react";
 
 import { canonicalFor } from "@/lib/seo/metadata";
+import doctorImage from "../../../../public/images/pediatricians-doctor.jpg";
+import parentChildImage from "../../../../public/images/pediatricians-parent-child.jpg";
+import therapistImage from "../../../../public/images/pediatricians-therapist.jpg";
 
 export const metadata: Metadata = {
   title: "For Pediatricians | Hayven",
@@ -10,79 +21,330 @@ export const metadata: Metadata = {
   alternates: canonicalFor("/pediatricians"),
 };
 
+const STEPS = [
+  {
+    icon: IconChecklist,
+    title: "Submit the referral",
+    body: "Child, parent contact, and what you're concerned about. That's the whole form.",
+  },
+  {
+    icon: IconMailForward,
+    title: "We contact the family",
+    body: "Hayven reaches out to the parent directly. You're not chasing the follow-up.",
+  },
+  {
+    icon: IconUsers,
+    title: "You see it move",
+    body: "Check status with your reference code: received, contacted, care started. No clinical detail, by design.",
+  },
+];
+
+const REFERRAL_GUIDE = [
+  { concern: "Speech delay, unclear speech, stuttering", consider: "Speech & language therapist" },
+  { concern: "Motor delays, sensory sensitivities", consider: "Occupational therapist" },
+  { concern: "Behavioral concerns, repetitive behaviors", consider: "ABA therapist" },
+  { concern: "Multiple or unclear concerns", consider: "Developmental psychologist" },
+];
+
 export default function PediatriciansPage() {
   return (
     <div className="bg-canvas-white">
-      <section className="bg-[linear-gradient(155deg,var(--charcoal)_0%,#2b2118_100%)] px-6 py-16 text-canvas-white md:px-10 md:py-24">
-        <div className="mx-auto max-w-2xl">
-          <span className="label-micro inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-rust-light">
-            For pediatricians &amp; referring clinicians
+      {/* ================= HERO ================= */}
+      <section className="relative isolate overflow-hidden bg-[radial-gradient(120%_100%_at_15%_0%,#2a211d_0%,#211b18_55%,#1c1714_100%)] py-20 md:flex md:min-h-[700px] md:items-center md:py-0">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-44 -right-36 size-[560px] rounded-[55%_45%_60%_40%/50%_55%_45%_50%] bg-[radial-gradient(circle_at_35%_30%,rgba(184,115,76,0.16),rgba(184,115,76,0.03)_70%)]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute right-40 -bottom-36 size-[380px] rounded-[55%_45%_60%_40%/50%_55%_45%_50%] bg-[radial-gradient(circle_at_60%_60%,rgba(217,161,126,0.12),transparent_70%)]"
+        />
+
+        <div className="relative z-[1] mx-auto grid w-full max-w-[1320px] gap-12 px-6 md:grid-cols-[5.4fr_6.6fr] md:items-center md:gap-10 md:px-10">
+          <div>
+            <span
+              className="reveal inline-flex items-center gap-2 rounded-full border border-[rgba(217,161,126,0.4)] bg-[rgba(184,115,76,0.08)] px-4 py-2 text-[0.68rem] font-semibold tracking-[0.12em] text-rust-light uppercase"
+              style={{ animationDelay: "100ms" }}
+            >
+              <span className="size-1.5 rounded-full bg-rust-light" />
+              For pediatricians &amp; referring clinicians
+            </span>
+
+            <h1
+              className="reveal mt-6 max-w-[12ch] font-heading text-[2.4rem] leading-[0.98] font-medium text-canvas-white sm:text-5xl lg:text-[4.2rem]"
+              style={{ animationDelay: "220ms" }}
+            >
+              Refer a family <span className="text-rust-light">in under</span> a minute, not a phone tree.
+            </h1>
+
+            <p
+              className="reveal mt-6 max-w-[34rem] text-[1.06rem] leading-relaxed text-canvas-white/72"
+              style={{ animationDelay: "340ms" }}
+            >
+              No account, no portal login. Tell us what you&apos;re concerned about, we contact the family, and you
+              can check status any time with your reference code.
+            </p>
+
+            <div className="reveal mt-9 flex flex-wrap gap-3.5" style={{ animationDelay: "460ms" }}>
+              <Link
+                href="/pediatricians/refer"
+                className="inline-flex h-[52px] items-center gap-2 rounded-full bg-terracotta px-7 text-[0.88rem] font-semibold text-canvas-white shadow-[0_10px_26px_-14px_rgba(156,89,52,0.6)] transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-px hover:bg-rust-dark hover:shadow-[0_16px_30px_-14px_rgba(156,89,52,0.55)]"
+              >
+                Refer a child <IconArrowRight size={16} stroke={2} />
+              </Link>
+              <Link
+                href="/pediatricians/status"
+                className="inline-flex h-[52px] items-center gap-2 rounded-full border border-white/30 px-7 text-[0.88rem] font-semibold text-canvas-white transition-[transform,background-color,border-color] duration-200 ease-out hover:-translate-y-px hover:border-white/55 hover:bg-white/5"
+              >
+                Track an existing referral
+              </Link>
+            </div>
+          </div>
+
+          {/* ---- referral journey visual ---- */}
+          <div className="pop-in relative h-[420px] md:h-[500px]" style={{ animationDelay: "300ms" }}>
+            <svg className="absolute inset-0 size-full" viewBox="0 0 560 500" fill="none" aria-hidden>
+              <path
+                d="M 150 100 C 220 60, 300 60, 360 90"
+                stroke="rgba(184,115,76,0.55)"
+                strokeWidth="1.5"
+                strokeDasharray="1 7"
+                strokeLinecap="round"
+              />
+              <path
+                d="M 210 260 C 270 300, 340 300, 400 260"
+                stroke="rgba(184,115,76,0.55)"
+                strokeWidth="1.5"
+                strokeDasharray="1 7"
+                strokeLinecap="round"
+              />
+              <circle cx="150" cy="100" r="4" fill="#b8734c" />
+              <circle cx="360" cy="90" r="4" fill="#b8734c" />
+              <circle cx="210" cy="260" r="4" fill="#b8734c" />
+              <circle cx="400" cy="260" r="4" fill="#b8734c" />
+            </svg>
+
+            <div
+              className="reveal absolute top-0 right-[18%] z-[2] w-[320px] rounded-2xl border border-white/60 bg-canvas-white p-6 shadow-[0_30px_70px_-30px_rgba(33,27,24,0.45)]"
+              style={{ animationDelay: "800ms" }}
+            >
+              <div className="mb-4 flex items-center gap-2.5 border-b border-offwhite pb-4">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#4f6146] text-[0.82rem] text-white">
+                  ✓
+                </span>
+                <div>
+                  <b className="block text-[0.96rem] text-charcoal">Referral submitted</b>
+                  <span className="text-[0.76rem] text-muted-foreground">Ref # HV-2487</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 py-1.5 text-[0.84rem] text-charcoal">
+                <span className="size-1.5 shrink-0 rounded-full bg-[#4f6146]" />
+                Family contacted
+                <span className="ml-auto text-[0.74rem] text-muted-foreground">2 min</span>
+              </div>
+              <div className="flex items-center gap-2 py-1.5 text-[0.84rem] text-charcoal">
+                <span className="size-1.5 shrink-0 rounded-full bg-[#4f6146]" />
+                Appointment scheduled
+                <span className="ml-auto text-[0.74rem] text-muted-foreground">1 day</span>
+              </div>
+              <div className="flex items-center gap-2 py-1.5 text-[0.84rem] text-muted-foreground">
+                <span className="size-1.5 shrink-0 rounded-full border border-offwhite" />
+                In care
+              </div>
+            </div>
+
+            <div className="absolute top-[2%] left-0 z-[3] size-[210px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)]">
+              <Image
+                src={doctorImage}
+                alt="Illustrated portrait of a referring pediatrician"
+                fill
+                placeholder="blur"
+                sizes="210px"
+                className="scale-[1.25] object-cover"
+              />
+            </div>
+            <div className="absolute bottom-[-2%] left-[22%] z-[4] size-[280px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)]">
+              <Image
+                src={parentChildImage}
+                alt="Illustrated portrait of a parent and child"
+                fill
+                placeholder="blur"
+                sizes="280px"
+                className="scale-[1.25] object-cover"
+              />
+            </div>
+            <div className="absolute top-[6%] right-[-2%] z-[3] size-[236px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)]">
+              <Image
+                src={therapistImage}
+                alt="Illustrated portrait of a Hayven care professional"
+                fill
+                placeholder="blur"
+                sizes="236px"
+                className="scale-[1.25] object-cover"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= HOW IT WORKS ================= */}
+      <section className="bg-ivory px-6 py-24 md:px-10 md:py-[120px]">
+        <div className="mx-auto max-w-[1320px]">
+          <span className="flex items-center gap-2.5 text-[0.72rem] font-bold tracking-[0.12em] text-terracotta uppercase">
+            <span className="h-px w-6 bg-terracotta" />
+            How it works
           </span>
-          <h1 className="mt-5 font-heading text-3xl leading-tight sm:text-4xl">
-            Refer a family in under a minute, not a phone tree.
-          </h1>
-          <p className="mt-4 max-w-lg text-base leading-relaxed text-canvas-white/78">
-            No account, no portal login. Tell us what you&apos;re concerned about, we contact the family, and you can
-            check status any time with your reference code.
+          <h2 className="mt-3 max-w-[14ch] font-heading text-4xl leading-[1.05] font-medium text-charcoal sm:text-5xl">
+            Three steps, on your side
+          </h2>
+
+          <div className="relative mt-14 grid gap-7 sm:grid-cols-3">
+            {STEPS.map((step, i) => (
+              <div
+                key={step.title}
+                className="reveal relative rounded-md border border-offwhite bg-canvas-white p-8 pt-9 shadow-[0_10px_26px_-14px_rgba(33,27,24,0.28)] transition-transform duration-200 ease-out hover:-translate-y-1"
+                style={{ animationDelay: `${60 + i * 130}ms` }}
+              >
+                <span className="pointer-events-none absolute top-5 right-6 font-heading text-5xl leading-none font-medium text-terracotta/30 select-none">
+                  0{i + 1}
+                </span>
+                <span className="flex size-11 items-center justify-center rounded-full bg-[#f1e4d6]">
+                  <step.icon size={20} stroke={1.6} className="text-terracotta" />
+                </span>
+                <h3 className="mt-5 font-heading text-xl font-medium text-charcoal">{step.title}</h3>
+                <p className="mt-2.5 max-w-[30ch] text-[0.92rem] leading-relaxed text-ink-soft">{step.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 flex items-center gap-2.5 border-t border-offwhite pt-7 text-[0.86rem] text-ink-soft">
+            <IconShieldCheck size={17} stroke={1.6} className="shrink-0 text-terracotta" />
+            No clinical detail is shared at referral stage.
+          </div>
+        </div>
+      </section>
+
+      {/* ================= CLINICAL OVERSIGHT ================= */}
+      <section className="bg-canvas-white px-6 py-20 md:px-10 md:py-24">
+        <div className="mx-auto grid max-w-[1320px] gap-14 md:grid-cols-[0.95fr_1.05fr] md:items-start">
+          <div>
+            <span className="flex items-center gap-2.5 text-[0.72rem] font-bold tracking-[0.12em] text-terracotta uppercase">
+              <span className="h-px w-6 bg-terracotta" />
+              Clinical oversight
+            </span>
+            <h2 className="mt-3 font-heading text-3xl leading-tight font-medium text-charcoal sm:text-4xl">
+              Built around a real diagnostic background, not just a directory.
+            </h2>
+            <p className="mt-4 max-w-[42ch] text-base leading-relaxed text-ink-soft">
+              Hayven&apos;s verification model was shaped by someone who has actually done this work, not designed
+              around it from the outside.
+            </p>
+          </div>
+
+          <div>
+            {[
+              {
+                icon: IconStethoscope,
+                title: "Founded by a practicing diagnostician",
+                body: "Hayven's clinical approach is shaped by its founder's own background as a diagnostician at a developmental psychology clinic, not a generalist product decision.",
+              },
+              {
+                icon: IconShieldCheck,
+                title: "Credentials checked directly, not self-reported",
+                body: "Every therapist's licence and professional body membership is confirmed directly with that body before they're listed, the same standard the parent-facing side of Hayven already holds itself to.",
+              },
+              {
+                icon: IconUsers,
+                title: "You keep visibility, without carrying the case",
+                body: "You see the referral move (contacted, assessment scheduled, care started) without needing to manage the follow-up yourself.",
+              },
+            ].map((detail, i) => (
+              <div
+                key={detail.title}
+                className={`flex gap-4 py-5 ${i === 0 ? "border-t" : ""} border-b border-offwhite`}
+              >
+                <span className="w-6 shrink-0 font-heading text-lg text-rust-light">0{i + 1}</span>
+                <div>
+                  <h4 className="text-[0.92rem] font-semibold text-charcoal">{detail.title}</h4>
+                  <p className="mt-1 text-[0.88rem] leading-relaxed text-ink-soft">{detail.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= REFERRAL GUIDE ================= */}
+      <section className="bg-ivory px-6 py-20 md:px-10 md:py-24">
+        <div className="mx-auto max-w-[1320px]">
+          <div className="max-w-[46ch]">
+            <span className="flex items-center gap-2.5 text-[0.72rem] font-bold tracking-[0.12em] text-terracotta uppercase">
+              <span className="h-px w-6 bg-terracotta" />
+              Referral guide
+            </span>
+            <h2 className="mt-3 font-heading text-3xl leading-tight font-medium text-charcoal sm:text-4xl">
+              What to refer, and to whom
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-ink-soft">
+              A quick reference for the moment you&apos;re deciding whether, and where, to send a family. You
+              don&apos;t need to know the answer before referring; this is just a starting point.
+            </p>
+          </div>
+
+          <div className="mt-11 overflow-hidden rounded-[10px] border border-offwhite bg-canvas-white shadow-[0_10px_26px_-14px_rgba(33,27,24,0.28)]">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="border-b border-offwhite px-5 py-4 text-left text-[0.68rem] font-bold tracking-[0.08em] text-terracotta uppercase sm:px-7">
+                    Presenting concern
+                  </th>
+                  <th className="border-b border-offwhite px-5 py-4 text-left text-[0.68rem] font-bold tracking-[0.08em] text-terracotta uppercase sm:px-7">
+                    Consider
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {REFERRAL_GUIDE.map((row, i) => (
+                  <tr key={row.concern} className={i < REFERRAL_GUIDE.length - 1 ? "border-b border-offwhite" : ""}>
+                    <td className="px-5 py-5 text-[0.94rem] font-medium text-charcoal sm:px-7">{row.concern}</td>
+                    <td className="px-5 py-5 font-heading text-base font-semibold text-terracotta sm:px-7">
+                      {row.consider}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-5 text-[0.84rem] text-ink-soft">
+            Not sure yet? That&apos;s fine. The referral form doesn&apos;t require a specialty.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+        </div>
+      </section>
+
+      {/* ================= PARTNER CTA ================= */}
+      <section className="bg-[linear-gradient(155deg,#2a211d_0%,#211b18_100%)] px-6 py-20 text-center md:px-10 md:py-24">
+        <div className="mx-auto max-w-[44ch]">
+          <h2 className="font-heading text-3xl font-medium text-canvas-white sm:text-4xl">
+            Refer a family today, or build an ongoing relationship
+          </h2>
+          <p className="mt-3.5 text-[0.96rem] leading-relaxed text-canvas-white/70">
+            Most clinicians start with a single referral. If your practice sees this often enough to want a standing
+            relationship with Hayven, we&apos;d like to hear from you directly.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3.5">
             <Link
               href="/pediatricians/refer"
-              className="rounded-full bg-terracotta px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
+              className="inline-flex h-[52px] items-center gap-2 rounded-full bg-terracotta px-7 text-[0.88rem] font-semibold text-canvas-white shadow-[0_10px_26px_-14px_rgba(156,89,52,0.6)] transition-[transform,background-color,box-shadow] duration-200 ease-out hover:-translate-y-px hover:bg-rust-dark"
             >
-              Refer a child &rarr;
+              Refer a child <IconArrowRight size={16} stroke={2} />
             </Link>
-            <Link
-              href="/pediatricians/status"
-              className="rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-canvas-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            <a
+              href="mailto:hayvenmind@gmail.com?subject=Partnering%20with%20Hayven"
+              className="inline-flex h-[52px] items-center gap-2 rounded-full border border-white/30 px-7 text-[0.88rem] font-semibold text-canvas-white transition-[transform,background-color,border-color] duration-200 ease-out hover:-translate-y-px hover:border-white/55 hover:bg-white/5"
             >
-              Track an existing referral
-            </Link>
+              Partner with Hayven
+            </a>
           </div>
-        </div>
-      </section>
-
-      <section className="px-6 py-16 md:px-10 md:py-20">
-        <div className="mx-auto max-w-4xl">
-          <span className="label-micro text-rust-dark">How it works</span>
-          <h2 className="mt-2 font-heading text-2xl text-charcoal">Three steps, on your side</h2>
-          <div className="mt-8 grid gap-5 sm:grid-cols-3">
-            <div className="rounded-sm bg-offwhite/60 p-5">
-              <IconChecklist size={22} stroke={1.75} className="text-terracotta" />
-              <h3 className="mt-3 text-sm font-semibold text-charcoal">Submit the referral</h3>
-              <p className="mt-1.5 text-sm text-ink-soft">
-                Child, parent contact, and what you&apos;re concerned about &mdash; that&apos;s the whole form.
-              </p>
-            </div>
-            <div className="rounded-sm bg-offwhite/60 p-5">
-              <IconMailForward size={22} stroke={1.75} className="text-terracotta" />
-              <h3 className="mt-3 text-sm font-semibold text-charcoal">We contact the family</h3>
-              <p className="mt-1.5 text-sm text-ink-soft">
-                Hayven reaches out to the parent directly. You&apos;re not chasing the follow-up.
-              </p>
-            </div>
-            <div className="rounded-sm bg-offwhite/60 p-5">
-              <IconStethoscope size={22} stroke={1.75} className="text-terracotta" />
-              <h3 className="mt-3 text-sm font-semibold text-charcoal">You see it move</h3>
-              <p className="mt-1.5 text-sm text-ink-soft">
-                Check status with your reference code &mdash; received, contacted, care started. No clinical
-                detail, by design.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-charcoal px-6 py-16 text-center text-canvas-white md:px-10">
-        <div className="mx-auto max-w-md">
-          <h2 className="font-heading text-2xl">Have a family in mind right now?</h2>
-          <p className="mt-2 text-sm text-canvas-white/70">Takes about a minute. No account required.</p>
-          <Link
-            href="/pediatricians/refer"
-            className="mt-6 inline-block rounded-full bg-terracotta px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
-          >
-            Refer a child
-          </Link>
         </div>
       </section>
     </div>
