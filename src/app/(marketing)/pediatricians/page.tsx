@@ -8,6 +8,7 @@ import {
   IconShieldCheck,
   IconStethoscope,
   IconArrowRight,
+  IconVideo,
 } from "@tabler/icons-react";
 
 import { canonicalFor } from "@/lib/seo/metadata";
@@ -220,6 +221,148 @@ export default function PediatriciansPage() {
           <div className="mt-12 flex items-center gap-2.5 border-t border-offwhite pt-7 text-[0.86rem] text-ink-soft">
             <IconShieldCheck size={17} stroke={1.6} className="shrink-0 text-terracotta" />
             No clinical detail is shared at referral stage.
+          </div>
+        </div>
+      </section>
+
+      {/* ================= THE HAYVEN WAY ================= */}
+      <section className="bg-canvas-white px-6 py-20 md:px-10 md:py-24">
+        <div className="mx-auto max-w-[1320px]">
+          <div className="max-w-[60ch]">
+            <span className="flex items-center gap-2.5 text-[0.72rem] font-bold tracking-[0.12em] text-terracotta uppercase">
+              <span className="h-px w-6 bg-terracotta" />
+              The Hayven way
+            </span>
+            <h2 className="mt-3 font-heading text-3xl leading-tight font-medium text-charcoal sm:text-4xl">
+              Care you can actually see moving
+            </h2>
+          </div>
+
+          <div className="mt-11 grid gap-7 sm:grid-cols-2">
+            {/* -- report excerpt -- */}
+            <div>
+              <div className="flex min-h-[300px] items-start overflow-hidden rounded-2xl bg-offwhite p-9 pb-11">
+                <div className="w-full max-w-[400px] overflow-hidden rounded-xl bg-canvas-white shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)]">
+                  <div className="flex items-center gap-2.5 border-b border-offwhite px-4.5 py-4">
+                    <span className="flex size-8.5 shrink-0 items-center justify-center rounded-full bg-[#f1e4d6] font-heading text-[0.74rem] font-bold text-terracotta">
+                      AO
+                    </span>
+                    <div>
+                      <b className="block text-[0.84rem] text-charcoal">Amara O., Speech Therapist</b>
+                      <span className="text-[0.72rem] text-ink-soft">Session report &middot; Zainab, 4</span>
+                    </div>
+                  </div>
+                  <div className="px-4.5 py-4 pb-5">
+                    <p className="mb-1.5 text-[0.66rem] font-bold tracking-[0.06em] text-terracotta uppercase">
+                      What went well
+                    </p>
+                    <p className="mb-2.5 rounded-lg bg-ivory/70 px-3.5 py-2.5 text-[0.84rem] leading-relaxed text-charcoal">
+                      Zainab followed about two-thirds of instructions independently today, up from last session.
+                    </p>
+                    <p className="mb-1.5 text-[0.66rem] font-bold tracking-[0.06em] text-terracotta uppercase">
+                      Practice at home
+                    </p>
+                    <p className="rounded-lg bg-ivory/70 px-3.5 py-2.5 text-[0.84rem] leading-relaxed text-charcoal">
+                      10 minutes of naming objects during playtime, daily if possible.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <h3 className="mt-5 font-heading text-xl font-medium text-charcoal">Reports built for busy families</h3>
+              <p className="mt-2 max-w-[42ch] text-[0.9rem] leading-relaxed text-ink-soft">
+                Session notes turn into a plain-language report automatically. No clinical jargon, no separate
+                write-up for the therapist.
+              </p>
+            </div>
+
+            {/* -- progress chart -- */}
+            <div>
+              <div className="flex min-h-[300px] items-start overflow-hidden rounded-2xl bg-offwhite p-9 pb-11">
+                <div className="w-full max-w-[400px] rounded-xl bg-canvas-white p-5.5 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)]">
+                  <span className="mb-2 inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-[0.64rem] font-bold tracking-[0.06em] text-success-text uppercase">
+                    Trending up
+                  </span>
+                  <h4 className="mb-3.5 text-[0.96rem] font-semibold text-charcoal">Communication</h4>
+                  <svg viewBox="0 0 320 110" fill="none" className="block h-[110px] w-full">
+                    <line x1="0" y1="90" x2="320" y2="90" stroke="#dcd3be" strokeWidth="1" />
+                    <line x1="0" y1="55" x2="320" y2="55" stroke="#dcd3be" strokeWidth="1" />
+                    <line x1="0" y1="20" x2="320" y2="20" stroke="#dcd3be" strokeWidth="1" />
+                    <path
+                      d="M0,85 C40,80 70,70 100,65 C140,58 170,50 200,38 C240,28 270,20 320,12"
+                      stroke="#9c5934"
+                      strokeWidth="2.5"
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M0,85 C40,80 70,70 100,65 C140,58 170,50 200,38 C240,28 270,20 320,12 L320,110 L0,110 Z"
+                      fill="#9c5934"
+                      opacity="0.08"
+                    />
+                    <circle cx="320" cy="12" r="4" fill="#9c5934" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="mt-5 font-heading text-xl font-medium text-charcoal">Progress you can actually see</h3>
+              <p className="mt-2 max-w-[42ch] text-[0.9rem] leading-relaxed text-ink-soft">
+                Every goal is tracked session to session, not just described. Parents see the same chart the
+                therapist and supervisor do.
+              </p>
+            </div>
+
+            {/* -- session format -- */}
+            <div>
+              <div className="flex min-h-[300px] items-start overflow-hidden rounded-2xl bg-offwhite p-9 pb-11">
+                <div className="flex w-full max-w-[400px] items-center gap-3.5 rounded-xl bg-canvas-white p-5 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)]">
+                  <span className="flex size-16 shrink-0 items-center justify-center rounded-[10px] bg-[linear-gradient(155deg,#2a211d,#211b18)] text-rust-light">
+                    <IconVideo size={26} stroke={1.6} />
+                  </span>
+                  <div>
+                    <b className="block text-[0.88rem] text-charcoal">Amara O.</b>
+                    <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-[#f1e4d6] px-2.5 py-0.5 text-[0.68rem] font-bold text-terracotta">
+                      Virtual session
+                    </span>
+                    <div className="mt-1 text-[0.78rem] text-ink-soft">Tuesday, 3:00 PM</div>
+                  </div>
+                </div>
+              </div>
+              <h3 className="mt-5 font-heading text-xl font-medium text-charcoal">
+                In-person or virtual, always verified
+              </h3>
+              <p className="mt-2 max-w-[42ch] text-[0.9rem] leading-relaxed text-ink-soft">
+                Families choose the format that works for them. Every therapist is verified the same way either
+                way.
+              </p>
+            </div>
+
+            {/* -- multi-child -- */}
+            <div>
+              <div className="relative flex min-h-[300px] items-start overflow-hidden rounded-2xl bg-offwhite p-9 pb-11">
+                <div className="relative h-[190px] w-full">
+                  <div className="absolute top-0 left-0 z-[1] w-[200px] rounded-[10px] border border-offwhite bg-canvas-white p-3.5 opacity-55 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)]">
+                    <b className="block font-heading text-[1.05rem] text-charcoal">Sarah</b>
+                    <span className="text-[0.74rem] text-ink-soft">Age 3</span>
+                  </div>
+                  <div className="absolute top-7 left-10 z-[2] w-[200px] rounded-[10px] border border-offwhite bg-canvas-white p-3.5 opacity-80 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)]">
+                    <b className="block font-heading text-[1.05rem] text-charcoal">Tobi</b>
+                    <span className="text-[0.74rem] text-ink-soft">Age 6</span>
+                  </div>
+                  <div className="absolute top-14 left-20 z-[3] w-[200px] rounded-[10px] border border-offwhite bg-canvas-white p-3.5 shadow-[0_20px_48px_-24px_rgba(40,28,12,0.28)]">
+                    <b className="block font-heading text-[1.05rem] text-charcoal">Zainab</b>
+                    <span className="text-[0.74rem] text-ink-soft">Age 4</span>
+                    <div className="mt-2 flex items-center gap-1.5 border-t border-offwhite pt-2 text-[0.74rem] text-charcoal">
+                      <span className="size-1.5 rounded-full bg-terracotta" />
+                      Speech therapy &middot; Tuesday, 3:00 PM
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3 className="mt-5 font-heading text-xl font-medium text-charcoal">One dashboard, every child</h3>
+              <p className="mt-2 max-w-[42ch] text-[0.9rem] leading-relaxed text-ink-soft">
+                Switch between children without mixing their records. Each child&apos;s care team, reports, and
+                progress stay entirely their own.
+              </p>
+            </div>
           </div>
         </div>
       </section>
