@@ -20,7 +20,7 @@ const TIMELINE = [
 export default function ReferChildPage() {
   return (
     <div className="md:grid md:h-dvh md:grid-cols-[5fr_7fr] md:overflow-hidden">
-      <div className="flex flex-col justify-between gap-10 bg-charcoal px-8 py-12 text-offwhite md:px-14 md:py-14">
+      <div className="flex flex-col justify-between gap-10 border-b border-rust-light/30 bg-charcoal px-8 py-12 text-offwhite md:border-r md:border-b-0 md:px-14 md:py-14">
         <div>
           <BrandMark />
           <span className="label-micro mt-10 block text-rust-light">For pediatricians</span>
