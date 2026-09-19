@@ -88,7 +88,7 @@ export default function AboutPage() {
 
       {/* The letter */}
       <section className="bg-canvas-white px-6 py-20 md:px-10 md:py-24">
-        <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-[220px_1fr] md:gap-16">
+        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[240px_1fr] md:gap-16 xl:gap-28">
           <div className="flex items-center gap-3.5 md:sticky md:top-24 md:flex-col md:items-start md:gap-4 md:self-start">
             <div className="size-[100px] shrink-0 overflow-hidden rounded-full border-[3px] border-canvas-white shadow-[0_12px_28px_-14px_rgba(33,27,24,0.4)] ring-1 ring-offwhite md:size-[140px]">
               <Image
@@ -109,7 +109,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <article>
+          <article className="max-w-[640px]">
           <p className="font-serif text-xl leading-relaxed text-charcoal sm:text-[1.4rem]">
             {OPENING[0]}
           </p>
