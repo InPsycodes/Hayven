@@ -173,50 +173,30 @@ export default function PediatriciansPage() {
           <div className="pop-in relative hidden sm:block sm:h-[380px] xl:h-[500px]" style={{ animationDelay: "300ms" }}>
             <svg className="absolute inset-0 size-full" viewBox="0 0 560 500" fill="none" aria-hidden>
               <path
-                d="M 150 100 C 220 60, 300 60, 360 90"
+                d="M 90 105 Q 280 55 465 115"
                 stroke="rgba(184,115,76,0.55)"
                 strokeWidth="1.5"
                 strokeDasharray="1 7"
                 strokeLinecap="round"
               />
               <path
-                d="M 210 260 C 270 300, 340 300, 400 260"
+                d="M 465 115 Q 410 255 280 360"
                 stroke="rgba(184,115,76,0.55)"
                 strokeWidth="1.5"
                 strokeDasharray="1 7"
                 strokeLinecap="round"
               />
-              <circle cx="150" cy="100" r="4" fill="#b8734c" />
-              <circle cx="360" cy="90" r="4" fill="#b8734c" />
-              <circle cx="210" cy="260" r="4" fill="#b8734c" />
-              <circle cx="400" cy="260" r="4" fill="#b8734c" />
+              <path
+                d="M 280 360 Q 150 255 90 105"
+                stroke="rgba(184,115,76,0.55)"
+                strokeWidth="1.5"
+                strokeDasharray="1 7"
+                strokeLinecap="round"
+              />
+              <circle cx="280" cy="55" r="4" fill="#b8734c" />
+              <circle cx="410" cy="255" r="4" fill="#b8734c" />
+              <circle cx="150" cy="255" r="4" fill="#b8734c" />
             </svg>
-
-            <div className="reveal absolute top-0 right-[18%] z-[2] w-[260px] rounded-2xl border border-white/60 bg-canvas-white p-5 shadow-[0_30px_70px_-30px_rgba(33,27,24,0.45)] xl:w-[320px] xl:p-6">
-              <div className="mb-4 flex items-center gap-2.5 border-b border-offwhite pb-4">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#4f6146] text-[0.82rem] text-white">
-                  ✓
-                </span>
-                <div>
-                  <b className="block text-[0.96rem] text-charcoal">Referral submitted</b>
-                  <span className="text-[0.76rem] text-muted-foreground">Ref # HV-2487</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 py-1.5 text-[0.84rem] text-charcoal">
-                <span className="size-1.5 shrink-0 rounded-full bg-[#4f6146]" />
-                Family contacted
-                <span className="ml-auto text-[0.74rem] text-muted-foreground">2 min</span>
-              </div>
-              <div className="flex items-center gap-2 py-1.5 text-[0.84rem] text-charcoal">
-                <span className="size-1.5 shrink-0 rounded-full bg-[#4f6146]" />
-                Appointment scheduled
-                <span className="ml-auto text-[0.74rem] text-muted-foreground">1 day</span>
-              </div>
-              <div className="flex items-center gap-2 py-1.5 text-[0.84rem] text-muted-foreground">
-                <span className="size-1.5 shrink-0 rounded-full border border-offwhite" />
-                In care
-              </div>
-            </div>
 
             <div className="absolute top-[2%] left-0 z-[3] size-[170px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] xl:size-[210px]">
               <Image
@@ -228,7 +208,7 @@ export default function PediatriciansPage() {
                 className="scale-[1.25] object-cover"
               />
             </div>
-            <div className="absolute bottom-[-2%] left-[22%] z-[4] size-[220px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] xl:size-[280px]">
+            <div className="absolute bottom-0 left-1/2 z-[4] size-[220px] -translate-x-1/2 overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] xl:size-[280px]">
               <Image
                 src={parentChildImage}
                 alt="Illustrated portrait of a parent and child"
@@ -238,7 +218,7 @@ export default function PediatriciansPage() {
                 className="scale-[1.25] object-cover"
               />
             </div>
-            <div className="absolute top-[6%] right-[-2%] z-[3] size-[190px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] xl:size-[236px]">
+            <div className="absolute top-0 right-0 z-[3] size-[190px] overflow-hidden rounded-full border-2 border-white/5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.55)] xl:size-[236px]">
               <Image
                 src={therapistImage}
                 alt="Illustrated portrait of a Hayven care professional"
