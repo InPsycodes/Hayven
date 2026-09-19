@@ -88,7 +88,28 @@ export default function AboutPage() {
 
       {/* The letter */}
       <section className="bg-canvas-white px-6 py-20 md:px-10 md:py-24">
-        <article className="mx-auto max-w-2xl">
+        <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-[220px_1fr] md:gap-16">
+          <div className="flex items-center gap-3.5 md:sticky md:top-24 md:flex-col md:items-start md:gap-4 md:self-start">
+            <div className="size-[100px] shrink-0 overflow-hidden rounded-full border-[3px] border-canvas-white shadow-[0_12px_28px_-14px_rgba(33,27,24,0.4)] ring-1 ring-offwhite md:size-[140px]">
+              <Image
+                src={founderImage}
+                alt="Ademola Yusuf, founder of Hayven"
+                width={140}
+                height={140}
+                placeholder="blur"
+                className="size-full object-cover"
+                style={{ objectPosition: "50% 15%" }}
+              />
+            </div>
+            <div>
+              <p className="label-micro text-rust-dark">Founder&apos;s note</p>
+              <p className="mt-0.5 font-heading text-base text-charcoal md:mt-1">Ademola Yusuf</p>
+              <p className="text-[13px] text-muted-foreground">Founder, Hayven</p>
+              <div className="mt-1 hidden h-0.5 w-7 rounded-full bg-terracotta md:block" />
+            </div>
+          </div>
+
+          <article>
           <p className="font-serif text-xl leading-relaxed text-charcoal sm:text-[1.4rem]">
             {OPENING[0]}
           </p>
@@ -129,7 +150,8 @@ export default function AboutPage() {
               <p className="text-[13px] text-muted-foreground">Founder, Hayven</p>
             </div>
           </div>
-        </article>
+          </article>
+        </div>
       </section>
 
       {/* What Hayven is for */}
