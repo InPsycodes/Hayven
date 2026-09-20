@@ -25,13 +25,42 @@ import { AbcObservationBuilder } from "@/components/therapy-session/abc-observat
  */
 const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 
+const DRAFT_KEY_PREFIX = "hayven:session-draft:";
+
 function draftKey(childId: string): string {
-  return `hayven:session-draft:${childId}`;
+  return `${DRAFT_KEY_PREFIX}${childId}`;
 }
 
 interface SavedDraft {
   savedAt: string;
   fields: Record<string, string>;
+}
+
+/**
+ * The lazy per-child TTL check below only prunes THIS child's draft, and
+ * only when this exact page happens to be visited again -- a therapist who
+ * starts drafts for several children and never returns to most of them
+ * would otherwise leave every one of those sitting in localStorage
+ * indefinitely, well past the 24h the restore offer implies. Sweeps every
+ * hayven:session-draft:* key on each mount, not just the current child's.
+ */
+function sweepExpiredDrafts(): void {
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith(DRAFT_KEY_PREFIX)) continue;
+      try {
+        const draft = JSON.parse(localStorage.getItem(key) ?? "") as SavedDraft;
+        if (Date.now() - new Date(draft.savedAt).getTime() > DRAFT_TTL_MS) toRemove.push(key);
+      } catch {
+        toRemove.push(key); // corrupt entry -- no reason to keep it either
+      }
+    }
+    for (const key of toRemove) localStorage.removeItem(key);
+  } catch {
+    // Storage unreachable -- nothing to sweep.
+  }
 }
 
 const MEASUREMENT_LABEL: Record<string, string> = {
@@ -73,6 +102,7 @@ export function SessionEntryForm({
   // that then vanishes on a second pass. Runs once, on this component's
   // first render for this child.
   const [pendingDraft, setPendingDraft] = useState<SavedDraft | null>(() => {
+    sweepExpiredDrafts();
     try {
       const raw = localStorage.getItem(draftKey(childId));
       if (!raw) return null;
@@ -92,6 +122,14 @@ export function SessionEntryForm({
     if (!formRef.current) return;
     try {
       const fields = Object.fromEntries(new FormData(formRef.current).entries()) as Record<string, string>;
+      // confidentialNote is deliberately excluded. It's the one field this
+      // form collects that the database itself won't even let the owning
+      // therapist read back through a normal query (column-revoked,
+      // service-role-only access re-checked against assignment -- see
+      // src/lib/therapy-sessions/confidential.ts) -- mirroring it into
+      // plaintext localStorage would undercut that restriction for no
+      // reason a session-loss safety net actually needs to cover.
+      delete fields.confidentialNote;
       localStorage.setItem(draftKey(childId), JSON.stringify({ savedAt: new Date().toISOString(), fields }));
     } catch {
       // Private window / cleared site data / storage quota -- the form

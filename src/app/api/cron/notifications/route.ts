@@ -9,7 +9,7 @@ import {
   notifyUpcomingSessions,
   notifyOnboardingCheckins,
 } from "@/lib/notifications/cron";
-import { purgeStaleReferrals } from "@/lib/referrals/actions";
+import { purgeStaleReferrals } from "@/lib/referrals/cron";
 
 // Timing-safe, same reasoning as the Paystack webhook's signature check: a
 // plain `===` leaks how many leading characters matched via response-time
