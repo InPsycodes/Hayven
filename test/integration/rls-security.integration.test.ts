@@ -13,6 +13,8 @@ import {
 } from "./helpers";
 import { getBankDetails } from "@/lib/payouts/queries";
 import { getOnboardingStatus } from "@/lib/therapist/onboarding";
+import { getCareTeamForChild } from "@/lib/therapy-sessions/queries";
+import { getFullChildProgramme } from "@/lib/programme/queries";
 
 const admin = testAdminClient;
 
@@ -233,5 +235,108 @@ describe("E6 regression: revoking therapist_access consent blocks clinical reads
     const therapistClient = await signInAs(therapist);
     const result = await therapistClient.from("goals").select("id").eq("id", goal!.id).maybeSingle();
     expect(result.data?.id).toBe(goal!.id);
+  });
+});
+
+describe("0083 regression: care-team roster visibility", () => {
+  it("two therapists sharing a child can each see the other on the roster", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapistA = await createTestTherapist();
+    const therapistB = await createTestTherapist();
+
+    const { error: insertErr } = await admin.from("therapist_child_assignments").insert([
+      { child_id: child.id, therapist_id: therapistA.therapistProfileId, status: "active", therapy_type: "Speech" },
+      { child_id: child.id, therapist_id: therapistB.therapistProfileId, status: "active", therapy_type: "OT" },
+    ]);
+    expect(insertErr).toBeNull();
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    await signInAs(therapistA);
+    const rosterForA = await getCareTeamForChild(child.id, therapistA.therapistProfileId);
+    expect(rosterForA).toHaveLength(1);
+    expect(rosterForA[0].therapistId).toBe(therapistB.therapistProfileId);
+    expect(rosterForA[0].therapyType).toBe("OT");
+
+    signOut();
+    await signInAs(therapistB);
+    const rosterForB = await getCareTeamForChild(child.id, therapistB.therapistProfileId);
+    expect(rosterForB).toHaveLength(1);
+    expect(rosterForB[0].therapistId).toBe(therapistA.therapistProfileId);
+  });
+
+  it("a therapist not assigned to the child sees an empty roster", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapistA = await createTestTherapist();
+    const outsider = await createTestTherapist();
+
+    await admin.from("therapist_child_assignments").insert({
+      child_id: child.id,
+      therapist_id: therapistA.therapistProfileId,
+      status: "active",
+    });
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    await signInAs(outsider);
+    const roster = await getCareTeamForChild(child.id, outsider.therapistProfileId);
+    expect(roster).toHaveLength(0);
+  });
+});
+
+describe("goal attribution regression: getFullChildProgramme resolves a teammate's name", () => {
+  it("with two active therapists on the same child, each can see the other's name on their goal", async () => {
+    // Reproduces the exact shape that broke .maybeSingle() in the first
+    // version of this fix: TWO active assignment rows for one child.
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapistA = await createTestTherapist();
+    const therapistB = await createTestTherapist();
+
+    await admin.from("therapist_child_assignments").insert([
+      { child_id: child.id, therapist_id: therapistA.therapistProfileId, status: "active" },
+      { child_id: child.id, therapist_id: therapistB.therapistProfileId, status: "active" },
+    ]);
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    const { data: goalB } = await admin
+      .from("goals")
+      .insert({ child_id: child.id, therapist_id: therapistB.therapistProfileId, title: "Therapist B's goal" })
+      .select("id")
+      .single();
+    trackForCleanup("goals", goalB!.id);
+
+    await signInAs(therapistA);
+    const programme = await getFullChildProgramme(child.id);
+    const seenGoal = programme.goals.find((g) => g.id === goalB!.id);
+    expect(seenGoal).toBeTruthy();
+    expect(seenGoal?.therapistId).toBe(therapistB.therapistProfileId);
+    expect(seenGoal?.therapistName).toBeTruthy();
+    expect(seenGoal?.therapistName).not.toBeNull();
+  });
+
+  it("an outsider therapist gets no goals and no attribution for a child they're not assigned to", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapistA = await createTestTherapist();
+    const outsider = await createTestTherapist();
+
+    await admin.from("therapist_child_assignments").insert({
+      child_id: child.id,
+      therapist_id: therapistA.therapistProfileId,
+      status: "active",
+    });
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    const { data: goal } = await admin
+      .from("goals")
+      .insert({ child_id: child.id, therapist_id: therapistA.therapistProfileId, title: "Therapist A's goal" })
+      .select("id")
+      .single();
+    trackForCleanup("goals", goal!.id);
+
+    await signInAs(outsider);
+    const programme = await getFullChildProgramme(child.id);
+    expect(programme.goals).toHaveLength(0);
   });
 });

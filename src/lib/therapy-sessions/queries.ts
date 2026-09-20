@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getSession } from "@/lib/auth/session";
 import type { AssignedChild, CareTeamMember, ChildProgramme } from "./types";
 
 export async function getAssignedChildren(therapistProfileId: string): Promise<AssignedChild[]> {
@@ -73,17 +75,40 @@ export async function getAssignedChildById(childId: string, therapistProfileId: 
 
 /**
  * Other therapists actively sharing this child's care -- the viewing
- * therapist's own row is excluded. Relies on migration 0083's
- * "assigned therapist views care team" policy; before that policy existed,
- * this would silently return empty for every caller (RLS only let a
- * therapist see their own assignment row).
+ * therapist's own row is excluded.
+ *
+ * Reads via the service-role client, not the regular one: public.users only
+ * lets a user read their OWN row (`id = auth.uid()`, migration 0002) --
+ * there's no policy letting one therapist read another's full_name at all.
+ * The original version embedded `users(full_name)` through the regular
+ * client and silently came back empty for every caller (the embed's nested
+ * relation was RLS-blocked, not erroring loudly), caught only by an
+ * integration test signing in as two real therapists and checking the
+ * actual return value. Since this bypasses RLS, it re-verifies in code that
+ * the caller genuinely owns excludeTherapistProfileId and is themselves
+ * actively assigned to this child before returning anyone else's data --
+ * otherwise any signed-in therapist could pass an arbitrary child id and
+ * profile id to see a roster they were never on.
  */
 export async function getCareTeamForChild(
   childId: string,
   excludeTherapistProfileId: string
 ): Promise<CareTeamMember[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const session = await getSession();
+  if (!session || session.role !== "therapist") return [];
+
+  const admin = createAdminClient();
+  const { data: callerAssignment } = await admin
+    .from("therapist_child_assignments")
+    .select("id, therapist_profiles(user_id)")
+    .eq("child_id", childId)
+    .eq("therapist_id", excludeTherapistProfileId)
+    .eq("status", "active")
+    .maybeSingle();
+  const callerProfile = callerAssignment?.therapist_profiles as unknown as { user_id: string } | null;
+  if (!callerAssignment || callerProfile?.user_id !== session.userId) return [];
+
+  const { data, error } = await admin
     .from("therapist_child_assignments")
     .select("therapist_id, therapy_type, started_on, therapist_profiles(user_id, users(full_name))")
     .eq("child_id", childId)

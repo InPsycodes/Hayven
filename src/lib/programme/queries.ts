@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getSession } from "@/lib/auth/session";
 
 export interface FullGoal {
   id: string;
@@ -39,11 +41,56 @@ export interface FullChildProgramme {
   skills: FullSkill[];
 }
 
-/** Unfiltered -- includes met/paused/discontinued goals and inactive behaviours/skills, unlike getChildProgramme (which only returns what a session entry form needs). For the programme management page. */
+/**
+ * Unfiltered -- includes met/paused/discontinued goals and inactive
+ * behaviours/skills, unlike getChildProgramme (which only returns what a
+ * session entry form needs). For the programme management page.
+ *
+ * The goals query reads via the service-role client, not the regular one:
+ * public.users only lets a user read their OWN row (migration 0002), so
+ * embedding therapist_profiles(user_id, users(full_name)) through the
+ * regular client silently comes back with therapistName: null for every
+ * goal that isn't the caller's own -- exactly the "Set by {name}" label a
+ * care-team member most needs to see, and the same bug independently found
+ * in getCareTeamForChild (both fixed together). Re-verifies the caller is
+ * actually an active therapist on this child before using the elevated
+ * client, since that check is no longer coming from RLS on this query.
+ */
 export async function getFullChildProgramme(childId: string): Promise<FullChildProgramme> {
   const supabase = await createClient();
+  const session = await getSession();
+
+  let isAuthorizedTherapist = false;
+  if (session?.role === "therapist") {
+    // Scoped to the CALLER's own therapist_profiles row before checking the
+    // assignment -- a plain "any active assignment for this child" check
+    // would use .maybeSingle() against a table that can legitimately have
+    // several active rows per child (the whole point of the care-team
+    // model), and .maybeSingle() errors on more than one match rather than
+    // picking one, which would make this silently fail closed for every
+    // child with more than one assigned therapist.
+    const { data: ownProfile } = await supabase
+      .from("therapist_profiles")
+      .select("id")
+      .eq("user_id", session.userId)
+      .maybeSingle();
+    if (ownProfile) {
+      const admin = createAdminClient();
+      const { data: assignment } = await admin
+        .from("therapist_child_assignments")
+        .select("id")
+        .eq("child_id", childId)
+        .eq("therapist_id", ownProfile.id)
+        .eq("status", "active")
+        .maybeSingle();
+      isAuthorizedTherapist = !!assignment;
+    }
+  }
+
+  const goalsClient = isAuthorizedTherapist ? createAdminClient() : supabase;
+
   const [goalsRes, behavioursRes, skillsRes] = await Promise.all([
-    supabase
+    goalsClient
       .from("goals")
       .select(
         "id, title, description, domain, baseline_value, target_value, unit, status, therapist_id, therapist_profiles(user_id, users(full_name))"
