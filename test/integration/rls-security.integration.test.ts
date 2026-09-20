@@ -11,6 +11,8 @@ import {
   testAdminClient,
   trackForCleanup,
 } from "./helpers";
+import { getBankDetails } from "@/lib/payouts/queries";
+import { getOnboardingStatus } from "@/lib/therapist/onboarding";
 
 const admin = testAdminClient;
 
@@ -134,6 +136,39 @@ describe("0084/0085 regression: bank columns aren't selectable via the regular c
       .maybeSingle();
     expect(error).toBeNull();
     expect(data?.id).toBe(therapist.therapistProfileId);
+  });
+
+  // The lockdown moved the two legitimate self-reads onto the service-role
+  // client with an app-level ownership check (src/lib/payouts/queries.ts,
+  // src/lib/therapist/onboarding.ts) -- confirming the columns are locked
+  // down doesn't by itself confirm the owner can still see their own data,
+  // or that a *different* signed-in therapist can't reach it through those
+  // same functions by just passing someone else's id.
+  it("the owning therapist can still see their own bank details through getBankDetails/getOnboardingStatus", async () => {
+    // createTestTherapist already sets bank_code/bank_account_number/
+    // bank_account_name via an admin insert during setup.
+    const therapist = await createTestTherapist();
+    await signInAs(therapist);
+
+    const details = await getBankDetails(therapist.therapistProfileId);
+    expect(details).not.toBeNull();
+    expect(details?.accountNumberMasked).toBe("••••0000");
+    expect(details?.bankCode).toBe("058");
+
+    const onboarding = await getOnboardingStatus(therapist.therapistProfileId);
+    expect(onboarding.hasBankAccount).toBe(true);
+  });
+
+  it("a different signed-in therapist cannot read someone else's bank details through getBankDetails", async () => {
+    const therapistA = await createTestTherapist();
+    const therapistB = await createTestTherapist();
+    await signInAs(therapistB);
+
+    const details = await getBankDetails(therapistA.therapistProfileId);
+    expect(details).toBeNull();
+
+    const onboarding = await getOnboardingStatus(therapistA.therapistProfileId);
+    expect(onboarding.hasBankAccount).toBe(false);
   });
 });
 
