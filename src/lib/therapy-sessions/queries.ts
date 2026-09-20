@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth/session";
+import { isTherapistAuthorizedForChild } from "@/lib/therapy-sessions/authorization";
 import type { AssignedChild, CareTeamMember, ChildProgramme } from "./types";
 
 export async function getAssignedChildren(therapistProfileId: string): Promise<AssignedChild[]> {
@@ -85,10 +86,12 @@ export async function getAssignedChildById(childId: string, therapistProfileId: 
  * relation was RLS-blocked, not erroring loudly), caught only by an
  * integration test signing in as two real therapists and checking the
  * actual return value. Since this bypasses RLS, it re-verifies in code that
- * the caller genuinely owns excludeTherapistProfileId and is themselves
- * actively assigned to this child before returning anyone else's data --
+ * the caller genuinely owns excludeTherapistProfileId and (via
+ * isTherapistAuthorizedForChild) is actively assigned AND hasn't had
+ * consent explicitly revoked, before returning anyone else's data --
  * otherwise any signed-in therapist could pass an arbitrary child id and
- * profile id to see a roster they were never on.
+ * profile id to see a roster they were never on, or one they were removed
+ * from.
  */
 export async function getCareTeamForChild(
   childId: string,
@@ -98,15 +101,13 @@ export async function getCareTeamForChild(
   if (!session || session.role !== "therapist") return [];
 
   const admin = createAdminClient();
-  const { data: callerAssignment } = await admin
-    .from("therapist_child_assignments")
-    .select("id, therapist_profiles(user_id)")
-    .eq("child_id", childId)
-    .eq("therapist_id", excludeTherapistProfileId)
-    .eq("status", "active")
+  const { data: callerProfile } = await admin
+    .from("therapist_profiles")
+    .select("user_id")
+    .eq("id", excludeTherapistProfileId)
     .maybeSingle();
-  const callerProfile = callerAssignment?.therapist_profiles as unknown as { user_id: string } | null;
-  if (!callerAssignment || callerProfile?.user_id !== session.userId) return [];
+  if (!callerProfile || callerProfile.user_id !== session.userId) return [];
+  if (!(await isTherapistAuthorizedForChild(childId, excludeTherapistProfileId))) return [];
 
   const { data, error } = await admin
     .from("therapist_child_assignments")

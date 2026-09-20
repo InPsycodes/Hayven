@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth/session";
+import { isTherapistAuthorizedForChild } from "@/lib/therapy-sessions/authorization";
 
 export interface FullGoal {
   id: string;
@@ -62,28 +63,26 @@ export async function getFullChildProgramme(childId: string): Promise<FullChildP
 
   let isAuthorizedTherapist = false;
   if (session?.role === "therapist") {
-    // Scoped to the CALLER's own therapist_profiles row before checking the
-    // assignment -- a plain "any active assignment for this child" check
-    // would use .maybeSingle() against a table that can legitimately have
-    // several active rows per child (the whole point of the care-team
+    // Scoped to the CALLER's own therapist_profiles row before checking
+    // authorization -- a plain "any active assignment for this child"
+    // check would use .maybeSingle() against a table that can legitimately
+    // have several active rows per child (the whole point of the care-team
     // model), and .maybeSingle() errors on more than one match rather than
     // picking one, which would make this silently fail closed for every
     // child with more than one assigned therapist.
+    //
+    // isTherapistAuthorizedForChild, not a hand-rolled assignment check:
+    // this function's first version only checked assignment status, so a
+    // therapist whose therapist_access consent had been explicitly revoked
+    // (0086) could still see every care-team member's goal and their name --
+    // the exact same request through RLS elsewhere was correctly blocked.
     const { data: ownProfile } = await supabase
       .from("therapist_profiles")
       .select("id")
       .eq("user_id", session.userId)
       .maybeSingle();
     if (ownProfile) {
-      const admin = createAdminClient();
-      const { data: assignment } = await admin
-        .from("therapist_child_assignments")
-        .select("id")
-        .eq("child_id", childId)
-        .eq("therapist_id", ownProfile.id)
-        .eq("status", "active")
-        .maybeSingle();
-      isAuthorizedTherapist = !!assignment;
+      isAuthorizedTherapist = await isTherapistAuthorizedForChild(childId, ownProfile.id);
     }
   }
 

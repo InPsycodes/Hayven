@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isTherapistAuthorizedForChild } from "@/lib/therapy-sessions/authorization";
 
 /**
  * confidential_note is select-revoked from `authenticated` entirely
@@ -9,6 +10,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * currently assigned to the child can read it, not just whoever wrote it --
  * that's the point of a safeguarding note: the whole care team should be
  * able to see a flagged concern, not just its author.
+ *
+ * Re-check via isTherapistAuthorizedForChild, not a hand-rolled assignment
+ * check: this function's own earlier version only checked assignment
+ * status, so a therapist whose therapist_access consent had been explicitly
+ * revoked (0086) could still read the confidential note -- the exact
+ * request through RLS elsewhere (goals, therapy_sessions) was correctly
+ * blocked, this admin-client path wasn't.
  */
 export async function getConfidentialNote(sessionId: string, therapistId: string): Promise<string | null> {
   const admin = createAdminClient();
@@ -20,14 +28,7 @@ export async function getConfidentialNote(sessionId: string, therapistId: string
     .maybeSingle();
   if (!therapySession) return null;
 
-  const { data: assignment } = await admin
-    .from("therapist_child_assignments")
-    .select("id")
-    .eq("child_id", therapySession.child_id)
-    .eq("therapist_id", therapistId)
-    .eq("status", "active")
-    .maybeSingle();
-  if (!assignment) return null;
+  if (!(await isTherapistAuthorizedForChild(therapySession.child_id, therapistId))) return null;
 
   return therapySession.confidential_note;
 }

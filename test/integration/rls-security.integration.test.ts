@@ -15,6 +15,7 @@ import { getBankDetails } from "@/lib/payouts/queries";
 import { getOnboardingStatus } from "@/lib/therapist/onboarding";
 import { getCareTeamForChild } from "@/lib/therapy-sessions/queries";
 import { getFullChildProgramme } from "@/lib/programme/queries";
+import { getConfidentialNote } from "@/lib/therapy-sessions/confidential";
 
 const admin = testAdminClient;
 
@@ -338,5 +339,122 @@ describe("goal attribution regression: getFullChildProgramme resolves a teammate
     await signInAs(outsider);
     const programme = await getFullChildProgramme(child.id);
     expect(programme.goals).toHaveLength(0);
+  });
+});
+
+describe("consent-consistency regression: revoking access blocks the admin-client read paths too", () => {
+  // getConfidentialNote, getCareTeamForChild, and getFullChildProgramme's
+  // goal-attribution query all independently re-implemented "is this
+  // therapist actively assigned" before this fix, and none of them
+  // re-checked consent when 0086 added that requirement to the RLS-backed
+  // path -- a therapist whose access had been explicitly revoked could
+  // still read the confidential note, the care-team roster, and attributed
+  // goals through these three admin-client paths. All three now go through
+  // the same isTherapistAuthorizedForChild helper; these tests set up one
+  // shared scenario (assigned, then explicitly revoked) and check each.
+
+  it("getConfidentialNote returns the note before revocation, null after", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist();
+
+    await admin.from("therapist_child_assignments").insert({
+      child_id: child.id,
+      therapist_id: therapist.therapistProfileId,
+      status: "active",
+    });
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    const { data: session_ } = await admin
+      .from("therapy_sessions")
+      .insert({
+        child_id: child.id,
+        therapist_id: therapist.therapistProfileId,
+        confidential_note: "Flagged: watch for a specific antecedent pattern.",
+      })
+      .select("id")
+      .single();
+    trackForCleanup("therapy_sessions", session_!.id);
+
+    const before = await getConfidentialNote(session_!.id, therapist.therapistProfileId);
+    expect(before).toBe("Flagged: watch for a specific antecedent pattern.");
+
+    await admin.from("intake_consents").insert({
+      child_id: child.id,
+      consent_type: "therapist_access",
+      granted: false,
+      recorded_by: parent.userId,
+    });
+    trackForCleanup("intake_consents", child.id, "child_id");
+
+    const after = await getConfidentialNote(session_!.id, therapist.therapistProfileId);
+    expect(after).toBeNull();
+  });
+
+  it("getCareTeamForChild returns the roster before revocation, empty after", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapistA = await createTestTherapist();
+    const therapistB = await createTestTherapist();
+
+    await admin.from("therapist_child_assignments").insert([
+      { child_id: child.id, therapist_id: therapistA.therapistProfileId, status: "active" },
+      { child_id: child.id, therapist_id: therapistB.therapistProfileId, status: "active" },
+    ]);
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    await signInAs(therapistA);
+    const before = await getCareTeamForChild(child.id, therapistA.therapistProfileId);
+    expect(before).toHaveLength(1);
+
+    await admin.from("intake_consents").insert({
+      child_id: child.id,
+      consent_type: "therapist_access",
+      granted: false,
+      recorded_by: parent.userId,
+    });
+    trackForCleanup("intake_consents", child.id, "child_id");
+
+    const after = await getCareTeamForChild(child.id, therapistA.therapistProfileId);
+    expect(after).toHaveLength(0);
+  });
+
+  it("getFullChildProgramme stops attributing goals to a therapist once their access is revoked", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapistA = await createTestTherapist();
+    const therapistB = await createTestTherapist();
+
+    await admin.from("therapist_child_assignments").insert([
+      { child_id: child.id, therapist_id: therapistA.therapistProfileId, status: "active" },
+      { child_id: child.id, therapist_id: therapistB.therapistProfileId, status: "active" },
+    ]);
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    const { data: goalB } = await admin
+      .from("goals")
+      .insert({ child_id: child.id, therapist_id: therapistB.therapistProfileId, title: "Therapist B's goal" })
+      .select("id")
+      .single();
+    trackForCleanup("goals", goalB!.id);
+
+    await signInAs(therapistA);
+    const before = await getFullChildProgramme(child.id);
+    expect(before.goals.find((g) => g.id === goalB!.id)?.therapistName).toBeTruthy();
+
+    await admin.from("intake_consents").insert({
+      child_id: child.id,
+      consent_type: "therapist_access",
+      granted: false,
+      recorded_by: parent.userId,
+    });
+    trackForCleanup("intake_consents", child.id, "child_id");
+
+    // therapistA's OWN access is what's revoked -- RLS blocks their read of
+    // the goals table entirely now, same as any other unauthorized
+    // therapist, so the whole list comes back empty rather than just
+    // missing the attribution.
+    const after = await getFullChildProgramme(child.id);
+    expect(after.goals).toHaveLength(0);
   });
 });
