@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSession } from "@/lib/auth/session";
 import { MIN_PAYOUT_NAIRA } from "@/lib/payouts/commission";
 
 export interface EarningsSummary {
@@ -173,15 +174,28 @@ export interface BankDetails {
   accountName: string;
 }
 
-/** The therapist's saved payout bank account. Resilient to a pre-0074 DB. */
+/**
+ * The therapist's saved payout bank account. Resilient to a pre-0074 DB.
+ *
+ * bank_account_number/bank_code/bank_account_name are select-revoked from
+ * `authenticated` and `anon` entirely (0084) -- they were previously
+ * reachable by anyone via the regular client, since RLS is row-level and
+ * can't restrict columns. Same pattern as getConfidentialNote: read via the
+ * service-role client, then independently re-verify the caller actually
+ * owns this profile before returning anything.
+ */
 export async function getBankDetails(therapistProfileId: string): Promise<BankDetails | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const session = await getSession();
+  if (!session || session.role !== "therapist") return null;
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .from("therapist_profiles")
-    .select("bank_code, bank_account_number, bank_account_name")
+    .select("user_id, bank_code, bank_account_number, bank_account_name")
     .eq("id", therapistProfileId)
     .maybeSingle();
-  if (error || !data || !data.bank_account_number) return null;
+  if (error || !data || data.user_id !== session.userId || !data.bank_account_number) return null;
+
   const num = String(data.bank_account_number);
   return {
     bankCode: data.bank_code ?? "",
