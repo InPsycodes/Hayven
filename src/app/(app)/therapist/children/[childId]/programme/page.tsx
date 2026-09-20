@@ -35,18 +35,28 @@ export default async function ChildProgrammePage({ params }: { params: Promise<{
             {programme.goals.length === 0 ? (
               <p className="rounded-sm bg-[#F6F4F0] p-3 text-sm text-muted-foreground">No goals set yet.</p>
             ) : (
-              programme.goals.map((g) => (
-                <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-charcoal">{g.title}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {g.domain ?? "No domain"}
-                      {g.baselineValue && g.targetValue ? ` · ${g.baselineValue} → ${g.targetValue}${g.unit ? ` ${g.unit}` : ""}` : ""}
-                    </p>
+              programme.goals.map((g) => {
+                const isOwnGoal = g.therapistId === therapist.id;
+                return (
+                  <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-charcoal">{g.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {g.domain ?? "No domain"}
+                        {g.baselineValue && g.targetValue ? ` · ${g.baselineValue} → ${g.targetValue}${g.unit ? ` ${g.unit}` : ""}` : ""}
+                        {!isOwnGoal && g.therapistName ? ` · Set by ${g.therapistName}` : ""}
+                      </p>
+                    </div>
+                    {isOwnGoal ? (
+                      <GoalStatusSelect goalId={g.id} status={g.status} />
+                    ) : (
+                      <span className="h-8 shrink-0 rounded-full border border-border bg-card px-3 text-xs font-medium text-charcoal capitalize leading-8">
+                        {g.status}
+                      </span>
+                    )}
                   </div>
-                  <GoalStatusSelect goalId={g.id} status={g.status} />
-                </div>
-              ))
+                );
+              })
             )}
           </div>
           <div className="mt-4">

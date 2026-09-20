@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { AssignedChild, ChildProgramme } from "./types";
+import type { AssignedChild, CareTeamMember, ChildProgramme } from "./types";
 
 export async function getAssignedChildren(therapistProfileId: string): Promise<AssignedChild[]> {
   const supabase = await createClient();
@@ -69,4 +69,34 @@ export async function getAssignedChildById(childId: string, therapistProfileId: 
   const child = data?.children as unknown as { id: string; first_name: string; date_of_birth: string } | null;
   if (!child) return null;
   return { id: child.id, firstName: child.first_name, dateOfBirth: child.date_of_birth };
+}
+
+/**
+ * Other therapists actively sharing this child's care -- the viewing
+ * therapist's own row is excluded. Relies on migration 0083's
+ * "assigned therapist views care team" policy; before that policy existed,
+ * this would silently return empty for every caller (RLS only let a
+ * therapist see their own assignment row).
+ */
+export async function getCareTeamForChild(
+  childId: string,
+  excludeTherapistProfileId: string
+): Promise<CareTeamMember[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("therapist_child_assignments")
+    .select("therapist_id, therapy_type, started_on, therapist_profiles(user_id, users(full_name))")
+    .eq("child_id", childId)
+    .eq("status", "active")
+    .neq("therapist_id", excludeTherapistProfileId);
+  if (error || !data) return [];
+
+  return data
+    .map((row) => {
+      const profile = row.therapist_profiles as unknown as { users: { full_name: string } | null } | null;
+      const name = profile?.users?.full_name;
+      if (!name) return null;
+      return { therapistId: row.therapist_id, name, therapyType: row.therapy_type, since: row.started_on };
+    })
+    .filter((m): m is CareTeamMember => Boolean(m));
 }

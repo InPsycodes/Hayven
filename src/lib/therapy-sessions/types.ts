@@ -9,6 +9,13 @@ export interface AssignedChild {
   dateOfBirth: string;
 }
 
+export interface CareTeamMember {
+  therapistId: string;
+  name: string;
+  therapyType: string | null;
+  since: string;
+}
+
 export interface RealGoal {
   id: string;
   title: string;

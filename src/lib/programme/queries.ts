@@ -11,6 +11,8 @@ export interface FullGoal {
   targetValue: string | null;
   unit: string | null;
   status: string;
+  therapistId: string;
+  therapistName: string | null;
 }
 
 export interface FullTargetBehaviour {
@@ -43,7 +45,9 @@ export async function getFullChildProgramme(childId: string): Promise<FullChildP
   const [goalsRes, behavioursRes, skillsRes] = await Promise.all([
     supabase
       .from("goals")
-      .select("id, title, description, domain, baseline_value, target_value, unit, status")
+      .select(
+        "id, title, description, domain, baseline_value, target_value, unit, status, therapist_id, therapist_profiles(user_id, users(full_name))"
+      )
       .eq("child_id", childId)
       .order("created_at"),
     supabase
@@ -59,16 +63,21 @@ export async function getFullChildProgramme(childId: string): Promise<FullChildP
   ]);
 
   return {
-    goals: (goalsRes.data ?? []).map((g) => ({
-      id: g.id,
-      title: g.title,
-      description: g.description,
-      domain: g.domain,
-      baselineValue: g.baseline_value,
-      targetValue: g.target_value,
-      unit: g.unit,
-      status: g.status,
-    })),
+    goals: (goalsRes.data ?? []).map((g) => {
+      const profile = g.therapist_profiles as unknown as { users: { full_name: string } | null } | null;
+      return {
+        id: g.id,
+        title: g.title,
+        description: g.description,
+        domain: g.domain,
+        baselineValue: g.baseline_value,
+        targetValue: g.target_value,
+        unit: g.unit,
+        status: g.status,
+        therapistId: g.therapist_id,
+        therapistName: profile?.users?.full_name ?? null,
+      };
+    }),
     targetBehaviours: (behavioursRes.data ?? []).map((b) => ({
       id: b.id,
       label: b.label,

@@ -12,7 +12,7 @@ import { AttendanceChart } from "@/components/therapy-session/charts/attendance-
 import { ReinforcerEffectivenessChart } from "@/components/therapy-session/charts/reinforcer-effectiveness-chart";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
-import { getAssignedChildById } from "@/lib/therapy-sessions/queries";
+import { getAssignedChildById, getCareTeamForChild } from "@/lib/therapy-sessions/queries";
 import { getSessionSeriesWindow } from "@/lib/therapy-sessions/chart-queries";
 import {
   toAttendanceSeries,
@@ -39,7 +39,10 @@ export default async function ChildOverviewPage({
   const child = await getAssignedChildById(childId, therapist.id);
   if (!child) notFound();
 
-  const window = await getSessionSeriesWindow(childId);
+  const [window, careTeam] = await Promise.all([
+    getSessionSeriesWindow(childId),
+    getCareTeamForChild(childId, therapist.id),
+  ]);
   const attendance = toAttendanceSeries(window);
   const goalMatrix = toGoalProgressMatrix(window);
   const reinforcers = toReinforcerEffectiveness(window);
@@ -65,6 +68,29 @@ export default async function ChildOverviewPage({
             <Link href={`/therapist/children/${childId}/intake`}>Intake form</Link>
           </Button>
         </div>
+
+        {careTeam.length > 0 && (
+          <div className="rounded-sm bg-card p-5 ring-1 ring-border">
+            <h2 className="font-heading text-lg text-charcoal">Care team</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Other therapists actively working with {child.firstName}. Their goals and session notes for{" "}
+              {child.firstName} are visible above so care stays coordinated.
+            </p>
+            <div className="mt-3 flex flex-col gap-2">
+              {careTeam.map((member) => (
+                <div
+                  key={member.therapistId}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3"
+                >
+                  <span className="truncate text-sm font-medium text-charcoal">{member.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {member.therapyType ?? "Therapy type not set"} · since {formatDate(member.since)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {window.sessions.length > 0 && (
           <div className="rounded-sm bg-card p-5 ring-1 ring-border">
