@@ -133,7 +133,8 @@ export async function submitReferral(_prevState: FormState, formData: FormData):
   return { referenceCode };
 }
 
-export interface ReferralStatusResult {
+export interface ReferralListItem {
+  referenceCode: string;
   childName: string;
   status: ReferralStatus;
   createdAt: string;
@@ -141,15 +142,23 @@ export interface ReferralStatusResult {
 }
 
 /**
- * Public status lookup -- the reference code plus the referrer's own email
- * is the entire "auth" here, since there's no account. On any mismatch this
+ * Public lookup -- the reference code plus the referrer's own email is the
+ * entire "auth" here, since there's no account. On any mismatch this
  * returns the same generic error regardless of which part was wrong, same
  * enumeration-safe shape as requestPasswordReset.
+ *
+ * Once that one code + email pair checks out, returns every referral tied
+ * to that same referrer email -- lets a pediatrician who's referred more
+ * than once see all of them without re-entering each code individually.
+ * Deliberately not offered as an email-only lookup: a referrer's contact is
+ * sometimes a shared clinic inbox, so the door into the full history stays
+ * gated on proof of at least one real code, not just knowledge of the
+ * address.
  */
-export async function checkReferralStatus(
+export async function listReferralsForReferrer(
   referenceCode: string,
   email: string
-): Promise<{ ok: true; result: ReferralStatusResult } | { ok: false; error: string }> {
+): Promise<{ ok: true; results: ReferralListItem[] } | { ok: false; error: string }> {
   const code = referenceCode.trim().toUpperCase();
   const cleanEmail = email.trim().toLowerCase();
   if (!code || !cleanEmail) {
@@ -162,24 +171,31 @@ export async function checkReferralStatus(
   }
 
   const admin = createAdminClient();
-  const { data } = await admin
+  const { data: matched } = await admin
     .from("referrals")
-    .select("child_name, referrer_contact, status, created_at, status_updated_at")
+    .select("referrer_contact")
     .eq("reference_code", code)
     .maybeSingle();
 
-  if (!data || data.referrer_contact.trim().toLowerCase() !== cleanEmail) {
+  if (!matched || matched.referrer_contact.trim().toLowerCase() !== cleanEmail) {
     return { ok: false, error: "We couldn't find a referral matching that code and email." };
   }
 
+  const { data } = await admin
+    .from("referrals")
+    .select("reference_code, child_name, status, created_at, status_updated_at")
+    .ilike("referrer_contact", cleanEmail)
+    .order("created_at", { ascending: false });
+
   return {
     ok: true,
-    result: {
-      childName: data.child_name,
-      status: data.status,
-      createdAt: data.created_at,
-      statusUpdatedAt: data.status_updated_at,
-    },
+    results: (data ?? []).map((r) => ({
+      referenceCode: r.reference_code,
+      childName: r.child_name,
+      status: r.status,
+      createdAt: r.created_at,
+      statusUpdatedAt: r.status_updated_at,
+    })),
   };
 }
 
