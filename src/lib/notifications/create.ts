@@ -26,6 +26,37 @@ export type NotificationType =
   | "referral_new";
 
 /**
+ * P6/E16 from the external PRD review: push payloads previously reused the
+ * same title/body as the in-app bell and email, which routinely embed a
+ * child's first name ("Zainab's new session report is ready") -- that then
+ * sits on a lock screen anyone nearby can read, in a context (child
+ * development, therapy) where stigma is a real concern. In-app and email
+ * both have a confirmed audience (the logged-in user, or an inbox only they
+ * open); a lock screen doesn't. Push gets a generic, category-level label
+ * instead; the `url` still deep-links to the specific thing once opened.
+ */
+const PUSH_GENERIC_TITLE: Record<NotificationType, string> = {
+  booking_confirmed: "Booking update",
+  new_message: "New message",
+  note_added: "New update",
+  payment_receipt: "Payment update",
+  verification_update: "Verification update",
+  meeting_link_ready: "Session update",
+  session_reminder: "Upcoming session",
+  support_request_new: "Support update",
+  support_request_resolved: "Support update",
+  report_published: "New report available",
+  report_reminder: "A report is waiting for you",
+  session_started: "Session update",
+  session_finished: "Session update",
+  supervisor_request_new: "Supervisor request update",
+  supervisor_request_approved: "Supervisor request update",
+  supervisor_request_denied: "Supervisor request update",
+  referral_new: "New referral",
+};
+const PUSH_GENERIC_BODY = "Open Hayven to see what's new.";
+
+/**
  * Fire-and-forget: a notification failing to write must never roll back the
  * booking/message/note/decision that triggered it. notifications' RLS only
  * lets a user manage their own rows, so cross-user delivery always needs the
@@ -109,7 +140,11 @@ export async function createNotification(params: {
   // unconditionally so it's reached even for notification types with no
   // email preference at all (prefKey undefined).
   try {
-    await sendPushToUser(params.userId, { title: params.title, body: params.body, url: params.url });
+    await sendPushToUser(params.userId, {
+      title: PUSH_GENERIC_TITLE[params.type],
+      body: PUSH_GENERIC_BODY,
+      url: params.url,
+    });
   } catch (err) {
     console.error("notification push threw", params.type, err);
   }
