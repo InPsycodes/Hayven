@@ -26,6 +26,8 @@ export interface FullTargetBehaviour {
   measurement: string;
   parentLabel: string | null;
   isActive: boolean;
+  /** Null for behaviours created before 0087 -- treated as editable by any assigned therapist, same as before that migration. */
+  createdBy: string | null;
 }
 
 export interface FullSkill {
@@ -34,6 +36,8 @@ export interface FullSkill {
   masteryCriteria: string | null;
   currentPercent: number | null;
   isActive: boolean;
+  /** Null for skills created before 0087 -- treated as editable by any assigned therapist, same as before that migration. */
+  createdBy: string | null;
 }
 
 export interface FullChildProgramme {
@@ -98,12 +102,12 @@ export async function getFullChildProgramme(childId: string): Promise<FullChildP
       .order("created_at"),
     supabase
       .from("target_behaviours")
-      .select("id, label, definition, direction, measurement, parent_label, is_active")
+      .select("id, label, definition, direction, measurement, parent_label, is_active, created_by")
       .eq("child_id", childId)
       .order("label"),
     supabase
       .from("skills")
-      .select("id, label, mastery_criteria, current_percent, is_active")
+      .select("id, label, mastery_criteria, current_percent, is_active, created_by")
       .eq("child_id", childId)
       .order("label"),
   ]);
@@ -132,6 +136,7 @@ export async function getFullChildProgramme(childId: string): Promise<FullChildP
       measurement: b.measurement,
       parentLabel: b.parent_label,
       isActive: b.is_active,
+      createdBy: b.created_by,
     })),
     skills: (skillsRes.data ?? []).map((s) => ({
       id: s.id,
@@ -139,6 +144,7 @@ export async function getFullChildProgramme(childId: string): Promise<FullChildP
       masteryCriteria: s.mastery_criteria,
       currentPercent: s.current_percent,
       isActive: s.is_active,
+      createdBy: s.created_by,
     })),
   };
 }

@@ -135,6 +135,7 @@ export async function createTargetBehaviour(
     .from("target_behaviours")
     .insert({
       child_id: childId,
+      created_by: therapist.id,
       label: label.trim(),
       definition: typeof definition === "string" && definition.trim() ? definition.trim() : null,
       direction,
@@ -241,6 +242,7 @@ export async function createSkill(
     .from("skills")
     .insert({
       child_id: childId,
+      created_by: therapist.id,
       label: label.trim(),
       mastery_criteria:
         typeof masteryCriteria === "string" && masteryCriteria.trim() ? masteryCriteria.trim() : null,

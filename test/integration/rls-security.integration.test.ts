@@ -16,6 +16,7 @@ import { getOnboardingStatus } from "@/lib/therapist/onboarding";
 import { getCareTeamForChild } from "@/lib/therapy-sessions/queries";
 import { getFullChildProgramme } from "@/lib/programme/queries";
 import { getConfidentialNote } from "@/lib/therapy-sessions/confidential";
+import { toggleTargetBehaviourActive, toggleSkillActive } from "@/lib/programme/actions";
 
 const admin = testAdminClient;
 
@@ -456,5 +457,99 @@ describe("consent-consistency regression: revoking access blocks the admin-clien
     // missing the attribution.
     const after = await getFullChildProgramme(child.id);
     expect(after.goals).toHaveLength(0);
+  });
+});
+
+describe("0087 regression: target_behaviours/skills are owner-restricted", () => {
+  it("a care-team member can't toggle another therapist's target behaviour", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const owner = await createTestTherapist();
+    const teammate = await createTestTherapist();
+
+    await admin.from("therapist_child_assignments").insert([
+      { child_id: child.id, therapist_id: owner.therapistProfileId, status: "active" },
+      { child_id: child.id, therapist_id: teammate.therapistProfileId, status: "active" },
+    ]);
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    const { data: behaviour } = await admin
+      .from("target_behaviours")
+      .insert({
+        child_id: child.id,
+        created_by: owner.therapistProfileId,
+        label: "Hand flapping",
+        direction: "decrease",
+        measurement: "frequency",
+      })
+      .select("id")
+      .single();
+    trackForCleanup("target_behaviours", behaviour!.id);
+
+    await signInAs(teammate);
+    const blocked = await toggleTargetBehaviourActive(behaviour!.id, false);
+    expect(blocked.ok).toBe(false);
+
+    const { data: stillActive } = await admin.from("target_behaviours").select("is_active").eq("id", behaviour!.id).single();
+    expect(stillActive?.is_active).toBe(true);
+
+    signOut();
+    await signInAs(owner);
+    const allowed = await toggleTargetBehaviourActive(behaviour!.id, false);
+    expect(allowed.ok).toBe(true);
+  });
+
+  it("a care-team member can't toggle another therapist's skill", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const owner = await createTestTherapist();
+    const teammate = await createTestTherapist();
+
+    await admin.from("therapist_child_assignments").insert([
+      { child_id: child.id, therapist_id: owner.therapistProfileId, status: "active" },
+      { child_id: child.id, therapist_id: teammate.therapistProfileId, status: "active" },
+    ]);
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    const { data: skill } = await admin
+      .from("skills")
+      .insert({ child_id: child.id, created_by: owner.therapistProfileId, label: "Requesting with a full sentence" })
+      .select("id")
+      .single();
+    trackForCleanup("skills", skill!.id);
+
+    await signInAs(teammate);
+    const blocked = await toggleSkillActive(skill!.id, false);
+    expect(blocked.ok).toBe(false);
+
+    signOut();
+    await signInAs(owner);
+    const allowed = await toggleSkillActive(skill!.id, false);
+    expect(allowed.ok).toBe(true);
+  });
+
+  it("a legacy behaviour with no recorded creator stays manageable by any assigned therapist", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist();
+
+    await admin.from("therapist_child_assignments").insert({
+      child_id: child.id,
+      therapist_id: therapist.therapistProfileId,
+      status: "active",
+    });
+    trackForCleanup("therapist_child_assignments", child.id, "child_id");
+
+    // No created_by -- simulates a row that predates migration 0087.
+    const { data: behaviour } = await admin
+      .from("target_behaviours")
+      .insert({ child_id: child.id, label: "Pre-existing behaviour", direction: "decrease", measurement: "frequency" })
+      .select("id")
+      .single();
+    trackForCleanup("target_behaviours", behaviour!.id);
+
+    await signInAs(therapist);
+    const result = await toggleTargetBehaviourActive(behaviour!.id, false);
+    expect(result.ok).toBe(true);
   });
 });

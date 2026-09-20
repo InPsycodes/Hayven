@@ -70,20 +70,29 @@ export default async function ChildProgrammePage({ params }: { params: Promise<{
             {programme.targetBehaviours.length === 0 ? (
               <p className="rounded-sm bg-[#F6F4F0] p-3 text-sm text-muted-foreground">No target behaviours set yet.</p>
             ) : (
-              programme.targetBehaviours.map((b) => (
-                <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-charcoal">
-                      {b.label} <span className="text-xs font-normal text-muted-foreground">({b.direction})</span>
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      Measured by {b.measurement}
-                      {b.parentLabel ? ` · shown to parents as "${b.parentLabel}"` : ""}
-                    </p>
+              programme.targetBehaviours.map((b) => {
+                const canManage = b.createdBy === null || b.createdBy === therapist.id;
+                return (
+                  <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-charcoal">
+                        {b.label} <span className="text-xs font-normal text-muted-foreground">({b.direction})</span>
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        Measured by {b.measurement}
+                        {b.parentLabel ? ` · shown to parents as "${b.parentLabel}"` : ""}
+                      </p>
+                    </div>
+                    {canManage ? (
+                      <ActiveToggle id={b.id} isActive={b.isActive} onToggle={toggleTargetBehaviourActive} />
+                    ) : (
+                      <span className="rounded-full bg-paper px-3 py-1 text-xs font-medium text-muted-foreground">
+                        {b.isActive ? "Active" : "Inactive"}
+                      </span>
+                    )}
                   </div>
-                  <ActiveToggle id={b.id} isActive={b.isActive} onToggle={toggleTargetBehaviourActive} />
-                </div>
-              ))
+                );
+              })
             )}
           </div>
           <div className="mt-4">
@@ -97,18 +106,27 @@ export default async function ChildProgrammePage({ params }: { params: Promise<{
             {programme.skills.length === 0 ? (
               <p className="rounded-sm bg-[#F6F4F0] p-3 text-sm text-muted-foreground">No skills tracked yet.</p>
             ) : (
-              programme.skills.map((s) => (
-                <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-charcoal">{s.label}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {s.currentPercent != null ? `${s.currentPercent}% independent · ` : ""}
-                      {s.masteryCriteria ?? "No mastery criteria set"}
-                    </p>
+              programme.skills.map((s) => {
+                const canManage = s.createdBy === null || s.createdBy === therapist.id;
+                return (
+                  <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-charcoal">{s.label}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {s.currentPercent != null ? `${s.currentPercent}% independent · ` : ""}
+                        {s.masteryCriteria ?? "No mastery criteria set"}
+                      </p>
+                    </div>
+                    {canManage ? (
+                      <ActiveToggle id={s.id} isActive={s.isActive} onToggle={toggleSkillActive} />
+                    ) : (
+                      <span className="rounded-full bg-paper px-3 py-1 text-xs font-medium text-muted-foreground">
+                        {s.isActive ? "Active" : "Inactive"}
+                      </span>
+                    )}
                   </div>
-                  <ActiveToggle id={s.id} isActive={s.isActive} onToggle={toggleSkillActive} />
-                </div>
-              ))
+                );
+              })
             )}
           </div>
           <div className="mt-4">
