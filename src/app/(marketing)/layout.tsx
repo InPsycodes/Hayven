@@ -9,7 +9,7 @@ import { getSession } from "@/lib/auth/session";
 const EXPLORE_LINKS = [
   { label: "Find a therapist", href: "/search" },
   { label: "Learning Center", href: "/learn" },
-  { label: "For therapists", href: "/signup?role=therapist" },
+  { label: "For therapists", href: "/for-therapists" },
   { label: "For pediatricians", href: "/pediatricians" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "About", href: "/about" },
