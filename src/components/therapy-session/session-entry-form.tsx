@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,29 @@ import { createTherapySession, type FormState } from "@/lib/therapy-sessions/act
 import type { ChildProgramme } from "@/lib/therapy-sessions/types";
 import { SkillDomainFields } from "@/components/therapy-session/skill-domain-fields";
 import { AbcObservationBuilder } from "@/components/therapy-session/abc-observation-builder";
+
+/**
+ * E17 from the external PRD review: unlike the intake form (which
+ * autosaves every 900ms), this form had no draft protection at all --
+ * ServiceWorkerUpdater (which force-reloads on a deployed app update) or a
+ * plain accidental tab close mid-session could wipe a therapist's typing
+ * with no way back. A full server-backed real-time draft (matching every
+ * dynamic sub-section, including the add-able ABC rows) would be a much
+ * larger feature than the actual risk warrants -- this is a lighter,
+ * right-sized fix: periodically snapshot the form to localStorage (a
+ * per-browser safety net, never synced or read back by the server), and
+ * offer to restore it if the page loads with one still sitting there.
+ */
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+
+function draftKey(childId: string): string {
+  return `hayven:session-draft:${childId}`;
+}
+
+interface SavedDraft {
+  savedAt: string;
+  fields: Record<string, string>;
+}
 
 const MEASUREMENT_LABEL: Record<string, string> = {
   frequency: "Count this session",
@@ -41,8 +64,121 @@ export function SessionEntryForm({
   const boundAction = createTherapySession.bind(null, childId);
   const [state, formAction, isPending] = useActionState(boundAction, initialState);
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [abcInitialCount, setAbcInitialCount] = useState(0);
+
+  // Lazy initializer, not an effect: reading localStorage is synchronous,
+  // so there's no reason to defer it a render and risk offering a draft
+  // that then vanishes on a second pass. Runs once, on this component's
+  // first render for this child.
+  const [pendingDraft, setPendingDraft] = useState<SavedDraft | null>(() => {
+    try {
+      const raw = localStorage.getItem(draftKey(childId));
+      if (!raw) return null;
+      const draft = JSON.parse(raw) as SavedDraft;
+      if (Date.now() - new Date(draft.savedAt).getTime() > DRAFT_TTL_MS) {
+        localStorage.removeItem(draftKey(childId));
+        return null;
+      }
+      return draft;
+    } catch {
+      // Corrupt/blocked storage -- nothing to restore, nothing to crash over.
+      return null;
+    }
+  });
+
+  function saveDraft() {
+    if (!formRef.current) return;
+    try {
+      const fields = Object.fromEntries(new FormData(formRef.current).entries()) as Record<string, string>;
+      localStorage.setItem(draftKey(childId), JSON.stringify({ savedAt: new Date().toISOString(), fields }));
+    } catch {
+      // Private window / cleared site data / storage quota -- the form
+      // itself still has everything the user typed, so this is a missed
+      // safety net, not data loss.
+    }
+  }
+
+  function scheduleDraftSave() {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(saveDraft, 900);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
+
+  function discardDraft() {
+    try {
+      localStorage.removeItem(draftKey(childId));
+    } catch {
+      // Nothing to clean up if storage was never reachable.
+    }
+    setPendingDraft(null);
+  }
+
+  function restoreDraft() {
+    if (!pendingDraft || !formRef.current) return;
+    const form = formRef.current;
+    const abcCount = Number(pendingDraft.fields.abcCount ?? 0);
+    setAbcInitialCount(abcCount);
+
+    const setFieldValue = (name: string, value: string) => {
+      // RadioNodeList (the "setting" radio group) also exposes a .value
+      // setter that checks the matching radio -- same interface as a plain
+      // input/select/textarea for this purpose, which is all that's read.
+      const field = form.elements.namedItem(name) as { value: string } | null;
+      if (field) field.value = value;
+    };
+
+    // The abc_N_* rows don't exist in the DOM until AbcObservationBuilder
+    // re-renders with the bumped initialCount above -- restoring those
+    // specific fields waits one tick for that render to land.
+    for (const [name, value] of Object.entries(pendingDraft.fields)) {
+      if (name === "abcCount" || name.startsWith("abc_")) continue;
+      setFieldValue(name, value);
+    }
+
+    if (abcCount > 0) {
+      setTimeout(() => {
+        for (const [name, value] of Object.entries(pendingDraft.fields)) {
+          if (name.startsWith("abc_")) setFieldValue(name, value);
+        }
+      }, 0);
+    }
+
+    setPendingDraft(null);
+  }
+
   return (
-    <form action={formAction} className="flex flex-col gap-8 p-6 pb-28 md:p-8">
+    <form
+      ref={formRef}
+      action={formAction}
+      onInput={scheduleDraftSave}
+      onSubmit={() => {
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        discardDraft();
+      }}
+      className="flex flex-col gap-8 p-6 pb-28 md:p-8"
+    >
+      {pendingDraft && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-accent/10 p-4 ring-1 ring-accent/30">
+          <p className="text-sm text-charcoal">
+            You have an unsaved session entry from earlier. Restore it?
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" size="sm" onClick={restoreDraft}>
+              Restore
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={discardDraft}>
+              Discard
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         <Label>Session basics</Label>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -143,7 +279,7 @@ export function SessionEntryForm({
         </div>
       )}
 
-      <AbcObservationBuilder />
+      <AbcObservationBuilder key={abcInitialCount} initialCount={abcInitialCount} />
 
       {programme.skills.length > 0 && (
         <div className="flex flex-col gap-3">

@@ -20,9 +20,21 @@ const ANTECEDENT_CATEGORIES = [
   { value: "other", label: "Other / unclear" },
 ];
 
-/** Repeatable ABC (antecedent-behaviour-consequence) observation rows -- same indexed-FormData pattern as the fixed reinforcer slots, just dynamically add-able. Rows with no behaviour label are ignored server-side, so removing a row is just clearing its label. */
-export function AbcObservationBuilder() {
-  const [rowCount, setRowCount] = useState(0);
+/**
+ * Repeatable ABC (antecedent-behaviour-consequence) observation rows -- same
+ * indexed-FormData pattern as the fixed reinforcer slots, just dynamically
+ * add-able. Rows with no behaviour label are ignored server-side, so
+ * removing a row is just clearing its label.
+ *
+ * initialCount lets a restored localStorage draft (see SessionEntryForm)
+ * pre-render the same number of rows it saved -- otherwise the saved
+ * abc_N_* field values would have nowhere to be written back into. The
+ * caller passes a changing `key` alongside it (see SessionEntryForm) so a
+ * restore forces a clean remount with the new initialCount as the fresh
+ * starting state, rather than syncing a prop into state via an effect.
+ */
+export function AbcObservationBuilder({ initialCount = 0 }: { initialCount?: number }) {
+  const [rowCount, setRowCount] = useState(initialCount);
 
   return (
     <div className="flex flex-col gap-3">
