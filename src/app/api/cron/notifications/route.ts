@@ -9,6 +9,7 @@ import {
   notifyUpcomingSessions,
   notifyOnboardingCheckins,
 } from "@/lib/notifications/cron";
+import { purgeStaleReferrals } from "@/lib/referrals/actions";
 
 // Timing-safe, same reasoning as the Paystack webhook's signature check: a
 // plain `===` leaks how many leading characters matched via response-time
@@ -36,12 +37,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [started, finished, reminders, upcoming, checkins] = await Promise.all([
+  const [started, finished, reminders, upcoming, checkins, referralsPurged] = await Promise.all([
     notifySessionsStarted(),
     notifySessionsFinished(),
     notifyUnreadReportReminders(),
     notifyUpcomingSessions(),
     notifyOnboardingCheckins(),
+    purgeStaleReferrals(),
   ]);
 
   return NextResponse.json({
@@ -50,5 +52,6 @@ export async function GET(req: NextRequest) {
     reportReminders: reminders,
     upcomingReminders: upcoming,
     onboardingCheckins: checkins,
+    referralsPurged: referralsPurged.purged,
   });
 }

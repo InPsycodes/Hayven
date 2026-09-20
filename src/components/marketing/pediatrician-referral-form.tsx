@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldError } from "@/components/ui/field-error";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { submitReferral, type FormState } from "@/lib/referrals/actions";
 import { REFERRAL_REASON_TAGS } from "@/lib/referrals/constants";
@@ -181,6 +182,22 @@ export function PediatricianReferralForm() {
           placeholder="Anything else worth knowing before we reach out"
         />
       </div>
+
+      <label className="flex items-start gap-2.5 text-sm text-ink-soft">
+        <Checkbox
+          id="parentConfirmed"
+          name="parentConfirmed"
+          required
+          aria-invalid={fieldError("parentConfirmed") ? true : undefined}
+          aria-describedby={fieldError("parentConfirmed") ? "parentConfirmed-error" : undefined}
+          className="mt-0.5"
+        />
+        <span>
+          I confirm the parent or guardian is aware I&apos;m making this referral and has agreed to
+          be contacted by Hayven about it.
+        </span>
+      </label>
+      <FieldError id="parentConfirmed-error">{fieldError("parentConfirmed")}</FieldError>
 
       {state.error && !state.field && <p className="text-sm text-error-text">{state.error}</p>}
 

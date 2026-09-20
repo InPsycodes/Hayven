@@ -45,6 +45,7 @@ export async function submitReferral(_prevState: FormState, formData: FormData):
   const referrerSpecialty = formData.get("referrerSpecialty");
   const referrerContact = formData.get("referrerContact");
   const additionalInfo = formData.get("additionalInfo");
+  const parentConfirmed = formData.get("parentConfirmed");
   const reasonTags = formData.getAll("reasonTags").filter((v): v is string => typeof v === "string");
 
   if (typeof childName !== "string" || !childName.trim()) {
@@ -65,6 +66,18 @@ export async function submitReferral(_prevState: FormState, formData: FormData):
   }
   if (reasonTags.length === 0) {
     return { error: "Select at least one reason for the referral.", field: "reasonTags" };
+  }
+  // E21 from the external PRD review: a referrer can submit a child's name
+  // and a parent's contact details without that parent ever having touched
+  // Hayven or agreed to anything. Requiring this confirmation doesn't
+  // verify it happened, but it does make the referrer explicitly attest to
+  // it rather than the platform silently assuming it, and gives Hayven a
+  // documented basis for the first outreach.
+  if (parentConfirmed !== "on") {
+    return {
+      error: "Confirm that the parent or guardian is aware of and agrees to this referral.",
+      field: "parentConfirmed",
+    };
   }
 
   const rateLimitOk = await checkRateLimit(`referral-submit:${referrerContact.trim().toLowerCase()}`, 10, 60 * 60);
@@ -257,4 +270,45 @@ export async function advanceReferralStatus(
 
   revalidatePath("/admin/referrals");
   return { ok: true };
+}
+
+/**
+ * E21 from the external PRD review: a referral that never converted (the
+ * family was never reached, or declined) has no ongoing reason to keep a
+ * child's name, age, and a parent's contact details on file indefinitely --
+ * the whole record only ever existed to support the one-time outreach.
+ * 90 days is a judgment call, not a legal minimum: long enough that a
+ * referral genuinely still being worked doesn't get swept up (the admin
+ * queue's own stated SLA is "within one business day" for first contact),
+ * short enough to meaningfully bound how long stale PII sits around.
+ * care_started referrals are never purged -- at that point the family is a
+ * real Hayven user and their record lives under the normal account/child
+ * data lifecycle, not this one.
+ *
+ * Cron-triggered (no real signed-in actor), so this doesn't go through
+ * logAuditEvent -- audit_log.actor_id is NOT NULL with a real FK to users,
+ * and there's no system-actor convention in this codebase to attribute an
+ * automated action to (the same reason session auto-completion and
+ * notification sends in src/lib/notifications/cron.ts aren't audit-logged
+ * either). The purged count is returned instead, visible in the cron
+ * route's own response/logs.
+ */
+const REFERRAL_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
+
+export async function purgeStaleReferrals(): Promise<{ purged: number }> {
+  const admin = createAdminClient();
+  const cutoff = new Date(Date.now() - REFERRAL_RETENTION_MS).toISOString();
+
+  const { data, error } = await admin
+    .from("referrals")
+    .delete()
+    .neq("status", "care_started")
+    .lt("created_at", cutoff)
+    .select("id");
+
+  if (error) {
+    console.error("purgeStaleReferrals failed", error.message);
+    return { purged: 0 };
+  }
+  return { purged: data?.length ?? 0 };
 }
