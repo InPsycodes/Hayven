@@ -132,7 +132,7 @@ export async function verifyMfaLogin(
   // guesses against the second factor. Keyed by factorId -- a stable,
   // non-guessable per-user identifier -- so this doesn't require a second
   // round trip to look up the user before the limit is even checked.
-  const allowed = await checkRateLimit(`mfa-login:${factorId}`, 5, 15 * 60);
+  const allowed = await checkRateLimit(`mfa-login:${factorId}`, 5, 15 * 60, { failClosed: true });
   if (!allowed) {
     return { ok: false, error: "Too many attempts. Please try again in a few minutes." };
   }

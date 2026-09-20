@@ -165,7 +165,7 @@ export async function listReferralsForReferrer(
     return { ok: false, error: "Enter your reference code and email." };
   }
 
-  const rateLimitOk = await checkRateLimit(`referral-status:${code}`, 10, 15 * 60);
+  const rateLimitOk = await checkRateLimit(`referral-status:${code}`, 10, 15 * 60, { failClosed: true });
   if (!rateLimitOk) {
     return { ok: false, error: "Too many attempts. Please wait a few minutes and try again." };
   }

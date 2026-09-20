@@ -43,7 +43,7 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
   // Same shape as signIn's rate limit, keyed by the submitted email --
   // without this, signup can be scripted to spam Supabase's confirmation
   // email at one target address indefinitely.
-  const allowed = await checkRateLimit(`signup:${input.email.trim().toLowerCase()}`, 5, 15 * 60);
+  const allowed = await checkRateLimit(`signup:${input.email.trim().toLowerCase()}`, 5, 15 * 60, { failClosed: true });
   if (!allowed) {
     return { ok: false, error: "Too many attempts. Please try again in a few minutes." };
   }
@@ -110,7 +110,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
   // someone hammering one known account, not a single source hammering many,
   // and it sidesteps needing a reliable client-IP header behind Netlify's
   // proxy layer.
-  const allowed = await checkRateLimit(`login:${email.trim().toLowerCase()}`, 5, 15 * 60);
+  const allowed = await checkRateLimit(`login:${email.trim().toLowerCase()}`, 5, 15 * 60, { failClosed: true });
   if (!allowed) {
     return { ok: false, error: "Too many login attempts. Please try again in a few minutes." };
   }

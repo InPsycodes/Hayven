@@ -31,8 +31,21 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * alert still fires on trip either way. Only the bucket's type prefix goes
  * to Sentry -- bucket keys can embed identifying detail (an email, a user
  * ID), which stays in the rate_limit_attempts table for investigation.
+ *
+ * failClosed opts a specific caller out of the fail-open default above --
+ * for the handful of endpoints where an outage-shaped brute-force window is
+ * worse than a false "too many attempts" during a real infrastructure
+ * hiccup: login, signup, and the pediatrician referral status lookup (the
+ * only "auth" that one has is a reference code, so it's the closest thing
+ * this app has to a password to guess).
  */
-export async function checkRateLimit(bucketKey: string, limit: number, windowSeconds: number): Promise<boolean> {
+export async function checkRateLimit(
+  bucketKey: string,
+  limit: number,
+  windowSeconds: number,
+  opts?: { failClosed?: boolean }
+): Promise<boolean> {
+  const onUnavailable = opts?.failClosed ? false : true;
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase.rpc("check_rate_limit", {
@@ -41,13 +54,13 @@ export async function checkRateLimit(bucketKey: string, limit: number, windowSec
       p_window_seconds: windowSeconds,
     });
     if (error) {
-      console.error("checkRateLimit RPC failed, failing open", bucketKey, error.message);
-      Sentry.captureMessage(`Rate limit fail-open: ${bucketKey.split(":")[0]}`, {
+      console.error(`checkRateLimit RPC failed, failing ${onUnavailable ? "open" : "closed"}`, bucketKey, error.message);
+      Sentry.captureMessage(`Rate limit fail-${onUnavailable ? "open" : "closed"}: ${bucketKey.split(":")[0]}`, {
         level: "error",
         tags: { anomaly: "rate_limit_unavailable" },
         extra: { rpcError: error.message },
       });
-      return true;
+      return onUnavailable;
     }
     const allowed = data === true;
     if (!allowed) {
@@ -58,12 +71,12 @@ export async function checkRateLimit(bucketKey: string, limit: number, windowSec
     }
     return allowed;
   } catch (err) {
-    console.error("checkRateLimit threw, failing open", bucketKey, err);
-    Sentry.captureMessage(`Rate limit fail-open: ${bucketKey.split(":")[0]}`, {
+    console.error(`checkRateLimit threw, failing ${onUnavailable ? "open" : "closed"}`, bucketKey, err);
+    Sentry.captureMessage(`Rate limit fail-${onUnavailable ? "open" : "closed"}: ${bucketKey.split(":")[0]}`, {
       level: "error",
       tags: { anomaly: "rate_limit_unavailable" },
       extra: { thrown: err instanceof Error ? err.message : String(err) },
     });
-    return true;
+    return onUnavailable;
   }
 }
