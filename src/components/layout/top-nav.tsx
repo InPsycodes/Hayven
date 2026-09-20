@@ -18,7 +18,7 @@ const LINKS = [
   { label: "Find a therapist", href: "/search" },
   { label: "Learning Center", href: "/learn" },
   { label: "About Us", href: "/about" },
-  { label: "For therapists", href: "/signup?role=therapist" },
+  { label: "For therapists", href: "/for-therapists" },
   { label: "For pediatricians", href: "/pediatricians" },
 ];
 
