@@ -19,7 +19,11 @@ export async function enrollMfa(): Promise<EnrollMfaResult> {
   // independently reachable regardless of which page renders their UI, so
   // this is the only thing standing between a suspended account's still-valid
   // session cookie and enrolling a fresh MFA factor as a persistent backdoor.
-  const session = await getSession();
+  // `true` opts out of getSession()'s admin-must-have-MFA-enrolled check
+  // (E8) -- every function in this file is part of the enrollment flow
+  // itself, so a zero-factor admin has to be able to call it or could never
+  // enroll a factor in the first place. Has no effect for any other role.
+  const session = await getSession(true);
   if (!session) return { ok: false, error: NOT_SIGNED_IN_ERROR };
 
   const supabase = await createClient();
@@ -40,7 +44,7 @@ export async function confirmMfaEnrollment(
   factorId: string,
   code: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const session = await getSession();
+  const session = await getSession(true);
   if (!session) return { ok: false, error: NOT_SIGNED_IN_ERROR };
 
   const supabase = await createClient();
@@ -73,7 +77,7 @@ export async function unenrollMfa(
   factorId: string,
   code: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const session = await getSession();
+  const session = await getSession(true);
   if (!session) return { ok: false, error: NOT_SIGNED_IN_ERROR };
 
   const allowed = await checkRateLimit(`mfa-unenroll:${factorId}`, 5, 15 * 60);
@@ -108,7 +112,7 @@ export interface MfaStatus {
 }
 
 export async function getMfaStatus(): Promise<MfaStatus> {
-  const session = await getSession();
+  const session = await getSession(true);
   if (!session) return { enrolled: false, factorId: null };
 
   const supabase = await createClient();

@@ -5,7 +5,12 @@ import { getSession } from "@/lib/auth/session";
 import { getMfaStatus } from "@/lib/auth/mfa-actions";
 
 export default async function AdminSettingsPage() {
-  const session = await getSession();
+  // `true`: this is the one page proxy.ts (E8) deliberately leaves reachable
+  // for an admin with zero MFA factors enrolled, specifically so they can
+  // land here and enroll one -- getSession()'s own admin-must-have-MFA-
+  // enrolled check would otherwise redirect them straight back to /login,
+  // bricking the exact bootstrap path proxy.ts exists to preserve.
+  const session = await getSession(true);
   if (!session || session.role !== "admin") redirect("/login");
 
   const mfaStatus = await getMfaStatus();

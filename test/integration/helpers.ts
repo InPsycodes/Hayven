@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 import { createClient as createAnonClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { currentUser } from "./mocks";
@@ -163,6 +165,64 @@ export async function createTestSlot(
 export async function makeAdmin(userId: string): Promise<void> {
   const { error } = await admin.from("users").update({ role: "admin" }).eq("id", userId);
   if (error) throw new Error(`makeAdmin failed: ${error.message}`);
+}
+
+// RFC 4226/6238 TOTP, implemented directly (no otplib/speakeasy dependency
+// exists in this repo) -- needed because getSession() (E8, src/lib/auth/
+// session.ts) now rejects an admin session with zero MFA factors enrolled,
+// so any test that signs in as a test admin and calls a real admin action
+// needs a REAL verified factor, not just a role flip, to reach getSession()'s
+// non-null path at all.
+function base32Decode(base32: string): Buffer {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const clean = base32.replace(/=+$/, "").toUpperCase();
+  let bits = "";
+  for (const char of clean) {
+    const val = alphabet.indexOf(char);
+    if (val === -1) throw new Error(`Invalid base32 character in TOTP secret: ${char}`);
+    bits += val.toString(2).padStart(5, "0");
+  }
+  const bytes: number[] = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  return Buffer.from(bytes);
+}
+
+function generateTotp(base32Secret: string, timeStepSeconds = 30, digits = 6): string {
+  const key = base32Decode(base32Secret);
+  const counter = Math.floor(Date.now() / 1000 / timeStepSeconds);
+  const counterBuffer = Buffer.alloc(8);
+  counterBuffer.writeBigUInt64BE(BigInt(counter));
+  const hmac = crypto.createHmac("sha1", key).update(counterBuffer).digest();
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const binCode =
+    ((hmac[offset] & 0x7f) << 24) |
+    ((hmac[offset + 1] & 0xff) << 16) |
+    ((hmac[offset + 2] & 0xff) << 8) |
+    (hmac[offset + 3] & 0xff);
+  return (binCode % 10 ** digits).toString().padStart(digits, "0");
+}
+
+/**
+ * Enrolls and verifies a real TOTP factor on the CURRENTLY signed-in test
+ * user (call after signInAs) -- elevates the session to AAL2 exactly as a
+ * real user completing 2FA setup would, so getSession()'s admin-must-have-
+ * MFA-enrolled check (E8) passes for the rest of the test.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- same cross-module generic quirk as signInAs's return type above, which this is meant to accept directly.
+export async function enrollAndVerifyMfa(client: { auth: any }): Promise<void> {
+  const { data: enrolled, error: enrollError } = await client.auth.mfa.enroll({ factorType: "totp" });
+  if (enrollError) throw new Error(`enrollAndVerifyMfa: enroll failed: ${enrollError.message}`);
+
+  const { data: challenge, error: challengeError } = await client.auth.mfa.challenge({ factorId: enrolled.id });
+  if (challengeError) throw new Error(`enrollAndVerifyMfa: challenge failed: ${challengeError.message}`);
+
+  const code = generateTotp(enrolled.totp.secret);
+  const { error: verifyError } = await client.auth.mfa.verify({
+    factorId: enrolled.id,
+    challengeId: challenge.id,
+    code,
+  });
+  if (verifyError) throw new Error(`enrollAndVerifyMfa: verify failed: ${verifyError.message}`);
 }
 
 /**

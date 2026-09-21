@@ -25,7 +25,7 @@ export interface AppSession {
  * that specifically tested this). It just stops paying for the same 3
  * round trips 2-4x over on every single page load.
  */
-export const getSession = cache(async function getSession(): Promise<AppSession | null> {
+export const getSession = cache(async function getSession(allowUnenrolledAdmin = false): Promise<AppSession | null> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -52,6 +52,26 @@ export const getSession = cache(async function getSession(): Promise<AppSession 
   // (suspending a compromised or abusive account) -- it's meaningless if
   // nothing actually checks it. Same choke point as the MFA/AAL check above.
   if (profile.status === "suspended") return null;
+
+  // E8 (external PRD review), found on a "CHECK ALL" recheck: the step-up
+  // check above only fires once a factor exists (nextLevel only ever becomes
+  // "aal2" that way), so an admin account with ZERO factors enrolled sailed
+  // through it forever. proxy.ts's page-navigation gate caught that for
+  // normal browsing, but src/app/api/admin/seed-learning-articles/route.ts
+  // -- a route with its own independent getSession()-based check, entirely
+  // outside proxy.ts's matcher (which excludes all of /api/) -- proved it
+  // was a real bypass: a compromised admin password with no MFA enrolled had
+  // no MFA barrier at all calling it directly. Same choke point as the two
+  // checks above closes it for every current and future admin action or
+  // route, not just the one found. allowUnenrolledAdmin is a narrow, explicit
+  // opt-out for the one legitimate case a zero-factor admin must still pass
+  // this check: enrolling a factor in the first place (src/lib/auth/
+  // mfa-actions.ts's enrollMfa/confirmMfaEnrollment/unenrollMfa/getMfaStatus,
+  // the only callers that pass it) -- a plain boolean, not an options object,
+  // so repeated no-arg calls within one request still hit React cache()'s
+  // same entry instead of each other re-paying the 3 round trips this
+  // wrapper exists to avoid.
+  if (profile.role === "admin" && !allowUnenrolledAdmin && (!aal || aal.nextLevel !== "aal2")) return null;
 
   return {
     userId: user.id,

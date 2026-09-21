@@ -15,8 +15,12 @@ export default defineConfig({
     env: { NODE_ENV: "test" },
     setupFiles: ["./test/integration/env.ts", "./test/integration/mocks.ts"],
     fileParallelism: false,
-    testTimeout: 30_000,
-    hookTimeout: 30_000,
+    // 30s was already tight before E8: enrollAndVerifyMfa (test/integration/
+    // helpers.ts) adds 3 more real network round trips -- enroll, challenge,
+    // verify -- to every test that signs in as a test admin, on top of an
+    // already-long chain of sequential setup calls in the heavier tests.
+    testTimeout: 45_000,
+    hookTimeout: 45_000,
   },
   resolve: {
     alias: [

@@ -16,7 +16,18 @@ import { getOpenDisputeCount } from "@/lib/disputes/queries";
 import { getOpenReferralCount } from "@/lib/referrals/queries";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
+  // `true`: this layout wraps every /admin/* page, including /admin/settings
+  // -- proxy.ts (E8) already redirects a zero-factor admin to exactly that
+  // one page for every other /admin/* request, so in normal operation this
+  // only ever renders un-enrolled for that one destination. Without the
+  // exemption here, getSession()'s admin-must-have-MFA-enrolled check would
+  // reject the session at the layout and bounce to /login before the
+  // settings page underneath even gets a chance to render, bricking the
+  // bootstrap path both proxy.ts and the settings page itself exist to keep
+  // open. Every actual admin action/mutation still calls the unexempted,
+  // default getSession() -- this only affects whether the shell (nav, badge
+  // counts) renders, not whether anything can be done with it.
+  const session = await getSession(true);
 
   if (!session || session.role !== "admin") {
     redirect("/login");

@@ -213,7 +213,17 @@ export async function finalizeBookingPayment(
       console.error("Failed to auto-create therapist_child_assignment on booking confirmation", assignmentError);
     }
 
-    await admin.from("payments").insert({
+    // CHECK ALL recheck: this insert used to go unchecked -- every race that
+    // could realistically hit it twice for the same (bookingId,
+    // gatewayReference) is already caught upstream (the loser of any of
+    // finalizeBookingPayment's conditional-update races either short-circuits
+    // on current.status === "confirmed" or lands in handleMissedConfirmation's
+    // own 23505-guarded insert), so there's no known live path to a failure
+    // here. But this function is the one place a booking's status flips to
+    // "confirmed" -- if this insert ever did fail silently, the result would
+    // be worse than the orphaned-charge bug E2 fixed: a booking marked
+    // confirmed with no payments row and nothing to ever notice it.
+    const { error: paymentError } = await admin.from("payments").insert({
       booking_id: bookingId,
       payer_id: booking.parent_id,
       payee_id: therapistProfile?.user_id ?? null,
@@ -222,6 +232,13 @@ export async function finalizeBookingPayment(
       gateway_reference: gatewayReference,
       status: "successful",
     });
+    if (paymentError) {
+      Sentry.captureMessage("Booking confirmed but its payments row failed to insert", {
+        level: "error",
+        tags: { anomaly: "confirmed_booking_missing_payment_row" },
+        extra: { bookingId, gatewayReference, dbError: paymentError.message },
+      });
+    }
 
     const therapistName = therapistProfile?.users?.full_name ?? "your therapist";
     const sessionLabel = slot ? formatDateTime(slot.start_time) : "your upcoming session";

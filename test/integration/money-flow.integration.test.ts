@@ -11,6 +11,7 @@ import {
   cleanupAll,
   testAdminClient,
   trackForCleanup,
+  enrollAndVerifyMfa,
   type TestParent,
   type TestTherapist,
 } from "./helpers";
@@ -100,7 +101,12 @@ describe("money flow: create hold -> pay -> complete -> earn -> payout", () => {
     const { net } = splitEarning(priceNaira);
 
     const adminUser = await makeTestAdmin();
-    await signInAs(adminUser);
+    // E8: getSession() now requires an admin to have a verified MFA factor
+    // enrolled -- enroll and verify a real TOTP factor so this test admin
+    // session actually passes it, the same as a real admin would after
+    // completing 2FA setup (rather than the pre-E8 world where a bare role
+    // flip was enough).
+    await enrollAndVerifyMfa(await signInAs(adminUser));
     const result = await runPayouts();
 
     expect(result.ok).toBe(true);
@@ -130,7 +136,12 @@ describe("H-1 regression: concurrent runPayouts cannot double-pay", () => {
     const { net } = splitEarning(priceNaira);
 
     const adminUser = await makeTestAdmin();
-    await signInAs(adminUser);
+    // E8: getSession() now requires an admin to have a verified MFA factor
+    // enrolled -- enroll and verify a real TOTP factor so this test admin
+    // session actually passes it, the same as a real admin would after
+    // completing 2FA setup (rather than the pre-E8 world where a bare role
+    // flip was enough).
+    await enrollAndVerifyMfa(await signInAs(adminUser));
 
     // The real race this reproduces: an admin double-clicking "Run
     // payouts", or opening /admin/payouts in two tabs -- both requests hit
@@ -175,7 +186,12 @@ describe("M-2 regression: a refund outside the dispute flow reverses the therapi
     expect(payment).toBeTruthy();
 
     const adminUser = await makeTestAdmin();
-    await signInAs(adminUser);
+    // E8: getSession() now requires an admin to have a verified MFA factor
+    // enrolled -- enroll and verify a real TOTP factor so this test admin
+    // session actually passes it, the same as a real admin would after
+    // completing 2FA setup (rather than the pre-E8 world where a bare role
+    // flip was enough).
+    await enrollAndVerifyMfa(await signInAs(adminUser));
     const result = await processRefund(payment!.id);
 
     expect(result.ok).toBe(true);
@@ -333,7 +349,12 @@ describe("E1 regression: an earning isn't payable until the dispute window on it
 
     signOut();
     const adminUser = await makeTestAdmin();
-    await signInAs(adminUser);
+    // E8: getSession() now requires an admin to have a verified MFA factor
+    // enrolled -- enroll and verify a real TOTP factor so this test admin
+    // session actually passes it, the same as a real admin would after
+    // completing 2FA setup (rather than the pre-E8 world where a bare role
+    // flip was enough).
+    await enrollAndVerifyMfa(await signInAs(adminUser));
 
     // Not fast-forwarded, so still well within the hold -- a real payout
     // run right now must not touch it.
