@@ -167,7 +167,7 @@ export async function finalizeBookingPayment(
   const { data: booking } = await admin
     .from("bookings")
     .select(
-      "id, parent_id, therapist_id, child_id, session_type, children(first_name), availability_slots(start_time), therapist_profiles(user_id, users(full_name))"
+      "id, parent_id, therapist_id, child_id, session_type, availability_slot_id, children(first_name), availability_slots(start_time), therapist_profiles(user_id, users(full_name))"
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -182,6 +182,221 @@ export async function finalizeBookingPayment(
   const meetingLink =
     booking.session_type === "virtual" && meetingBaseUrl ? `${meetingBaseUrl}/${bookingId}` : null;
 
+  const child = booking.children as unknown as { first_name: string } | null;
+  const slot = booking.availability_slots as unknown as { start_time: string } | null;
+  const therapistProfile = booking.therapist_profiles as unknown as {
+    user_id: string;
+    users: { full_name: string } | null;
+  } | null;
+
+  // Everything a confirmed booking needs beyond the status flip itself --
+  // shared between the normal path below and the reclaimed-slot path in
+  // handleMissedConfirmation, so a hold that expired just before payment
+  // landed gets the exact same treatment as one that didn't.
+  // Arrow-const rather than a nested function declaration -- TS only
+  // carries the `booking` non-null narrowing above into a closure for the
+  // latter form.
+  const applyConfirmedBookingEffects = async () => {
+    // The therapist_child_assignments RLS policy (0011) was written to allow
+    // a therapist to "self-assign from a booking", and /therapist/caseload
+    // has always told therapists this happens automatically -- but nothing
+    // ever actually performed the insert, so a confirmed booking never
+    // showed up in caseload. This is that missing insert. 23505 = the
+    // active-assignment partial unique index already has a row for this
+    // pair (a prior admin assignment, or a repeat booking) -- not an error,
+    // just already covered.
+    const { error: assignmentError } = await admin.from("therapist_child_assignments").insert({
+      therapist_id: booking.therapist_id,
+      child_id: booking.child_id,
+    });
+    if (assignmentError && assignmentError.code !== "23505") {
+      console.error("Failed to auto-create therapist_child_assignment on booking confirmation", assignmentError);
+    }
+
+    await admin.from("payments").insert({
+      booking_id: bookingId,
+      payer_id: booking.parent_id,
+      payee_id: therapistProfile?.user_id ?? null,
+      amount: Math.round(amountKobo / 100),
+      type: "session_commission",
+      gateway_reference: gatewayReference,
+      status: "successful",
+    });
+
+    const therapistName = therapistProfile?.users?.full_name ?? "your therapist";
+    const sessionLabel = slot ? formatDateTime(slot.start_time) : "your upcoming session";
+
+    if (meetingLink) {
+      await createNotification({
+        userId: booking.parent_id,
+        type: "meeting_link_ready",
+        title: "Meeting link ready",
+        body: `Your virtual session with ${therapistName} on ${sessionLabel} is confirmed. Join from your sessions page when it's time.`,
+        url: "/parent/sessions",
+      });
+    } else if (booking.session_type === "virtual") {
+      await createNotification({
+        userId: booking.parent_id,
+        type: "booking_confirmed",
+        title: "Booking confirmed",
+        body: `Your virtual session with ${therapistName} on ${sessionLabel} is confirmed. ${therapistName} will share the video link with you before the session.`,
+        url: "/parent/sessions",
+      });
+    } else {
+      await createNotification({
+        userId: booking.parent_id,
+        type: "booking_confirmed",
+        title: "Booking confirmed",
+        body: `Your session with ${therapistName} on ${sessionLabel} is confirmed.`,
+        url: "/parent/sessions",
+      });
+    }
+
+    if (therapistProfile?.user_id) {
+      await createNotification({
+        userId: therapistProfile.user_id,
+        type: "payment_receipt",
+        title: "Payment received",
+        body: `You received ${formatNaira(Math.round(amountKobo / 100))} for your session with ${child?.first_name ?? "a client"}.`,
+        url: "/therapist/earnings",
+      });
+    }
+
+    await captureServer(booking.parent_id, ANALYTICS_EVENTS.bookingPaid, {
+      amount_naira: Math.round(amountKobo / 100),
+      session_type: booking.session_type ?? undefined,
+    });
+
+    revalidatePath("/parent");
+    revalidatePath("/parent/sessions");
+    revalidatePath("/therapist/schedule");
+    revalidatePath("/therapist/caseload");
+  };
+
+  // E2, external PRD review: this used to treat any miss here ("status is no
+  // longer pending_payment") as "already finalized by a prior call" and
+  // return ok:true unconditionally. That's only true when the status moved
+  // to confirmed. If it moved to cancelled instead -- the 15-minute hold
+  // (src/lib/booking/actions.ts createPendingBooking) lazily expired via
+  // releaseExpiredHolds (src/lib/therapist/queries.ts) before a late webhook
+  // delivery, a slow Paystack redirect, or a retry after an outage landed --
+  // the charge was real but nothing in Hayven ever recorded it: no payments
+  // row, no booking, no refund-queue entry, no alert. handleMissedConfirmation
+  // is what closes that gap.
+  const handleMissedConfirmation = async (): Promise<ActionResult<object>> => {
+    const { data: current } = await admin.from("bookings").select("status").eq("id", bookingId).maybeSingle();
+    if (!current || current.status === "confirmed") {
+      return { ok: true }; // genuinely already finalized by a prior call
+    }
+    if (current.status !== "cancelled") {
+      // pending_payment can in practice only become confirmed or cancelled
+      // -- never drop a real charge silently for a status this doesn't
+      // recognize.
+      Sentry.captureMessage("Paystack confirmation landed on a booking in an unexpected status", {
+        level: "error",
+        tags: { anomaly: "unexpected_booking_status_on_payment" },
+        extra: { bookingId, status: current.status, gatewayReference },
+      });
+      return { ok: false, error: `Booking is in an unexpected state (${current.status}).` };
+    }
+
+    // The hold expired (or the parent cancelled while unpaid) before this
+    // payment landed. Try to win the slot back first -- if nobody else has
+    // taken it, the paying parent shouldn't lose their spot just because
+    // confirmation was slow. Same atomic-claim pattern as createPendingBooking.
+    const { data: reclaimed } = await admin
+      .from("availability_slots")
+      .update({ is_booked: true })
+      .eq("id", booking.availability_slot_id)
+      .eq("is_booked", false)
+      .select("id")
+      .maybeSingle();
+
+    if (reclaimed) {
+      const { data: revived } = await admin
+        .from("bookings")
+        .update({
+          status: "confirmed",
+          meeting_link: meetingLink,
+          expires_at: null,
+          cancelled_at: null,
+          cancellation_reason: null,
+        })
+        .eq("id", bookingId)
+        .eq("status", "cancelled")
+        .select("id")
+        .maybeSingle();
+      if (revived) {
+        await applyConfirmedBookingEffects();
+        return { ok: true };
+      }
+      // Lost a race putting the booking back (nothing else writes
+      // bookings.status for an already-cancelled row, so this should be
+      // unreachable) -- don't leave the slot falsely held.
+      await admin.from("availability_slots").update({ is_booked: false }).eq("id", booking.availability_slot_id);
+    }
+
+    // The slot is gone -- someone else booked it during the gap -- and the
+    // parent was genuinely charged for nothing. Record the payment so this
+    // enters the existing refund queue (getBookingsNeedingRefund,
+    // src/lib/admin/queries.ts) instead of leaving no trace at all, apply
+    // the "not the parent's fault" full-refund tier (same tier a
+    // therapist-initiated cancellation gets), and alert immediately instead
+    // of relying on anyone to notice the queue.
+    const { error: paymentError } = await admin.from("payments").insert({
+      booking_id: bookingId,
+      payer_id: booking.parent_id,
+      payee_id: therapistProfile?.user_id ?? null,
+      amount: Math.round(amountKobo / 100),
+      type: "session_commission",
+      gateway_reference: gatewayReference,
+      status: "successful",
+    });
+    if (paymentError) {
+      if (paymentError.code === "23505") {
+        // gateway_reference is unique -- this exact charge was already
+        // recorded by a concurrent call (the webhook and the redirect path
+        // landing near-simultaneously, both racing the slot-reclaim above).
+        // If that other call is the one that actually won the reclaim, the
+        // booking is genuinely confirmed now and this call shouldn't also
+        // fire a false "you'll be refunded" notification and Sentry alert
+        // for a booking that's actually fine.
+        const { data: recheck } = await admin.from("bookings").select("status").eq("id", bookingId).maybeSingle();
+        if (recheck?.status === "confirmed") return { ok: true };
+      } else {
+        Sentry.captureMessage("Failed to record an orphaned Paystack charge", {
+          level: "error",
+          tags: { anomaly: "orphaned_payment_record_failed" },
+          extra: { bookingId, gatewayReference, dbError: paymentError.message },
+        });
+        return { ok: false, error: paymentError.message };
+      }
+    }
+
+    await applyRefundPolicy(admin, bookingId, "therapist", slot?.start_time ?? null);
+    await admin
+      .from("bookings")
+      .update({ cancellation_reason: "hold_expired_before_payment_confirmed" })
+      .eq("id", bookingId)
+      .is("cancellation_reason", null);
+
+    await createNotification({
+      userId: booking.parent_id,
+      type: "booking_confirmed",
+      title: "Payment received, but the slot was lost",
+      body: `We received your payment for ${child?.first_name ?? "your child"}'s session, but the hold on that time slot had already expired and it's no longer available. You'll be refunded in full -- we're sorry for the mix-up.`,
+      url: "/parent/sessions",
+    });
+
+    Sentry.captureMessage("Paystack payment confirmed after the booking hold had already expired", {
+      level: "error",
+      tags: { anomaly: "orphaned_payment" },
+      extra: { bookingId, gatewayReference, amountKobo },
+    });
+
+    return { ok: false, error: "The booking hold expired before payment was confirmed; a refund has been recorded." };
+  };
+
   const { data: updated, error: updateError } = await admin
     .from("bookings")
     .update({ status: "confirmed", meeting_link: meetingLink, expires_at: null })
@@ -190,88 +405,9 @@ export async function finalizeBookingPayment(
     .select("id")
     .maybeSingle();
   if (updateError) return { ok: false, error: updateError.message };
-  if (!updated) return { ok: true }; // already finalized by a prior call -- idempotent no-op
+  if (!updated) return handleMissedConfirmation();
 
-  // The therapist_child_assignments RLS policy (0011) was written to allow a
-  // therapist to "self-assign from a booking", and /therapist/caseload has
-  // always told therapists this happens automatically -- but nothing ever
-  // actually performed the insert, so a confirmed booking never showed up in
-  // caseload. This is that missing insert. 23505 = the active-assignment
-  // partial unique index already has a row for this pair (a prior admin
-  // assignment, or a repeat booking) -- not an error, just already covered.
-  const { error: assignmentError } = await admin.from("therapist_child_assignments").insert({
-    therapist_id: booking.therapist_id,
-    child_id: booking.child_id,
-  });
-  if (assignmentError && assignmentError.code !== "23505") {
-    console.error("Failed to auto-create therapist_child_assignment on booking confirmation", assignmentError);
-  }
-
-  const child = booking.children as unknown as { first_name: string } | null;
-  const slot = booking.availability_slots as unknown as { start_time: string } | null;
-  const therapistProfile = booking.therapist_profiles as unknown as {
-    user_id: string;
-    users: { full_name: string } | null;
-  } | null;
-
-  await admin.from("payments").insert({
-    booking_id: bookingId,
-    payer_id: booking.parent_id,
-    payee_id: therapistProfile?.user_id ?? null,
-    amount: Math.round(amountKobo / 100),
-    type: "session_commission",
-    gateway_reference: gatewayReference,
-    status: "successful",
-  });
-
-  const therapistName = therapistProfile?.users?.full_name ?? "your therapist";
-  const sessionLabel = slot ? formatDateTime(slot.start_time) : "your upcoming session";
-
-  if (meetingLink) {
-    await createNotification({
-      userId: booking.parent_id,
-      type: "meeting_link_ready",
-      title: "Meeting link ready",
-      body: `Your virtual session with ${therapistName} on ${sessionLabel} is confirmed. Join from your sessions page when it's time.`,
-      url: "/parent/sessions",
-    });
-  } else if (booking.session_type === "virtual") {
-    await createNotification({
-      userId: booking.parent_id,
-      type: "booking_confirmed",
-      title: "Booking confirmed",
-      body: `Your virtual session with ${therapistName} on ${sessionLabel} is confirmed. ${therapistName} will share the video link with you before the session.`,
-      url: "/parent/sessions",
-    });
-  } else {
-    await createNotification({
-      userId: booking.parent_id,
-      type: "booking_confirmed",
-      title: "Booking confirmed",
-      body: `Your session with ${therapistName} on ${sessionLabel} is confirmed.`,
-      url: "/parent/sessions",
-    });
-  }
-
-  if (therapistProfile?.user_id) {
-    await createNotification({
-      userId: therapistProfile.user_id,
-      type: "payment_receipt",
-      title: "Payment received",
-      body: `You received ${formatNaira(Math.round(amountKobo / 100))} for your session with ${child?.first_name ?? "a client"}.`,
-      url: "/therapist/earnings",
-    });
-  }
-
-  await captureServer(booking.parent_id, ANALYTICS_EVENTS.bookingPaid, {
-    amount_naira: Math.round(amountKobo / 100),
-    session_type: booking.session_type ?? undefined,
-  });
-
-  revalidatePath("/parent");
-  revalidatePath("/parent/sessions");
-  revalidatePath("/therapist/schedule");
-  revalidatePath("/therapist/caseload");
+  await applyConfirmedBookingEffects();
   return { ok: true };
 }
 

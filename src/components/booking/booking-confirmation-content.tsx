@@ -17,11 +17,17 @@ export function BookingConfirmationContent({
   kids,
   slots,
   pending = false,
+  holdExpired = false,
+  wasPaid = false,
 }: {
   therapist: DiscoveryTherapist;
   kids: BookingChild[];
   slots: AvailabilitySlot[];
   pending?: boolean;
+  /** True when the 15-minute hold expired before payment was confirmed (E2). */
+  holdExpired?: boolean;
+  /** Only meaningful alongside holdExpired -- whether a charge actually went through. */
+  wasPaid?: boolean;
 }) {
   const router = useRouter();
   const { draft, hasHydrated } = useBookingStore();
@@ -77,6 +83,30 @@ export function BookingConfirmationContent({
         actions={
           <Button className="flex-1" onClick={() => router.refresh()}>
             Refresh
+          </Button>
+        }
+      >
+        <div className="mt-2 flex w-full flex-col gap-2 rounded-sm bg-paper p-4 text-left">
+          <Row label="Therapist" value={therapist.displayName} />
+          <Row label="Child" value={child.firstName} />
+          <Row label="Date & time" value={formatDateTime(slot.startTime)} />
+        </div>
+      </ConfirmationPanel>
+    );
+  }
+
+  if (holdExpired) {
+    return (
+      <ConfirmationPanel
+        heading="This time slot is no longer available"
+        subtext={
+          wasPaid
+            ? "Your payment went through, but the hold on this slot expired just before it was confirmed. You'll be refunded in full -- no action needed. We're sorry for the mix-up."
+            : "The hold on this slot expired before payment was completed, so it's been released. You have not been charged."
+        }
+        actions={
+          <Button asChild className="flex-1">
+            <Link href={`/book/${therapist.id}/time`}>Pick another time</Link>
           </Button>
         }
       >

@@ -349,3 +349,120 @@ describe("E1 regression: an earning isn't payable until the dispute window on it
     expect(afterRun?.status).toBe("pending");
   });
 });
+
+describe("E2 regression: a Paystack confirmation that lands after the 15-minute hold has already expired", () => {
+  it("reclaims the slot and confirms the booking when it's still free", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+
+    await signInAs(parent);
+    const hold = await createPendingBooking({
+      childId: child.id,
+      therapistId: therapist.therapistProfileId,
+      slotId: slot.id,
+      sessionType: "virtual",
+    });
+    if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
+    trackForCleanup("bookings", hold.bookingId);
+
+    // Simulate releaseExpiredHolds (src/lib/therapist/queries.ts) having
+    // already run -- exactly what it does on a real 15-minute expiry,
+    // without waiting 15 real minutes for it.
+    await admin.from("bookings").update({ status: "cancelled" }).eq("id", hold.bookingId);
+    await admin.from("availability_slots").update({ is_booked: false }).eq("id", slot.id);
+
+    const reference = `test_ref_late_${hold.bookingId}`;
+    const finalize = await finalizeBookingPayment(hold.bookingId, reference, 1500000);
+    trackForCleanup("payments", reference, "gateway_reference");
+
+    // The old behavior returned ok:true here too (the "already finalized"
+    // no-op), which is why this test checks the actual DB state, not just
+    // the return value -- that's exactly what let the bug hide.
+    expect(finalize.ok).toBe(true);
+
+    const { data: booking } = await admin
+      .from("bookings")
+      .select("status, meeting_link")
+      .eq("id", hold.bookingId)
+      .single();
+    expect(booking?.status).toBe("confirmed");
+
+    const { data: slotRow } = await admin.from("availability_slots").select("is_booked").eq("id", slot.id).single();
+    expect(slotRow?.is_booked).toBe(true);
+
+    const { data: payment } = await admin
+      .from("payments")
+      .select("status, amount, booking_id")
+      .eq("gateway_reference", reference)
+      .single();
+    expect(payment?.status).toBe("successful");
+    expect(payment?.booking_id).toBe(hold.bookingId);
+    expect(payment?.amount).toBe(15000);
+  });
+
+  it("records the charge for a refund instead of losing it, when the slot was taken by someone else first", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+
+    await signInAs(parent);
+    const hold = await createPendingBooking({
+      childId: child.id,
+      therapistId: therapist.therapistProfileId,
+      slotId: slot.id,
+      sessionType: "virtual",
+    });
+    if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
+    trackForCleanup("bookings", hold.bookingId);
+
+    // Same expiry as above, but this time someone else claims the slot in
+    // the gap before the late confirmation arrives -- the slot cannot be
+    // handed back to this parent no matter what.
+    await admin.from("bookings").update({ status: "cancelled" }).eq("id", hold.bookingId);
+    await admin.from("availability_slots").update({ is_booked: true }).eq("id", slot.id);
+
+    const reference = `test_ref_orphaned_${hold.bookingId}`;
+    const finalize = await finalizeBookingPayment(hold.bookingId, reference, 1500000);
+    trackForCleanup("payments", reference, "gateway_reference");
+
+    // The bug this closes: this used to be ok:true with nothing recorded
+    // anywhere -- a real charge with no trace. Now it must fail loudly *and*
+    // leave a trace.
+    expect(finalize.ok).toBe(false);
+
+    const { data: booking } = await admin
+      .from("bookings")
+      .select("status, refund_amount, cancellation_reason")
+      .eq("id", hold.bookingId)
+      .single();
+    expect(booking?.status).toBe("cancelled");
+    // computeRefund's "therapist"-initiated tier: full refund, Hayven
+    // absorbs the Paystack fee -- this isn't the parent's fault.
+    expect(booking?.refund_amount).toBe(15000);
+    expect(booking?.cancellation_reason).toBe("hold_expired_before_payment_confirmed");
+
+    const { data: payment } = await admin
+      .from("payments")
+      .select("status, amount, booking_id")
+      .eq("gateway_reference", reference)
+      .single();
+    expect(payment?.status).toBe("successful");
+    expect(payment?.booking_id).toBe(hold.bookingId);
+    expect(payment?.amount).toBe(15000);
+
+    // And it must now surface through the exact queue an admin already
+    // works from (src/lib/admin/queries.ts getBookingsNeedingRefund) --
+    // proving this isn't just a payments-table row nobody will ever see.
+    const { data: refundRows } = await admin
+      .from("payments")
+      .select("id, booking_id, status, type, bookings!inner(status)")
+      .eq("status", "successful")
+      .eq("type", "session_commission")
+      .eq("gateway_reference", reference);
+    expect(refundRows?.length).toBe(1);
+    expect((refundRows?.[0].bookings as unknown as { status: string }).status).toBe("cancelled");
+  });
+});

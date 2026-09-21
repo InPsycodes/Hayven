@@ -52,7 +52,14 @@ export async function POST(req: NextRequest) {
     const reference = event.data?.reference;
     const amountKobo = event.data?.amount;
     if (typeof bookingId === "string" && typeof reference === "string" && typeof amountKobo === "number") {
-      await finalizeBookingPayment(bookingId, reference, amountKobo);
+      const result = await finalizeBookingPayment(bookingId, reference, amountKobo);
+      // Paystack still gets 200 below either way -- a non-2xx here would just
+      // make it retry a charge that's already Sentry-alerted and, for the
+      // orphaned-payment case, already in the refund queue (E2). This is
+      // purely so the failure shows up in server logs too, not only Sentry.
+      if (!result.ok) {
+        console.error("finalizeBookingPayment did not succeed", { bookingId, reference, error: result.error });
+      }
     }
   } else if (
     event.event === "transfer.success" ||

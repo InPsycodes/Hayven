@@ -32,7 +32,13 @@ export default async function BookingConfirmationPage({
   // Re-check the real booking status rather than trusting optimistic client
   // state -- if neither this call nor the webhook has landed yet, say so
   // instead of showing a false "you're booked" before it's actually true.
-  const stillPending = bookingId ? (await getRealBookingStatus(bookingId))?.status === "pending_payment" : false;
+  // E2, external PRD review: a cancelled status here used to fall through to
+  // the same "you're booked" branch as confirmed (the code only ever checked
+  // for pending_payment) -- shown whenever the 15-minute hold expired before
+  // payment could be confirmed, parent charged or not.
+  const realStatus = bookingId ? await getRealBookingStatus(bookingId) : null;
+  const stillPending = realStatus?.status === "pending_payment";
+  const holdExpired = realStatus?.status === "cancelled";
 
   const context = await getBookingPageContext(therapistId, session.userId);
   if (!context) notFound();
@@ -47,7 +53,14 @@ export default async function BookingConfirmationPage({
         totalSteps={3}
         closeHref="/parent"
       />
-      <BookingConfirmationContent therapist={therapist} kids={kids} slots={slots} pending={stillPending} />
+      <BookingConfirmationContent
+        therapist={therapist}
+        kids={kids}
+        slots={slots}
+        pending={stillPending}
+        holdExpired={holdExpired}
+        wasPaid={realStatus?.hasSuccessfulPayment ?? false}
+      />
     </div>
   );
 }

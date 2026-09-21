@@ -339,10 +339,27 @@ export async function getRealEarningsForTherapist(therapistUserId: string): Prom
 }
 
 /** Lightweight status check for the confirmation page -- avoids trusting optimistic client state for whether a payment actually landed. */
-export async function getRealBookingStatus(bookingId: string): Promise<{ status: string } | null> {
+export async function getRealBookingStatus(
+  bookingId: string
+): Promise<{ status: string; hasSuccessfulPayment: boolean } | null> {
   const supabase = await createClient();
-  const { data } = await supabase.from("bookings").select("status").eq("id", bookingId).maybeSingle();
-  return data ?? null;
+  const [{ data: booking }, { data: payment }] = await Promise.all([
+    supabase.from("bookings").select("status").eq("id", bookingId).maybeSingle(),
+    // Lets the confirmation page (E2, external PRD review) tell "the hold
+    // expired before you ever paid" apart from "you paid, but the hold
+    // expired first and the charge is being refunded" -- both land on
+    // booking.status === "cancelled", and only one of them should say
+    // "you'll be refunded."
+    supabase
+      .from("payments")
+      .select("id")
+      .eq("booking_id", bookingId)
+      .eq("status", "successful")
+      .eq("type", "session_commission")
+      .maybeSingle(),
+  ]);
+  if (!booking) return null;
+  return { status: booking.status, hasSuccessfulPayment: !!payment };
 }
 
 export interface BookingPageContext {
