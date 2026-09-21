@@ -10,6 +10,11 @@ const ROLE_PREFIXES: { prefix: string; role: UserRole }[] = [
   { prefix: "/supervisor", role: "supervisor" },
 ];
 
+// Reachable by an admin with no MFA factor enrolled -- has to stay a real
+// allowlist, not just "not /admin", or the E8 redirect below would send
+// them into a loop trying to reach the one page that lets them fix it.
+const ADMIN_MFA_BOOTSTRAP_PATH = "/admin/settings";
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const match = ROLE_PREFIXES.find(
@@ -20,7 +25,7 @@ export async function proxy(request: NextRequest) {
   // written back no matter where the user is -- otherwise the token silently
   // expires on /book, marketing pages, etc. and the next server render
   // bounces them to /login. The role lookup only happens for a role-gated path.
-  const { response, role, isSupervisor } = await updateSupabaseSession(request, Boolean(match));
+  const { response, role, isSupervisor, mfaEnrolled } = await updateSupabaseSession(request, Boolean(match));
 
   if (!match) return response;
 
@@ -37,6 +42,20 @@ export async function proxy(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // E8 from the external PRD review: admin was the one role that could
+  // operate with no MFA at all -- getSession() (src/lib/auth/session.ts)
+  // already rejects a session that hasn't stepped up to a factor it HAS
+  // enrolled, on every page, every role; nothing previously required an
+  // admin to have enrolled one in the first place. Scoped to admin only
+  // for now, not supervisor too (the review's other ask) -- a supervisor
+  // is often a therapist with an extra flag, and /supervisor is a separate
+  // route from /therapist, so this wouldn't touch their own practice
+  // either way; kept out of this change to prove the pattern is safe on
+  // the highest-value target first before widening it.
+  if (match.prefix === "/admin" && role === "admin" && !mfaEnrolled && pathname !== ADMIN_MFA_BOOTSTRAP_PATH) {
+    return NextResponse.redirect(new URL(ADMIN_MFA_BOOTSTRAP_PATH, request.url));
   }
 
   return response;
