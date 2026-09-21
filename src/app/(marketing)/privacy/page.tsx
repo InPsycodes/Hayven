@@ -189,14 +189,15 @@ export default function PrivacyPolicyPage() {
               deletion request.
             </li>
             <li>
-              <strong className="text-charcoal">Clinical records</strong> (session notes, reports, goals,
-              behaviour data) are kept for up to 6 years after a child&apos;s last recorded session, in line with
-              standard clinical record-keeping practice &mdash; even after an account is deleted &mdash; to
-              support continuity of care and meet professional record-keeping obligations.
+              <strong className="text-charcoal">Clinical records</strong> (including session notes, reports,
+              goals, behaviour data, and the child&apos;s core identifying details recorded as part of their
+              care) are kept for up to 6 years after the child&apos;s last recorded session, even after an
+              account is deleted, to support continuity of care and meet applicable professional
+              record-keeping obligations.
             </li>
             <li>
-              <strong className="text-charcoal">Payment and transaction records</strong> are kept for 6 years, in
-              line with standard financial record-keeping practice.
+              <strong className="text-charcoal">Payment and transaction records</strong> are kept for 6 years, on
+              a separate retention timeline independent of account and clinical-record retention periods.
             </li>
             <li>
               <strong className="text-charcoal">Security and audit logs</strong> are kept for 24 months, then

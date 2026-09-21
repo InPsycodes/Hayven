@@ -229,9 +229,16 @@ GA4 property.
 
 Retention periods are published in the Privacy Policy (`/privacy`, Section 6) and
 applied consistently: personal account data deleted within 30 days of a verified
-deletion request; clinical records kept up to 6 years after a child's last session (even
+deletion request; clinical records -- including a child's core identifying details,
+not just session content -- kept up to 6 years after a child's last session (even
 past account deletion, for continuity of care and professional record-keeping);
-payment records 6 years; security/audit logs 24 months.
+payment records kept 6 years on their own timeline, independent of the account and
+clinical retention periods; security/audit logs 24 months.
+
+Implemented: personal-account-data purge (30 days) and the audit-log purge (24
+months) are both live (`src/lib/account/purge.ts`, `src/lib/audit/cron.ts`). The
+6-year clinical/payment purge is not yet built -- the retention periods above are
+published and intended, but nothing currently enforces them automatically.
 
 ### 6.5 Accountability
 
