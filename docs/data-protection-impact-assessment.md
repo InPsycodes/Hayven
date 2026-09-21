@@ -235,10 +235,15 @@ past account deletion, for continuity of care and professional record-keeping);
 payment records kept 6 years on their own timeline, independent of the account and
 clinical retention periods; security/audit logs 24 months.
 
-Implemented: personal-account-data purge (30 days) and the audit-log purge (24
-months) are both live (`src/lib/account/purge.ts`, `src/lib/audit/cron.ts`). The
-6-year clinical/payment purge is not yet built -- the retention periods above are
-published and intended, but nothing currently enforces them automatically.
+Implemented: all four categories are now live -- personal-account-data purge (30
+days, `src/lib/account/purge.ts`), the audit-log purge (24 months,
+`src/lib/audit/cron.ts`), the clinical-record purge (6 years past a child's last
+recorded session, anonymizing the child's identifying details alongside the
+clinical content itself, `src/lib/clinical/purge.ts`), and the payment purge (6
+years from the transaction date, independent of the clinical timeline,
+`src/lib/payments/retention.ts`). Scheduled daily via `src/app/api/cron/retention`
+(migration 0089) -- the clinical and payment windows don't need the 15-minute/
+hourly cadence the other two crons run on.
 
 ### 6.5 Accountability
 
