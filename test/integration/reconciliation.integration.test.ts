@@ -1,0 +1,166 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+
+import {
+  createTestParent,
+  createTestChild,
+  createTestTherapist,
+  createTestSlot,
+  signInAs,
+  signOut,
+  cleanupAll,
+  testAdminClient,
+  trackForCleanup,
+} from "./helpers";
+import { paystackMock } from "./mocks";
+import { createPendingBooking } from "@/lib/booking/actions";
+import { reconcilePaystackPayments } from "@/lib/payments/reconciliation";
+
+const admin = testAdminClient;
+
+beforeEach(() => {
+  paystackMock.listSuccessfulTransactions.mockClear();
+  paystackMock.verifyTransaction.mockClear();
+});
+
+afterEach(async () => {
+  signOut();
+  await cleanupAll();
+});
+
+// E18(b) regression: the sweep that closes the gap E2 (src/lib/booking/
+// actions.ts finalizeBookingPayment) left open -- a charge whose webhook AND
+// redirect-verify fallback both never fired, so finalizeBookingPayment was
+// never even called for it.
+describe("E18(b) regression: Paystack reconciliation sweep", () => {
+  it("replays a successful Paystack charge that never reached finalizeBookingPayment", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+
+    await signInAs(parent);
+    const hold = await createPendingBooking({
+      childId: child.id,
+      therapistId: therapist.therapistProfileId,
+      slotId: slot.id,
+      sessionType: "virtual",
+    });
+    if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
+    trackForCleanup("bookings", hold.bookingId);
+    signOut();
+
+    // Simulate the total-loss case: neither the webhook nor the redirect
+    // fallback ever ran finalizeBookingPayment for this charge -- the
+    // booking is still sitting at pending_payment, no payments row exists,
+    // exactly as if the browser closed mid-redirect during an outage.
+    const reference = `test_ref_unseen_${hold.bookingId}`;
+    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([
+      {
+        reference,
+        status: "success",
+        amountKobo: 1500000,
+        metadata: { booking_id: hold.bookingId },
+      },
+    ]);
+    trackForCleanup("payments", reference, "gateway_reference");
+
+    const result = await reconcilePaystackPayments();
+
+    expect(result.paystackChecked).toBe(1);
+    expect(result.replayed).toBe(1);
+    expect(result.stillUnresolved).toBe(0);
+
+    const { data: booking } = await admin.from("bookings").select("status").eq("id", hold.bookingId).single();
+    expect(booking?.status).toBe("confirmed");
+
+    const { data: payment } = await admin
+      .from("payments")
+      .select("status, booking_id")
+      .eq("gateway_reference", reference)
+      .single();
+    expect(payment?.status).toBe("successful");
+    expect(payment?.booking_id).toBe(hold.bookingId);
+  });
+
+  it("does not re-replay a charge Hayven already recorded", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+
+    await signInAs(parent);
+    const hold = await createPendingBooking({
+      childId: child.id,
+      therapistId: therapist.therapistProfileId,
+      slotId: slot.id,
+      sessionType: "virtual",
+    });
+    if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
+    trackForCleanup("bookings", hold.bookingId);
+    signOut();
+
+    // This time the webhook DID land already -- a normal successful payment
+    // sitting in the DB. The sweep must recognize it and leave it alone.
+    const reference = `test_ref_already_recorded_${hold.bookingId}`;
+    await admin.from("bookings").update({ status: "confirmed" }).eq("id", hold.bookingId);
+    await admin.from("payments").insert({
+      booking_id: hold.bookingId,
+      payer_id: parent.userId,
+      amount: 15000,
+      type: "session_commission",
+      gateway_reference: reference,
+      status: "successful",
+    });
+    trackForCleanup("payments", reference, "gateway_reference");
+
+    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([
+      { reference, status: "success", amountKobo: 1500000, metadata: { booking_id: hold.bookingId } },
+    ]);
+
+    const result = await reconcilePaystackPayments();
+    expect(result.replayed).toBe(0);
+    expect(result.stillUnresolved).toBe(0);
+  });
+
+  it("flags a DB-recorded payment that Paystack no longer confirms as successful", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+
+    await signInAs(parent);
+    const hold = await createPendingBooking({
+      childId: child.id,
+      therapistId: therapist.therapistProfileId,
+      slotId: slot.id,
+      sessionType: "virtual",
+    });
+    if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
+    trackForCleanup("bookings", hold.bookingId);
+    signOut();
+
+    const reference = `test_ref_drifted_${hold.bookingId}`;
+    await admin.from("bookings").update({ status: "confirmed" }).eq("id", hold.bookingId);
+    await admin.from("payments").insert({
+      booking_id: hold.bookingId,
+      payer_id: parent.userId,
+      amount: 15000,
+      type: "session_commission",
+      gateway_reference: reference,
+      status: "successful",
+    });
+    trackForCleanup("payments", reference, "gateway_reference");
+
+    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([]);
+    paystackMock.verifyTransaction.mockResolvedValueOnce({
+      status: "reversed",
+      reference,
+      amountKobo: 1500000,
+      metadata: null,
+    });
+
+    const result = await reconcilePaystackPayments();
+    expect(result.dbRowsChecked).toBeGreaterThanOrEqual(1);
+    expect(result.mismatched).toBe(1);
+  });
+});

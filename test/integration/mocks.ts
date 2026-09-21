@@ -62,6 +62,15 @@ export const paystackMock = {
     reference: params.reference,
   })),
   verifyWebhookSignature: vi.fn(() => true),
+  listSuccessfulTransactions: vi.fn(
+    async () =>
+      [] as Array<{
+        reference: string;
+        status: string;
+        amountKobo: number;
+        metadata: Record<string, unknown> | null;
+      }>
+  ),
 };
 
 vi.mock("@/lib/payments/paystack", () => paystackMock);

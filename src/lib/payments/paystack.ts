@@ -63,6 +63,64 @@ export async function verifyTransaction(reference: string): Promise<VerifyTransa
   };
 }
 
+export interface PaystackTransactionSummary {
+  reference: string;
+  status: string;
+  amountKobo: number;
+  metadata: Record<string, unknown> | null;
+}
+
+/**
+ * GET /transaction, paginated to exhaustion -- for the reconciliation sweep
+ * (E18, external PRD review) to walk Paystack's own record of what it
+ * actually charged over a window, as opposed to verifyTransaction's
+ * one-reference-at-a-time lookup (which only helps once you already suspect
+ * a specific reference). `from`/`to` are ISO 8601 timestamps.
+ */
+export async function listSuccessfulTransactions(params: {
+  from: string;
+  to: string;
+}): Promise<PaystackTransactionSummary[]> {
+  const results: PaystackTransactionSummary[] = [];
+  const perPage = 100;
+  let page = 1;
+
+  while (true) {
+    const url = new URL(`${PAYSTACK_BASE_URL}/transaction`);
+    url.searchParams.set("status", "success");
+    url.searchParams.set("from", params.from);
+    url.searchParams.set("to", params.to);
+    url.searchParams.set("perPage", String(perPage));
+    url.searchParams.set("page", String(page));
+
+    const res = await fetch(url, { headers: paystackHeaders() });
+    const json = await res.json();
+    if (!res.ok || !json.status) {
+      throw new Error(json.message ?? "Failed to list transactions.");
+    }
+
+    for (const txn of (json.data ?? []) as Array<{
+      reference: string;
+      status: string;
+      amount: number;
+      metadata: Record<string, unknown> | null;
+    }>) {
+      results.push({
+        reference: txn.reference,
+        status: txn.status,
+        amountKobo: txn.amount,
+        metadata: txn.metadata ?? null,
+      });
+    }
+
+    const pageCount = json.meta?.pageCount ?? 1;
+    if (page >= pageCount) break;
+    page += 1;
+  }
+
+  return results;
+}
+
 // --- Refunds --------------------------------------------------------------
 
 /**
