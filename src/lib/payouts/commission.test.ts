@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { splitEarning, COMMISSION_RATE } from "./commission";
+import { splitEarning, COMMISSION_RATE, EARNING_HOLD_MS, DISPUTE_WINDOW_MS } from "./commission";
 
 describe("splitEarning", () => {
   it("takes 20% commission, rest to the therapist", () => {
@@ -14,5 +14,17 @@ describe("splitEarning", () => {
   it("clamps a negative/zero gross", () => {
     expect(splitEarning(-100)).toEqual({ gross: 0, commission: 0, net: 0 });
     expect(splitEarning(0)).toEqual({ gross: 0, commission: 0, net: 0 });
+  });
+});
+
+describe("EARNING_HOLD_MS / DISPUTE_WINDOW_MS", () => {
+  // E1 from the external PRD review: a payout run must never be able to
+  // claim an earning before the dispute window on that same session has
+  // closed -- otherwise money can leave before a dispute describing it
+  // could even exist yet. This is the one invariant that guarantees it,
+  // independent of whatever the two constants' actual values are; it fails
+  // loudly if a future change to either one reopens the gap.
+  it("the earning hold strictly outlasts the dispute window", () => {
+    expect(EARNING_HOLD_MS).toBeGreaterThan(DISPUTE_WINDOW_MS);
   });
 });

@@ -9,8 +9,10 @@ import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { getEarningsSummary, getEarningRows } from "@/lib/payouts/queries";
-import { COMMISSION_RATE, MIN_PAYOUT_NAIRA } from "@/lib/payouts/commission";
+import { COMMISSION_RATE, MIN_PAYOUT_NAIRA, EARNING_HOLD_MS } from "@/lib/payouts/commission";
 import { formatDate, formatNaira } from "@/data/format";
+
+const EARNING_HOLD_DAYS = Math.round(EARNING_HOLD_MS / (24 * 60 * 60 * 1000));
 
 type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
 
@@ -40,13 +42,13 @@ export default async function TherapistEarningsPage() {
       <div className="flex flex-col gap-6 px-5 py-6 md:px-10 md:py-8">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <StatCard label="Ready to pay out" value={formatNaira(summary.available)} emphasis />
-          <StatCard label="Clearing (72h)" value={formatNaira(summary.pending)} />
+          <StatCard label={`Clearing (${EARNING_HOLD_DAYS} days)`} value={formatNaira(summary.pending)} />
           <StatCard label="On hold" value={formatNaira(summary.held)} />
           <StatCard label="Paid out" value={formatNaira(summary.paid)} />
         </div>
 
         <p className="-mt-2 text-xs text-muted-foreground">
-          Earnings clear 72 hours after each session, then pay out weekly on Monday once you&apos;re above{" "}
+          Earnings clear {EARNING_HOLD_DAYS} days after each session (room for a parent to report a problem), then pay out weekly on Monday once you&apos;re above{" "}
           {formatNaira(MIN_PAYOUT_NAIRA)}. Add your bank details on your Profile so payouts can be sent.
         </p>
 

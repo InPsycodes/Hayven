@@ -20,7 +20,7 @@ import { initiatePaystackPayment } from "@/lib/payments/actions";
 import { runPayouts } from "@/lib/payouts/actions";
 import { recordSessionEarnings } from "@/lib/payouts/earnings";
 import { processRefund } from "@/lib/admin/actions";
-import { splitEarning } from "@/lib/payouts/commission";
+import { splitEarning, EARNING_HOLD_MS, DISPUTE_WINDOW_MS } from "@/lib/payouts/commission";
 
 const admin = testAdminClient;
 
@@ -276,5 +276,76 @@ describe("M-5 regression: markNoShow can't be used on an already-completed sessi
     const { data: booking } = await admin.from("bookings").select("status, refund_amount").eq("id", hold.bookingId).single();
     expect(booking?.status).toBe("no_show");
     expect(booking?.refund_amount).toBe(0);
+  });
+});
+
+describe("E1 regression: an earning isn't payable until the dispute window on it has closed", () => {
+  it("a real (non-fast-forwarded) earning's payable_at lands after the 7-day dispute window, and a payout run skips it", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+
+    await signInAs(parent);
+    const hold = await createPendingBooking({
+      childId: child.id,
+      therapistId: therapist.therapistProfileId,
+      slotId: slot.id,
+      sessionType: "virtual",
+    });
+    if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
+    trackForCleanup("bookings", hold.bookingId);
+
+    const finalize = await finalizeBookingPayment(hold.bookingId, `test_ref_${hold.bookingId}`, 1500000);
+    if (!finalize.ok) throw new Error(`finalizeBookingPayment failed: ${finalize.error}`);
+    trackForCleanup("payments", `test_ref_${hold.bookingId}`, "gateway_reference");
+
+    await admin.from("bookings").update({ status: "completed" }).eq("id", hold.bookingId);
+
+    // Real call, no fast-forward this time -- payable_at is computed from
+    // the actual EARNING_HOLD_MS, exactly as it would be in production.
+    await recordSessionEarnings(admin, [hold.bookingId]);
+
+    const { data: earning } = await admin
+      .from("therapist_earnings")
+      .select("payable_at")
+      .eq("booking_id", hold.bookingId)
+      .single();
+    trackForCleanup("therapist_earnings", hold.bookingId, "booking_id");
+
+    // recordSessionEarnings computes payable_at from the SLOT's end_time,
+    // not from "now" -- createTestSlot's default books ~4h45m out, so the
+    // expected value has to be anchored to the real slot end, not to the
+    // moment this test happens to run.
+    const { data: slotRow } = await admin.from("availability_slots").select("end_time").eq("id", slot.id).single();
+    const slotEndMs = new Date(slotRow!.end_time).getTime();
+    const payableAt = new Date(earning!.payable_at).getTime();
+    const now = Date.now();
+
+    // The actual bug: payable_at used to land inside the still-open dispute
+    // window (72h hold vs. a 7-day window, measured from session end). It
+    // must now land at or after the window closes.
+    expect(payableAt).toBeGreaterThanOrEqual(slotEndMs + DISPUTE_WINDOW_MS - 1000);
+    expect(payableAt - slotEndMs).toBeCloseTo(EARNING_HOLD_MS, -4);
+    // And, concretely, well after "now" -- a payout run this instant has
+    // nothing to claim.
+    expect(payableAt).toBeGreaterThan(now);
+
+    signOut();
+    const adminUser = await makeTestAdmin();
+    await signInAs(adminUser);
+
+    // Not fast-forwarded, so still well within the hold -- a real payout
+    // run right now must not touch it.
+    const result = await runPayouts();
+    expect(result.ok).toBe(true);
+    expect(result.created).toBe(0);
+
+    const { data: afterRun } = await admin
+      .from("therapist_earnings")
+      .select("status")
+      .eq("booking_id", hold.bookingId)
+      .single();
+    expect(afterRun?.status).toBe("pending");
   });
 });

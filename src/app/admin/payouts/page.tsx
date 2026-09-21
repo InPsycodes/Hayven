@@ -4,8 +4,10 @@ import { Card } from "@/components/ui/card";
 import { StatusBadge, type statusBadgeVariants } from "@/components/ui/status-badge";
 import { RunPayoutsButton } from "@/components/admin/run-payouts-button";
 import { getPayoutPreview, getPayoutHistory } from "@/lib/payouts/queries";
-import { MIN_PAYOUT_NAIRA } from "@/lib/payouts/commission";
+import { MIN_PAYOUT_NAIRA, EARNING_HOLD_MS } from "@/lib/payouts/commission";
 import { formatDate, formatNaira } from "@/data/format";
+
+const EARNING_HOLD_DAYS = Math.round(EARNING_HOLD_MS / (24 * 60 * 60 * 1000));
 
 type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
 
@@ -25,7 +27,8 @@ export default async function AdminPayoutsPage() {
       <div className="p-6 md:p-8">
         <h1 className="font-heading text-xl text-charcoal">Payouts</h1>
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-          Therapist earnings clear 72h after a session. A run pays everyone at or above{" "}
+          Therapist earnings clear {EARNING_HOLD_DAYS} days after a session (long enough to outlast the 7-day
+          window a parent has to report a problem). A run pays everyone at or above{" "}
           {formatNaira(MIN_PAYOUT_NAIRA)} via Paystack Transfer; the rest rolls to next time. Disputed
           sessions are held out automatically.
         </p>

@@ -8,12 +8,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
 import { createNotification } from "@/lib/notifications/create";
 import { holdBookingEarnings, releaseBookingEarnings } from "@/lib/payouts/earnings";
+import { DISPUTE_WINDOW_MS } from "@/lib/payouts/commission";
 import { formatNaira } from "@/data/format";
 import type { DisputeResolution } from "@/lib/disputes/queries";
 
 type Result = { ok: true } | { ok: false; error: string };
 
-const DISPUTE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_REASON = 2000;
 
 /** Parent opens a dispute on one of their own past bookings, within 7 days. */

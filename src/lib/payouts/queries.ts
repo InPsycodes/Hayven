@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { MIN_PAYOUT_NAIRA } from "@/lib/payouts/commission";
 
 export interface EarningsSummary {
-  /** Net naira earned but not yet past the 72h hold. */
+  /** Net naira earned but not yet past the EARNING_HOLD_MS hold. */
   pending: number;
   /** Net naira past the hold, waiting for the next payout run. */
   available: number;

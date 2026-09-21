@@ -5,12 +5,13 @@ import { IconArrowRight, IconArrowDown } from "@tabler/icons-react";
 
 import { canonicalFor } from "@/lib/seo/metadata";
 import { formatNaira } from "@/data/format";
-import { COMMISSION_RATE, MIN_PAYOUT_NAIRA } from "@/lib/payouts/commission";
+import { COMMISSION_RATE, MIN_PAYOUT_NAIRA, EARNING_HOLD_MS } from "@/lib/payouts/commission";
 import heroImage from "../../../../public/images/for-therapists-hero.jpg";
 
 const TEXT_SHADOW = "0 2px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.45)";
 
 const THERAPIST_SHARE = Math.round((1 - COMMISSION_RATE) * 100);
+const EARNING_HOLD_DAYS = Math.round(EARNING_HOLD_MS / (24 * 60 * 60 * 1000));
 
 export const metadata: Metadata = {
   title: "For Therapists | Hayven",
@@ -33,7 +34,7 @@ const STEPS = [
   },
   {
     title: "See families, get paid weekly",
-    body: `Earnings clear 72 hours after a session, paid out every Monday once you're at ${formatNaira(MIN_PAYOUT_NAIRA)} or more.`,
+    body: `Earnings clear ${EARNING_HOLD_DAYS} days after a session, paid out every Monday once you're at ${formatNaira(MIN_PAYOUT_NAIRA)} or more.`,
   },
 ];
 
