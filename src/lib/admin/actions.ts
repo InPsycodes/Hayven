@@ -10,6 +10,7 @@ import { createRefund } from "@/lib/payments/paystack";
 import { isValidDomainBand } from "@/lib/reports/phrase-domains";
 import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 import { releaseBookingEarnings } from "@/lib/payouts/earnings";
+import { purgeAccountPersonalData } from "@/lib/account/purge";
 
 export type VerificationDecision = "approved" | "rejected" | "needs_more_info";
 const VERIFICATION_DECISIONS: readonly VerificationDecision[] = ["approved", "rejected", "needs_more_info"];
@@ -136,11 +137,15 @@ export async function reviewVerificationRequestReal(
 export type AccountDeletionDecision = "reviewed" | "actioned";
 
 /**
- * Marks a request reviewed/actioned for tracking only -- this never deletes
- * the requester's actual data. Actually deleting a user (and whatever of
- * their children's clinical records that cascades into) stays a deliberate,
- * manual operation an admin does separately; this just records that it
- * happened.
+ * Marks a request reviewed (an admin has confirmed it's a legitimate
+ * request from the account holder) or actioned. "reviewed" starts the
+ * 30-day clock Privacy Policy Section 6 promises ("deleted within 30 days
+ * of a verified deletion request") -- purgeReviewedAccountDeletions
+ * (src/lib/account/cron.ts) auto-actions it once that window closes.
+ * Marking "actioned" here does the same thing immediately, as an admin
+ * escape hatch for a request that shouldn't wait (e.g. a legally urgent
+ * one) -- either path runs the real purge (E3, src/lib/account/purge.ts),
+ * not just a label change.
  */
 export async function reviewAccountDeletionRequest(
   requestId: string,
@@ -161,6 +166,17 @@ export async function reviewAccountDeletionRequest(
     .single();
   if (fetchError || !request) {
     return { ok: false, error: "Deletion request not found." };
+  }
+
+  // Purge before recording "actioned" -- if it fails, the request should
+  // still show as needing attention rather than falsely claiming the
+  // deletion happened.
+  if (status === "actioned") {
+    try {
+      await purgeAccountPersonalData(request.user_id, { adminId: session.userId, requestId });
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : "Failed to purge the account's data." };
+    }
   }
 
   const { error: updateError } = await supabase

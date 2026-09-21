@@ -10,8 +10,9 @@ export default async function AdminDeletionRequestsPage() {
       <div className="p-6 md:p-8">
         <h1 className="font-heading text-xl text-charcoal">Account deletion requests</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Marking a request reviewed or actioned only tracks that here -- the actual deletion is a
-          separate, manual step.
+          Mark reviewed once you&apos;ve confirmed the request is genuinely from the account holder --
+          their personal data is purged automatically 30 days later. Mark actioned to purge it
+          immediately instead of waiting.
         </p>
       </div>
 

@@ -51,12 +51,14 @@ export async function updateAccountProfile(_prevState: FormState, formData: Form
 }
 
 /**
- * Records a request only -- this never deletes any data itself. An admin
- * reviews the request and handles the actual deletion manually and
- * separately, since it likely cascades into records still in active use
- * (a parent's children, or a therapist's clients), and health data can
- * carry retention obligations independent of what the account holder wants
- * gone.
+ * Records a request only -- this doesn't delete anything itself. An admin
+ * reviews it first (confirming it's genuinely from the account holder,
+ * not a mistaken or malicious request); that review starts the 30-day
+ * clock Privacy Policy Section 6 promises, after which the account's
+ * personal data (not a parent's children's clinical records, or a
+ * therapist's clients' records -- those carry their own, longer retention
+ * obligations) is purged automatically. See src/lib/account/purge.ts and
+ * src/lib/account/cron.ts (E3).
  */
 export async function requestAccountDeletion(_prevState: FormState, formData: FormData): Promise<FormState> {
   const session = await getSession();
