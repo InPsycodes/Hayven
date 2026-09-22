@@ -11,6 +11,7 @@ import { isValidDomainBand } from "@/lib/reports/phrase-domains";
 import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 import { releaseBookingEarnings } from "@/lib/payouts/earnings";
 import { purgeAccountPersonalData } from "@/lib/account/purge";
+import { cancelBookingsForDepartedTherapist } from "@/lib/booking/actions";
 
 export type VerificationDecision = "approved" | "rejected" | "needs_more_info";
 const VERIFICATION_DECISIONS: readonly VerificationDecision[] = ["approved", "rejected", "needs_more_info"];
@@ -634,6 +635,108 @@ export async function setUserAccountStatus(
 
   revalidatePath("/admin/accounts");
   return { ok: true };
+}
+
+export interface OffboardResult {
+  assignmentsEnded: number;
+  supervisorAssignmentsEnded: number;
+  bookingsCancelled: number;
+}
+
+/**
+ * E12, external PRD review. Distinct from setUserAccountStatus's suspend,
+ * on purpose: suspension is a temporary, reversible hold (e.g. pending a
+ * safeguarding investigation -- docs/safeguarding-procedure.md frames it as
+ * "while it's looked into"); offboarding is the deliberate, permanent "this
+ * therapist is no longer part of Hayven" case, and runs the full cascade a
+ * plain suspend never touches:
+ *
+ *   - locks the account out (same mechanism setUserAccountStatus uses)
+ *   - ends every active therapist_child_assignments row (ended_reason=
+ *     'therapist_departed' -- getChildrenNeedingReassignment, src/lib/
+ *     admin/queries.ts, filters on exactly this)
+ *   - removes their supervisor-of-others access (ends supervisor_assignments
+ *     where they're supervisor_id, clears is_supervisor) and tidies up any
+ *     row where they were the one being supervised
+ *   - cancels every future confirmed booking with a full refund queued for
+ *     an admin to send (cancelBookingsForDepartedTherapist, src/lib/
+ *     booking/actions.ts), notifying each affected parent
+ *
+ * Deliberately does NOT touch clinical content -- goals/session notes/
+ * reports stay attributed to them permanently (see migration 0093's
+ * goals.therapist_id immutability trigger); a currently-assigned therapist
+ * gains the ability to manage their now-orphaned goals going forward via
+ * the RLS policy that same migration adds, not by rewriting who authored
+ * them.
+ */
+export async function offboardTherapist(
+  userId: string
+): Promise<{ ok: true; result: OffboardResult } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+  if (userId === session.userId) return { ok: false, error: "You can't offboard your own account here." };
+
+  const supabase = createAdminClient();
+
+  const { data: target } = await supabase.from("users").select("role").eq("id", userId).maybeSingle();
+  if (!target) return { ok: false, error: "Account not found." };
+  if (target.role !== "therapist") return { ok: false, error: "Only therapist accounts can be offboarded." };
+
+  const { data: therapistProfile } = await supabase
+    .from("therapist_profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!therapistProfile) return { ok: false, error: "This therapist hasn't finished setting up their profile." };
+
+  const { error: statusError } = await supabase.from("users").update({ status: "suspended" }).eq("id", userId);
+  if (statusError) return { ok: false, error: statusError.message };
+
+  const endedOn = new Date().toISOString().slice(0, 10);
+
+  const { data: endedAssignments } = await supabase
+    .from("therapist_child_assignments")
+    .update({ status: "ended", ended_on: endedOn, ended_reason: "therapist_departed" })
+    .eq("therapist_id", therapistProfile.id)
+    .eq("status", "active")
+    .select("id");
+
+  const { data: endedSupervisorAssignments } = await supabase
+    .from("supervisor_assignments")
+    .update({ status: "ended", ended_on: endedOn })
+    .eq("supervisor_id", userId)
+    .eq("status", "active")
+    .select("id");
+  await supabase.from("users").update({ is_supervisor: false }).eq("id", userId);
+
+  // Tidy, not an access concern -- they're gone either way, this just
+  // closes out the record of who used to supervise them.
+  await supabase
+    .from("supervisor_assignments")
+    .update({ status: "ended", ended_on: endedOn })
+    .eq("therapist_id", therapistProfile.id)
+    .eq("status", "active");
+
+  const { cancelled: bookingsCancelled } = await cancelBookingsForDepartedTherapist(supabase, therapistProfile.id);
+
+  const result: OffboardResult = {
+    assignmentsEnded: endedAssignments?.length ?? 0,
+    supervisorAssignmentsEnded: endedSupervisorAssignments?.length ?? 0,
+    bookingsCancelled,
+  };
+
+  await logAuditEvent({
+    actor: session,
+    action: "account.offboard",
+    entityType: "user",
+    entityId: userId,
+    metadata: { ...result },
+  });
+
+  revalidatePath("/admin/accounts");
+  revalidatePath("/admin/users");
+
+  return { ok: true, result };
 }
 
 export async function resetUserAccountPassword(

@@ -9,7 +9,81 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDate, initialsFromName } from "@/data/format";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import type { AdminUserRow } from "@/lib/admin/queries";
-import { setUserAccountStatus, resetUserAccountPassword, setUserSupervisorFlag } from "@/lib/admin/actions";
+import {
+  setUserAccountStatus,
+  resetUserAccountPassword,
+  setUserSupervisorFlag,
+  offboardTherapist,
+  type OffboardResult,
+} from "@/lib/admin/actions";
+
+/** E12, external PRD review: the deliberate, permanent departure action --
+ *  distinct from Suspend/Reactivate above, which stays a temporary,
+ *  reversible hold. Requires an explicit confirm click since this cascades
+ *  (ends assignments, cancels upcoming bookings with refunds queued,
+ *  removes supervisor access) and can't be undone the way a re-suspend can. */
+function OffboardControl({ userId }: { userId: string }) {
+  const [confirming, setConfirming] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<OffboardResult | null>(null);
+  const { guard, reset } = useSubmitGuard();
+
+  if (result) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        Offboarded — {result.assignmentsEnded} assignment{result.assignmentsEnded === 1 ? "" : "s"} ended,{" "}
+        {result.bookingsCancelled} booking{result.bookingsCancelled === 1 ? "" : "s"} cancelled (refunds queued in{" "}
+        <a href="/admin/refunds" className="underline">
+          Refunds
+        </a>
+        ).
+      </p>
+    );
+  }
+
+  if (!confirming) {
+    return (
+      <Button size="sm" variant="destructive" onClick={() => setConfirming(true)}>
+        Offboard
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-xs text-charcoal">
+        Ends their active assignments, cancels upcoming confirmed bookings (refunds queued for you to send), and
+        removes supervisor access. Clinical records stay attributed to them. This can&apos;t be undone.
+      </p>
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="destructive"
+          disabled={isPending}
+          onClick={guard(() =>
+            startTransition(async () => {
+              setError(null);
+              const res = await offboardTherapist(userId);
+              if (!res.ok) {
+                setError(res.error);
+                reset();
+                return;
+              }
+              setResult(res.result);
+            })
+          )}
+        >
+          {isPending ? "Offboarding..." : "Confirm offboard"}
+        </Button>
+        <Button size="sm" variant="ghost" disabled={isPending} onClick={() => setConfirming(false)}>
+          Cancel
+        </Button>
+      </div>
+      {error && <p className="text-xs text-error-text">{error}</p>}
+    </div>
+  );
+}
 
 const ROLE_FILTERS = [
   { key: "all", label: "All" },
@@ -150,6 +224,7 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
             {isRolePending ? "Saving..." : localIsSupervisor ? "Remove supervisor" : "Make supervisor"}
           </Button>
         )}
+        {user.role === "therapist" && !isSelf && <OffboardControl userId={user.id} />}
       </div>
 
       {roleError && <p className="text-xs text-error-text">{roleError}</p>}

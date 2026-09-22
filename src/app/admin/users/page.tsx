@@ -1,6 +1,7 @@
 import { AssignPicker } from "@/components/care-team/assign-picker";
 import { AssignmentRow } from "@/components/care-team/assignment-row";
 import { LapsedAssignmentRow } from "@/components/care-team/lapsed-assignment-row";
+import { ReassignChildRow } from "@/components/care-team/reassign-child-row";
 import { SupervisorRequestRow } from "@/components/admin/supervisor-request-row";
 import {
   getAllChildrenForAdmin,
@@ -9,6 +10,7 @@ import {
   getActiveSupervisorAssignments,
   getActiveTherapistChildAssignments,
   getLapsedTherapistChildAssignments,
+  getChildrenNeedingReassignment,
   getSupervisorRequests,
 } from "@/lib/admin/queries";
 import {
@@ -26,6 +28,7 @@ export default async function AdminUsersPage() {
     supervisors,
     therapistChildAssignments,
     lapsedTherapistChildAssignments,
+    childrenNeedingReassignment,
     supervisorAssignments,
     supervisorRequests,
   ] = await Promise.all([
@@ -34,6 +37,7 @@ export default async function AdminUsersPage() {
     getAllSupervisorsForAdmin(),
     getActiveTherapistChildAssignments(),
     getLapsedTherapistChildAssignments(),
+    getChildrenNeedingReassignment(),
     getActiveSupervisorAssignments(),
     getSupervisorRequests(),
   ]);
@@ -82,6 +86,30 @@ export default async function AdminUsersPage() {
             )}
           </div>
         </section>
+
+        {childrenNeedingReassignment.length > 0 && (
+          <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)] md:p-6">
+            <h2 className="label-micro text-rust-dark">Care team</h2>
+            <h3 className="mt-1 font-heading text-lg text-charcoal">Needs reassignment</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              These children&apos;s therapist was offboarded and no one else is currently assigned.
+            </p>
+
+            <div className="mt-5 flex flex-col gap-2">
+              {childrenNeedingReassignment.map((c) => (
+                <ReassignChildRow
+                  key={c.childId}
+                  childId={c.childId}
+                  childName={c.childName}
+                  previousTherapistName={c.previousTherapistName}
+                  endedOn={c.endedOn}
+                  therapistOptions={therapists}
+                  onAssign={assignTherapistToChild}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {lapsedTherapistChildAssignments.length > 0 && (
           <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)] md:p-6">

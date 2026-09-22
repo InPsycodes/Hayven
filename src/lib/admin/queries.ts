@@ -510,6 +510,55 @@ export async function getLapsedTherapistChildAssignments(): Promise<RealLapsedTh
   }));
 }
 
+export interface ChildNeedingReassignment {
+  childId: string;
+  childName: string;
+  previousTherapistName: string;
+  endedOn: string | null;
+}
+
+/**
+ * E12, external PRD review: children left with zero active therapist after
+ * offboardTherapist (src/lib/admin/actions.ts) ended their assignment with
+ * ended_reason='therapist_departed'. Deliberately narrower than
+ * getLapsedTherapistChildAssignments -- this only surfaces a child once,
+ * and only while they genuinely have no one, even if they have other
+ * lapsed/ended rows for unrelated reasons.
+ */
+export async function getChildrenNeedingReassignment(): Promise<ChildNeedingReassignment[]> {
+  const supabase = createAdminClient();
+  const { data: departedRows } = await supabase
+    .from("therapist_child_assignments")
+    .select("child_id, ended_on, therapist_profiles(users(full_name)), children(first_name)")
+    .eq("ended_reason", "therapist_departed")
+    .order("ended_on", { ascending: false });
+  if (!departedRows || departedRows.length === 0) return [];
+
+  const childIds = [...new Set(departedRows.map((r) => r.child_id))];
+  const { data: stillActive } = await supabase
+    .from("therapist_child_assignments")
+    .select("child_id")
+    .in("child_id", childIds)
+    .eq("status", "active");
+  const activeChildIds = new Set((stillActive ?? []).map((r) => r.child_id));
+
+  const seen = new Set<string>();
+  const results: ChildNeedingReassignment[] = [];
+  for (const row of departedRows) {
+    if (activeChildIds.has(row.child_id) || seen.has(row.child_id)) continue;
+    seen.add(row.child_id);
+    results.push({
+      childId: row.child_id,
+      childName: (row.children as unknown as { first_name: string } | null)?.first_name ?? "Unknown",
+      previousTherapistName:
+        (row.therapist_profiles as unknown as { users: { full_name: string } | null } | null)?.users?.full_name ??
+        "Unknown",
+      endedOn: row.ended_on,
+    });
+  }
+  return results;
+}
+
 export interface PlatformMetrics {
   totalParents: number;
   totalTherapists: number;

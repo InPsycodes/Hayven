@@ -95,6 +95,21 @@ export async function createPendingBooking(input: {
     return { ok: false, error: "That time is too soon to book. Please pick a slot at least 2 hours out." };
   }
 
+  // E12: defense in depth alongside therapist_public_profiles' own
+  // u.status = 'active' filter (migration 0092) -- discovery shouldn't
+  // surface a suspended therapist's slots at all, but a stale client-side
+  // listing or a direct call with a known slot id shouldn't be able to
+  // create a new hold against one either.
+  const { data: therapistAccount } = await admin
+    .from("therapist_profiles")
+    .select("users(status)")
+    .eq("id", input.therapistId)
+    .maybeSingle();
+  const therapistStatus = (therapistAccount?.users as unknown as { status: string } | null)?.status;
+  if (therapistStatus !== "active") {
+    return { ok: false, error: "That therapist isn't currently accepting bookings." };
+  }
+
   const { data: heldSlot, error: holdError } = await admin
     .from("availability_slots")
     .update({ is_booked: true })
@@ -560,6 +575,64 @@ export async function cancelBooking(
   revalidatePath("/parent/sessions");
   revalidatePath("/therapist/schedule");
   return { ok: true, wasPaid, refundNaira: outcome?.refundNaira ?? 0 };
+}
+
+/**
+ * E12, external PRD review: cancels every future confirmed booking for a
+ * therapist being offboarded (src/lib/admin/actions.ts offboardTherapist).
+ * Same refund tier a therapist-initiated cancellation gets (full refund,
+ * Hayven absorbs the fee) -- this is never the parent's fault. Queues the
+ * refund the same way cancelBooking does (bookings.refund_amount, feeding
+ * the existing admin refund queue) rather than moving money automatically.
+ * Already-past bookings are left alone -- autoCompletePastBookings handles
+ * those normally, there's nothing to cancel or refund.
+ */
+export async function cancelBookingsForDepartedTherapist(
+  admin: ReturnType<typeof createAdminClient>,
+  therapistProfileId: string
+): Promise<{ cancelled: number }> {
+  const { data: bookings } = await admin
+    .from("bookings")
+    .select("id, parent_id, availability_slot_id, children(first_name), availability_slots(start_time)")
+    .eq("therapist_id", therapistProfileId)
+    .eq("status", "confirmed");
+
+  let cancelled = 0;
+  for (const booking of bookings ?? []) {
+    const slot = booking.availability_slots as unknown as { start_time: string } | null;
+    if (slot && new Date(slot.start_time).getTime() < Date.now()) continue;
+
+    const { data: updated } = await admin
+      .from("bookings")
+      .update({
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+        cancellation_reason: "Therapist is no longer on Hayven.",
+      })
+      .eq("id", booking.id)
+      .eq("status", "confirmed")
+      .select("id")
+      .maybeSingle();
+    if (!updated) continue;
+
+    await admin.from("availability_slots").update({ is_booked: false }).eq("id", booking.availability_slot_id);
+
+    const outcome = await applyRefundPolicy(admin, booking.id, "therapist", slot?.start_time ?? null);
+    if (outcome) {
+      const child = booking.children as unknown as { first_name: string } | null;
+      const when = slot ? formatDateTime(slot.start_time) : "your session";
+      await createNotification({
+        userId: booking.parent_id,
+        type: "booking_confirmed",
+        title: "Session cancelled",
+        body: refundNotificationBody(child?.first_name ?? "Your child", when, outcome, true),
+        url: "/parent/sessions",
+      });
+    }
+    cancelled += 1;
+  }
+
+  return { cancelled };
 }
 
 /**
