@@ -626,6 +626,17 @@ export async function setUserAccountStatus(
   const { error } = await supabase.from("users").update({ status }).eq("id", userId);
   if (error) return { ok: false, error: error.message };
 
+  // AUTH-01 (pre-launch audit, P0): a JWT already issued before this call
+  // stays cryptographically valid until it naturally expires -- Supabase
+  // Auth has no way to retroactively kill a live access token, and RLS
+  // (migration 0095) is what actually closes that window in the meantime.
+  // ban_duration is the other half: it stops the account getting a NEW
+  // token (login or refresh) for as long as the suspension lasts, instead
+  // of silently allowing that the moment the current token expires.
+  await supabase.auth.admin.updateUserById(userId, {
+    ban_duration: status === "suspended" ? "876000h" : "none",
+  });
+
   await logAuditEvent({
     actor: session,
     action: status === "suspended" ? "account.suspend" : "account.reactivate",
@@ -691,6 +702,10 @@ export async function offboardTherapist(
 
   const { error: statusError } = await supabase.from("users").update({ status: "suspended" }).eq("id", userId);
   if (statusError) return { ok: false, error: statusError.message };
+
+  // AUTH-01 -- see setUserAccountStatus's comment; offboarding is
+  // permanent, so this ban is never lifted the way a plain suspension's is.
+  await supabase.auth.admin.updateUserById(userId, { ban_duration: "876000h" });
 
   const endedOn = new Date().toISOString().slice(0, 10);
 
