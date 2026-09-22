@@ -81,15 +81,31 @@ export async function reconcilePaystackPayments(): Promise<ReconciliationResult>
     const bookingId = (txn.metadata as { booking_id?: unknown } | null)?.booking_id;
     if (typeof bookingId !== "string") continue; // not a session-booking charge -- out of scope for this sweep
 
-    const result = await finalizeBookingPayment(bookingId, txn.reference, txn.amountKobo);
-    if (result.ok) {
-      replayed += 1;
-    } else {
+    // BOOK-06, pre-launch audit (P1): this call had no per-iteration error
+    // handling, unlike the reverse-direction loop just below -- a single
+    // throw (as opposed to a clean {ok:false}) aborted the `for` loop
+    // entirely, leaving every remaining transaction in this run's batch
+    // unprocessed until the next scheduled run. Self-healing given the
+    // 48h overlapping window, but inconsistent with this file's own
+    // defensive style. Caught per-row now, same as the reverse check.
+    try {
+      const result = await finalizeBookingPayment(bookingId, txn.reference, txn.amountKobo);
+      if (result.ok) {
+        replayed += 1;
+      } else {
+        stillUnresolved += 1;
+        Sentry.captureMessage("Paystack reconciliation: a successful charge could not be resolved against Hayven's booking", {
+          level: "error",
+          tags: { anomaly: "reconciliation_unresolved_charge" },
+          extra: { bookingId, reference: txn.reference, amountKobo: txn.amountKobo, error: result.error },
+        });
+      }
+    } catch (err) {
       stillUnresolved += 1;
-      Sentry.captureMessage("Paystack reconciliation: a successful charge could not be resolved against Hayven's booking", {
+      Sentry.captureMessage("Paystack reconciliation: finalizeBookingPayment threw while replaying a charge", {
         level: "error",
-        tags: { anomaly: "reconciliation_unresolved_charge" },
-        extra: { bookingId, reference: txn.reference, amountKobo: txn.amountKobo, error: result.error },
+        tags: { anomaly: "reconciliation_replay_threw" },
+        extra: { bookingId, reference: txn.reference, amountKobo: txn.amountKobo, thrown: err instanceof Error ? err.message : String(err) },
       });
     }
   }
