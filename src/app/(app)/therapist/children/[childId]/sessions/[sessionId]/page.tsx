@@ -7,6 +7,7 @@ import { ParentPreviewPanel } from "@/components/therapy-session/parent-preview-
 import { ReportPanel } from "@/components/therapy-session/report-panel";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { getReportForSession } from "@/lib/reports/queries";
 import { renderReportBody } from "@/lib/reports/generate";
@@ -42,6 +43,17 @@ export default async function TherapySessionPage({
 
   const report = await getReportForSession(sessionId, therapist.id);
   const confidentialNote = await getConfidentialNote(sessionId, therapist.id);
+
+  // E10/D5: an active supervisor changes what publishing this report
+  // actually does -- see ParentPreviewPanel/publishReport. Admin client:
+  // supervisor_assignments' RLS only lets a supervisor read rows where
+  // they're supervisor_id, not a therapist checking their own rows.
+  const { count: activeSupervisorCount } = await createAdminClient()
+    .from("supervisor_assignments")
+    .select("id", { count: "exact", head: true })
+    .eq("therapist_id", therapist.id)
+    .eq("status", "active");
+  const hasActiveSupervisor = (activeSupervisorCount ?? 0) > 0;
 
   // The same free-text sub-fields the parent-friendly filter covers in
   // domainSkillParentSentence (generate.ts) also need a flagged-phrase
@@ -121,6 +133,7 @@ export default async function TherapySessionPage({
                   status={report.status}
                   publishedAt={report.publishedAt}
                   flaggedPhrases={flaggedPhrases}
+                  hasActiveSupervisor={hasActiveSupervisor}
                 />
               </div>
             )}

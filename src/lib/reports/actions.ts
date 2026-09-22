@@ -14,6 +14,37 @@ import { getGenerationInput, getPhraseVariants } from "./queries";
 import { generateParentReport, generateTherapistReport } from "./generate";
 import type { ReportBody } from "./types";
 
+/**
+ * Shared by publishReport (therapist, unsupervised case) and
+ * approveAndPublishReport (src/lib/supervisor/actions.ts, E10/D5) -- always
+ * names the treating therapist, not whoever's session triggered the call,
+ * so a supervisor's approval doesn't produce a notification that looks like
+ * it came from them.
+ */
+export async function notifyParentReportPublished(
+  admin: ReturnType<typeof createAdminClient>,
+  childId: string,
+  reportId: string,
+  therapistName: string
+): Promise<void> {
+  try {
+    const { data: child } = await admin.from("children").select("first_name, parent_id").eq("id", childId).maybeSingle();
+    if (child) {
+      await createNotification({
+        userId: child.parent_id,
+        type: "report_published",
+        entityType: "report",
+        entityId: reportId,
+        title: `${child.first_name}'s new session report is ready`,
+        body: `${therapistName} just published a new report for ${child.first_name}.`,
+        url: `/parent/children/${childId}/reports`,
+      });
+    }
+  } catch (err) {
+    console.error("report_published notification threw", reportId, err);
+  }
+}
+
 /** Defense in depth -- RLS already blocks a cross-tenant write, but every other action in this file re-checks ownership explicitly, and these two should too. Returns the report's child_id when owned (also handy for audit logging), or null. */
 async function reportBelongsToTherapist(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -156,8 +187,20 @@ export async function saveReport(
   return { ok: true };
 }
 
-/** Publishes for the first time, or re-publishes after an edit -- either way this is the therapist's explicit sign-off that the parent should see the current state. */
-export async function publishReport(reportId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+/**
+ * Publishes for the first time, or re-publishes after an edit -- either way
+ * this is the therapist's explicit sign-off that the parent should see the
+ * current state. E10/D5, external PRD review: a therapist with an active
+ * supervisor submits for that supervisor's approval instead of publishing
+ * directly -- approveAndPublishReport (src/lib/supervisor/actions.ts) is
+ * the only thing that can then set published_at for them. An unsupervised
+ * therapist (supervision here is elective, not universal -- E9) keeps
+ * publishing directly, exactly as before; this never blocks a therapist who
+ * has no supervisor to ask.
+ */
+export async function publishReport(
+  reportId: string
+): Promise<{ ok: true; pendingApproval?: boolean } | { ok: false; error: string }> {
   const session = await getSession();
   if (!session || session.role !== "therapist") {
     return { ok: false, error: "Not authorized." };
@@ -170,6 +213,60 @@ export async function publishReport(reportId: string): Promise<{ ok: true } | { 
   const childId = await reportBelongsToTherapist(supabase, reportId, therapist.id);
   if (!childId) {
     return { ok: false, error: "Report not found." };
+  }
+
+  // supervisor_assignments' RLS (migration 0024) only lets a supervisor read
+  // rows where THEY are supervisor_id, not a therapist checking their own
+  // rows as therapist_id -- the RLS-bound client would silently return
+  // empty here and this whole gate would never fire. Admin client, same
+  // "defense in depth, ownership already established by session" pattern
+  // this file already uses throughout (reportBelongsToTherapist etc.).
+  const { data: activeSupervisors } = await createAdminClient()
+    .from("supervisor_assignments")
+    .select("supervisor_id")
+    .eq("therapist_id", therapist.id)
+    .eq("status", "active");
+
+  if (activeSupervisors && activeSupervisors.length > 0) {
+    const { data, error } = await supabase
+      .from("reports")
+      .update({ status: "in_review" })
+      .eq("id", reportId)
+      .neq("status", "in_review")
+      .select("id")
+      .maybeSingle();
+    if (error) return { ok: false, error: error.message };
+    if (!data) return { ok: true, pendingApproval: true }; // already submitted, awaiting the same approval -- idempotent no-op
+
+    await logAuditEvent({
+      actor: session,
+      action: "report.submit_for_approval",
+      entityType: "report",
+      entityId: reportId,
+      childId,
+    });
+
+    try {
+      const admin = createAdminClient();
+      const { data: child } = await admin.from("children").select("first_name").eq("id", childId).maybeSingle();
+      const childName = child?.first_name ?? "a child";
+      for (const { supervisor_id } of activeSupervisors) {
+        await createNotification({
+          userId: supervisor_id,
+          type: "report_needs_approval",
+          entityType: "report",
+          entityId: reportId,
+          title: "A report needs your approval",
+          body: `${session.name} submitted a session report for ${childName} -- review it before it reaches the parent.`,
+          url: `/supervisor/children/${childId}`,
+        });
+      }
+    } catch (err) {
+      console.error("report_needs_approval notification threw", reportId, err);
+    }
+
+    revalidatePath(`/therapist/children`);
+    return { ok: true, pendingApproval: true };
   }
 
   // Conditional on status != 'published' -- editing an already-published
@@ -197,23 +294,7 @@ export async function publishReport(reportId: string): Promise<{ ok: true } | { 
   // service-role client, same reasoning as createNotification's own reads --
   // never let a notification failure roll back a publish that already
   // succeeded, so this is fire-and-forget after the real write.
-  try {
-    const admin = createAdminClient();
-    const { data: child } = await admin.from("children").select("first_name, parent_id").eq("id", childId).maybeSingle();
-    if (child) {
-      await createNotification({
-        userId: child.parent_id,
-        type: "report_published",
-        entityType: "report",
-        entityId: reportId,
-        title: `${child.first_name}'s new session report is ready`,
-        body: `${session.name} just published a new report for ${child.first_name}.`,
-        url: `/parent/children/${childId}/reports`,
-      });
-    }
-  } catch (err) {
-    console.error("report_published notification threw", reportId, err);
-  }
+  await notifyParentReportPublished(createAdminClient(), childId, reportId, session.name);
 
   revalidatePath(`/therapist/children`);
   return { ok: true };

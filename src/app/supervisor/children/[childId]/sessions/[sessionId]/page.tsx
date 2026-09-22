@@ -4,6 +4,7 @@ import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ReportView } from "@/components/therapy-session/report-view";
+import { ReportApprovalPanel } from "@/components/therapy-session/report-approval-panel";
 import { getSession } from "@/lib/auth/session";
 import { getSupervisedChildById } from "@/lib/supervisor/queries";
 import { getReportForSessionAsSupervisor } from "@/lib/reports/queries";
@@ -26,17 +27,25 @@ export default async function SupervisorTherapySessionPage({
   const report = await getReportForSessionAsSupervisor(sessionId, session.userId);
   if (!report) notFound();
 
+  // E10/D5: 'in_review' here specifically means "submitted for your
+  // approval" -- publishReport (src/lib/reports/actions.ts) only puts a
+  // report in this state for a therapist who has an active supervisor.
+  const awaitingApproval = report.status === "in_review";
+
   return (
     <div>
       <DashboardHeader session={session} greeting="Session report" subtext={child.firstName} />
       <div className="flex flex-col gap-4 px-5 py-6 md:px-10 md:py-8">
-        <StatusBadge tone="grey" className="w-fit px-3 py-1 text-xs">
-          Oversight view &middot; read-only
+        <StatusBadge tone={awaitingApproval ? "amber" : "grey"} className="w-fit px-3 py-1 text-xs">
+          {awaitingApproval ? "Awaiting your approval" : "Oversight view · read-only"}
         </StatusBadge>
         {report.therapistBody ? (
-          <Card lift className="p-5">
-            <ReportView body={renderReportBody(report.therapistBody, child.firstName)} />
-          </Card>
+          <>
+            <Card lift className="p-5">
+              <ReportView body={renderReportBody(report.therapistBody, child.firstName)} />
+            </Card>
+            {awaitingApproval && <ReportApprovalPanel reportId={report.id} />}
+          </>
         ) : (
           <StatusBadge tone="error" className="w-fit px-3 py-1 text-xs">
             This report failed to generate.

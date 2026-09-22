@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
+import { notifyParentReportPublished } from "@/lib/reports/actions";
+import { captureServer } from "@/lib/analytics/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 /** Defense in depth -- real enforcement is the RLS policy from 0024 (is_supervisor_of_therapist), this just gives a friendly error instead of a silent no-op. */
 async function isOwnTeamTherapist(
@@ -163,5 +167,66 @@ export async function renewTherapistChildAssignmentAsSupervisor(
   });
 
   revalidatePath("/supervisor/assignments");
+  return { ok: true };
+}
+
+/**
+ * E10/D5, external PRD review: the only thing that can set published_at for
+ * a report from a therapist who has an active supervisor -- publishReport
+ * (src/lib/reports/actions.ts) routes those therapists here instead of
+ * publishing directly. Scoped to the supervisor's own team the same way
+ * every other action in this file is (isOwnTeamTherapist).
+ */
+export async function approveAndPublishReport(reportId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || !(session.role === "therapist" && session.isSupervisor)) {
+    return { ok: false, error: "Not authorized." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: report } = await supabase.from("reports").select("id, session_id").eq("id", reportId).maybeSingle();
+  if (!report) return { ok: false, error: "Report not found." };
+
+  const { data: therapySession } = await supabase
+    .from("therapy_sessions")
+    .select("child_id, therapist_id, therapist_profiles(users(full_name))")
+    .eq("id", report.session_id)
+    .maybeSingle();
+  if (!therapySession || !(await isOwnTeamTherapist(supabase, session.userId, therapySession.therapist_id))) {
+    return { ok: false, error: "Report not found." };
+  }
+
+  const { data, error } = await supabase
+    .from("reports")
+    .update({
+      status: "published",
+      published_at: new Date().toISOString(),
+      approved_by: session.userId,
+      approved_at: new Date().toISOString(),
+    })
+    .eq("id", reportId)
+    .eq("status", "in_review")
+    .select("id")
+    .maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "This report isn't waiting for approval." };
+
+  await logAuditEvent({
+    actor: session,
+    action: "report.approve_and_publish",
+    entityType: "report",
+    entityId: reportId,
+    childId: therapySession.child_id,
+  });
+
+  await captureServer(session.userId, ANALYTICS_EVENTS.reportPublished, { role: "supervisor" });
+
+  const therapistName =
+    (therapySession.therapist_profiles as unknown as { users: { full_name: string } | null } | null)?.users
+      ?.full_name ?? "Your therapist";
+  await notifyParentReportPublished(createAdminClient(), therapySession.child_id, reportId, therapistName);
+
+  revalidatePath(`/supervisor/children/${therapySession.child_id}/sessions/${report.session_id}`);
   return { ok: true };
 }

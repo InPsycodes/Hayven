@@ -15,19 +15,23 @@ export function ParentPreviewPanel({
   status,
   publishedAt,
   flaggedPhrases = [],
+  hasActiveSupervisor = false,
 }: {
   reportId: string;
   body: ReportBody;
   status: string;
   publishedAt: string | null;
   flaggedPhrases?: string[];
+  /** E10/D5: when true, publishing routes through supervisor approval instead of publishing directly -- see publishReport. */
+  hasActiveSupervisor?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const [currentStatus, setCurrentStatus] = useState(status);
   const [published, setPublished] = useState(publishedAt);
   const [error, setError] = useState<string | null>(null);
 
-  const needsRepublish = published !== null && currentStatus === "in_review";
+  const awaitingApproval = hasActiveSupervisor && currentStatus === "in_review";
+  const needsRepublish = !hasActiveSupervisor && published !== null && currentStatus === "in_review";
   const { guard, reset } = useSubmitGuard();
 
   const handlePublish = guard(() => {
@@ -39,11 +43,23 @@ export function ParentPreviewPanel({
         reset();
         return;
       }
-      setPublished(new Date().toISOString());
-      setCurrentStatus("published");
-      reset(); // a report can legitimately be edited and republished later
+      if (result.pendingApproval) {
+        setCurrentStatus("in_review");
+      } else {
+        setPublished(new Date().toISOString());
+        setCurrentStatus("published");
+      }
+      reset(); // a report can legitimately be edited and republished (or resubmitted) later
     });
   });
+
+  const publishLabel = hasActiveSupervisor
+    ? published
+      ? "Resubmit for review"
+      : "Submit for supervisor review"
+    : needsRepublish
+      ? "Republish to parent"
+      : "Publish to parent";
 
   return (
     <div className="flex flex-col gap-3">
@@ -68,15 +84,26 @@ export function ParentPreviewPanel({
           {published && new Date(published).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}.
         </p>
       )}
+      {awaitingApproval && (
+        <p className="rounded-sm bg-terracotta/10 px-3 py-2 text-xs text-charcoal">
+          {published
+            ? "The clinical report was edited and resubmitted -- your supervisor needs to approve the new version before the parent sees it."
+            : "Your supervisor needs to approve this before the parent sees it."}
+        </p>
+      )}
       {error && <p className="text-sm text-error-text">{error}</p>}
       <div className="flex items-center gap-3">
-        {published && !needsRepublish ? (
+        {awaitingApproval ? (
+          <StatusBadge tone="amber" className="fade-in w-fit">
+            Awaiting supervisor approval
+          </StatusBadge>
+        ) : published && !needsRepublish ? (
           <StatusBadge tone="sage" className="fade-in w-fit">
             Published to parent
           </StatusBadge>
         ) : (
           <Button onClick={handlePublish} disabled={isPending} className="w-fit">
-            {isPending ? "Publishing..." : needsRepublish ? "Republish to parent" : "Publish to parent"}
+            {isPending ? (hasActiveSupervisor ? "Submitting..." : "Publishing...") : publishLabel}
           </Button>
         )}
       </div>
