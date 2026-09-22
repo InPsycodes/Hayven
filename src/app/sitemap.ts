@@ -2,8 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { getRealLearningArticles } from "@/lib/learning/queries";
 import { getRealVerifiedTherapists } from "@/lib/therapist/queries";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { SITE_URL } from "@/lib/seo/metadata";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [

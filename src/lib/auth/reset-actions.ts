@@ -2,10 +2,9 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit/check";
+import { SITE_URL } from "@/lib/seo/metadata";
 
 type Result = { ok: true } | { ok: false; error: string };
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 /**
  * Sends a password-reset email. Always reports success even when the address

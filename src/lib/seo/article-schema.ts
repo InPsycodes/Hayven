@@ -1,7 +1,6 @@
 import type { RealLearningArticle } from "@/lib/learning/queries";
 import { getOrganizationSchema } from "@/lib/seo/organization-schema";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { SITE_URL } from "@/lib/seo/metadata";
 
 /**
  * Plain Article, not MedicalWebPage -- same liability-boundary reasoning as

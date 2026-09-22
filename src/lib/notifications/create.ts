@@ -5,6 +5,7 @@ import { sendEmail, renderNotificationEmail } from "@/lib/email/send";
 import { sendPushToUser } from "@/lib/notifications/push";
 import { EMAIL_PREF_BY_TYPE } from "@/lib/notifications/preferences-server";
 import { makeUnsubscribeToken } from "@/lib/notifications/unsubscribe-token";
+import { SITE_URL } from "@/lib/seo/metadata";
 
 export type NotificationType =
   | "booking_confirmed"
@@ -118,9 +119,7 @@ export async function createNotification(params: {
       const { data: user } = await admin.from("users").select("email").eq("id", params.userId).maybeSingle();
       if (user?.email) {
         const unsubscribeUrl = prefKey
-          ? `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/unsubscribe?t=${encodeURIComponent(
-              makeUnsubscribeToken(params.userId)
-            )}`
+          ? `${SITE_URL}/unsubscribe?t=${encodeURIComponent(makeUnsubscribeToken(params.userId))}`
           : undefined;
         await sendEmail({
           to: user.email,

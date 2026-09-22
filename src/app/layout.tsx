@@ -5,6 +5,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
 import { ServiceWorkerUpdater } from "@/components/shared/service-worker-updater";
 import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
+import { SITE_URL } from "@/lib/seo/metadata";
 import "./globals.css";
 
 // Google Analytics is separate from the PostHog product-analytics wrapper in
@@ -35,7 +36,7 @@ const DEFAULT_DESCRIPTION =
   "Hayven connects parents with credential-verified child therapists: booking, payments, and progress tracking in one place.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: DEFAULT_TITLE,
     template: "%s · Hayven",

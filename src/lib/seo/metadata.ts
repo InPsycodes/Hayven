@@ -3,9 +3,34 @@
  * URL and Open Graph boilerplate in one place instead of re-typed per page
  * (and re-typed slightly differently each time, which is how canonical tags
  * silently go missing on new pages).
+ *
+ * SITE_URL is also this whole app's single canonical base-URL source --
+ * SEC-03, pre-launch audit (P2): 9 separate files used to each redefine
+ * `process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"` locally. A
+ * reasonable dev convenience, but it meant a production misconfiguration
+ * (the env var unset on a new deploy environment, a typo'd var name) would
+ * fail *silently* rather than loudly -- password-reset links, the Paystack
+ * payment callback URL, and unsubscribe links would all have silently
+ * pointed at localhost for real users. Centralized here and thrown loudly
+ * at import time instead, in production only (dev/test/CI builds still
+ * fall back so `next dev`/`next build` don't need the var set).
  */
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+function resolveSiteUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!raw) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "NEXT_PUBLIC_SITE_URL is not set. Password-reset links, the payment callback URL, and unsubscribe " +
+          "links all depend on it being correct in production -- refusing to silently fall back to localhost."
+      );
+    }
+    return "http://localhost:3000";
+  }
+  return raw.replace(/\/+$/, "");
+}
+
+export const SITE_URL = resolveSiteUrl();
 export const SITE_NAME = "Hayven";
 
 /** Absolute URL for a site-relative path, e.g. absoluteUrl("/search") -> "https://hayven.com.ng/search". */

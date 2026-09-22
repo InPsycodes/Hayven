@@ -1,4 +1,4 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { SITE_URL } from "@/lib/seo/metadata";
 
 /**
  * Deliberately a plain Organization, never MedicalBusiness/MedicalOrganization
