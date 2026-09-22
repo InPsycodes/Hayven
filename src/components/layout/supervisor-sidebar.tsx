@@ -18,9 +18,11 @@ const SUPERVISOR_NAV = [
   { label: "Settings", href: "/supervisor/settings", icon: IconShieldLock },
 ];
 
-// A therapist granted supervisor access (see migration 0054) still has a
-// real practice of their own, so unlike a plain role === "supervisor"
-// account, they need a way back to it from inside the supervisor portal.
+// A therapist granted supervisor access (migration 0054) still has a real
+// practice of their own, so they need a way back to it from inside the
+// supervisor portal. E9: this is now unconditional -- the standalone
+// role === "supervisor" mechanism (which had no practice to link back to)
+// is retired, so every session here is a therapist.
 const MY_DASHBOARD_ITEM = { label: "My dashboard", href: "/therapist", icon: IconStethoscope };
 
 export function SupervisorSidebar({
@@ -31,7 +33,7 @@ export function SupervisorSidebar({
   teamCount?: number;
 }) {
   const pathname = usePathname();
-  const items = session.role === "therapist" ? [MY_DASHBOARD_ITEM, ...SUPERVISOR_NAV] : SUPERVISOR_NAV;
+  const items = [MY_DASHBOARD_ITEM, ...SUPERVISOR_NAV];
 
   return (
     <>

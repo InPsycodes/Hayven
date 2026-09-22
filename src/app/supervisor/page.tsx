@@ -19,7 +19,7 @@ import { initialsFromName, formatShortDate } from "@/data/format";
 
 export default async function SupervisorTeamPage() {
   const session = await getSession();
-  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+  if (!session || !(session.role === "therapist" && session.isSupervisor)) {
     redirect("/login");
   }
 

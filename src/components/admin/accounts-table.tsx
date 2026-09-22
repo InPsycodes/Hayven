@@ -170,9 +170,10 @@ export function AccountsTable({ users, currentUserId }: { users: AdminUserRow[];
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return users.filter((u) => {
+      // E9: the "supervisor" filter option means is_supervisor, not a role
+      // value -- the standalone role === "supervisor" mechanism is retired.
       const matchesRole =
-        roleFilter === "all" ||
-        (roleFilter === "supervisor" ? u.role === "supervisor" || u.isSupervisor : u.role === roleFilter);
+        roleFilter === "all" || (roleFilter === "supervisor" ? u.isSupervisor : u.role === roleFilter);
       const matchesSearch = !q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
       return matchesRole && matchesSearch;
     });

@@ -437,16 +437,12 @@ export async function assignSupervisorToTherapist(
 
   // is_supervisor_of_therapist() only checks the assignment row + status, never the
   // target user's actual role -- so this table's own RLS wouldn't catch a bad id here.
-  // Covers both a plain role === "supervisor" account and a therapist granted
-  // is_supervisor (see migration 0054) -- getAllSupervisorsForAdmin() already
-  // only offers these two kinds of accounts as pickable options.
-  const { data: targetUser } = await supabase
-    .from("users")
-    .select("role, is_supervisor")
-    .eq("id", supervisorId)
-    .maybeSingle();
-  const isValidSupervisor = targetUser?.role === "supervisor" || (targetUser?.role === "therapist" && targetUser?.is_supervisor);
-  if (!isValidSupervisor) {
+  // E9: every real supervisor is a therapist granted is_supervisor (migration
+  // 0054) -- the standalone role === "supervisor" mechanism is retired, zero
+  // live accounts use it -- getAllSupervisorsForAdmin() already only offers
+  // is_supervisor accounts as pickable options.
+  const { data: targetUser } = await supabase.from("users").select("is_supervisor").eq("id", supervisorId).maybeSingle();
+  if (!targetUser?.is_supervisor) {
     return { ok: false, error: "That user isn't a supervisor." };
   }
 

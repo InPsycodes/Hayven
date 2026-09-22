@@ -29,14 +29,15 @@ export async function proxy(request: NextRequest) {
 
   if (!match) return response;
 
-  // /supervisor is reachable two ways: a plain role === "supervisor"
-  // account (the original mechanism), or a therapist granted is_supervisor
-  // -- who also still passes the /therapist check below and keeps their own
-  // dashboard. See migration 0054.
+  // E9, external PRD review: the standalone role === "supervisor" mechanism
+  // (migration 0023/0024) is retired -- confirmed zero live accounts use it,
+  // and no code path can create one (signup rejects it, the signup trigger
+  // falls back to "parent", the only admin grant action requires
+  // role === "therapist"). Every supervisor is now a therapist granted
+  // is_supervisor (migration 0054), who also still passes the /therapist
+  // check below and keeps their own dashboard.
   const allowed =
-    match.prefix === "/supervisor"
-      ? role === "supervisor" || (role === "therapist" && isSupervisor)
-      : role === match.role;
+    match.prefix === "/supervisor" ? role === "therapist" && isSupervisor : role === match.role;
 
   if (!allowed) {
     const loginUrl = new URL("/login", request.url);

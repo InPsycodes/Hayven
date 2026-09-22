@@ -28,7 +28,7 @@ export async function assignChildToTherapist(
   therapyType?: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await getSession();
-  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+  if (!session || !(session.role === "therapist" && session.isSupervisor)) {
     return { ok: false, error: "Not authorized." };
   }
 
@@ -78,7 +78,7 @@ export async function endTherapistChildAssignmentAsSupervisor(
   assignmentId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await getSession();
-  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+  if (!session || !(session.role === "therapist" && session.isSupervisor)) {
     return { ok: false, error: "Not authorized." };
   }
 
@@ -127,7 +127,7 @@ export async function renewTherapistChildAssignmentAsSupervisor(
   assignmentId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await getSession();
-  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+  if (!session || !(session.role === "therapist" && session.isSupervisor)) {
     return { ok: false, error: "Not authorized." };
   }
 

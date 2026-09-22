@@ -439,14 +439,10 @@ export async function getAllChildrenForAdmin(): Promise<AdminPickerOption[]> {
   return (data ?? []).map((row) => ({ id: row.id, label: row.first_name }));
 }
 
-/** Covers both a plain role === "supervisor" account and a therapist granted is_supervisor -- see migration 0054. */
+/** E9: the standalone role === "supervisor" mechanism is retired (zero live accounts, no code path can create one) -- every supervisor is a therapist granted is_supervisor, see migration 0054. */
 export async function getAllSupervisorsForAdmin(): Promise<AdminPickerOption[]> {
   const supabase = createAdminClient();
-  const { data } = await supabase
-    .from("users")
-    .select("id, full_name")
-    .or("role.eq.supervisor,is_supervisor.eq.true")
-    .order("full_name");
+  const { data } = await supabase.from("users").select("id, full_name").eq("is_supervisor", true).order("full_name");
   return (data ?? []).map((row) => ({ id: row.id, label: row.full_name }));
 }
 
@@ -547,7 +543,10 @@ export async function getPlatformMetrics(): Promise<PlatformMetrics> {
       .from("therapist_profiles")
       .select("id", { count: "exact", head: true })
       .eq("verification_status", "verified"),
-    supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "supervisor"),
+    // E9: was .eq("role", "supervisor") -- undercounted, since every real
+    // supervisor is a therapist granted is_supervisor (migration 0054), not
+    // a role="supervisor" account (retired, zero live accounts use it).
+    supabase.from("users").select("id", { count: "exact", head: true }).eq("is_supervisor", true),
     supabase.from("children").select("id", { count: "exact", head: true }),
     supabase.from("bookings").select("id", { count: "exact", head: true }),
     supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "completed"),

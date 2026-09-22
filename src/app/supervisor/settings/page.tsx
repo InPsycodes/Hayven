@@ -8,7 +8,7 @@ import { getMfaStatus } from "@/lib/auth/mfa-actions";
 
 export default async function SupervisorSettingsPage() {
   const session = await getSession();
-  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+  if (!session || !(session.role === "therapist" && session.isSupervisor)) {
     redirect("/login");
   }
 

@@ -20,7 +20,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
   // A therapist with is_supervisor granted keeps full access to their own
   // /therapist dashboard too -- see migration 0054 and src/proxy.ts, which
   // gates this same route the same way.
-  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+  if (!session || !(session.role === "therapist" && session.isSupervisor)) {
     redirect("/login");
   }
 
