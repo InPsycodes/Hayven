@@ -44,7 +44,21 @@ export async function initiatePaystackPayment(
   // PAYMENT_LOCK_STALE_MS, treated as an abandoned attempt); the condition
   // lives in the WHERE clause of the update itself, not a separate read-then-
   // write, so two simultaneous calls can't both pass the check.
-  const PAYMENT_LOCK_STALE_MS = 5 * 60 * 1000;
+  //
+  // BOOK-01, pre-launch audit (P0): this used to be 5 minutes while the
+  // booking hold below lasts 15 -- a parent who opened checkout, stalled,
+  // and retried after 5 minutes (still well inside their own hold) got a
+  // second, independent Paystack reference for the same booking. If both
+  // ever got paid, the second real charge had nothing to invalidate the
+  // first one, and finalizeBookingPayment's "already confirmed" check used
+  // to drop that second charge with no record, no refund, no alert (now
+  // fixed separately below). The actual failure mode is a genuine retry
+  // during a stalled checkout, not a legitimate need for a second
+  // *concurrent* attempt -- a real error already releases the lock
+  // immediately in the catch block below. Matching this to the hold TTL
+  // means a retry can never mint a second reference while the original
+  // hold (and thus the original reference) is still alive.
+  const PAYMENT_LOCK_STALE_MS = 15 * 60 * 1000;
   const staleCutoff = new Date(Date.now() - PAYMENT_LOCK_STALE_MS).toISOString();
   const { data: lockedBooking, error: lockError } = await admin
     .from("bookings")

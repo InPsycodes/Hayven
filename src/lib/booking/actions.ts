@@ -305,6 +305,79 @@ export async function finalizeBookingPayment(
     revalidatePath("/therapist/caseload");
   };
 
+  // Shared by both "unaccounted charge" scenarios below: a real Paystack
+  // charge landed but nothing in Hayven has a record of THIS SPECIFIC
+  // gatewayReference yet. Records it, queues a full refund (the existing
+  // "not the parent's fault" tier), notifies the parent, and alerts --
+  // instead of the charge vanishing into an inconsistent state silently.
+  const recordUnaccountedCharge = async (params: {
+    anomalyTag: string;
+    sentryMessage: string;
+    cancellationReason: string | null;
+    // false for a duplicate charge on a booking that stays confirmed --
+    // applyRefundPolicy expects exactly one successful payment row per
+    // booking (it errors on more than one) and writes to bookings.refund_amount,
+    // a single column meant for "this booking's own cancellation refund."
+    // A duplicate charge isn't a cancellation and needs its own refund
+    // surfaced independently (see getBookingsNeedingRefund's duplicate-
+    // payment branch) -- reusing the cancellation-policy machinery here
+    // would either crash on the .maybeSingle() or silently overwrite an
+    // unrelated refund amount.
+    applyCancellationRefundPolicy: boolean;
+    notificationTitle: string;
+    notificationBody: string;
+  }): Promise<ActionResult<object>> => {
+    const { error: paymentError } = await admin.from("payments").insert({
+      booking_id: bookingId,
+      payer_id: booking.parent_id,
+      payee_id: therapistProfile?.user_id ?? null,
+      amount: Math.round(amountKobo / 100),
+      type: "session_commission",
+      gateway_reference: gatewayReference,
+      status: "successful",
+    });
+    if (paymentError) {
+      if (paymentError.code === "23505") {
+        // gateway_reference is unique -- a concurrent call already recorded
+        // this exact charge. Nothing left to do.
+        return { ok: true };
+      }
+      Sentry.captureMessage("Failed to record an unaccounted Paystack charge", {
+        level: "error",
+        tags: { anomaly: "orphaned_payment_record_failed" },
+        extra: { bookingId, gatewayReference, dbError: paymentError.message },
+      });
+      return { ok: false, error: paymentError.message };
+    }
+
+    if (params.applyCancellationRefundPolicy) {
+      await applyRefundPolicy(admin, bookingId, "therapist", slot?.start_time ?? null);
+    }
+    if (params.cancellationReason) {
+      await admin
+        .from("bookings")
+        .update({ cancellation_reason: params.cancellationReason })
+        .eq("id", bookingId)
+        .is("cancellation_reason", null);
+    }
+
+    await createNotification({
+      userId: booking.parent_id,
+      type: "booking_confirmed",
+      title: params.notificationTitle,
+      body: params.notificationBody,
+      url: "/parent/sessions",
+    });
+
+    Sentry.captureMessage(params.sentryMessage, {
+      level: "error",
+      tags: { anomaly: params.anomalyTag },
+      extra: { bookingId, gatewayReference, amountKobo },
+    });
+
+    return { ok: false, error: "A refund has been recorded for this payment." };
+  };
+
   // E2, external PRD review: this used to treat any miss here ("status is no
   // longer pending_payment") as "already finalized by a prior call" and
   // return ok:true unconditionally. That's only true when the status moved
@@ -317,9 +390,36 @@ export async function finalizeBookingPayment(
   // is what closes that gap.
   const handleMissedConfirmation = async (): Promise<ActionResult<object>> => {
     const { data: current } = await admin.from("bookings").select("status").eq("id", bookingId).maybeSingle();
-    if (!current || current.status === "confirmed") {
-      return { ok: true }; // genuinely already finalized by a prior call
+    if (!current) {
+      return { ok: true }; // booking genuinely gone -- nothing to do
     }
+
+    if (current.status === "confirmed") {
+      // BOOK-01, pre-launch audit (P0): "the booking is confirmed" used to
+      // be treated as proof THIS charge was accounted for. It isn't --
+      // initiatePaystackPayment's lock (now matched to the hold TTL, see
+      // that file) used to let a retried checkout mint a second, genuinely
+      // different gatewayReference for the same booking. If a *different*
+      // reference already won the confirmation race, this specific charge
+      // is still real money nothing has recorded yet.
+      const { data: existingPayment } = await admin
+        .from("payments")
+        .select("id")
+        .eq("gateway_reference", gatewayReference)
+        .maybeSingle();
+      if (existingPayment) {
+        return { ok: true }; // this exact charge is the one that won -- already handled
+      }
+      return recordUnaccountedCharge({
+        anomalyTag: "duplicate_charge_on_confirmed_booking",
+        sentryMessage: "A second real Paystack charge landed on an already-confirmed booking",
+        cancellationReason: null,
+        applyCancellationRefundPolicy: false,
+        notificationTitle: "You may have been charged twice",
+        notificationBody: `We found a second payment for ${child?.first_name ?? "your child"}'s already-confirmed session. You'll be refunded in full for the duplicate charge -- we're sorry for the mix-up.`,
+      });
+    }
+
     if (current.status !== "cancelled") {
       // pending_payment can in practice only become confirmed or cancelled
       // -- never drop a real charge silently for a status this doesn't
@@ -369,64 +469,15 @@ export async function finalizeBookingPayment(
     }
 
     // The slot is gone -- someone else booked it during the gap -- and the
-    // parent was genuinely charged for nothing. Record the payment so this
-    // enters the existing refund queue (getBookingsNeedingRefund,
-    // src/lib/admin/queries.ts) instead of leaving no trace at all, apply
-    // the "not the parent's fault" full-refund tier (same tier a
-    // therapist-initiated cancellation gets), and alert immediately instead
-    // of relying on anyone to notice the queue.
-    const { error: paymentError } = await admin.from("payments").insert({
-      booking_id: bookingId,
-      payer_id: booking.parent_id,
-      payee_id: therapistProfile?.user_id ?? null,
-      amount: Math.round(amountKobo / 100),
-      type: "session_commission",
-      gateway_reference: gatewayReference,
-      status: "successful",
+    // parent was genuinely charged for nothing.
+    return recordUnaccountedCharge({
+      anomalyTag: "orphaned_payment",
+      sentryMessage: "Paystack payment confirmed after the booking hold had already expired",
+      cancellationReason: "hold_expired_before_payment_confirmed",
+      applyCancellationRefundPolicy: true,
+      notificationTitle: "Payment received, but the slot was lost",
+      notificationBody: `We received your payment for ${child?.first_name ?? "your child"}'s session, but the hold on that time slot had already expired and it's no longer available. You'll be refunded in full -- we're sorry for the mix-up.`,
     });
-    if (paymentError) {
-      if (paymentError.code === "23505") {
-        // gateway_reference is unique -- this exact charge was already
-        // recorded by a concurrent call (the webhook and the redirect path
-        // landing near-simultaneously, both racing the slot-reclaim above).
-        // If that other call is the one that actually won the reclaim, the
-        // booking is genuinely confirmed now and this call shouldn't also
-        // fire a false "you'll be refunded" notification and Sentry alert
-        // for a booking that's actually fine.
-        const { data: recheck } = await admin.from("bookings").select("status").eq("id", bookingId).maybeSingle();
-        if (recheck?.status === "confirmed") return { ok: true };
-      } else {
-        Sentry.captureMessage("Failed to record an orphaned Paystack charge", {
-          level: "error",
-          tags: { anomaly: "orphaned_payment_record_failed" },
-          extra: { bookingId, gatewayReference, dbError: paymentError.message },
-        });
-        return { ok: false, error: paymentError.message };
-      }
-    }
-
-    await applyRefundPolicy(admin, bookingId, "therapist", slot?.start_time ?? null);
-    await admin
-      .from("bookings")
-      .update({ cancellation_reason: "hold_expired_before_payment_confirmed" })
-      .eq("id", bookingId)
-      .is("cancellation_reason", null);
-
-    await createNotification({
-      userId: booking.parent_id,
-      type: "booking_confirmed",
-      title: "Payment received, but the slot was lost",
-      body: `We received your payment for ${child?.first_name ?? "your child"}'s session, but the hold on that time slot had already expired and it's no longer available. You'll be refunded in full -- we're sorry for the mix-up.`,
-      url: "/parent/sessions",
-    });
-
-    Sentry.captureMessage("Paystack payment confirmed after the booking hold had already expired", {
-      level: "error",
-      tags: { anomaly: "orphaned_payment" },
-      extra: { bookingId, gatewayReference, amountKobo },
-    });
-
-    return { ok: false, error: "The booking hold expired before payment was confirmed; a refund has been recorded." };
   };
 
   const { data: updated, error: updateError } = await admin

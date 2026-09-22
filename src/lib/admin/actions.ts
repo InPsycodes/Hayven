@@ -281,7 +281,7 @@ export async function processRefund(
   const supabase = createAdminClient();
   const { data: payment } = await supabase
     .from("payments")
-    .select("id, booking_id, amount, status, gateway_reference, bookings(refund_amount, refund_status)")
+    .select("id, booking_id, amount, status, gateway_reference, created_at, bookings(refund_amount, refund_status)")
     .eq("id", paymentId)
     .maybeSingle();
   if (!payment) return { ok: false, error: "Payment not found." };
@@ -292,7 +292,24 @@ export async function processRefund(
     return { ok: false, error: "A refund for this is already in progress." };
   }
 
-  const amountNaira = booking?.refund_amount ?? payment.amount;
+  // BOOK-01: bookings.refund_amount is a single column meant for the
+  // booking's own cancellation-policy refund. If this booking has more
+  // than one successful charge (a duplicate/orphaned payment,
+  // getBookingsNeedingRefund's "duplicate_charge" case), that column may
+  // hold an amount for a completely unrelated cancellation -- a duplicate
+  // payment always owes back its own full amount, never the booking-level
+  // figure.
+  let amountNaira = booking?.refund_amount ?? payment.amount;
+  if (payment.booking_id) {
+    const { count } = await supabase
+      .from("payments")
+      .select("id", { count: "exact", head: true })
+      .eq("booking_id", payment.booking_id)
+      .eq("status", "successful")
+      .eq("type", "session_commission")
+      .lt("created_at", payment.created_at);
+    if ((count ?? 0) > 0) amountNaira = payment.amount;
+  }
   if (amountNaira <= 0) return { ok: false, error: "The policy says nothing is owed on this booking." };
 
   try {

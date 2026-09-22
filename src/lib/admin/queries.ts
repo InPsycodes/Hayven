@@ -241,10 +241,11 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
   const { data, error } = await supabase
     .from("payments")
     .select(
-      "id, amount, gateway_reference, booking_id, users!payer_id(full_name, email), bookings(status, cancelled_at, cancellation_reason, children(first_name), therapist_profiles(users(full_name)))"
+      "id, amount, gateway_reference, booking_id, created_at, users!payer_id(full_name, email), bookings(status, cancelled_at, cancellation_reason, children(first_name), therapist_profiles(users(full_name)))"
     )
     .eq("status", "successful")
-    .eq("type", "session_commission");
+    .eq("type", "session_commission")
+    .order("created_at", { ascending: true });
 
   if (error || !data) return [];
 
@@ -266,6 +267,17 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
     }
   }
 
+  // BOOK-01, pre-launch audit: a retried checkout can mint a second,
+  // genuinely paid Paystack reference for the same booking (see
+  // finalizeBookingPayment's "duplicate charge on an already-confirmed
+  // booking" path). That second row is real money owed back regardless of
+  // whether the booking itself was ever cancelled -- it's not covered by
+  // bookings.refund_amount (a single column meant for the booking's own
+  // cancellation-policy refund, not a second unrelated charge). Rows are
+  // ordered oldest-first above, so for any booking with more than one
+  // successful charge, every row after the first is the duplicate.
+  const seenBookingIds = new Set<string>();
+
   return data
     .map((row) => {
       const booking = row.bookings as unknown as {
@@ -276,7 +288,29 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
         therapist_profiles: { users: { full_name: string } | null } | null;
       } | null;
       const payer = row.users as unknown as { full_name: string; email: string } | null;
-      if (!booking || booking.status !== "cancelled") return null;
+      if (!booking) return null;
+
+      const isFirstChargeSeen = row.booking_id ? !seenBookingIds.has(row.booking_id) : true;
+      if (row.booking_id) seenBookingIds.add(row.booking_id);
+
+      if (!isFirstChargeSeen) {
+        return {
+          paymentId: row.id,
+          bookingId: row.booking_id,
+          amount: row.amount,
+          refundAmount: row.amount,
+          refundStatus: refundStatuses.get(row.booking_id) ?? null,
+          gatewayReference: row.gateway_reference,
+          cancelledAt: null,
+          cancellationReason: "duplicate_charge",
+          parentName: payer?.full_name ?? "Unknown",
+          parentEmail: payer?.email ?? "",
+          childFirstName: booking.children?.first_name ?? "Unknown",
+          therapistName: booking.therapist_profiles?.users?.full_name ?? "Unknown",
+        };
+      }
+
+      if (booking.status !== "cancelled") return null;
       const policy = policyAmounts.get(row.booking_id);
       // 0 => policy says nothing owed (late cancel after start); skip it.
       if (policy === 0) return null;
