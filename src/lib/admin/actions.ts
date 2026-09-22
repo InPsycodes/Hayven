@@ -312,14 +312,36 @@ export async function processRefund(
   }
   if (amountNaira <= 0) return { ok: false, error: "The policy says nothing is owed on this booking." };
 
+  // BOOK-03, pre-launch audit (P1): claim the refund atomically -- checked
+  // in the WHERE clause of the update itself, not the separate read above
+  // -- BEFORE calling Paystack, not after. The read above is only a fast
+  // path for the common "already done" case; this is what actually closes
+  // a double-click or two admins racing the same payment. Same pattern as
+  // initiatePaystackPayment's payment_initiated_at lock.
+  if (payment.booking_id) {
+    const { data: claimed, error: claimError } = await supabase
+      .from("bookings")
+      .update({ refund_status: "processing" })
+      .eq("id", payment.booking_id)
+      .or("refund_status.is.null,refund_status.eq.manual")
+      .select("id")
+      .maybeSingle();
+    if (claimError) return { ok: false, error: claimError.message };
+    if (!claimed) return { ok: false, error: "A refund for this is already in progress." };
+  }
+
   try {
     await createRefund(payment.gateway_reference, amountNaira * 100);
   } catch (err) {
+    // Release the claim on a genuine failure so a retry isn't blocked --
+    // same reasoning as initiatePaystackPayment's catch block.
+    if (payment.booking_id) {
+      await supabase.from("bookings").update({ refund_status: null }).eq("id", payment.booking_id);
+    }
     return { ok: false, error: err instanceof Error ? err.message : "Paystack refused the refund." };
   }
 
   if (payment.booking_id) {
-    await supabase.from("bookings").update({ refund_status: "processing" }).eq("id", payment.booking_id);
     // Reverse the therapist's earning now, at initiation, the same moment a
     // dispute resolution does it -- don't wait on the refund.processed
     // webhook, which is also covered as a defensive backstop (M-2,
