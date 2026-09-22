@@ -1,0 +1,23 @@
+-- RLS-07 fix (pre-launch audit, P3): account_deletion_requests (0036) and
+-- the 6-year retention purge (0089) both document that real data deletion
+-- is meant to be a deliberate, out-of-band, admin/cron-controlled process
+-- -- but "parents manage own children" (0002) is `for all`, so a parent
+-- has always been able to directly DELETE their own child row via the
+-- same RLS grant, bypassing that documented path entirely. In practice
+-- this rarely does anything: bookings.child_id (0001) has no `on delete
+-- cascade`, so once a child has any booking -- the precondition for any
+-- real clinical relationship, since assignments/goals/sessions/reports/
+-- diagnoses all DO cascade from bookings-adjacent tables -- the DELETE
+-- fails outright with a foreign-key violation. Only a booking-less child
+-- (no clinical data yet) can actually be deleted this way today. Still
+-- worth closing given the platform's own explicit retention/legal posture
+-- (the DPIA, the 6-year clinical retention policy) -- a parent bypassing
+-- the documented deletion-governance path for the one case where it
+-- technically works is inconsistent design, not a defensible exception.
+--
+-- No app code anywhere calls children.delete() -- confirmed by grep across
+-- src/ -- so there's no legitimate write surface to preserve here, same
+-- situation 0018/0030/0078 each found for their own unused booking-write
+-- surfaces and closed the same way: revoke the privilege outright.
+
+revoke delete on public.children from authenticated;
