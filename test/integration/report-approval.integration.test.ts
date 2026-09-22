@@ -224,6 +224,90 @@ describe("E10/D5 regression: report supervisor-approval gate", () => {
     await assertParentCanSee(reportId, parent, false);
   });
 
+  // RLS-02 regression (pre-launch audit, P1): neither RLS policy that can
+  // reach reports.status/approved_by ever had a WITH CHECK, so nothing at
+  // the database layer actually enforced the approval flow above -- it
+  // only existed because publishReport/approveAndPublishReport are the
+  // only code paths that call it. A raw update through the same RLS grant
+  // could bypass it entirely.
+  it("a supervised therapist cannot force-publish their own report with a raw update", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist();
+    const supervisor = await createTestTherapist();
+    await admin.from("users").update({ is_supervisor: true }).eq("id", supervisor.userId);
+    await admin.from("supervisor_assignments").insert({
+      supervisor_id: supervisor.userId,
+      therapist_id: therapist.therapistProfileId,
+      status: "active",
+    });
+
+    const reportId = await createDraftReport(child.id, therapist.therapistProfileId);
+
+    const client = createAnonClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+    const { error: signInError } = await client.auth.signInWithPassword({
+      email: therapist.email,
+      password: therapist.password,
+    });
+    if (signInError) throw new Error(`sign-in failed: ${signInError.message}`);
+
+    // Never went through publishReport's in_review branch -- straight for
+    // published, exactly what a malicious or scripted client could try.
+    const { error: bypassError } = await client
+      .from("reports")
+      .update({ status: "published", published_at: new Date().toISOString(), approved_by: therapist.userId, approved_at: new Date().toISOString() })
+      .eq("id", reportId);
+    expect(bypassError).toBeTruthy();
+
+    const { data: report } = await admin.from("reports").select("status, published_at").eq("id", reportId).single();
+    expect(report?.status).toBe("draft");
+    expect(report?.published_at).toBeNull();
+
+    await assertParentCanSee(reportId, parent, false);
+  });
+
+  it("a supervisor cannot forge approved_by to a different user while approving", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist();
+    const supervisor = await createTestTherapist();
+    await admin.from("users").update({ is_supervisor: true }).eq("id", supervisor.userId);
+    await admin.from("supervisor_assignments").insert({
+      supervisor_id: supervisor.userId,
+      therapist_id: therapist.therapistProfileId,
+      status: "active",
+    });
+
+    const reportId = await createDraftReport(child.id, therapist.therapistProfileId);
+    await signInAs(therapist);
+    await publishReport(reportId);
+    signOut();
+
+    const client = createAnonClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+    const { error: signInError } = await client.auth.signInWithPassword({
+      email: supervisor.email,
+      password: supervisor.password,
+    });
+    if (signInError) throw new Error(`sign-in failed: ${signInError.message}`);
+
+    // Attribute the approval to the therapist themselves instead of the
+    // real approving supervisor.
+    const { error: forgeError } = await client
+      .from("reports")
+      .update({
+        status: "published",
+        published_at: new Date().toISOString(),
+        approved_by: therapist.userId,
+        approved_at: new Date().toISOString(),
+      })
+      .eq("id", reportId);
+    expect(forgeError).toBeTruthy();
+
+    const { data: report } = await admin.from("reports").select("status, approved_by").eq("id", reportId).single();
+    expect(report?.status).toBe("in_review");
+    expect(report?.approved_by).toBeNull();
+  });
+
   it("resubmitting while already in_review is idempotent", async () => {
     const parent = await createTestParent();
     const child = await createTestChild(parent.userId);
