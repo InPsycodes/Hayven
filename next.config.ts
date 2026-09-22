@@ -125,4 +125,18 @@ export default withSentryConfig(withSerwist(nextConfig), {
   // skipped with a warning, not a failed build, so it's fine to leave unset
   // until it's actually configured.
   silent: !process.env.CI,
+  // SEC-01, pre-launch audit (P2): withSentryConfig implicitly turns on
+  // productionBrowserSourceMaps so it has something to upload -- without
+  // this, those .js.map files would sit in the public .next/static output
+  // right alongside the JS they describe, leaking original file paths,
+  // variable/function names, and business logic structure to anyone who
+  // requests them. deleteSourcemapsAfterUpload already defaults to true in
+  // the installed SDK version (confirmed against its own type
+  // definitions), so this is currently a no-op in practice -- pinned
+  // explicitly anyway so it can't silently regress on a future SDK
+  // upgrade, and so this doesn't depend on a reader checking the SDK's own
+  // source to know it's intentional.
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
 });
