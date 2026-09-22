@@ -178,8 +178,21 @@ export async function listReferralsForReferrer(
     return { ok: false, error: "Enter your reference code and email." };
   }
 
-  const rateLimitOk = await checkRateLimit(`referral-status:${code}`, 10, 15 * 60, { failClosed: true });
-  if (!rateLimitOk) {
+  // F1, pre-launch audit (P1): a bucket keyed on the guessed code alone
+  // doesn't throttle a sweep across the code space -- a fresh guess lands
+  // in a fresh, never-seen bucket every time. Add a second bucket keyed on
+  // the email being targeted, the same reasoning and shape as signIn's own
+  // login-attempt limit (src/lib/auth/actions.ts): the realistic risk is
+  // someone hammering one known/guessed family's email with different
+  // codes, not a single source spreading across many emails, and it
+  // sidesteps needing a reliable client-IP signal behind this deployment's
+  // proxy layer.
+  const codeRateLimitOk = await checkRateLimit(`referral-status:${code}`, 10, 15 * 60, { failClosed: true });
+  if (!codeRateLimitOk) {
+    return { ok: false, error: "Too many attempts. Please wait a few minutes and try again." };
+  }
+  const emailRateLimitOk = await checkRateLimit(`referral-status-email:${cleanEmail}`, 10, 15 * 60, { failClosed: true });
+  if (!emailRateLimitOk) {
     return { ok: false, error: "Too many attempts. Please wait a few minutes and try again." };
   }
 
