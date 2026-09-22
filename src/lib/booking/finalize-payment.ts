@@ -39,7 +39,7 @@ export async function finalizeBookingPayment(
   const { data: booking } = await admin
     .from("bookings")
     .select(
-      "id, parent_id, therapist_id, child_id, session_type, availability_slot_id, children(first_name), availability_slots(start_time), therapist_profiles(user_id, users(full_name))"
+      "id, parent_id, therapist_id, child_id, session_type, availability_slot_id, children(first_name), availability_slots(start_time), therapist_profiles(user_id, users(full_name, status))"
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -58,7 +58,7 @@ export async function finalizeBookingPayment(
   const slot = booking.availability_slots as unknown as { start_time: string } | null;
   const therapistProfile = booking.therapist_profiles as unknown as {
     user_id: string;
-    users: { full_name: string } | null;
+    users: { full_name: string; status: string } | null;
   } | null;
 
   // Everything a confirmed booking needs beyond the status flip itself --
@@ -336,6 +336,32 @@ export async function finalizeBookingPayment(
       notificationBody: `We received your payment for ${child?.first_name ?? "your child"}'s session, but the hold on that time slot had already expired and it's no longer available. You'll be refunded in full -- we're sorry for the mix-up.`,
     });
   };
+
+  // BOOK-04, pre-launch audit (P1): never confirm a booking against a
+  // therapist who's been suspended or offboarded, however this call
+  // reached us -- a fresh payment landing in the narrow window right after
+  // offboarding (before cancelBookingsForDepartedTherapist's cascade
+  // reaches this specific hold), or a late/reclaim-path payment on a hold
+  // that cascade already cancelled, which would otherwise let
+  // handleMissedConfirmation's slot-reclaim below silently revive it.
+  // Checked first, before either path, rather than threading a
+  // "don't revive" flag through the cancellation_reason.
+  if (therapistProfile?.users && therapistProfile.users.status !== "active") {
+    await admin
+      .from("bookings")
+      .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+      .eq("id", bookingId)
+      .neq("status", "cancelled");
+    await admin.from("availability_slots").update({ is_booked: false }).eq("id", booking.availability_slot_id);
+    return recordUnaccountedCharge({
+      anomalyTag: "payment_against_inactive_therapist",
+      sentryMessage: "A Paystack charge landed for a booking whose therapist is no longer active",
+      cancellationReason: "therapist_no_longer_active",
+      applyCancellationRefundPolicy: false,
+      notificationTitle: "Your therapist is no longer available",
+      notificationBody: `${therapistProfile.users.full_name || "Your therapist"} is no longer on Hayven, so this session with ${child?.first_name ?? "your child"} couldn't be confirmed. You'll be refunded in full -- we're sorry for the mix-up.`,
+    });
+  }
 
   const { data: updated, error: updateError } = await admin
     .from("bookings")

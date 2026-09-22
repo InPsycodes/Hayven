@@ -691,6 +691,7 @@ export interface OffboardResult {
   assignmentsEnded: number;
   supervisorAssignmentsEnded: number;
   bookingsCancelled: number;
+  holdsReleased: number;
 }
 
 /**
@@ -709,8 +710,9 @@ export interface OffboardResult {
  *     where they're supervisor_id, clears is_supervisor) and tidies up any
  *     row where they were the one being supervised
  *   - cancels every future confirmed booking with a full refund queued for
- *     an admin to send (cancelBookingsForDepartedTherapist, src/lib/
- *     booking/actions.ts), notifying each affected parent
+ *     an admin to send, and releases every still-unpaid pending hold with
+ *     no refund needed (cancelBookingsForDepartedTherapist, src/lib/
+ *     booking/actions.ts), notifying each affected parent either way
  *
  * Deliberately does NOT touch clinical content -- goals/session notes/
  * reports stay attributed to them permanently (see migration 0093's
@@ -771,12 +773,16 @@ export async function offboardTherapist(
     .eq("therapist_id", therapistProfile.id)
     .eq("status", "active");
 
-  const { cancelled: bookingsCancelled } = await cancelBookingsForDepartedTherapist(supabase, therapistProfile.id);
+  const { cancelled: bookingsCancelled, holdsReleased } = await cancelBookingsForDepartedTherapist(
+    supabase,
+    therapistProfile.id
+  );
 
   const result: OffboardResult = {
     assignmentsEnded: endedAssignments?.length ?? 0,
     supervisorAssignmentsEnded: endedSupervisorAssignments?.length ?? 0,
     bookingsCancelled,
+    holdsReleased,
   };
 
   await logAuditEvent({

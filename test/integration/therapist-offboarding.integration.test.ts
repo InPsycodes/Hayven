@@ -232,6 +232,93 @@ describe("E12 regression: offboarding cascade", () => {
     expect(queuedIds).toContain(childAlone.id);
     expect(queuedIds).not.toContain(childWithBackup.id); // backupTherapist is still active
   });
+
+  // BOOK-04 regression (pre-launch audit, P1): offboarding used to only
+  // cancel *confirmed* bookings -- a hold still sitting at pending_payment
+  // (unpaid, up to 15 minutes old) was left untouched, so a parent who
+  // placed a hold moments before this therapist was offboarded could still
+  // pay afterward and end up with a confirmed booking against someone no
+  // longer on the platform.
+  it("releases a still-unpaid hold, with no refund needed since nothing was charged", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+    const adminUser = await makeTestAdmin();
+
+    await signInAs(parent);
+    const hold = await createPendingBooking({
+      childId: child.id,
+      therapistId: therapist.therapistProfileId,
+      slotId: slot.id,
+      sessionType: "virtual",
+    });
+    if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
+    trackForCleanup("bookings", hold.bookingId);
+    signOut();
+
+    await enrollAndVerifyMfa(await signInAs(adminUser));
+    const result = await offboardTherapist(therapist.userId);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("unreachable");
+    expect(result.result.holdsReleased).toBe(1);
+
+    const { data: bookingRow } = await admin.from("bookings").select("status, refund_amount").eq("id", hold.bookingId).single();
+    expect(bookingRow?.status).toBe("cancelled");
+    expect(bookingRow?.refund_amount).toBeNull(); // never charged, nothing to refund
+
+    const { data: slotRow } = await admin.from("availability_slots").select("is_booked").eq("id", slot.id).single();
+    expect(slotRow?.is_booked).toBe(false);
+  });
+
+  // Defense in depth for the same gap: even if a payment lands in the
+  // narrow window before the cascade above reaches this specific hold (or
+  // after, via a race with the reconciliation sweep or a delayed webhook),
+  // finalizeBookingPayment itself now refuses to confirm a booking against
+  // an inactive therapist.
+  it("never confirms a payment that lands for a booking whose therapist has since been offboarded", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+    const adminUser = await makeTestAdmin();
+
+    await signInAs(parent);
+    const hold = await createPendingBooking({
+      childId: child.id,
+      therapistId: therapist.therapistProfileId,
+      slotId: slot.id,
+      sessionType: "virtual",
+    });
+    if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
+    trackForCleanup("bookings", hold.bookingId);
+    signOut();
+
+    // Offboard, but restore the hold's status to pending_payment to
+    // simulate a payment that was already mid-flight before the cascade's
+    // own cancellation reached it -- exactly the race window this guard
+    // exists for.
+    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await offboardTherapist(therapist.userId);
+    await admin
+      .from("bookings")
+      .update({ status: "pending_payment", cancelled_at: null, cancellation_reason: null })
+      .eq("id", hold.bookingId);
+    await admin.from("availability_slots").update({ is_booked: true }).eq("id", slot.id);
+    signOut();
+
+    const { finalizeBookingPayment } = await import("@/lib/booking/finalize-payment");
+    const reference = `test_book04_${hold.bookingId}`;
+    trackForCleanup("payments", reference, "gateway_reference");
+    const result = await finalizeBookingPayment(hold.bookingId, reference, 1500000);
+    expect(result.ok).toBe(false);
+
+    const { data: bookingRow } = await admin.from("bookings").select("status").eq("id", hold.bookingId).single();
+    expect(bookingRow?.status).toBe("cancelled");
+
+    const { data: payment } = await admin.from("payments").select("status").eq("gateway_reference", reference).single();
+    expect(payment?.status).toBe("successful"); // recorded as a real charge, queued for refund -- never silently lost
+  });
 });
 
 // E12 regression: a goal only the departed therapist could manage doesn't

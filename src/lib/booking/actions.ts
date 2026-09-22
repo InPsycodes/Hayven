@@ -284,7 +284,7 @@ export async function cancelBooking(
 export async function cancelBookingsForDepartedTherapist(
   admin: ReturnType<typeof createAdminClient>,
   therapistProfileId: string
-): Promise<{ cancelled: number }> {
+): Promise<{ cancelled: number; holdsReleased: number }> {
   const { data: bookings } = await admin
     .from("bookings")
     .select("id, parent_id, availability_slot_id, children(first_name), availability_slots(start_time)")
@@ -326,7 +326,49 @@ export async function cancelBookingsForDepartedTherapist(
     cancelled += 1;
   }
 
-  return { cancelled };
+  // BOOK-04, pre-launch audit (P1): the cascade above only ever cancelled
+  // *confirmed* bookings -- a hold still sitting at pending_payment (up to
+  // 15 minutes old, unpaid) was left untouched, so a parent who placed a
+  // hold moments before this therapist was offboarded could still complete
+  // payment afterward and end up with a confirmed booking against someone
+  // no longer on the platform. Nothing was ever charged for these, so
+  // there's no refund to compute -- just release the hold and the slot,
+  // same shape as releaseExpiredHolds (src/lib/therapist/queries.ts).
+  const { data: holds } = await admin
+    .from("bookings")
+    .select("id, parent_id, availability_slot_id, children(first_name)")
+    .eq("therapist_id", therapistProfileId)
+    .eq("status", "pending_payment");
+
+  let holdsReleased = 0;
+  for (const hold of holds ?? []) {
+    const { data: released } = await admin
+      .from("bookings")
+      .update({
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+        cancellation_reason: "therapist_departed",
+      })
+      .eq("id", hold.id)
+      .eq("status", "pending_payment")
+      .select("id")
+      .maybeSingle();
+    if (!released) continue;
+
+    await admin.from("availability_slots").update({ is_booked: false }).eq("id", hold.availability_slot_id);
+
+    const child = hold.children as unknown as { first_name: string } | null;
+    await createNotification({
+      userId: hold.parent_id,
+      type: "booking_confirmed",
+      title: "Your held session is no longer available",
+      body: `The therapist you were booking for ${child?.first_name ?? "your child"} is no longer on Hayven. You haven't been charged -- find another therapist whenever you're ready.`,
+      url: "/search",
+    });
+    holdsReleased += 1;
+  }
+
+  return { cancelled, holdsReleased };
 }
 
 /**

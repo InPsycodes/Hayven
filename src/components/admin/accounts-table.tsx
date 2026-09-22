@@ -37,7 +37,12 @@ function OffboardControl({ userId }: { userId: string }) {
         <a href="/admin/refunds" className="underline">
           Refunds
         </a>
-        ).
+        ){result.holdsReleased > 0 && (
+          <>
+            , {result.holdsReleased} unpaid hold{result.holdsReleased === 1 ? "" : "s"} released
+          </>
+        )}
+        .
       </p>
     );
   }
