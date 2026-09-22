@@ -70,6 +70,20 @@ export async function createPendingBooking(input: {
   // never actually paying), keeping it permanently unbookable by real
   // parents. Scoped to active (not-yet-expired) holds so it doesn't punish
   // someone for holds that are stale but haven't been cleaned up yet.
+  //
+  // BOOK-08, pre-launch audit (P2): this count-then-insert isn't atomic --
+  // a burst of near-simultaneous calls from the same parent could each read
+  // a count under the cap and all proceed, briefly exceeding it. Reviewed
+  // and left as-is rather than forcing an incomplete fix: making this
+  // genuinely atomic would mean moving the count check AND the eventual
+  // booking insert (well below, after the slot hold and price snapshot)
+  // into one Postgres transaction holding an advisory lock the whole way
+  // through -- a real database-function rewrite, not a small patch. Not
+  // worth it here: the rate limiter above (10 hold attempts per 10 min)
+  // already bounds how large a burst can even be, and this cap being off
+  // by a couple during a deliberate burst cannot cause double-booking --
+  // the actual slot claim just below is its own, genuinely atomic
+  // conditional UPDATE, unaffected by this.
   const MAX_CONCURRENT_HOLDS = 3;
   const { count: activeHoldCount } = await admin
     .from("bookings")
