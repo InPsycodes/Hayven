@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listSuccessfulTransactions, verifyTransaction } from "@/lib/payments/paystack";
-import { finalizeBookingPayment } from "@/lib/booking/actions";
+import { finalizeBookingPayment } from "@/lib/booking/finalize-payment";
 
 // E18(b), external PRD review. E2 (finalizeBookingPayment, src/lib/booking/
 // actions.ts) closed the "late confirmation" race -- a webhook or redirect

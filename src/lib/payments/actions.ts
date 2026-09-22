@@ -3,7 +3,7 @@
 import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { initializeTransaction, verifyTransaction } from "@/lib/payments/paystack";
-import { finalizeBookingPayment } from "@/lib/booking/actions";
+import { finalizeBookingPayment } from "@/lib/booking/finalize-payment";
 import { checkRateLimit } from "@/lib/rate-limit/check";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";

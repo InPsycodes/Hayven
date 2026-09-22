@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { verifyWebhookSignature } from "@/lib/payments/paystack";
-import { finalizeBookingPayment } from "@/lib/booking/actions";
+import { finalizeBookingPayment } from "@/lib/booking/finalize-payment";
 import { finalizeRefund } from "@/lib/booking/webhook-refund";
 import { finalizeTransfer } from "@/lib/payouts/webhook";
 import { createAdminClient } from "@/lib/supabase/admin";

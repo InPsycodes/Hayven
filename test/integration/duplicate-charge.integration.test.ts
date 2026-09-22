@@ -11,7 +11,8 @@ import {
   testAdminClient,
   trackForCleanup,
 } from "./helpers";
-import { createPendingBooking, finalizeBookingPayment } from "@/lib/booking/actions";
+import { createPendingBooking } from "@/lib/booking/actions";
+import { finalizeBookingPayment } from "@/lib/booking/finalize-payment";
 import { getBookingsNeedingRefund } from "@/lib/admin/queries";
 
 const admin = testAdminClient;

@@ -16,7 +16,8 @@ import {
   type TestTherapist,
 } from "./helpers";
 import { paystackMock } from "./mocks";
-import { createPendingBooking, finalizeBookingPayment, markNoShow } from "@/lib/booking/actions";
+import { createPendingBooking, markNoShow } from "@/lib/booking/actions";
+import { finalizeBookingPayment } from "@/lib/booking/finalize-payment";
 import { initiatePaystackPayment } from "@/lib/payments/actions";
 import { runPayouts } from "@/lib/payouts/actions";
 import { recordSessionEarnings } from "@/lib/payouts/earnings";
