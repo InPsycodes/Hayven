@@ -33,6 +33,7 @@ export interface ReconciliationResult {
   stillUnresolved: number;
   dbRowsChecked: number;
   mismatched: number;
+  confirmedWithoutPayment: number;
 }
 
 export async function reconcilePaystackPayments(): Promise<ReconciliationResult> {
@@ -52,7 +53,7 @@ export async function reconcilePaystackPayments(): Promise<ReconciliationResult>
       tags: { anomaly: "reconciliation_list_failed" },
       extra: { error: err instanceof Error ? err.message : String(err) },
     });
-    return { paystackChecked: 0, replayed: 0, stillUnresolved: 0, dbRowsChecked: 0, mismatched: 0 };
+    return { paystackChecked: 0, replayed: 0, stillUnresolved: 0, dbRowsChecked: 0, mismatched: 0, confirmedWithoutPayment: 0 };
   }
 
   // Forward direction: Paystack says a charge succeeded -- does Hayven have
@@ -146,5 +147,45 @@ export async function reconcilePaystackPayments(): Promise<ReconciliationResult>
     }
   }
 
-  return { paystackChecked: paystackTransactions.length, replayed, stillUnresolved, dbRowsChecked, mismatched };
+  // Third direction: a booking marked confirmed with no matching
+  // successful payments row at all (BOOK-07, pre-launch audit). The
+  // status flip and the payments insert in applyConfirmedBookingEffects
+  // (src/lib/booking/finalize-payment.ts) aren't one transaction -- if the
+  // insert ever failed for a reason other than the already-handled 23505
+  // duplicate, the booking stays confirmed with nothing to show for it.
+  // Sentry already alerts the moment that happens; this is what actually
+  // keeps checking for it afterward, the same as the forward/reverse
+  // directions above. Surfaced only -- there's no charge amount on hand to
+  // safely fabricate a payments row from, so a human has to reconcile it
+  // against Paystack's own dashboard directly.
+  let confirmedWithoutPayment = 0;
+
+  const { data: confirmedBookings } = await admin
+    .from("bookings")
+    .select("id")
+    .eq("status", "confirmed")
+    .gte("created_at", windowStart.toISOString());
+
+  if (confirmedBookings && confirmedBookings.length > 0) {
+    const bookingIds = confirmedBookings.map((b) => b.id);
+    const { data: paidBookings } = await admin
+      .from("payments")
+      .select("booking_id")
+      .eq("status", "successful")
+      .eq("type", "session_commission")
+      .in("booking_id", bookingIds);
+    const paidSet = new Set((paidBookings ?? []).map((p) => p.booking_id));
+
+    for (const booking of confirmedBookings) {
+      if (paidSet.has(booking.id)) continue;
+      confirmedWithoutPayment += 1;
+      Sentry.captureMessage("Paystack reconciliation: a confirmed booking still has no successful payment row", {
+        level: "error",
+        tags: { anomaly: "reconciliation_confirmed_booking_missing_payment" },
+        extra: { bookingId: booking.id },
+      });
+    }
+  }
+
+  return { paystackChecked: paystackTransactions.length, replayed, stillUnresolved, dbRowsChecked, mismatched, confirmedWithoutPayment };
 }

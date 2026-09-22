@@ -163,4 +163,75 @@ describe("E18(b) regression: Paystack reconciliation sweep", () => {
     expect(result.dbRowsChecked).toBeGreaterThanOrEqual(1);
     expect(result.mismatched).toBe(1);
   });
+
+  // BOOK-07, pre-launch audit (P2): the status flip and the payments insert
+  // in applyConfirmedBookingEffects aren't one transaction -- if the insert
+  // ever failed for a reason other than the already-handled 23505
+  // duplicate, the booking stays confirmed with no payments row and
+  // nothing ever surfaces it again. This third direction is what does.
+  it("flags a confirmed booking that has no successful payment row at all", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+
+    const { data: booking, error: bookingError } = await admin
+      .from("bookings")
+      .insert({
+        parent_id: parent.userId,
+        child_id: child.id,
+        therapist_id: therapist.therapistProfileId,
+        availability_slot_id: slot.id,
+        status: "confirmed",
+        session_type: "virtual",
+      })
+      .select("id")
+      .single();
+    if (bookingError || !booking) throw new Error(`booking fixture failed: ${bookingError?.message}`);
+    trackForCleanup("bookings", booking.id);
+
+    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([]);
+    const result = await reconcilePaystackPayments();
+    expect(result.confirmedWithoutPayment).toBeGreaterThanOrEqual(1);
+  });
+
+  it("does not flag a confirmed booking that DOES have a successful payment row", async () => {
+    const parent = await createTestParent();
+    const child = await createTestChild(parent.userId);
+    const therapist = await createTestTherapist({ priceNaira: 15000 });
+    const slot = await createTestSlot(therapist.therapistProfileId);
+
+    const { data: booking, error: bookingError } = await admin
+      .from("bookings")
+      .insert({
+        parent_id: parent.userId,
+        child_id: child.id,
+        therapist_id: therapist.therapistProfileId,
+        availability_slot_id: slot.id,
+        status: "confirmed",
+        session_type: "virtual",
+      })
+      .select("id")
+      .single();
+    if (bookingError || !booking) throw new Error(`booking fixture failed: ${bookingError?.message}`);
+    trackForCleanup("bookings", booking.id);
+
+    const reference = `test_ref_has_payment_${booking.id}`;
+    await admin.from("payments").insert({
+      booking_id: booking.id,
+      payer_id: parent.userId,
+      amount: 15000,
+      type: "session_commission",
+      gateway_reference: reference,
+      status: "successful",
+    });
+    trackForCleanup("payments", reference, "gateway_reference");
+
+    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([]);
+    const result = await reconcilePaystackPayments();
+    // Same convention as this file's other exact-count assertions --
+    // afterEach's cleanupAll() means no other test in this file leaves a
+    // confirmed booking behind for this one to trip over.
+    expect(result.confirmedWithoutPayment).toBe(0);
+  });
 });
