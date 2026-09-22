@@ -190,7 +190,7 @@ export async function approveAndPublishReport(reportId: string): Promise<{ ok: t
 
   const { data: therapySession } = await supabase
     .from("therapy_sessions")
-    .select("child_id, therapist_id, therapist_profiles(users(full_name))")
+    .select("child_id, therapist_id")
     .eq("id", report.session_id)
     .maybeSingle();
   if (!therapySession || !(await isOwnTeamTherapist(supabase, session.userId, therapySession.therapist_id))) {
@@ -222,10 +222,21 @@ export async function approveAndPublishReport(reportId: string): Promise<{ ok: t
 
   await captureServer(session.userId, ANALYTICS_EVENTS.reportPublished, { role: "supervisor" });
 
+  // RLS-01, pre-launch audit: a supervisor's RLS visibility into a
+  // supervised therapist's users row is now name-only via a dedicated
+  // roster view (0098), not the raw table -- but ownership of this
+  // specific therapist is already verified by isOwnTeamTherapist above, so
+  // the admin client is simplest and consistent with notifyParentReportPublished
+  // just below.
+  const admin = createAdminClient();
+  const { data: therapistProfile } = await admin
+    .from("therapist_profiles")
+    .select("users(full_name)")
+    .eq("id", therapySession.therapist_id)
+    .maybeSingle();
   const therapistName =
-    (therapySession.therapist_profiles as unknown as { users: { full_name: string } | null } | null)?.users
-      ?.full_name ?? "Your therapist";
-  await notifyParentReportPublished(createAdminClient(), therapySession.child_id, reportId, therapistName);
+    (therapistProfile?.users as unknown as { full_name: string } | null)?.full_name ?? "Your therapist";
+  await notifyParentReportPublished(admin, therapySession.child_id, reportId, therapistName);
 
   revalidatePath(`/supervisor/children/${therapySession.child_id}/sessions/${report.session_id}`);
   return { ok: true };

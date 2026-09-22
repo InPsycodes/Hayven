@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { AssignedChild } from "@/lib/therapy-sessions/types";
 import type { AdminPickerOption } from "@/lib/admin/queries";
 
@@ -22,7 +23,17 @@ export async function getMySupervisedTherapistCount(supervisorId: string): Promi
 }
 
 export async function getMySupervisedTherapists(supervisorId: string): Promise<SupervisedTherapist[]> {
-  const supabase = await createClient();
+  // RLS-01, pre-launch audit: a supervisor's own RLS grant on `users` only
+  // ever needed to expose a supervised therapist's name (0027's own
+  // comment), but it was table/row-scoped with no column limit, so it
+  // handed over email/phone/status/role too. Rather than a table-wide
+  // column-scoped grant (which would also restrict every OTHER
+  // authenticated user's read of their own full row -- Postgres GRANTs are
+  // role-wide, not per-caller), the query itself is already correctly
+  // scoped to this exact supervisorId's own active team, so the admin
+  // client is the simplest fix consistent with this codebase's established
+  // "ownership already verified, defense in depth" pattern.
+  const supabase = createAdminClient();
   const { data } = await supabase
     .from("supervisor_assignments")
     .select("therapist_profiles(id, users(full_name))")
@@ -55,7 +66,9 @@ export interface TeamAssignment {
 
 /** All active therapist-child assignments for the supervisor's own team -- for the assignments page's "currently assigned" list. */
 export async function getMyTeamAssignments(supervisorId: string): Promise<TeamAssignment[]> {
-  const supabase = await createClient();
+  // RLS-01, pre-launch audit: see getMySupervisedTherapists above -- same
+  // reasoning, needs the therapist's name via the users() embed.
+  const supabase = createAdminClient();
 
   const { data: teamRows } = await supabase
     .from("supervisor_assignments")
@@ -97,7 +110,9 @@ export interface LapsedTeamAssignment extends TeamAssignment {
  * (src/lib/admin/queries.ts) -- a working queue, not a full audit history.
  */
 export async function getMyLapsedTeamAssignments(supervisorId: string): Promise<LapsedTeamAssignment[]> {
-  const supabase = await createClient();
+  // RLS-01, pre-launch audit: see getMySupervisedTherapists above -- same
+  // reasoning, needs the therapist's name via the users() embed.
+  const supabase = createAdminClient();
 
   const { data: teamRows } = await supabase
     .from("supervisor_assignments")

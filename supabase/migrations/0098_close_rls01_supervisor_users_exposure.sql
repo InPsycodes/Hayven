@@ -1,0 +1,29 @@
+-- RLS-01 fix (pre-launch audit, P1): "supervisor views team therapist user
+-- profiles" (0027) was written to expose a supervised therapist's NAME (its
+-- own comment: "there was no name to show anywhere a supervisor lists
+-- their team") but is a row-level-only policy with no column limit --
+-- public.users has never had the column-scoped GRANT treatment 0021/0085
+-- gave therapist_profiles for the same bug class, so once the row is
+-- visible under this policy, every column is: email, phone, status, role,
+-- is_supervisor, terms_accepted_at.
+--
+-- A column-scoped GRANT isn't the right fix here the way it was for
+-- therapist_profiles' bank columns: GRANT is role-wide, not per-caller, and
+-- `users` is read by every authenticated user for their OWN full row
+-- (profile pages, settings, session checks) -- narrowing the table-wide
+-- SELECT grant would break that for everyone, not just narrow what a
+-- supervisor sees about someone else.
+--
+-- Real fix: the app code that needed this (src/lib/supervisor/queries.ts's
+-- getMySupervisedTherapists/getMyTeamAssignments/getMyLapsedTeamAssignments,
+-- and src/lib/supervisor/actions.ts's approveAndPublishReport) has been
+-- switched to look up the name via the admin client, scoped to a
+-- therapist_id whose ownership by the calling supervisor is already
+-- verified by that same query chain (supervisor_assignments filtered to
+-- the caller's own id, or isOwnTeamTherapist) -- the established "ownership
+-- already established, defense in depth" pattern already used elsewhere in
+-- this schema (E10/D5's publishReport). Nothing else in the app reads a
+-- supervised therapist's users row via this policy, so it can be dropped
+-- outright rather than patched.
+
+drop policy "supervisor views team therapist user profiles" on public.users;
