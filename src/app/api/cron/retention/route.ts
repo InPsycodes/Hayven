@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { purgeAgedOutClinicalRecords } from "@/lib/clinical/purge";
 import { purgeAgedOutPayments } from "@/lib/payments/retention";
+import { expireInactiveAssignments } from "@/lib/assignments/cron";
 
 // Timing-safe, same reasoning as the notifications cron and the Paystack
 // webhook's signature check: a plain `===` leaks how many leading
@@ -23,7 +24,10 @@ function timingSafeEqualString(a: string, b: string): boolean {
  * with no reason to run more than once a day, and the clinical sweep costs
  * one query per not-yet-purged child, which is wasted work at a 15-minute
  * or even hourly cadence. Scheduled daily via pg_cron (migration 0089, same
- * vault-secret pattern as 0070/0088).
+ * vault-secret pattern as 0070/0088). Also carries expireInactiveAssignments
+ * (E5, src/lib/assignments/cron.ts) -- a different concern (access
+ * lifecycle, not data retention) that shares this route purely because it
+ * has the same "not time-critical, daily is plenty" cadence.
  */
 export async function GET(req: NextRequest) {
   const expected = process.env.CRON_SECRET;
@@ -32,13 +36,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [clinicalRecordsPurged, paymentsPurged] = await Promise.all([
+  const [clinicalRecordsPurged, paymentsPurged, assignmentsExpired] = await Promise.all([
     purgeAgedOutClinicalRecords(),
     purgeAgedOutPayments(),
+    expireInactiveAssignments(),
   ]);
 
   return NextResponse.json({
     clinicalRecordsPurged: clinicalRecordsPurged.purged,
     paymentsPurged: paymentsPurged.purged,
+    assignmentsExpired: assignmentsExpired.expired,
   });
 }

@@ -95,7 +95,7 @@ export async function endTherapistChildAssignmentAsSupervisor(
 
   const { data, error } = await supabase
     .from("therapist_child_assignments")
-    .update({ status: "ended", ended_on: new Date().toISOString().slice(0, 10) })
+    .update({ status: "ended", ended_on: new Date().toISOString().slice(0, 10), ended_reason: "manual" })
     .eq("id", assignmentId)
     .select("id, child_id, therapist_id")
     .maybeSingle();
@@ -109,6 +109,57 @@ export async function endTherapistChildAssignmentAsSupervisor(
     entityId: assignmentId,
     childId: data.child_id,
     metadata: { therapistId: data.therapist_id },
+  });
+
+  revalidatePath("/supervisor/assignments");
+  return { ok: true };
+}
+
+/**
+ * E5, external PRD review: same reasoning as renewTherapistChildAssignment
+ * (src/lib/admin/actions.ts) -- creates a fresh row rather than reactivating
+ * the lapsed one, so the old row stays an untouched record of when and why
+ * access previously ended. Scoped to the supervisor's own team the same way
+ * every other action in this file is (isOwnTeamTherapist), via the
+ * RLS-bound client rather than the service-role one.
+ */
+export async function renewTherapistChildAssignmentAsSupervisor(
+  assignmentId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || !(session.role === "supervisor" || (session.role === "therapist" && session.isSupervisor))) {
+    return { ok: false, error: "Not authorized." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("therapist_child_assignments")
+    .select("therapist_id, child_id, therapy_type, status")
+    .eq("id", assignmentId)
+    .maybeSingle();
+  if (!existing || !(await isOwnTeamTherapist(supabase, session.userId, existing.therapist_id))) {
+    return { ok: false, error: "Assignment not found." };
+  }
+  if (existing.status === "active") return { ok: false, error: "This assignment is already active." };
+
+  const { data, error } = await supabase
+    .from("therapist_child_assignments")
+    .insert({ therapist_id: existing.therapist_id, child_id: existing.child_id, therapy_type: existing.therapy_type })
+    .select("id")
+    .single();
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "This therapist is already actively assigned to this child." };
+    return { ok: false, error: error.message };
+  }
+
+  await logAuditEvent({
+    actor: session,
+    action: "assignment.therapist_child.renew",
+    entityType: "therapist_child_assignment",
+    entityId: data.id,
+    childId: existing.child_id,
+    metadata: { therapistId: existing.therapist_id, previousAssignmentId: assignmentId },
   });
 
   revalidatePath("/supervisor/assignments");

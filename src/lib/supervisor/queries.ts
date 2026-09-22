@@ -83,6 +83,53 @@ export async function getMyTeamAssignments(supervisorId: string): Promise<TeamAs
   }));
 }
 
+export interface LapsedTeamAssignment extends TeamAssignment {
+  endedOn: string | null;
+  /** 'manual' | 'inactivity' | null (predates the ended_reason column, migration 0090) */
+  endedReason: string | null;
+}
+
+/**
+ * E5, external PRD review: lapsed (manually ended or 90-day-inactivity-
+ * expired) assignments for the supervisor's own team, so care can be
+ * resumed via renewTherapistChildAssignmentAsSupervisor. Capped to the most
+ * recent 50, same reasoning as getLapsedTherapistChildAssignments
+ * (src/lib/admin/queries.ts) -- a working queue, not a full audit history.
+ */
+export async function getMyLapsedTeamAssignments(supervisorId: string): Promise<LapsedTeamAssignment[]> {
+  const supabase = await createClient();
+
+  const { data: teamRows } = await supabase
+    .from("supervisor_assignments")
+    .select("therapist_id")
+    .eq("supervisor_id", supervisorId)
+    .eq("status", "active");
+  const therapistIds = (teamRows ?? []).map((r) => r.therapist_id);
+  if (therapistIds.length === 0) return [];
+
+  const { data } = await supabase
+    .from("therapist_child_assignments")
+    .select(
+      "id, therapy_type, started_on, ended_on, ended_reason, therapist_profiles(users(full_name)), children(first_name)"
+    )
+    .in("therapist_id", therapistIds)
+    .in("status", ["ended", "expired"])
+    .order("ended_on", { ascending: false })
+    .limit(50);
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    therapistName:
+      (row.therapist_profiles as unknown as { users: { full_name: string } | null } | null)?.users?.full_name ??
+      "Unknown",
+    childName: (row.children as unknown as { first_name: string } | null)?.first_name ?? "Unknown",
+    therapyType: row.therapy_type,
+    startedOn: row.started_on,
+    endedOn: row.ended_on,
+    endedReason: row.ended_reason,
+  }));
+}
+
 export async function getSupervisedChildrenForTherapist(
   therapistId: string,
   supervisorId: string

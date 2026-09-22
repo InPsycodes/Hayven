@@ -17,6 +17,7 @@ export type AuditAction =
   | "verification.decide"
   | "assignment.therapist_child.create"
   | "assignment.therapist_child.end"
+  | "assignment.therapist_child.renew"
   | "assignment.supervisor_therapist.create"
   | "assignment.supervisor_therapist.end"
   | "account_deletion_request.submit"

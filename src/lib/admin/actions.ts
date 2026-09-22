@@ -359,7 +359,7 @@ export async function endTherapistChildAssignment(assignmentId: string): Promise
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("therapist_child_assignments")
-    .update({ status: "ended", ended_on: new Date().toISOString().slice(0, 10) })
+    .update({ status: "ended", ended_on: new Date().toISOString().slice(0, 10), ended_reason: "manual" })
     .eq("id", assignmentId)
     .select("id, child_id, therapist_id")
     .maybeSingle();
@@ -373,6 +373,53 @@ export async function endTherapistChildAssignment(assignmentId: string): Promise
     entityId: assignmentId,
     childId: data.child_id,
     metadata: { therapistId: data.therapist_id },
+  });
+
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+/**
+ * E5, external PRD review: reactivates a lapsed (manually ended or
+ * inactivity-expired) assignment when care is actually continuing. Creates
+ * a fresh row rather than flipping the old one back to active -- matching
+ * this table's own established convention (0037's comment: "every real
+ * 'reassignment' ends one row... and creates a new one"), so the expired
+ * row stays an untouched historical record of exactly when and why access
+ * previously ended.
+ */
+export async function renewTherapistChildAssignment(
+  assignmentId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
+
+  const supabase = createAdminClient();
+  const { data: existing } = await supabase
+    .from("therapist_child_assignments")
+    .select("therapist_id, child_id, therapy_type, status")
+    .eq("id", assignmentId)
+    .maybeSingle();
+  if (!existing) return { ok: false, error: "Assignment not found." };
+  if (existing.status === "active") return { ok: false, error: "This assignment is already active." };
+
+  const { data, error } = await supabase
+    .from("therapist_child_assignments")
+    .insert({ therapist_id: existing.therapist_id, child_id: existing.child_id, therapy_type: existing.therapy_type })
+    .select("id")
+    .single();
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "This therapist is already actively assigned to this child." };
+    return { ok: false, error: error.message };
+  }
+
+  await logAuditEvent({
+    actor: session,
+    action: "assignment.therapist_child.renew",
+    entityType: "therapist_child_assignment",
+    entityId: data.id,
+    childId: existing.child_id,
+    metadata: { therapistId: existing.therapist_id, previousAssignmentId: assignmentId },
   });
 
   revalidatePath("/admin/users");

@@ -4,13 +4,19 @@ import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { Card } from "@/components/ui/card";
 import { AssignPicker } from "@/components/care-team/assign-picker";
 import { AssignmentRow } from "@/components/care-team/assignment-row";
+import { LapsedAssignmentRow } from "@/components/care-team/lapsed-assignment-row";
 import { getSession } from "@/lib/auth/session";
 import {
   getMySupervisedTherapists,
   getMyTeamAssignments,
+  getMyLapsedTeamAssignments,
   getChildrenEligibleForSupervisorAssignment,
 } from "@/lib/supervisor/queries";
-import { assignChildToTherapist, endTherapistChildAssignmentAsSupervisor } from "@/lib/supervisor/actions";
+import {
+  assignChildToTherapist,
+  endTherapistChildAssignmentAsSupervisor,
+  renewTherapistChildAssignmentAsSupervisor,
+} from "@/lib/supervisor/actions";
 
 export default async function SupervisorAssignmentsPage() {
   const session = await getSession();
@@ -18,10 +24,11 @@ export default async function SupervisorAssignmentsPage() {
     redirect("/login");
   }
 
-  const [therapists, children, teamAssignments] = await Promise.all([
+  const [therapists, children, teamAssignments, lapsedTeamAssignments] = await Promise.all([
     getMySupervisedTherapists(session.userId),
     getChildrenEligibleForSupervisorAssignment(),
     getMyTeamAssignments(session.userId),
+    getMyLapsedTeamAssignments(session.userId),
   ]);
 
   return (
@@ -61,6 +68,31 @@ export default async function SupervisorAssignmentsPage() {
                   />
                 ))
               )}
+            </div>
+          </Card>
+        )}
+
+        {lapsedTeamAssignments.length > 0 && (
+          <Card lift className="p-5">
+            <h3 className="font-heading text-base text-charcoal">Lapsed assignments</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ended manually, or auto-expired after 90 days with no recorded session. Renew if care is
+              continuing.
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              {lapsedTeamAssignments.map((a) => (
+                <LapsedAssignmentRow
+                  key={a.id}
+                  fromName={a.therapistName}
+                  toName={a.childName}
+                  detail={a.therapyType}
+                  startedOn={a.startedOn}
+                  endedOn={a.endedOn}
+                  endedReason={a.endedReason}
+                  assignmentId={a.id}
+                  onRenew={renewTherapistChildAssignmentAsSupervisor}
+                />
+              ))}
             </div>
           </Card>
         )}

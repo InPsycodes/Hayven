@@ -477,6 +477,43 @@ export async function getActiveTherapistChildAssignments(): Promise<RealTherapis
   }));
 }
 
+export interface RealLapsedTherapistChildAssignment extends RealTherapistChildAssignment {
+  endedOn: string | null;
+  /** 'manual' | 'inactivity' | null (predates the ended_reason column, migration 0090) */
+  endedReason: string | null;
+}
+
+/**
+ * E5, external PRD review: assignments an admin (or the 90-day inactivity
+ * sweep, src/lib/assignments/cron.ts) has ended, kept visible so care can be
+ * resumed via renewTherapistChildAssignment without re-entering therapy_type
+ * from scratch. Capped to the most recent 50 -- this is a working queue for
+ * "might need to renew," not a full historical audit (that's audit_log).
+ */
+export async function getLapsedTherapistChildAssignments(): Promise<RealLapsedTherapistChildAssignment[]> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("therapist_child_assignments")
+    .select(
+      "id, therapy_type, started_on, ended_on, ended_reason, therapist_profiles(users(full_name)), children(first_name)"
+    )
+    .in("status", ["ended", "expired"])
+    .order("ended_on", { ascending: false })
+    .limit(50);
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    therapistName:
+      (row.therapist_profiles as unknown as { users: { full_name: string } | null } | null)?.users?.full_name ??
+      "Unknown",
+    childName: (row.children as unknown as { first_name: string } | null)?.first_name ?? "Unknown",
+    therapyType: row.therapy_type,
+    startedOn: row.started_on,
+    endedOn: row.ended_on,
+    endedReason: row.ended_reason,
+  }));
+}
+
 export interface PlatformMetrics {
   totalParents: number;
   totalTherapists: number;

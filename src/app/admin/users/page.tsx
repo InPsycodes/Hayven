@@ -1,5 +1,6 @@
 import { AssignPicker } from "@/components/care-team/assign-picker";
 import { AssignmentRow } from "@/components/care-team/assignment-row";
+import { LapsedAssignmentRow } from "@/components/care-team/lapsed-assignment-row";
 import { SupervisorRequestRow } from "@/components/admin/supervisor-request-row";
 import {
   getAllChildrenForAdmin,
@@ -7,6 +8,7 @@ import {
   getAllTherapistsForAdmin,
   getActiveSupervisorAssignments,
   getActiveTherapistChildAssignments,
+  getLapsedTherapistChildAssignments,
   getSupervisorRequests,
 } from "@/lib/admin/queries";
 import {
@@ -14,18 +16,27 @@ import {
   assignTherapistToChild,
   endSupervisorAssignment,
   endTherapistChildAssignment,
+  renewTherapistChildAssignment,
 } from "@/lib/admin/actions";
 
 export default async function AdminUsersPage() {
-  const [therapists, children, supervisors, therapistChildAssignments, supervisorAssignments, supervisorRequests] =
-    await Promise.all([
-      getAllTherapistsForAdmin(),
-      getAllChildrenForAdmin(),
-      getAllSupervisorsForAdmin(),
-      getActiveTherapistChildAssignments(),
-      getActiveSupervisorAssignments(),
-      getSupervisorRequests(),
-    ]);
+  const [
+    therapists,
+    children,
+    supervisors,
+    therapistChildAssignments,
+    lapsedTherapistChildAssignments,
+    supervisorAssignments,
+    supervisorRequests,
+  ] = await Promise.all([
+    getAllTherapistsForAdmin(),
+    getAllChildrenForAdmin(),
+    getAllSupervisorsForAdmin(),
+    getActiveTherapistChildAssignments(),
+    getLapsedTherapistChildAssignments(),
+    getActiveSupervisorAssignments(),
+    getSupervisorRequests(),
+  ]);
   const pendingSupervisorRequests = supervisorRequests.filter((r) => r.status === "pending");
 
   return (
@@ -71,6 +82,33 @@ export default async function AdminUsersPage() {
             )}
           </div>
         </section>
+
+        {lapsedTherapistChildAssignments.length > 0 && (
+          <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)] md:p-6">
+            <h2 className="label-micro text-rust-dark">Care team</h2>
+            <h3 className="mt-1 font-heading text-lg text-charcoal">Lapsed assignments</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ended manually, or auto-expired after 90 days with no recorded session. Renew if care is
+              continuing.
+            </p>
+
+            <div className="mt-5 flex flex-col gap-2">
+              {lapsedTherapistChildAssignments.map((a) => (
+                <LapsedAssignmentRow
+                  key={a.id}
+                  fromName={a.therapistName}
+                  toName={a.childName}
+                  detail={a.therapyType}
+                  startedOn={a.startedOn}
+                  endedOn={a.endedOn}
+                  endedReason={a.endedReason}
+                  assignmentId={a.id}
+                  onRenew={renewTherapistChildAssignment}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="rounded-sm bg-white p-5 shadow-[0_1px_2px_rgba(26,26,26,.04),0_6px_16px_-10px_rgba(26,26,26,.15)] md:p-6">
           <h2 className="label-micro text-rust-dark">Oversight</h2>
