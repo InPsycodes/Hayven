@@ -39,3 +39,4 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("sfvwfbgrfmqaaakbepll")) {
   );
 }
 process.env.PAYSTACK_SECRET_KEY ??= "sk_test_integration_placeholder";
+process.env.UNSUBSCRIBE_SECRET ??= "integration-test-unsubscribe-secret-placeholder";
