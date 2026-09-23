@@ -296,7 +296,7 @@ export function DashboardPreview() {
           <div className="lg:absolute lg:top-[10px] lg:left-0 lg:w-[34%]">
             <h2 className="font-serif text-[2rem] leading-[1.06] tracking-tight text-charcoal sm:text-[2.75rem] lg:text-[3.2rem]">
               A clearer view of
-              <span className="block text-terracotta">your child&apos;s care.</span>
+              <span className="block">your child&apos;s care.</span>
             </h2>
             <p className="mt-4 max-w-[22em] text-[16.5px] leading-[1.5] text-ink-soft sm:text-[17px]">
               Progress, sessions, reports and therapist updates, all in one calm place.

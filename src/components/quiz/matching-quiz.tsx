@@ -431,11 +431,8 @@ function ResultsStep({
       ) : (
         <>
           <h1 className="max-w-[26ch] font-serif text-2xl leading-tight text-charcoal md:text-[1.75rem]">
-            We found{" "}
-            <span className="text-rust-dark">
-              {preview.count} verified therapist{preview.count === 1 ? "" : "s"}
-            </span>{" "}
-            who fit, mostly in {specialtyLabel.toLowerCase()}.
+            We found {preview.count} verified therapist{preview.count === 1 ? "" : "s"} who fit, mostly in{" "}
+            {specialtyLabel.toLowerCase()}.
           </h1>
 
           <div className="flex flex-wrap gap-2">

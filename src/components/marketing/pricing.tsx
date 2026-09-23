@@ -39,7 +39,7 @@ export function Pricing() {
           <h2 className="font-serif text-[1.7rem] leading-[1.06] tracking-tight text-canvas-white sm:text-[2.5rem] lg:text-[3.3rem]">
             You see the price.
             <br />
-            <em className="not-italic text-rust-light">Before you commit.</em>
+            <em className="not-italic">Before you commit.</em>
           </h2>
 
           <p className="mt-5 max-w-md text-sm leading-relaxed text-canvas-white/65 sm:text-[15px]">

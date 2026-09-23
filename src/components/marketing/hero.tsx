@@ -46,7 +46,7 @@ export function Hero() {
               style={{ textShadow: TEXT_SHADOW }}
             >
               A calmer path to the{" "}
-              <em className="font-normal text-rust-light not-italic">right care</em> for
+              <em className="font-normal not-italic">right care</em> for
               your child.
             </h1>
 

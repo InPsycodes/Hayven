@@ -101,7 +101,7 @@ export default function ForTherapistsPage() {
                 className="reveal mt-5 max-w-[22ch] font-heading text-[2.1rem] leading-[1.08] font-medium text-canvas-white sm:text-5xl lg:text-[3.6rem]"
                 style={{ textShadow: TEXT_SHADOW, animationDelay: "220ms" }}
               >
-                Less admin. <em className="font-normal text-rust-light not-italic">More of the families</em> you
+                Less admin. <em className="font-normal not-italic">More of the families</em> you
                 took this job for.
               </h1>
 

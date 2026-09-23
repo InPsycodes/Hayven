@@ -75,7 +75,7 @@ export default function PediatriciansPage() {
               className="reveal mt-6 max-w-[12ch] font-heading text-[2.4rem] leading-[0.98] font-medium text-canvas-white sm:text-5xl lg:text-[4.2rem]"
               style={{ animationDelay: "220ms" }}
             >
-              Refer a family <span className="text-rust-light">in under</span> a minute, not a phone tree.
+              Refer a family in under a minute, not a phone tree.
             </h1>
 
             <p
