@@ -153,6 +153,10 @@ The original draft explained *why* data is collected but did not systematically 
 *what NDPA lawful basis each processing activity relies on* — the single biggest
 substantive gap an external legal-context review identified in it. This section is that
 map, in skeleton form; every "Needs legal review" cell is a real gap, not a formality.
+A consolidated, counsel-ready version of this table lives in
+`docs/counsel-briefing-legal-review.md` Part A, alongside the Therapist Agreement's
+liability questions and the transfer register below — hand that single document to
+whoever reviews this, rather than this full DPIA.
 
 | Processing activity | Data involved | Purpose | Proposed lawful basis | Notes |
 |---|---|---|---|---|
@@ -271,6 +275,8 @@ leaves Nigeria, who receives it, for what purpose, where it's actually processed
 what contractual arrangement, and under what NDPA transfer mechanism. The register below
 is the start of that answer; the "DPA" and "Transfer mechanism" columns are the two
 columns counsel needs to close before this section is more than a location inventory.
+See `docs/counsel-briefing-legal-review.md` Part C for the counsel-ready version of
+this table with priority ranking and the specific per-vendor questions.
 
 | Vendor | Data received | Purpose | Primary location | DPA executed? | Transfer mechanism | Status |
 |---|---|---|---|---|---|---|

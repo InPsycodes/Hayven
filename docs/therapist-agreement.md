@@ -149,7 +149,10 @@ implemented — not a proposal.
 
 This is the section with the most at stake and the least defensible for me to draft
 substantively — every number and allocation below needs your and counsel's actual
-decision, not my estimate.
+decision, not my estimate. A consolidated, counsel-ready version of these three
+questions (plus the labour-classification question in §1) lives in
+`docs/counsel-briefing-legal-review.md` Part B, alongside the DPIA's lawful-basis
+matrix and transfer register — hand that single document to whoever reviews this.
 
 - **Professional liability insurance.** [FILL IN — will the Platform require
   therapists to carry their own professional indemnity/liability insurance as a
