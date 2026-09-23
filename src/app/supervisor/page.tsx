@@ -161,11 +161,11 @@ export default async function SupervisorTeamPage() {
             )}
           </CarePanel.Static>
 
-          <CarePanel label="Oversight" href="/supervisor/settings" accent>
+          <CarePanel label="Account security" href="/supervisor/settings" accent>
             <div className="mt-2 flex items-start gap-2.5">
               <IconShieldLock size={18} stroke={1.75} className="mt-0.5 shrink-0 text-care-accent" />
               <p className="text-[12.5px] leading-relaxed text-care-ink-soft">
-                Report-review cadence, flagged-session alerts, and session-notes access.
+                Two-factor authentication for your account.
               </p>
             </div>
           </CarePanel>

@@ -81,8 +81,8 @@ export function ReferralStatusLookup() {
       <div>
         <h1 className="font-heading text-2xl text-charcoal">Track your referrals</h1>
         <p className="mt-1.5 text-sm text-ink-soft">
-          Enter one reference code and the email from your confirmation -- we&apos;ll show every referral tied to
-          that email.
+          Enter a reference code and the email address you (the referring clinician) gave when you submitted
+          it -- we&apos;ll show every referral tied to that email.
         </p>
       </div>
       <div className="flex flex-col gap-2">
@@ -96,7 +96,7 @@ export function ReferralStatusLookup() {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="statusEmail">Your email</Label>
+        <Label htmlFor="statusEmail">Your email (not the parent&apos;s)</Label>
         <Input
           id="statusEmail"
           type="email"

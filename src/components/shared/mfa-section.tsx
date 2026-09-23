@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,12 +20,21 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
   const [secret, setSecret] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  // A plain boolean, not useTransition()'s isPending -- these actions call
+  // revalidatePath() on several routes, and Next.js keeps a transition
+  // "pending" until the router refresh that triggers settles, not just
+  // until the awaited call resolves. That left the idle-state button stuck
+  // showing "Working..." after a successful enrollment even though
+  // `status`/`step` had already updated correctly. This tracks only "is our
+  // own await still in flight", independent of any router-refresh timing.
+  const [isPending, setIsPending] = useState(false);
 
   function startEnroll() {
     setError(null);
-    startTransition(async () => {
+    setIsPending(true);
+    void (async () => {
       const result = await enrollMfa();
+      setIsPending(false);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -34,7 +43,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
       setQrCode(result.qrCode);
       setSecret(result.secret);
       setStep("confirming");
-    });
+    })();
   }
 
   const confirmEnrollGuard = useSubmitGuard();
@@ -43,8 +52,10 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
     e.preventDefault();
     if (!factorId) return;
     setError(null);
-    startTransition(async () => {
+    setIsPending(true);
+    void (async () => {
       const result = await confirmMfaEnrollment(factorId, code);
+      setIsPending(false);
       if (!result.ok) {
         setError(result.error);
         confirmEnrollGuard.reset();
@@ -55,7 +66,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
       setCode("");
       setQrCode(null);
       setSecret(null);
-    });
+    })();
   });
 
   function startDisable() {
@@ -70,8 +81,10 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
     e.preventDefault();
     if (!status.factorId) return;
     setError(null);
-    startTransition(async () => {
+    setIsPending(true);
+    void (async () => {
       const result = await unenrollMfa(status.factorId!, code);
+      setIsPending(false);
       if (!result.ok) {
         setError(result.error);
         confirmDisableGuard.reset();
@@ -80,7 +93,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
       setStatus({ enrolled: false, factorId: null });
       setStep("idle");
       setCode("");
-    });
+    })();
   });
 
   return (
