@@ -199,6 +199,22 @@ export async function saveProfileStep(
 
   const supabase = await createClient();
 
+  // Step 3 of the onboarding wizard has no guard requiring step 2 (the
+  // credentials step, where the therapist_profiles row is actually
+  // created) to be done first -- it's directly reachable by URL. Without
+  // this check, the update below matches zero rows and .single() throws a
+  // raw Postgrest error ("Cannot coerce the result to a single JSON
+  // object") straight into the form's error slot. Redirect back to the
+  // step that actually creates the row instead of surfacing that.
+  const { data: existingProfile } = await supabase
+    .from("therapist_profiles")
+    .select("id")
+    .eq("user_id", session.userId)
+    .maybeSingle();
+  if (!existingProfile) {
+    redirect("/signup/credentials");
+  }
+
   let photoUrl: string | undefined;
   const photo = formData.get("photo");
   if (photo instanceof File && photo.size > 0) {

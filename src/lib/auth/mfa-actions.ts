@@ -27,6 +27,26 @@ export async function enrollMfa(): Promise<EnrollMfaResult> {
   if (!session) return { ok: false, error: NOT_SIGNED_IN_ERROR };
 
   const supabase = await createClient();
+
+  // An abandoned enrollment (closed tab, slow QR render, network blip)
+  // leaves an unverified TOTP factor behind -- Supabase's enroll() then
+  // rejects every retry with "A factor with the friendly name ... already
+  // exists", and there was previously no way to recover short of manual
+  // API/dashboard intervention. An unverified factor has never proven
+  // possession of anything (that's the whole point of confirmMfaEnrollment
+  // below), so clearing it needs no re-auth the way unenrollMfa's verified-
+  // factor removal does -- it's just retrying a setup step that never
+  // finished, not weakening an active security control.
+  // `.totp` (unlike `.all`) is mistyped by the SDK as always-verified, even
+  // though an unverified factor genuinely appears there at runtime (per
+  // supabase-js's own status-field doc comment) -- read off `.all` instead
+  // so this actually type-checks against what the API can return.
+  const { data: existing } = await supabase.auth.mfa.listFactors();
+  const stale = existing?.all.filter((f) => f.factor_type === "totp" && f.status === "unverified") ?? [];
+  for (const factor of stale) {
+    await supabase.auth.mfa.unenroll({ factorId: factor.id });
+  }
+
   const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
   if (error) return { ok: false, error: error.message };
 
