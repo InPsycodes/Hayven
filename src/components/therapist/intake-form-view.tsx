@@ -70,7 +70,7 @@ export function IntakeFormView({ childName, form }: { childName: string; form: R
             <section key={section.id} className="border-t border-care-line pt-5">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="font-serif text-[16px] text-care-ink">
-                  <span className="mr-2 text-[13px] text-care-ink-faint tabular-nums">{i + 1}</span>
+                  <span className="mr-2 text-[13px] tabular-nums">{i + 1}</span>
                   {title}
                 </h3>
               </div>
@@ -112,7 +112,7 @@ export function IntakeFormView({ childName, form }: { childName: string; form: R
           <section key={section.id} className="border-t border-care-line pt-5">
             <div className="flex items-center justify-between gap-3">
               <h3 className="font-serif text-[16px] text-care-ink">
-                <span className="mr-2 text-[13px] text-care-ink-faint tabular-nums">{i + 1}</span>
+                <span className="mr-2 text-[13px] tabular-nums">{i + 1}</span>
                 {title}
               </h3>
               <StatusBadge tone={badge.tone}>{badge.label}</StatusBadge>
