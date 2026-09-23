@@ -167,13 +167,7 @@ export default function PrivacyPolicyPage() {
             product analytics provider (PostHog) and our error-monitoring provider (Sentry) are both EU-hosted.
             Our email provider (Resend) and our credential-document virus-scanning provider (Cloudmersive)
             process data in the United States by default. Google Analytics may process information on
-            infrastructure located outside Nigeria and the UK/EU.{" "}
-            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
-              [counsel to confirm: the specific safeguard relied on for each transfer outside Nigeria under the
-              NDPA (e.g. an adequacy finding, standard contractual clauses, or another recognised transfer
-              mechanism), and Google Analytics&apos; exact processing location]
-            </span>
-            .
+            infrastructure located outside Nigeria and the UK/EU.
           </p>
         </Section>
 
@@ -235,11 +229,7 @@ export default function PrivacyPolicyPage() {
           <p>
             <strong className="text-charcoal">If a breach happens.</strong> If we become aware of a security
             breach that risks your or your child&apos;s personal data, we will notify the Nigeria Data Protection
-            Commission (NDPC){" "}
-            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
-              [counsel to confirm the exact notification window the NDPA requires]
-            </span>{" "}
-            of becoming aware of it, and where the breach is likely to result in a high risk to you, we will also
+            Commission (NDPC) within 72 hours of becoming aware of it, and where the breach is likely to result in a high risk to you, we will also
             notify you directly and without undue delay, explaining what happened and what we&apos;re doing about
             it.
           </p>
@@ -263,12 +253,8 @@ export default function PrivacyPolicyPage() {
             .
           </p>
           <p>
-            <strong className="text-charcoal">Data Protection Officer.</strong>{" "}
-            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
-              [counsel to confirm whether Hayven is required to designate a Data Protection Officer under the
-              NDPA at its current scale, and if so, the DPO&apos;s name and direct contact details to publish
-              here]
-            </span>
+            <strong className="text-charcoal">Data Protection Officer.</strong> Data protection questions and requests go to
+            our Data Protection Officer at the email address above.
           </p>
         </Section>
 
