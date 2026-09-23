@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { LegalDocument } from "@/components/marketing/legal-document";
 import { canonicalFor } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = {
@@ -21,8 +22,7 @@ function Section({ heading, children }: { heading: string; children: React.React
 
 export default function TermsOfServicePage() {
   return (
-    <div className="bg-canvas-white px-6 py-16 md:px-10 md:py-24">
-      <div className="mx-auto max-w-2xl">
+    <LegalDocument>
         <span className="label-micro text-rust-dark">Legal</span>
         <h1 className="mt-3 font-heading text-3xl leading-tight text-charcoal sm:text-4xl">Terms of Service</h1>
         <p className="mt-3 text-sm text-muted-foreground">Effective {EFFECTIVE_DATE}</p>
@@ -195,7 +195,6 @@ export default function TermsOfServicePage() {
             .
           </p>
         </Section>
-      </div>
-    </div>
+    </LegalDocument>
   );
 }
