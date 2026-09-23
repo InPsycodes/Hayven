@@ -124,7 +124,10 @@ export async function createNotification(params: {
         await sendEmail({
           to: user.email,
           subject: params.title,
-          html: renderNotificationEmail(params.title, params.body, unsubscribeUrl),
+          html: renderNotificationEmail(params.title, params.body, {
+            unsubscribeUrl,
+            actionUrl: params.url ? `${SITE_URL}${params.url}` : undefined,
+          }),
         });
       }
     } catch (err) {

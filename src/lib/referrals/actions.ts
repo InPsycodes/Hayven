@@ -8,6 +8,7 @@ import { checkRateLimit } from "@/lib/rate-limit/check";
 import { createNotification } from "@/lib/notifications/create";
 import { sendEmail, renderNotificationEmail } from "@/lib/email/send";
 import { logAuditEvent } from "@/lib/audit/log";
+import { SITE_URL } from "@/lib/seo/metadata";
 
 export type ReferralStatus = "received" | "family_contacted" | "assessment_scheduled" | "care_started";
 
@@ -127,7 +128,41 @@ export async function submitReferral(_prevState: FormState, formData: FormData):
       html: renderNotificationEmail(
         "Referral received",
         `Thanks, Dr. ${referrerName.trim()}. We'll reach out to ${childName.trim()}'s family within one business day. ` +
-          `Your reference code is ${referenceCode} -- use it with this email address at hayven.com.ng/pediatricians/status to check progress any time.`
+          `Your reference code is ${referenceCode} -- use it with this email address to check progress any time.`,
+        { actionUrl: `${SITE_URL}/pediatricians/status`, actionLabel: "Check referral status" }
+      ),
+    });
+  }
+
+  // Real user-testing finding (pre-launch): the referred family previously
+  // received nothing automated at all -- the only signal anything was
+  // happening was whatever the pediatrician remembered to say in the
+  // appointment, until a Hayven staff member called (up to a business day
+  // later). A short, warm heads-up email first makes that call land as
+  // expected instead of as a cold call from a stranger. Deliberately does
+  // NOT restate the clinical reason tags (e.g. "Speech / language") --
+  // the pediatrician already discussed the concern with the family
+  // directly; repeating it back as a category label here would read as
+  // clinical and impersonal, not reassuring. Gated on looksLikeEmail the
+  // same way the pediatrician's own confirmation is -- parent_contact is
+  // "a way to reach the parent or guardian" on the form, not guaranteed to
+  // be an email address.
+  if (looksLikeEmail(parentContact.trim())) {
+    const facilityNote = referrerFacility && typeof referrerFacility === "string" ? ` at ${referrerFacility.trim()}` : "";
+    await sendEmail({
+      to: parentContact.trim(),
+      subject: `A referral for ${childName.trim()} from Dr. ${referrerName.trim()}`,
+      html: renderNotificationEmail(
+        `Dr. ${referrerName.trim()} referred you to Hayven`,
+        `Hi, this is Hayven -- a platform that connects families in Nigeria with verified paediatric therapists. ` +
+          `Dr. ${referrerName.trim()}${facilityNote} referred ${childName.trim()} to us after your recent visit. ` +
+          `Someone from our team will call you within one business day to talk through next steps -- there's nothing you need to do right now. ` +
+          `If you'd like to look around first, you're welcome to.`,
+        {
+          actionUrl: SITE_URL,
+          actionLabel: "See how Hayven works",
+          footerNote: `Dr. ${referrerName.trim()} shared your contact with us as part of this referral.`,
+        }
       ),
     });
   }
@@ -269,7 +304,10 @@ export async function advanceReferralStatus(
     await sendEmail({
       to: data.referrer_contact,
       subject: `${copy.subject} -- ${data.child_name}`,
-      html: renderNotificationEmail(copy.subject, copy.body(data.child_name)),
+      html: renderNotificationEmail(copy.subject, copy.body(data.child_name), {
+        actionUrl: `${SITE_URL}/pediatricians/status`,
+        actionLabel: "View referral status",
+      }),
     });
   }
 

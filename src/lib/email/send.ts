@@ -60,12 +60,37 @@ function escapeHtml(text: string): string {
  * Tailwind's utility classes. Kept deliberately plain (one accent color,
  * no imagery) so it renders consistently across clients without a full
  * email-testing pass.
+ *
+ * actionUrl/actionLabel add a clickable button -- previously every
+ * notification email was a dead end (title + body only, no way to act on
+ * it without already knowing where to navigate manually). Found via a
+ * real user testing the pediatrician-referral flow and reporting the
+ * resulting email as "vague and non-explanatory": createNotification
+ * already carries a `url` for the in-app bell's deep link, but never
+ * passed it into this template at all.
  */
-export function renderNotificationEmail(title: string, body: string, unsubscribeUrl?: string): string {
+export function renderNotificationEmail(
+  title: string,
+  body: string,
+  opts?: { unsubscribeUrl?: string; actionUrl?: string; actionLabel?: string; footerNote?: string }
+): string {
   const safeTitle = escapeHtml(title);
   const safeBody = escapeHtml(body);
-  const unsubscribeLine = unsubscribeUrl
-    ? `<br /><a href="${escapeHtml(unsubscribeUrl)}" style="color:#4a4744;text-decoration:underline;">Manage or turn off these emails</a>.`
+  // Default assumes the recipient has a Hayven account (true for every
+  // existing caller -- createNotification only ever targets a user row).
+  // Wrong for a cold, no-account recipient like the pediatrician-referral
+  // flow's new parent email -- caught by actually looking at the rendered
+  // output before shipping, not assumed correct from the code alone.
+  const safeFooterNote = escapeHtml(opts?.footerNote ?? "You’re receiving this because of activity on your account.");
+  const unsubscribeLine = opts?.unsubscribeUrl
+    ? `<br /><a href="${escapeHtml(opts.unsubscribeUrl)}" style="color:#4a4744;text-decoration:underline;">Manage or turn off these emails</a>.`
+    : "";
+  const actionButton = opts?.actionUrl
+    ? `<tr>
+              <td style="padding:0 28px 28px;">
+                <a href="${escapeHtml(opts.actionUrl)}" style="display:inline-block;background-color:#1a1a1a;color:#faf8f6;font-size:14px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:6px;">${escapeHtml(opts.actionLabel ?? "Open in Hayven")}</a>
+              </td>
+            </tr>`
     : "";
   return `<!doctype html>
 <html>
@@ -80,15 +105,16 @@ export function renderNotificationEmail(title: string, body: string, unsubscribe
               </td>
             </tr>
             <tr>
-              <td style="padding:28px;">
+              <td style="padding:28px 28px 20px;">
                 <h1 style="margin:0 0 12px;color:#1a1a1a;font-size:19px;font-weight:600;">${safeTitle}</h1>
                 <p style="margin:0;color:#4a4744;font-size:15px;line-height:1.6;">${safeBody}</p>
               </td>
             </tr>
+            ${actionButton}
             <tr>
               <td style="padding:16px 28px 24px;border-top:1px solid rgba(26,26,26,0.08);">
                 <p style="margin:0;color:#4a4744;font-size:12px;">
-                  Hayven &middot; Nigeria pilot &middot; You&rsquo;re receiving this because of activity on your account.${unsubscribeLine}
+                  Hayven &middot; Nigeria pilot &middot; ${safeFooterNote}${unsubscribeLine}
                 </p>
               </td>
             </tr>
