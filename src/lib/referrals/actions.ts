@@ -139,25 +139,29 @@ export async function submitReferral(_prevState: FormState, formData: FormData):
   // happening was whatever the pediatrician remembered to say in the
   // appointment, until a Hayven staff member called (up to a business day
   // later). A short, warm heads-up email first makes that call land as
-  // expected instead of as a cold call from a stranger. Deliberately does
-  // NOT restate the clinical reason tags (e.g. "Speech / language") --
-  // the pediatrician already discussed the concern with the family
-  // directly; repeating it back as a category label here would read as
-  // clinical and impersonal, not reassuring. Gated on looksLikeEmail the
-  // same way the pediatrician's own confirmation is -- parent_contact is
-  // "a way to reach the parent or guardian" on the form, not guaranteed to
-  // be an email address.
+  // expected instead of as a cold call from a stranger. Founder-signed and
+  // deliberately addresses the anxiety a referral itself can cause ("this
+  // doesn't mean something's wrong") rather than just stating facts.
+  // Deliberately does NOT restate the clinical reason tags (e.g. "Speech /
+  // language") -- the pediatrician already discussed the concern with the
+  // family directly; repeating it back as a category label here would
+  // read as clinical, not reassuring. Gated on looksLikeEmail the same way
+  // the pediatrician's own confirmation is -- parent_contact is "a way to
+  // reach the parent or guardian" on the form, not guaranteed to be an
+  // email address.
   if (looksLikeEmail(parentContact.trim())) {
-    const facilityNote = referrerFacility && typeof referrerFacility === "string" ? ` at ${referrerFacility.trim()}` : "";
     await sendEmail({
       to: parentContact.trim(),
       subject: `A referral for ${childName.trim()} from Dr. ${referrerName.trim()}`,
       html: renderNotificationEmail(
         `Dr. ${referrerName.trim()} referred you to Hayven`,
-        `Hi, this is Hayven -- a platform that connects families in Nigeria with verified paediatric therapists. ` +
-          `Dr. ${referrerName.trim()}${facilityNote} referred ${childName.trim()} to us after your recent visit. ` +
-          `Someone from our team will call you within one business day to talk through next steps -- there's nothing you need to do right now. ` +
-          `If you'd like to look around first, you're welcome to.`,
+        `Hi there,\n\n` +
+          `My name is Ademola, and I'm the founder of Hayven.\n\n` +
+          `Dr. ${referrerName.trim()} recently referred you to us because they believe ${childName.trim()} may benefit from the support we help connect families with.\n\n` +
+          `As a parent, you want to know your child is growing, learning, and getting the right support. Sometimes knowing where to start can feel overwhelming -- that's why Hayven exists. We help parents connect with trusted, verified child development professionals, including psychologists, speech therapists, and occupational therapists.\n\n` +
+          `A referral doesn't mean something's necessarily wrong. It just means your pediatrician cares, and thinks it might be helpful to take a closer look.\n\n` +
+          `If you have any questions about the referral or how Hayven can support your family, please reach out anytime. We're here to help make the next step easier.\n\n` +
+          `Warmly,\nAdemola\nFounder, Hayven`,
         {
           actionUrl: SITE_URL,
           actionLabel: "See how Hayven works",
