@@ -75,7 +75,24 @@ export function renderNotificationEmail(
   opts?: { unsubscribeUrl?: string; actionUrl?: string; actionLabel?: string; footerNote?: string }
 ): string {
   const safeTitle = escapeHtml(title);
-  const safeBody = escapeHtml(body);
+  // Split on blank lines into separate <p> tags -- a single-paragraph
+  // body (every existing caller) renders exactly as before; a longer,
+  // multi-paragraph one (the referral flow's founder-signed parent email)
+  // doesn't collapse into one dense block.
+  const bodyParagraphs = body
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p, i, arr) => {
+      // A single newline *within* a paragraph (a sign-off's "Warmly, /
+      // Ademola / Founder, Hayven") is meaningful line-break intent, but
+      // HTML collapses bare whitespace -- escape first, then turn each
+      // remaining \n into a real <br />, same order every mail client
+      // expects so it can't reintroduce raw HTML through the line break.
+      const withBreaks = escapeHtml(p).replace(/\n/g, "<br />");
+      return `<p style="margin:0${i < arr.length - 1 ? " 0 12px" : ""};color:#4a4744;font-size:15px;line-height:1.6;">${withBreaks}</p>`;
+    })
+    .join("");
   // Default assumes the recipient has a Hayven account (true for every
   // existing caller -- createNotification only ever targets a user row).
   // Wrong for a cold, no-account recipient like the pediatrician-referral
@@ -107,7 +124,7 @@ export function renderNotificationEmail(
             <tr>
               <td style="padding:28px 28px 20px;">
                 <h1 style="margin:0 0 12px;color:#1a1a1a;font-size:19px;font-weight:600;">${safeTitle}</h1>
-                <p style="margin:0;color:#4a4744;font-size:15px;line-height:1.6;">${safeBody}</p>
+                ${bodyParagraphs}
               </td>
             </tr>
             ${actionButton}
