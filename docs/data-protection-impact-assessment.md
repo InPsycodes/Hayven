@@ -299,6 +299,7 @@ this table with priority ranking and the specific per-vendor questions.
 | Resend | Email content/metadata, recipient address | Transactional email | US by default (confirmed via vendor docs) | Not confirmed | Needs counsel | 🔴 Priority |
 | Cloudmersive | The uploaded credential file itself (scanned, not stored, by this call) | Malware scanning | Likely US by default (global endpoint; EU regions exist only on paid tiers, not configured here) | Not confirmed | Needs counsel | 🔴 Priority |
 | Google Analytics | Allowlisted coarse events, if configured | Site-traffic analytics | **Not confirmed** — the one processor whose region is still genuinely unknown | Not confirmed | Needs counsel, once location is known | 🔴 Priority |
+| Google (sign-in, parents only, optional) | Parent's name and verified email, received from Google at sign-in; nothing about children or platform use is sent to Google | Optional "Continue with Google" authentication | Not confirmed (Google identity services; location and role as independent controller vs processor to be confirmed) | Not confirmed | Needs counsel | 🟠 Medium |
 
 Most of the system's core data (the database itself, and the servers that query it) is
 UK-based, which is the most consequential fact for a transfer assessment — the

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/app-shell";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,6 +27,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // supervisor) can't fall through into this shell by default.
   if (!session || (session.role !== "parent" && session.role !== "therapist")) {
     redirect("/login");
+  }
+
+  // A parent who came in through Google hasn't accepted the Privacy Policy and
+  // Terms yet (the password form collects that up front); send them to finish
+  // rather than let a direct URL skip it.
+  if (session.role === "parent") {
+    const supabase = await createClient();
+    const { data: consent } = await supabase
+      .from("users")
+      .select("terms_accepted_at")
+      .eq("id", session.userId)
+      .single();
+    if (consent && !consent.terms_accepted_at) redirect("/signup/finish");
   }
 
   return <AppShell session={session}>{children}</AppShell>;

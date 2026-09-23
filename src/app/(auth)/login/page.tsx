@@ -8,9 +8,9 @@ export const metadata: Metadata = { title: "Log in" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; next?: string }>;
+  searchParams: Promise<{ reset?: string; next?: string; error?: string }>;
 }) {
-  const { reset, next: nextParam } = await searchParams;
+  const { reset, next: nextParam, error } = await searchParams;
   // Same relative-path-only guard as auth/confirm/route.ts -- a validated
   // `next` can't become an open redirect. Middleware and the step pages
   // (src/proxy.ts) push unauthenticated users here with ?next=<path> so
@@ -28,7 +28,7 @@ export default async function LoginPage({
         "Follow progress between sessions.",
       ]}
     >
-      <LoginForm justReset={reset === "1"} next={next} />
+      <LoginForm justReset={reset === "1"} next={next} oauthError={error} />
     </SplitAuthPanel>
   );
 }

@@ -150,6 +150,12 @@ export default function PrivacyPolicyPage() {
               Signals or ad personalisation on our Google Analytics property.
             </li>
             <li>
+              <strong className="text-charcoal">Google</strong> (optional &ldquo;Continue with Google&rdquo; sign-in
+              for parents) &mdash; if you choose it, Google confirms your identity and shares your name and email
+              address with us. We don&apos;t receive your Google password, contacts, or other Google data, and
+              Google isn&apos;t told anything about your child or your use of Hayven.
+            </li>
+            <li>
               <strong className="text-charcoal">Legal or safety exceptions.</strong> If required by law, or where
               we believe in good faith it&apos;s necessary to protect a child&apos;s safety or the rights of
               others.

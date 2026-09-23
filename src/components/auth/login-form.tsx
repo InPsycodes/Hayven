@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldError } from "@/components/ui/field-error";
+import { GoogleButton, OrDivider } from "@/components/auth/google-button";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { useFieldErrors } from "@/hooks/use-field-errors";
 import { emailDomainSuggestion, emailFormatError } from "@/lib/validation/email";
@@ -17,7 +18,22 @@ import { identifyUser } from "@/lib/analytics/client";
 import { roleHomePath } from "@/lib/auth/role-path";
 import type { UserRole } from "@/data/types";
 
-export function LoginForm({ justReset = false, next }: { justReset?: boolean; next?: string }) {
+const GOOGLE_ERRORS: Record<string, string> = {
+  "google-cancelled": "Google sign-in was cancelled. You can try again below.",
+  "google-failed": "Google sign-in didn't complete. Please try again.",
+  "google-suspended": "This account has been suspended. Contact support for help.",
+  "google-parent-only": "Google sign-in is for parent accounts. Therapists and admins log in with email and password.",
+};
+
+export function LoginForm({
+  justReset = false,
+  next,
+  oauthError,
+}: {
+  justReset?: boolean;
+  next?: string;
+  oauthError?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -140,6 +156,15 @@ export function LoginForm({ justReset = false, next }: { justReset?: boolean; ne
         <h2 className="font-heading text-xl text-charcoal">Welcome back</h2>
         <p className="mt-1 text-sm text-muted-foreground">Log in to your Hayven account.</p>
       </div>
+
+      {oauthError && GOOGLE_ERRORS[oauthError] && (
+        <p role="alert" className="rounded-sm bg-error/10 p-3 text-sm text-error-text">
+          {GOOGLE_ERRORS[oauthError]}
+        </p>
+      )}
+
+      <GoogleButton next={next} />
+      <OrDivider />
 
       {justReset && (
         <p className="rounded-sm bg-success/10 p-3 text-sm text-success-text">
