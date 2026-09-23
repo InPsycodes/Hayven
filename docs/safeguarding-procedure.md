@@ -23,12 +23,25 @@ raised by a parent, a therapist, a supervisor, or surfaced by the platform.
 
 | Role | Person | Contact | Cover |
 |---|---|---|---|
-| Designated Safeguarding Lead (DSL) — receives and decides on every concern | [FILL IN] | [FILL IN — direct phone + email] | [FILL IN: Deputy DSL] |
+| Designated Safeguarding Lead (DSL) — receives and decides on every concern | Ademola Yusuf (Founder), named 2026-09-23 | +2348122832137 / hayvenmind@gmail.com | No Deputy DSL yet — see below |
 | Deputy DSL — acts when the DSL is unavailable | [FILL IN] | [FILL IN] | — |
 
 The DSL should be a specific named person, reachable the same working day,
 with the authority to contact a family or an external authority without
 waiting for anyone else's sign-off.
+
+**Named, not yet fully operative.** Naming a DSL closes the "nobody owns this"
+gap this document has flagged since its first draft — but two things keep this
+procedure short of actually operative: (1) the sections below still have
+`[FILL IN]` markers for the exact escalation channel, the relevant Nigerian
+child-protection authority, and record retention/storage, all of which need
+the safeguarding-adviser and legal review in §9; (2) **there is no Deputy DSL**
+— the same person (Ademola Yusuf) currently holds the founder, DPO, and DSL
+roles simultaneously. That's a real single-point-of-failure risk worth naming
+plainly rather than glossing over: if the DSL is unreachable, there is
+currently no cover. A deputy — even an informal one who can at minimum
+trigger emergency escalation in the DSL's absence — should be named before
+this procedure is treated as reliable, not just before it's "complete."
 
 ## 3. What counts as a concern
 
@@ -118,7 +131,10 @@ When in doubt: raise it. Over-reporting to the DSL is fine; the DSL filters.
 - [ ] Legal review — mandatory reporting duties in Nigeria, which authority
       referrals go to, record-retention period.
 - [ ] Safeguarding adviser review of §3–§6.
-- [ ] Name the DSL and Deputy DSL; publish their contact route.
+- [x] Name the DSL — **Ademola Yusuf (Founder), named 2026-09-23**, contact
+      published in §2.
+- [ ] Name a Deputy DSL — no cover currently exists if the DSL is
+      unreachable; see the note in §2.
 - [ ] Decide where safeguarding records live and lock down access.
 - [ ] Add the "raise a safeguarding concern" route in-app (distinct from
       general support) and the therapist-onboarding acceptance step.
