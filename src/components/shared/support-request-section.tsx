@@ -25,7 +25,7 @@ export function SupportRequestSection({ requests }: { requests: RealSupportReque
       <div>
         <h2 className="font-heading text-base text-charcoal">Contact support</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Can&apos;t find the answer above? Send us a message and we&apos;ll reply here and by email.
+          Can&apos;t find the answer above? Send us a message and we&apos;ll reply on this page and by email.
         </p>
       </div>
 
@@ -46,7 +46,7 @@ export function SupportRequestSection({ requests }: { requests: RealSupportReque
               succeeded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
             )}
           >
-            <p className="overflow-hidden text-sm text-success-text">Sent. We&apos;ll reply here and by email.</p>
+            <p className="overflow-hidden text-sm text-success-text">Sent. We&apos;ll reply on this page and by email.</p>
           </div>
           <div className="flex gap-3">
             <Button type="submit" disabled={isPending} className="w-fit">
