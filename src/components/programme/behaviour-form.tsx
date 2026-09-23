@@ -22,7 +22,7 @@ export function BehaviourForm({ childId }: { childId: string }) {
   const [state, formAction, isPending] = useActionState(boundAction, initialState);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 rounded-sm bg-[#F6F4F0] p-4">
+    <form action={formAction} className="flex flex-col gap-3 rounded-sm bg-inset p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="behaviour-label" className="label-micro text-muted-foreground">

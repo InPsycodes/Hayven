@@ -66,7 +66,7 @@ export function LearningCategoryManager({ categories }: { categories: RealLearni
         {list.map((c) => (
           <span
             key={c.id}
-            className="flex items-center gap-1.5 rounded-full bg-[#F6F4F0] px-3 py-1.5 text-xs text-charcoal"
+            className="flex items-center gap-1.5 rounded-full bg-inset px-3 py-1.5 text-xs text-charcoal"
           >
             {c.name}
             <span className="text-muted-foreground">({c.audience})</span>

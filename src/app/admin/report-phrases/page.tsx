@@ -29,7 +29,7 @@ export default async function AdminReportPhrasesPage() {
           <h2 className="label-micro text-rust-dark">Existing phrases</h2>
           <div className="mt-5 flex flex-col gap-2">
             {variants.length === 0 ? (
-              <p className="rounded-sm bg-[#F6F4F0] p-4 text-sm text-muted-foreground">No added phrases yet.</p>
+              <p className="rounded-sm bg-inset p-4 text-sm text-muted-foreground">No added phrases yet.</p>
             ) : (
               variants.map((v) => {
                 const domain = PHRASE_DOMAINS.find((d) => d.key === v.domainKey);

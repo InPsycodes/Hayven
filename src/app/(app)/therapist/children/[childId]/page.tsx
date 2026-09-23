@@ -80,7 +80,7 @@ export default async function ChildOverviewPage({
               {careTeam.map((member) => (
                 <div
                   key={member.therapistId}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-inset p-3"
                 >
                   <span className="truncate text-sm font-medium text-charcoal">{member.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
@@ -103,7 +103,7 @@ export default async function ChildOverviewPage({
                   <Link
                     key={s.id}
                     href={`/therapist/children/${childId}/sessions/${s.id}`}
-                    className="flex items-center justify-between rounded-sm bg-[#F6F4F0] p-3 transition-colors hover:ring-1 hover:ring-terracotta"
+                    className="flex items-center justify-between rounded-sm bg-inset p-3 transition-colors hover:ring-1 hover:ring-terracotta"
                   >
                     <span className="text-sm font-medium text-charcoal">{formatDate(s.sessionDate)}</span>
                     <span className="text-xs text-muted-foreground">

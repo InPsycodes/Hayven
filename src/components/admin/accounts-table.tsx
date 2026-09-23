@@ -167,7 +167,7 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
   const suspended = localStatus === "suspended";
 
   return (
-    <div className="flex flex-col gap-3 rounded-sm bg-[#F6F4F0] p-3.5">
+    <div className="flex flex-col gap-3 rounded-sm bg-inset p-3.5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-paper text-[10px] font-medium text-charcoal">
@@ -335,7 +335,7 @@ export function AccountsTable({
 
       <div className="mt-3 flex flex-col gap-2">
         {users.length === 0 ? (
-          <p className="rounded-sm bg-[#F6F4F0] p-4 text-sm text-muted-foreground">No accounts match this search.</p>
+          <p className="rounded-sm bg-inset p-4 text-sm text-muted-foreground">No accounts match this search.</p>
         ) : (
           users.map((user) => <AccountRow key={user.id} user={user} isSelf={user.id === currentUserId} />)
         )}

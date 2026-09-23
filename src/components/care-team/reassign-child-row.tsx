@@ -49,11 +49,11 @@ export function ReassignChildRow({
   });
 
   if (assigned) {
-    return <div className="rounded-sm bg-[#F6F4F0] p-3.5 text-sm text-charcoal">{childName} reassigned.</div>;
+    return <div className="rounded-sm bg-inset p-3.5 text-sm text-charcoal">{childName} reassigned.</div>;
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3.5">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-inset p-3.5">
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-charcoal">{childName}</p>
         <p className="text-xs text-muted-foreground">

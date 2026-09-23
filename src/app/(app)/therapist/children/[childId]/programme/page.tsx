@@ -33,12 +33,12 @@ export default async function ChildProgrammePage({ params }: { params: Promise<{
           <h2 className="font-heading text-lg text-charcoal">Goals</h2>
           <div className="mt-3 flex flex-col gap-2">
             {programme.goals.length === 0 ? (
-              <p className="rounded-sm bg-[#F6F4F0] p-3 text-sm text-muted-foreground">No goals set yet.</p>
+              <p className="rounded-sm bg-inset p-3 text-sm text-muted-foreground">No goals set yet.</p>
             ) : (
               programme.goals.map((g) => {
                 const isOwnGoal = g.therapistId === therapist.id;
                 return (
-                  <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3">
+                  <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-inset p-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-charcoal">{g.title}</p>
                       <p className="truncate text-xs text-muted-foreground">
@@ -68,12 +68,12 @@ export default async function ChildProgrammePage({ params }: { params: Promise<{
           <h2 className="font-heading text-lg text-charcoal">Target behaviours</h2>
           <div className="mt-3 flex flex-col gap-2">
             {programme.targetBehaviours.length === 0 ? (
-              <p className="rounded-sm bg-[#F6F4F0] p-3 text-sm text-muted-foreground">No target behaviours set yet.</p>
+              <p className="rounded-sm bg-inset p-3 text-sm text-muted-foreground">No target behaviours set yet.</p>
             ) : (
               programme.targetBehaviours.map((b) => {
                 const canManage = b.createdBy === null || b.createdBy === therapist.id;
                 return (
-                  <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3">
+                  <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-inset p-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-charcoal">
                         {b.label} <span className="text-xs font-normal text-muted-foreground">({b.direction})</span>
@@ -104,12 +104,12 @@ export default async function ChildProgrammePage({ params }: { params: Promise<{
           <h2 className="font-heading text-lg text-charcoal">Skills</h2>
           <div className="mt-3 flex flex-col gap-2">
             {programme.skills.length === 0 ? (
-              <p className="rounded-sm bg-[#F6F4F0] p-3 text-sm text-muted-foreground">No skills tracked yet.</p>
+              <p className="rounded-sm bg-inset p-3 text-sm text-muted-foreground">No skills tracked yet.</p>
             ) : (
               programme.skills.map((s) => {
                 const canManage = s.createdBy === null || s.createdBy === therapist.id;
                 return (
-                  <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3">
+                  <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-inset p-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-charcoal">{s.label}</p>
                       <p className="truncate text-xs text-muted-foreground">

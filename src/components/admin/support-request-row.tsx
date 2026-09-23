@@ -53,7 +53,7 @@ export function SupportRequestRow({ request }: { request: RealSupportRequest }) 
         </div>
       </div>
 
-      <p className="rounded-sm bg-[#F6F4F0] p-2.5 text-sm text-charcoal">{request.message}</p>
+      <p className="rounded-sm bg-inset p-2.5 text-sm text-charcoal">{request.message}</p>
 
       {isOpen ? (
         <div className="flex flex-col gap-2">

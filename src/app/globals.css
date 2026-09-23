@@ -56,6 +56,7 @@
   --color-charcoal: var(--charcoal);
   --color-ink-soft: var(--ink-soft);
   --color-paper: var(--paper);
+  --color-inset: var(--inset);
   --color-offwhite: var(--offwhite);
   --color-canvas-white: var(--canvas-white);
   --color-canvas-deep: var(--canvas-deep);
@@ -98,6 +99,7 @@
   --charcoal: #1a1a1a;
   --ink-soft: #4a4744; /* secondary/body copy on light */
   --paper: #dcd3be;
+  --inset: #f6f4f0; /* recessed row/box inside a card; dark themes remap it */
   --offwhite: #dcd3be;
   --canvas-white: #faf8f6; /* card surfaces, text on dark */
   --canvas-deep: #d6d1cc; /* reserved */
@@ -224,6 +226,7 @@
   --canvas-deep: var(--care-raised);
   --offwhite: var(--care-bg);
   --paper: var(--care-raised);
+  --inset: var(--care-raised);
   --ivory: var(--care-raised);
   --terracotta: var(--care-accent);
   --rust-dark: var(--care-accent-deep);
@@ -243,6 +246,7 @@
 
 .dark {
   --background: var(--charcoal);
+  --inset: color-mix(in oklch, var(--charcoal), white 12%);
   --foreground: var(--offwhite);
   --card: color-mix(in oklch, var(--charcoal), white 8%);
   --card-foreground: var(--offwhite);

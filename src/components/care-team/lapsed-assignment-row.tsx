@@ -50,7 +50,7 @@ export function LapsedAssignmentRow({
   const { guard, reset } = useSubmitGuard();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3.5">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm bg-inset p-3.5">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <PersonBadge name={fromName} />
         <IconArrowRight size={14} stroke={2} className="shrink-0 text-muted-foreground" />

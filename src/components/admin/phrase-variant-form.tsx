@@ -58,7 +58,7 @@ export function PhraseVariantForm({
   });
 
   return (
-    <div className="flex flex-col gap-3 rounded-sm bg-[#F6F4F0] p-4">
+    <div className="flex flex-col gap-3 rounded-sm bg-inset p-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="flex flex-col gap-1.5">
           <Label className="label-micro text-muted-foreground">Domain</Label>

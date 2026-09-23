@@ -66,7 +66,7 @@ export function SupportRequestSection({ requests }: { requests: RealSupportReque
       {requests.length > 0 && (
         <div className="flex flex-col gap-2 border-t border-border pt-4">
           {requests.map((r) => (
-            <div key={r.id} className="rounded-sm bg-[#F6F4F0] p-3.5">
+            <div key={r.id} className="rounded-sm bg-inset p-3.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-medium text-charcoal">{r.subject}</p>
                 <div className="flex items-center gap-2">

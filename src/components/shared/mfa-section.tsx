@@ -110,7 +110,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
       </div>
 
       {step === "confirming" && qrCode && (
-        <form onSubmit={confirmEnroll} className="reveal flex flex-col gap-3 rounded-sm bg-[#F6F4F0] p-4">
+        <form onSubmit={confirmEnroll} className="reveal flex flex-col gap-3 rounded-sm bg-inset p-4">
           <p className="text-sm text-charcoal">Scan this with your authenticator app:</p>
           <div
             className="h-40 w-40 self-center [&_svg]:h-full [&_svg]:w-full"
@@ -156,7 +156,7 @@ export function MfaSection({ initialStatus }: { initialStatus: MfaStatus }) {
       )}
 
       {step === "disabling" && (
-        <form onSubmit={confirmDisable} className="reveal flex flex-col gap-3 rounded-sm bg-[#F6F4F0] p-4">
+        <form onSubmit={confirmDisable} className="reveal flex flex-col gap-3 rounded-sm bg-inset p-4">
           <p className="text-sm text-charcoal">
             Enter a current code from your authenticator app to turn off two-factor authentication.
           </p>

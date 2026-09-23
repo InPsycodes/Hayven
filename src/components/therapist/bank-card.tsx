@@ -29,7 +29,7 @@ export function TherapistBankCard({ current }: { current: BankDetails | null }) 
       </p>
 
       {current && (
-        <p className="rounded-sm bg-[#F6F4F0] px-3 py-2 text-xs text-charcoal">
+        <p className="rounded-sm bg-inset px-3 py-2 text-xs text-charcoal">
           Currently: <span className="font-medium">{current.accountName}</span> ·{" "}
           {bankName(current.bankCode) ?? current.bankCode} · {current.accountNumberMasked}
         </p>

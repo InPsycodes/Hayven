@@ -22,7 +22,7 @@ export function PhraseVariantRow({
   const { guard, reset } = useSubmitGuard();
 
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3 rounded-sm bg-[#F6F4F0] p-3.5">
+    <div className="flex flex-wrap items-start justify-between gap-3 rounded-sm bg-inset p-3.5">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-charcoal">

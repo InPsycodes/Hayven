@@ -72,7 +72,7 @@ export function DisputeRow({ dispute }: { dispute: AdminDispute }) {
       </div>
 
       {open && !done && (
-        <div className="flex flex-col gap-2 rounded-sm bg-[#F6F4F0] p-3">
+        <div className="flex flex-col gap-2 rounded-sm bg-inset p-3">
           <div className="flex flex-wrap gap-3">
             {OPTIONS.map((o) => (
               <label key={o.value} className="flex items-center gap-1.5 text-xs text-charcoal">
