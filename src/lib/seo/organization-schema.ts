@@ -13,6 +13,7 @@ export function getOrganizationSchema() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Hayven",
+    legalName: "Hayven Health Limited",
     url: SITE_URL,
     logo: `${SITE_URL}/images/logo-full.png`,
     description:
@@ -21,8 +22,15 @@ export function getOrganizationSchema() {
     telephone: "+2348122832137",
     address: {
       "@type": "PostalAddress",
-      addressLocality: "Lagos",
+      streetAddress: "No. 17, Aganga Williams, Ogba",
+      addressLocality: "Ikeja",
+      addressRegion: "Lagos",
       addressCountry: "NG",
+    },
+    identifier: {
+      "@type": "PropertyValue",
+      name: "RC Number",
+      value: "9879135",
     },
     sameAs: ["https://x.com/hayvenmind"],
   };

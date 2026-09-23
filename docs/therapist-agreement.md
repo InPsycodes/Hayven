@@ -30,8 +30,9 @@ therapist, before they can be assigned a child.
 
 ## 1. Parties and relationship
 
-Between Hayven ("we," "us," "the Platform") and the therapist signing below ("you,"
-"Therapist").
+Between Hayven Health Limited (RC 9879135), of No. 17, Aganga Williams, Ogba, Ikeja,
+Lagos State, Nigeria ("we," "us," "the Platform"), and the therapist signing below
+("you," "Therapist").
 
 **Independent contractor, not employee.** You provide therapy services as an
 independent professional. Nothing in this agreement creates an employment,

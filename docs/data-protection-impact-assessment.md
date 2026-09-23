@@ -26,6 +26,10 @@ not fabricated, but a compliance document of this kind should still have its reg
 citations confirmed by Nigerian counsel before anyone relies on them, since secondary
 sources can lag or misstate a regulator's own text.
 **System assessed:** Hayven (paediatric-therapy marketplace web application and PWA)
+**Data controller:** Hayven Health Limited (RC 9879135), registered at No. 17, Aganga
+Williams, Ogba, Ikeja, Lagos State, Nigeria — incorporated 2026-09-22; added once
+incorporation completed and verified against the CAC certificate/status report, not
+present in the original 2026-09-19 draft.
 **Author of this draft:** Written by Claude (Anthropic), from direct knowledge of the
 codebase, its security audit history, and its data model — not a substitute for DPO or
 legal review.

@@ -1,5 +1,8 @@
 # Safeguarding procedure — DRAFT
 
+**Responsible entity:** Hayven Health Limited (RC 9879135), registered at No. 17,
+Aganga Williams, Ogba, Ikeja, Lagos State, Nigeria.
+
 > **This is a first draft and is NOT operative.** Hayven connects families
 > with therapists working with children; a real safeguarding policy must be
 > written or reviewed with (a) a qualified safeguarding/child-protection
