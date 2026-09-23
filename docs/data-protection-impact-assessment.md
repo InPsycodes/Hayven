@@ -38,6 +38,13 @@ has open `[FILL IN]` items pending safeguarding-adviser/legal review.
 (`docs/safeguarding-procedure.md` §2), closing the single-point-of-failure gap flagged
 in (IV) — the DSL is no longer the only person who can act on a concern. Still open:
 briefing the deputy on §3–§6 of the procedure, and the same `[FILL IN]` items as (IV).
+**Updated 2026-09-23 (VI):** drafted a first breach-response runbook
+(`docs/breach-response-runbook.md`), closing the "nothing written" half of risk #13
+and §12 P0-9. Grounded in the actual system (the AUTH-01 suspension fix, `audit_log`,
+Sentry, Cloudmersive's fail-closed scanning) rather than generic advice, and reuses
+the DPIA's own §10 risk-scoring scale instead of inventing a parallel one. Does not
+close the "tested" half — still needs a tabletop run-through and counsel's
+confirmation of the actual NDPC filing mechanics.
 **System assessed:** Hayven (paediatric-therapy marketplace web application and PWA)
 **Data controller:** Hayven Health Limited (RC 9879135), registered at No. 17, Aganga
 Williams, Ogba, Ikeja, Lagos State, Nigeria — incorporated 2026-09-22; added once
@@ -525,7 +532,7 @@ owns this document.
 | 10 | Platform responsibility — what Hayven actually provides versus warrants — isn't precisely scoped alongside risk #9 | Platform, therapist | Medium | Medium | Terms of Service disclaims clinical-outcome liability | Medium — same Therapist Agreement closes this |
 | 11 | Data-controller/processor responsibility isn't contractually mapped between Hayven, therapists, and any clinics they're affiliated with | Child, therapist, platform | Not assessed | Medium-High | Not mitigated | Medium-High — a marketplace doesn't automatically make every participant the same type of data-protection actor; needs counsel |
 | 12 | No verified backup/restore process exists, and a data-loss incident has no tested recovery path | All users | **Confirmed: Point-in-Time Recovery is disabled** (`pitr_enabled: false`, re-checked live via the Supabase CLI on 2026-09-23) | High if it occurred | None confirmed beyond whatever Supabase's plan tier includes by default | **High — launch-blocking; see §12 P0-8** |
-| 13 | No fully tested personal-data breach response process exists | All users, regulator relationship | Medium | High | Technical controls (§9) reduce the chance of a breach but don't constitute a response plan | Medium until tabletop-tested; see §13 |
+| 13 | No fully tested personal-data breach response process exists | All users, regulator relationship | Low-Medium — a first-draft runbook now exists (`docs/breach-response-runbook.md`) | High | Runbook covers roles, detection, the 72-hour NDPC clock, and scenario playbooks; not yet tabletop-tested | Medium — written, not yet exercised; see §13 |
 | 14 | Referral data (a child's name, contact details) is collected from a third party before the family's direct consent | Child, prospective parent | Low-Medium — referrer must attest parent awareness | Medium | Referrer attestation, 90-day auto-purge, prompt parent email (§2.3) | Low-Medium — attestation isn't verification; a minimised-form redesign is recommended (§8) but not built |
 | 15 | Hayven hasn't determined "data controller/processor of major importance" status or registered with the NDPC | Regulator relationship, all users indirectly | Not assessed | Medium-High | Not mitigated | **Medium-High — likely launch-blocking; see §12 P0-4.** The NDPC's published threshold is processing 200+ data subjects within a rolling 6-month window, and health-sector organisations are explicitly named among the sectors the "major importance" designation targets ([Michalsons](https://www.michalsons.com/blog/nigeria-data-protection-act-ndpa-controller-and-processor-registration/77465), [KPMG](https://kpmg.com/ng/en/home/insights/2024/03/nigeria-data-protection-commissions-guidance-notice-on-registration-of-data-processors-controllers-of-major-importance.html)) — counsel should treat this as a concrete determination to make, not an abstract question |
 
@@ -574,7 +581,10 @@ gate a decision to process real children's clinical data at volume.
    accounts, child records, clinical records, consent history, audit logs, and payment
    records all restore correctly into an isolated environment, and the result should be
    recorded back into this document.
-9. **Build and tabletop-test a breach-response procedure** (risk #13, §13).
+9. **Tabletop-test the breach-response runbook** (risk #13, §13) — the runbook
+   itself is drafted (`docs/breach-response-runbook.md`); what remains is walking
+   through it with the DPO and Deputy Safeguarding Lead and getting counsel's
+   confirmation of the actual NDPC filing mechanics.
 10. **Draft and execute a standalone Therapist Agreement** (risks #9, #10, #11) —
     covering professional/clinical responsibility, platform responsibility, and the
     data-controller/processor relationship between Hayven and its therapists. A first
@@ -611,21 +621,27 @@ gate a decision to process real children's clinical data at volume.
 
 ## 13. Breach response
 
-**Not yet built.** The technical controls in §9 reduce the likelihood of a breach but
-do not constitute a response plan, and this document should not imply otherwise. Under
-the NDPA, a data controller must notify the NDPC within 72 hours of becoming aware of a
-breach, and must also notify affected data subjects without undue delay where the
-breach is likely to result in a high risk to their rights and freedoms
+**A first-draft runbook now exists** (`docs/breach-response-runbook.md`, drafted
+2026-09-23), covering roles, detection sources, the 72-hour NDPC notification
+clock, data-subject notification criteria, vendor-breach handling, and
+scenario-specific playbooks for the cases listed below. It closes the "nothing
+written" half of this gap, not the "tested and reliable" half — per its own open
+items, it still needs a tabletop exercise with the DPO and Deputy Safeguarding
+Lead, legal counsel's confirmation of the actual NDPC filing mechanics, and a
+decision on where breach records live. The technical controls in §9 reduce the
+likelihood of a breach but were never a response plan on their own — that
+distinction is exactly why this document exists separately.
+
+Under the NDPA, a data controller must notify the NDPC within 72 hours of becoming
+aware of a breach, and must also notify affected data subjects without undue delay
+where the breach is likely to result in a high risk to their rights and freedoms
 ([PrivacyNeedle](https://privacyneedle.com/compliance/legislation/the-72-hour-rule-what-ndpa-and-gdpr-say-about-data-breaches/)).
-A 72-hour clock only means something if the organisation already knows, before an
-incident, who decides an event is a reportable personal-data breach, who investigates,
-who notifies whom, and what's recorded along the way. None of that currently exists in
-writing for Hayven. Scenarios this should cover, at minimum: a therapist's account
-compromised; the database itself compromised; a malicious credential document that
-evades scanning; a clinical report sent to the wrong parent; a therapist accessing
-information they shouldn't; referral data exposed; a vendor (Supabase, Vercel, Resend,
-Cloudmersive, PostHog, Sentry, Paystack) suffering its own breach that implicates
-Hayven's data. See risk #13 in §11 and P0 item 9 in §12.
+Scenarios the runbook covers: a therapist's account compromised; the database
+itself compromised; a malicious credential document that evades scanning; a
+clinical report sent to the wrong parent; a therapist accessing information they
+shouldn't; referral data exposed; a vendor (Supabase, Vercel, Resend, Cloudmersive,
+PostHog, Sentry, Paystack) suffering its own breach that implicates Hayven's data.
+See risk #13 in §11 and P0 item 9 in §12.
 
 ---
 
@@ -672,7 +688,9 @@ measures section stay in sync rather than duplicating slightly different orderin
       every non-Nigeria processor.
 - [ ] Enable Point-in-Time Recovery on production, then run and record a real restore
       drill (§11, risk #12; confirmed disabled, re-confirmed live 2026-09-23).
-- [ ] Build and tabletop-test a breach-response procedure (§13).
+- [x] Draft a breach-response runbook — **`docs/breach-response-runbook.md`,
+      2026-09-23**. Still open: tabletop-test it, and counsel's confirmation of
+      the actual NDPC filing mechanics (§13).
 - [ ] Draft and execute the standalone Therapist Agreement (§11, risks #9–11).
 
 ### P1 (before meaningful scale)
