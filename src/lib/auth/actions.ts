@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit/check";
 import { captureServer } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { logAuditEvent } from "@/lib/audit/log";
 import type { UserRole } from "@/data/types";
 
 export interface SignUpInput {
@@ -151,6 +152,21 @@ export async function signIn(email: string, password: string): Promise<SignInRes
       return { ok: false, error: "Couldn't complete two-factor sign-in. Please try again." };
     }
     return { ok: true, mfaRequired: true, factorId };
+  }
+
+  // A completed sign-in with no second-factor step. Admins only: this log
+  // exists so privileged access is traceable, and logging every parent
+  // login would just be volume. An admin signing in *without* MFA is worth
+  // seeing on its own (mfa: false), since admin routes require enrollment.
+  // The MFA path logs from verifyMfaLogin instead, once the code checks out.
+  if (profile.role === "admin") {
+    await logAuditEvent({
+      actor: { userId: data.user.id, role: "admin" },
+      action: "auth.sign_in",
+      entityType: "user",
+      entityId: data.user.id,
+      metadata: { mfa: false },
+    });
   }
 
   return { ok: true, role: profile.role as UserRole, userId: data.user.id };

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/auth/session";
 import { checkRateLimit } from "@/lib/rate-limit/check";
+import { logAuditEvent } from "@/lib/audit/log";
 
 export type EnrollMfaResult =
   | { ok: true; factorId: string; qrCode: string; secret: string }
@@ -78,6 +79,11 @@ export async function confirmMfaEnrollment(
   });
   if (verifyError) return { ok: false, error: "Incorrect code. Please try again." };
 
+  // Every role, not just admins: turning a second factor on or off is a
+  // security change to the account whoever owns it, and it's rare enough
+  // that it adds no meaningful volume.
+  await logAuditEvent({ actor: session, action: "auth.mfa_enrolled", entityType: "user", entityId: session.userId });
+
   revalidatePath("/parent/profile");
   revalidatePath("/therapist/profile");
   revalidatePath("/supervisor/settings");
@@ -118,6 +124,8 @@ export async function unenrollMfa(
 
   const { error } = await supabase.auth.mfa.unenroll({ factorId });
   if (error) return { ok: false, error: error.message };
+
+  await logAuditEvent({ actor: session, action: "auth.mfa_disabled", entityType: "user", entityId: session.userId });
 
   revalidatePath("/parent/profile");
   revalidatePath("/therapist/profile");
@@ -179,6 +187,19 @@ export async function verifyMfaLogin(
 
   const { data: profile } = await supabase.from("users").select("role").eq("id", user.id).single();
   if (!profile) return { ok: false, error: "Account setup isn't finished yet. Please try again shortly." };
+
+  // The completed admin sign-in (password AND second factor both verified).
+  // signIn() logs the no-MFA case; this is the other half. See there for why
+  // it's admin-only.
+  if (profile.role === "admin") {
+    await logAuditEvent({
+      actor: { userId: user.id, role: "admin" },
+      action: "auth.sign_in",
+      entityType: "user",
+      entityId: user.id,
+      metadata: { mfa: true },
+    });
+  }
 
   return { ok: true, role: profile.role as string, userId: user.id };
 }

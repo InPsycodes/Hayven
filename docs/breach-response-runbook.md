@@ -64,6 +64,9 @@ What would actually surface a breach, given what's built today:
   transfer-reversal edge cases.
 - **`audit_log`** (service-role-only) — verification decisions, clinical record
   access patterns, payout runs, refund decisions, all with actor/action/metadata.
+  It also records every admin sign-in (with whether a second factor was used)
+  and any account turning two-factor on or off, so a suspected admin-account
+  compromise can be checked against when that account actually signed in.
   Reviewing this after a suspected breach is how you'd reconstruct who accessed
   what, when.
 - **Supabase's own dashboard** — auth logs, unusual query patterns, failed RLS

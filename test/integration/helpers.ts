@@ -187,7 +187,7 @@ function base32Decode(base32: string): Buffer {
   return Buffer.from(bytes);
 }
 
-function generateTotp(base32Secret: string, timeStepSeconds = 30, digits = 6): string {
+export function generateTotp(base32Secret: string, timeStepSeconds = 30, digits = 6): string {
   const key = base32Decode(base32Secret);
   const counter = Math.floor(Date.now() / 1000 / timeStepSeconds);
   const counterBuffer = Buffer.alloc(8);
@@ -207,9 +207,13 @@ function generateTotp(base32Secret: string, timeStepSeconds = 30, digits = 6): s
  * user (call after signInAs) -- elevates the session to AAL2 exactly as a
  * real user completing 2FA setup would, so getSession()'s admin-must-have-
  * MFA-enrolled check (E8) passes for the rest of the test.
+ *
+ * Returns the factor's base32 secret, for tests that later need to generate
+ * a fresh code themselves (e.g. to exercise the login-time second-factor
+ * step). Callers that only need the enrollment can ignore it.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same cross-module generic quirk as signInAs's return type above, which this is meant to accept directly.
-export async function enrollAndVerifyMfa(client: { auth: any }): Promise<void> {
+export async function enrollAndVerifyMfa(client: { auth: any }): Promise<string> {
   const { data: enrolled, error: enrollError } = await client.auth.mfa.enroll({ factorType: "totp" });
   if (enrollError) throw new Error(`enrollAndVerifyMfa: enroll failed: ${enrollError.message}`);
 
@@ -223,6 +227,7 @@ export async function enrollAndVerifyMfa(client: { auth: any }): Promise<void> {
     code,
   });
   if (verifyError) throw new Error(`enrollAndVerifyMfa: verify failed: ${verifyError.message}`);
+  return enrolled.totp.secret;
 }
 
 /**

@@ -67,7 +67,10 @@ export type AuditAction =
   | "learning_lesson.delete"
   | "review.submit"
   | "review.delete"
-  | "referral.status_update";
+  | "referral.status_update"
+  | "auth.sign_in"
+  | "auth.mfa_enrolled"
+  | "auth.mfa_disabled";
 
 /**
  * Fire-and-forget: a logging failure must never roll back a clinical write
@@ -75,7 +78,10 @@ export type AuditAction =
  * this always goes through the service-role client.
  */
 export async function logAuditEvent(params: {
-  actor: AppSession;
+  // Only the id and role are read, so those are all that's required. A full
+  // AppSession still fits (every existing caller passes one); sign-in just
+  // can't supply one, since it's logged before a completed session exists.
+  actor: Pick<AppSession, "userId" | "role"> & Partial<AppSession>;
   action: AuditAction;
   entityType: string;
   entityId?: string;

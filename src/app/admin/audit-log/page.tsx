@@ -17,6 +17,9 @@ const ACTION_LABEL: Record<string, string> = {
   "assignment.therapist_child.end": "Ended a therapist-child assignment",
   "assignment.supervisor_therapist.create": "Assigned supervisor to therapist",
   "assignment.supervisor_therapist.end": "Ended a supervisor assignment",
+  "auth.sign_in": "Signed in as admin",
+  "auth.mfa_enrolled": "Turned on two-factor authentication",
+  "auth.mfa_disabled": "Turned off two-factor authentication",
 };
 
 const ACTION_TONE: Record<string, Tone> = {
@@ -26,6 +29,8 @@ const ACTION_TONE: Record<string, Tone> = {
   generate: "rust",
   decide: "rust",
   end: "error",
+  mfa_enrolled: "sage",
+  mfa_disabled: "error",
 };
 
 function toneFor(action: string): Tone {

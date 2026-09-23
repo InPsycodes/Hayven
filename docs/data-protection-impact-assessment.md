@@ -52,6 +52,10 @@ referrer clinical detail isn't needed there. Closes §12 P1-14. A copy-level cha
 not a removal: nothing about what's stored, purged, or sent to the parent changed,
 and the underlying lawful-basis question for referral data (risk #14, Part A of
 `docs/counsel-briefing-legal-review.md`) is unaffected by this and still open.
+**Updated 2026-09-23 (VIII):** the audit log (§9.5) now records admin sign-ins and
+two-factor changes, closing a gap cross-role QA found: admins' own security-relevant
+actions were absent from the trail that exists to show who did what. Covered by a
+new integration test against a real database.
 **System assessed:** Hayven (paediatric-therapy marketplace web application and PWA)
 **Data controller:** Hayven Health Limited (RC 9879135), registered at No. 17, Aganga
 Williams, Ogba, Ikeja, Lagos State, Nigeria — incorporated 2026-09-22; added once
@@ -458,7 +462,12 @@ after the fact.
 
 An `audit_log` table (service-role-only, no user-facing grant) records sensitive
 administrative actions — verification decisions, clinical record access patterns,
-payout runs, refund decisions — with actor, action, and metadata.
+payout runs, refund decisions — with actor, action, and metadata. Since
+2026-09-23 it also records privileged-access events, which cross-role QA found
+were missing: every admin sign-in (flagged with whether a second factor was
+used), and any account turning two-factor authentication on or off. Ordinary
+parent and therapist sign-ins are deliberately not logged, to keep the log
+meaningful rather than noisy.
 
 ### 9.6 Money-flow correctness (indirect safeguard)
 
