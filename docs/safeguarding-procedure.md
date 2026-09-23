@@ -23,25 +23,23 @@ raised by a parent, a therapist, a supervisor, or surfaced by the platform.
 
 | Role | Person | Contact | Cover |
 |---|---|---|---|
-| Designated Safeguarding Lead (DSL) — receives and decides on every concern | Ademola Yusuf (Founder), named 2026-09-23 | +2348122832137 / hayvenmind@gmail.com | No Deputy DSL yet — see below |
-| Deputy DSL — acts when the DSL is unavailable | [FILL IN] | [FILL IN] | — |
+| Designated Safeguarding Lead (DSL) — receives and decides on every concern | Ademola Yusuf (Founder), named 2026-09-23 | +2348122832137 / hayvenmind@gmail.com | Deputy DSL below |
+| Deputy DSL — acts when the DSL is unavailable | Yusuf Omotoyosi, named 2026-09-23 | +2348022884563 / motoyo25@gmail.com | — |
 
 The DSL should be a specific named person, reachable the same working day,
 with the authority to contact a family or an external authority without
 waiting for anyone else's sign-off.
 
-**Named, not yet fully operative.** Naming a DSL closes the "nobody owns this"
-gap this document has flagged since its first draft — but two things keep this
-procedure short of actually operative: (1) the sections below still have
+**Both roles named; still not fully operative.** Naming a DSL and a Deputy
+closes the "nobody owns this, no cover" gap this document has flagged since
+its first draft — the single-point-of-failure risk of one person (Ademola
+Yusuf) holding founder, DPO, and DSL simultaneously is now mitigated by a
+distinct deputy who can act if the DSL is unreachable. What still keeps this
+procedure short of actually operative: the sections below still have
 `[FILL IN]` markers for the exact escalation channel, the relevant Nigerian
 child-protection authority, and record retention/storage, all of which need
-the safeguarding-adviser and legal review in §9; (2) **there is no Deputy DSL**
-— the same person (Ademola Yusuf) currently holds the founder, DPO, and DSL
-roles simultaneously. That's a real single-point-of-failure risk worth naming
-plainly rather than glossing over: if the DSL is unreachable, there is
-currently no cover. A deputy — even an informal one who can at minimum
-trigger emergency escalation in the DSL's absence — should be named before
-this procedure is treated as reliable, not just before it's "complete."
+the safeguarding-adviser and legal review in §9. The Deputy DSL should also
+be briefed on §3–§6 before being relied on in practice, not just named.
 
 ## 3. What counts as a concern
 
@@ -133,8 +131,9 @@ When in doubt: raise it. Over-reporting to the DSL is fine; the DSL filters.
 - [ ] Safeguarding adviser review of §3–§6.
 - [x] Name the DSL — **Ademola Yusuf (Founder), named 2026-09-23**, contact
       published in §2.
-- [ ] Name a Deputy DSL — no cover currently exists if the DSL is
-      unreachable; see the note in §2.
+- [x] Name a Deputy DSL — **Yusuf Omotoyosi, named 2026-09-23**, contact
+      published in §2. Still needed: brief the deputy on §3–§6 before relying
+      on them in practice.
 - [ ] Decide where safeguarding records live and lock down access.
 - [ ] Add the "raise a safeguarding concern" route in-app (distinct from
       general support) and the therapist-onboarding acceptance step.

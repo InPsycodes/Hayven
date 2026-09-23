@@ -33,9 +33,11 @@ checklist, and §15's open items updated to match; nothing else in this revision
 **Updated 2026-09-23 (IV):** Ademola Yusuf (Founder) also named as Hayven's Designated
 Safeguarding Lead (`docs/safeguarding-procedure.md` §2). Closes the "nobody named" half
 of risk #6; explicitly does not close the "fully operative" half — the procedure still
-has open `[FILL IN]` items pending safeguarding-adviser/legal review, and there is no
-Deputy DSL, meaning the founder now holds DPO and DSL simultaneously with no cover if
-unreachable. Named as a real gap, not glossed over.
+has open `[FILL IN]` items pending safeguarding-adviser/legal review.
+**Updated 2026-09-23 (V):** Yusuf Omotoyosi named as Deputy DSL
+(`docs/safeguarding-procedure.md` §2), closing the single-point-of-failure gap flagged
+in (IV) — the DSL is no longer the only person who can act on a concern. Still open:
+briefing the deputy on §3–§6 of the procedure, and the same `[FILL IN]` items as (IV).
 **System assessed:** Hayven (paediatric-therapy marketplace web application and PWA)
 **Data controller:** Hayven Health Limited (RC 9879135), registered at No. 17, Aganga
 Williams, Ogba, Ikeja, Lagos State, Nigeria — incorporated 2026-09-22; added once
@@ -209,10 +211,11 @@ initially through neither the parent nor the child, but a third-party clinician.
 - The referral flow's third-party-collection problem (§2.3, risk #14) — a parent's
   awareness of their child's data being processed is attested to by someone else, not
   confirmed by the parent themselves, until Hayven's own outreach happens.
-- The safeguarding procedure has a named DSL as of 2026-09-23 but is still not fully
-  operative (risk #6) — no Deputy DSL exists, and this is arguably the single most
-  consequential residual item in this entire document, because it concerns a child's
-  immediate physical/psychological safety, not just their data.
+- The safeguarding procedure has a named DSL and Deputy DSL as of 2026-09-23 but is
+  still not fully operative (risk #6) — several procedural `[FILL IN]` items remain
+  (escalation channel, external authority, record retention) — and this is arguably
+  the single most consequential residual item in this entire document, because it
+  concerns a child's immediate physical/psychological safety, not just their data.
 - No dedicated clinical-information-governance policy yet answers who decides what
   belongs in a "confidential" note versus a shared one, or what happens to a child's
   data as their care team changes (§9.7).
@@ -300,9 +303,11 @@ This document is the first link in that chain. Specifically still needed:
 - [ ] Ademola Yusuf (Founder), named DPO as of 2026-09-23, to formally review this
       document end-to-end and record the review here — naming the role is done;
       the review itself, and NDPC/GAID verification, are not.
-- [ ] The Designated Safeguarding Lead once named (see `docs/safeguarding-procedure.md`,
-      which has the same "not yet operative" status as this document, for the same
-      reason) — see §4 and risk #6.
+- [ ] The Designated Safeguarding Lead's (Ademola Yusuf) and Deputy DSL's (Yusuf
+      Omotoyosi) formal review of this document — both are named
+      (`docs/safeguarding-procedure.md` §2), but the procedure itself has the same
+      "not yet operative" status as this document, for the same reason — see §4
+      and risk #6.
 - [ ] Nigerian legal counsel, specifically on: the lawful-basis matrix (§3), the
       "major importance" determination (§12, P0 item 4), and the transfer register (§6).
 - [ ] If Hayven works with a specific clinical/therapy advisory body, their review of
@@ -513,7 +518,7 @@ owns this document.
 | 3 | A credential upload contains malware, or a spoofed file type | Therapist, platform | Low | Medium | Magic-byte + fail-closed AV scan (§9.2) | Low |
 | 4 | Analytics tooling captures identifying or clinical data by accident | Child, parent | Low — structurally prevented, not just policy | High if it occurred | Allowlist-based `sanitizeProps` (§9.3) | Low |
 | 5 | A therapist's payout is paid twice due to a concurrency bug | Therapist, platform | Was Medium; now fixed and integration-tested | Medium | Atomic claim + real concurrent-request test (§9.6) | Low |
-| 6 | A safeguarding concern about a child is raised but has no defined, working path to a responsible person | Child | Medium — DSL now named (2026-09-23), but no Deputy DSL and procedure not yet fully operative | **High** | Draft procedure exists, DSL named; still has `[FILL IN]` markers pending review, and no Deputy DSL exists | **Medium-High — DSL naming reduces the "nobody to reach" gap, but the no-deputy single-point-of-failure and the procedure's remaining open items keep this from High-open to fully closed; see §12 P0-1** |
+| 6 | A safeguarding concern about a child is raised but has no defined, working path to a responsible person | Child | Low-Medium — DSL and Deputy DSL both now named (2026-09-23) | **High** | Draft procedure exists, DSL + Deputy DSL named; procedure still has `[FILL IN]` markers pending review | **Medium — naming both roles closes the "nobody to reach, no cover" gap; residual is now the procedure's remaining open items (escalation channel, external authority, record retention) rather than an unstaffed role; see §12 P0-1** |
 | 7 | A data subject rights request has nowhere specific to go, or no defined SLA is met | Parent, therapist | Medium | Medium | A contact email exists; NDPA-timeframe commitment stated in the Privacy Policy; **(2026-09-23) an initial DPO has been named** (founder appointment — Ademola Yusuf) | Medium-Low — a named owner now exists for a rights request to reach, but NDPC DPO verification (GAID Schedule 3) hasn't been completed; see §12 P0-2 |
 | 8 | Cross-border transfers have no documented NDPA transfer mechanism (§6) | All users (Resend); therapists (Cloudmersive) | Medium — a process gap, not a technical one | Medium | Most core data stays UK-based; the transfer register (§6) now documents locations, not yet mechanisms | Medium — open |
 | 9 | Professional/clinical responsibility for a therapy outcome isn't clearly allocated between the therapist and the platform | Child, therapist | Medium | High | Terms of Service frames therapists as independent contractors | Medium — needs a standalone Therapist Agreement; a first draft exists (`docs/therapist-agreement.md`) |
@@ -534,14 +539,14 @@ gate a decision to process real children's clinical data at volume.
 
 ### 🔴 P0 — before production processing of real children's clinical data at any scale
 
-1. **Make the safeguarding procedure operative** (risk #6) — the single
+1. **Make the safeguarding procedure fully operative** (risk #6) — the single
    highest-severity item in this document; it's about a child in active danger
    having no defined person to reach. **2026-09-23: Ademola Yusuf (founder) named
-   as DSL** (`docs/safeguarding-procedure.md` §2), closing the "nobody named" gap.
-   Not yet fully operative: the procedure still has `[FILL IN]` markers pending
-   safeguarding-adviser/legal review, and **there is no Deputy DSL** — the founder
-   currently holds the DPO and DSL roles simultaneously, a real single-point-of-
-   failure the procedure now names plainly rather than glosses over.
+   as DSL, Yusuf Omotoyosi named as Deputy DSL** (`docs/safeguarding-procedure.md`
+   §2), closing both the "nobody named" gap and the single-point-of-failure gap a
+   solo founder holding DPO and DSL simultaneously would have left. Still open:
+   briefing the deputy on §3–§6, and the procedure's remaining `[FILL IN]` markers
+   pending safeguarding-adviser/legal review.
 2. **Complete NDPC DPO verification for the now-named privacy owner** (risk #7) —
    **2026-09-23: Ademola Yusuf (founder) has been named as Hayven's initial DPO**, the
    informal-appointment step the original draft anticipated. This is not yet the full
@@ -631,7 +636,7 @@ Hayven's data. See risk #13 in §11 and P0 item 9 in §12.
 | Author (this draft) | Claude (Anthropic) | 2026-09-19, restructured 2026-09-23 | Draft complete, not adopted |
 | Data Protection Officer / privacy owner | Ademola Yusuf (Founder) | 2026-09-23 | **Named, initial appointment — NDPC/GAID verification not yet completed (§12 P0-2)** |
 | Legal counsel | [FILL IN] | | |
-| Designated Safeguarding Lead | Ademola Yusuf (Founder) | 2026-09-23 | **Named — no Deputy DSL, procedure not yet fully operative (see `docs/safeguarding-procedure.md` §2, §9)** |
+| Designated Safeguarding Lead | Ademola Yusuf (Founder) | 2026-09-23 | **Named, with a Deputy DSL (Yusuf Omotoyosi); procedure not yet fully operative (see `docs/safeguarding-procedure.md` §2, §9)** |
 
 **This DPIA is not fully in effect until the DPO row's NDPC verification is complete
 and legal counsel has reviewed it, following the chain in §7** (founder/engineering
@@ -653,11 +658,11 @@ measures section stay in sync rather than duplicating slightly different orderin
 - [x] Name a DPO/privacy owner — **Ademola Yusuf (Founder), named 2026-09-23** as an
       initial appointment. Still open: complete NDPC DPO verification/CPD enrollment
       (GAID Schedule 3) — naming someone isn't the same as GAID-verified status.
-- [x] Name a Designated Safeguarding Lead — **Ademola Yusuf (Founder), named
-      2026-09-23**. Still open: a Deputy DSL (none currently exists — the founder
-      holds DPO and DSL simultaneously, a named single-point-of-failure), and the
-      safeguarding procedure's own remaining `[FILL IN]` items (escalation channel,
-      external authority, record retention).
+- [x] Name a Designated Safeguarding Lead and a Deputy DSL — **Ademola Yusuf
+      (Founder) as DSL, Yusuf Omotoyosi as Deputy DSL, both named 2026-09-23**.
+      Still open: briefing the deputy on §3–§6, and the safeguarding procedure's
+      own remaining `[FILL IN]` items (escalation channel, external authority,
+      record retention).
 - [ ] Legal review of the lawful-basis matrix (§3) and the sensitive-data processing
       it covers.
 - [ ] Determine "data controller/processor of major importance" status and register
