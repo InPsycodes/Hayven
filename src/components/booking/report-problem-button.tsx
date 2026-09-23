@@ -73,7 +73,7 @@ export function ReportProblemButton({
   return (
     <div className="flex w-full flex-col gap-2 sm:w-72">
       <p className="text-xs text-muted-foreground">
-        Tell us what went wrong. Hayven reviews it and follows up &mdash; you have 7 days after a session.
+        Tell us what went wrong. Hayven reviews it and follows up. You have 7 days after a session.
       </p>
       <Textarea
         value={reason}

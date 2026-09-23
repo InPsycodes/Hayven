@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
         <p className="mt-8 text-base leading-relaxed text-ink-soft">
           Hayven connects Nigerian families with verified paediatric therapists, and helps you stay involved in
           your child&apos;s care between sessions. Doing that well means handling some of the most sensitive
-          information a family has &mdash; about a child&apos;s health, development, and behaviour. This policy
+          information a family has, about a child&apos;s health, development, and behaviour. This policy
           explains, in plain language, what we collect, why, who ever sees it, and the choices you have.
         </p>
 
@@ -62,7 +62,7 @@ export default function PrivacyPolicyPage() {
             <strong className="text-charcoal">Clinical and session information, from therapists.</strong> Session
             notes, goals, target behaviours, skill tracking, and the reports generated from a session. Some
             observations recorded during a session are confidential clinical notes, visible only to therapists
-            directly involved in your child&apos;s care &mdash; never included in the report shared with you.
+            directly involved in your child&apos;s care, and never included in the report shared with you.
           </p>
           <p>
             <strong className="text-charcoal">Professional information, from therapists.</strong> Professional
@@ -72,7 +72,7 @@ export default function PrivacyPolicyPage() {
           <p>
             <strong className="text-charcoal">Booking, payment, and messages.</strong> Session bookings, and
             messages exchanged between a parent and therapist about a booking. Payments are processed by
-            Paystack &mdash; Hayven never receives or stores your full card details (see Section 5).
+            Paystack. Hayven never receives or stores your full card details (see Section 5).
           </p>
           <p>
             <strong className="text-charcoal">Technical information.</strong> Basic device and access logs kept
@@ -81,9 +81,9 @@ export default function PrivacyPolicyPage() {
           <p>
             <strong className="text-charcoal">Product and site analytics.</strong> Which pages are visited, how
             long a page takes to load, and coarse actions like &ldquo;search performed&rdquo; or &ldquo;booking
-            started&rdquo; &mdash; used to understand how the Service is used and to fix what&apos;s slow or
+            started&rdquo;, used to understand how the Service is used and to fix what&apos;s slow or
             broken. These events never include a child&apos;s name, date of birth, presenting concern, session
-            notes, or report content &mdash; see Section 5. We do not run third-party advertising trackers, ad
+            notes, or report content (see Section 5). We do not run third-party advertising trackers, ad
             pixels, or sell any data to data brokers.
           </p>
         </Section>
@@ -102,7 +102,7 @@ export default function PrivacyPolicyPage() {
             Our legal basis is, depending on the activity: your consent (for example, registering your child and
             their health information), the necessity of processing to perform our contract with you (bookings,
             payments), and our legitimate interest in keeping the platform safe (audit logs, fraud prevention).
-            Where we rely on consent, you can withdraw it at any time &mdash; see Section 7.
+            Where we rely on consent, you can withdraw it at any time (see Section 7).
           </p>
         </Section>
 
@@ -112,7 +112,7 @@ export default function PrivacyPolicyPage() {
             profile is created and controlled entirely by their registered parent or caregiver, who is the one
             consenting to its collection. Only the therapist(s) actively assigned to a child, that child&apos;s
             supervising clinician (where applicable), the child&apos;s own parent, and Hayven administrators (for
-            safety and support purposes) can ever see a child&apos;s clinical information &mdash; enforced at the
+            safety and support purposes) can ever see a child&apos;s clinical information, enforced at the
             database level, not just in the app&apos;s screens.
           </p>
           <p>
@@ -134,24 +134,24 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <strong className="text-charcoal">Supabase</strong> (database, authentication, and file storage) and{" "}
-              <strong className="text-charcoal">Vercel</strong> (application hosting) &mdash; our infrastructure
+              <strong className="text-charcoal">Vercel</strong> (application hosting), our infrastructure
               providers, bound by their own security and confidentiality obligations.
             </li>
             <li>
-              <strong className="text-charcoal">Paystack</strong> &mdash; to process payments. Paystack receives
+              <strong className="text-charcoal">Paystack</strong> for payments. Paystack receives
               what&apos;s needed to complete your transaction directly; Hayven never sees or stores your full card
               number.
             </li>
             <li>
               <strong className="text-charcoal">PostHog</strong> (product analytics, EU-hosted) and{" "}
-              <strong className="text-charcoal">Google Analytics</strong> (site-traffic analytics) &mdash; both
+              <strong className="text-charcoal">Google Analytics</strong> (site-traffic analytics). Both
               receive only your role, the page or action, and coarse timing/counts. Neither ever receives your
               name, email, a child&apos;s details, session notes, or report content; we do not enable Google
               Signals or ad personalisation on our Google Analytics property.
             </li>
             <li>
               <strong className="text-charcoal">Google</strong> (optional &ldquo;Continue with Google&rdquo; sign-in
-              for parents) &mdash; if you choose it, Google confirms your identity and shares your name and email
+              for parents). If you choose it, Google confirms your identity and shares your name and email
               address with us. We don&apos;t receive your Google password, contacts, or other Google data, and
               Google isn&apos;t told anything about your child or your use of Hayven.
             </li>

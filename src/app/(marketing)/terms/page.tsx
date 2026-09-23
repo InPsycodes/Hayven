@@ -42,7 +42,7 @@ export default function TermsOfServicePage() {
             <strong className="text-charcoal">Hayven is a platform, not a clinic.</strong> We connect families
             with independent, verified paediatric therapists, and give therapists tools to record sessions and
             share progress. Therapists using Hayven are independent practitioners responsible for their own
-            professional judgment, licensing, and the care they provide &mdash; they are not Hayven employees,
+            professional judgment, licensing, and the care they provide. They are not Hayven employees,
             and Hayven does not itself provide therapy.
           </p>
         </Section>
@@ -50,7 +50,7 @@ export default function TermsOfServicePage() {
         <Section heading="2. Who can use Hayven">
           <p>
             You must be at least 18 years old to create a parent, therapist, or supervisor account. A child&apos;s
-            profile is created and controlled by their registered parent or caregiver &mdash; children do not
+            profile is created and controlled by their registered parent or caregiver, and children do not
             hold their own accounts. You&apos;re responsible for keeping your login credentials secure and for
             all activity under your account.
           </p>
@@ -63,7 +63,7 @@ export default function TermsOfServicePage() {
         <Section heading="3. Therapist verification">
           <p>
             Before a therapist is listed publicly, we review the credentials, licensing information, and
-            supporting documents they submit. This review is a genuine check, not a rubber stamp &mdash; but it
+            supporting documents they submit. This review is a genuine check, not a rubber stamp, but it
             is not a guarantee. Hayven does not warrant the ongoing conduct, availability, or clinical outcomes
             of any therapist. If you have a concern about a therapist&apos;s conduct or credentials, report it to
             us immediately at the contact in Section 14.
@@ -74,12 +74,12 @@ export default function TermsOfServicePage() {
           <p>
             Each therapist sets their own session price, shown before you book. Payments are processed securely
             by Paystack; Hayven never sees or stores your full card details. A booking is held for you for 15
-            minutes while payment completes &mdash; if payment isn&apos;t finished in that window, the slot is
+            minutes while payment completes. If payment isn&apos;t finished in that window, the slot is
             released. Hayven may retain a portion of each payment as a platform fee.
           </p>
           <p>
             You can cancel an upcoming session from your account at any time before it starts. Cancelling does
-            not automatically refund a payment already made &mdash; refunds for a paid, cancelled session are
+            not automatically refund a payment already made. Refunds for a paid, cancelled session are
             reviewed and processed by our team directly, not issued automatically by the app.
           </p>
           <p>
@@ -123,7 +123,7 @@ export default function TermsOfServicePage() {
             </strong>{" "}
             If your child is in immediate danger, or you&apos;re experiencing a medical or safety emergency, call
             112 (Nigeria&apos;s national emergency number) or go to your nearest hospital emergency room
-            immediately &mdash; do not wait for a message or session on Hayven.
+            immediately. Do not wait for a message or session on Hayven.
           </p>
         </Section>
 
@@ -146,7 +146,7 @@ export default function TermsOfServicePage() {
         <Section heading="10. Disclaimers">
           <p>
             The Service is provided &quot;as is.&quot; Hayven is a platform connecting you with independent
-            therapists &mdash; we don&apos;t practise therapy ourselves, and we don&apos;t guarantee any
+            therapists. We don&apos;t practise therapy ourselves, and we don&apos;t guarantee any
             particular clinical outcome. General information on Hayven (including the Learning Center) is
             educational and does not replace an individualised clinical assessment from your child&apos;s
             therapist.

@@ -33,7 +33,7 @@ function OffboardControl({ userId }: { userId: string }) {
   if (result) {
     return (
       <p className="text-xs text-muted-foreground">
-        Offboarded — {result.assignmentsEnded} assignment{result.assignmentsEnded === 1 ? "" : "s"} ended,{" "}
+        Offboarded: {result.assignmentsEnded} assignment{result.assignmentsEnded === 1 ? "" : "s"} ended,{" "}
         {result.bookingsCancelled} booking{result.bookingsCancelled === 1 ? "" : "s"} cancelled (refunds queued in{" "}
         <a href="/admin/refunds" className="underline">
           Refunds

@@ -182,7 +182,7 @@ export function PediatricianReferralForm() {
           placeholder="e.g. best time to reach the family, a language preference"
         />
         <p className="text-xs text-muted-foreground">
-          No need to describe the child&apos;s history here — we&apos;ll get clinical detail
+          No need to describe the child&apos;s history here. We&apos;ll get clinical detail
           directly from the family once they&apos;re set up.
         </p>
       </div>

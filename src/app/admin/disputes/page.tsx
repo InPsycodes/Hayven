@@ -11,7 +11,7 @@ export default async function AdminDisputesPage() {
         <h1 className="font-heading text-xl text-charcoal">Disputes</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Sessions a parent has reported a problem with. A refund resolution records the amount and adds it
-          to the Refunds queue &mdash; you still move the money in Paystack. That session&apos;s therapist
+          to the Refunds queue. You still move the money in Paystack. That session&apos;s therapist
           payout is held until you resolve this.
         </p>
       </div>

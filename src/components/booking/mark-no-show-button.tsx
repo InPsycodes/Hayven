@@ -72,7 +72,7 @@ export function MarkNoShowButton({
   return (
     <form action={submit} className="flex w-full flex-col gap-2 sm:w-64">
       <p className="text-xs text-muted-foreground">
-        The family didn&apos;t attend. Recorded for your records &mdash; no automatic refund or penalty.
+        The family didn&apos;t attend. Recorded for your records, with no automatic refund or penalty.
       </p>
       <Textarea
         name="note"

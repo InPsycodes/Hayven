@@ -60,7 +60,7 @@ export function ReferralRow({ referral }: { referral: RealReferral }) {
 
       <p className="text-xs text-ink-soft">
         {referral.reasonTags.join(", ")}
-        {referral.additionalInfo ? ` — ${referral.additionalInfo}` : ""}
+        {referral.additionalInfo ? `: ${referral.additionalInfo}` : ""}
       </p>
       <p className="text-xs text-muted-foreground">Parent contact: {referral.parentContact}</p>
 

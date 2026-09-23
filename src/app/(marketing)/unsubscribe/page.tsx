@@ -20,7 +20,7 @@ export default async function UnsubscribePage({
       {!result ? (
         <p className="text-sm text-muted-foreground">
           This link is invalid or has expired. You can manage these emails from your account settings
-          instead &mdash;{" "}
+          instead:{" "}
           <Link href="/login" className="font-medium text-terracotta hover:underline">
             sign in
           </Link>
