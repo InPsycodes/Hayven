@@ -6,10 +6,10 @@
 > DPIA under the NDPA/GAID framework is a governance and legal instrument, not only an
 > engineering one — the lawful-basis analysis (§3), the children's-data safeguarding
 > posture (§4), the international-transfer register (§6), the risk ratings (§11), and
-> the sign-off (§14) all need a named, GAID-verified Data Protection Officer and Nigerian
-> legal counsel before this is a real, adopted assessment rather than a strong starting
-> point. Use this as the structure and factual base, not as evidence of compliance on
-> its own.
+> the sign-off (§14) all need the now-named DPO's formal review, completed NDPC/GAID
+> DPO verification, and Nigerian legal counsel before this is a real, adopted
+> assessment rather than a strong starting point. Use this as the structure and
+> factual base, not as evidence of compliance on its own.
 
 **Date of original draft:** 2026-09-19
 **Updated 2026-09-23 (I):** added the referral data flow and the second security audit's
@@ -25,6 +25,11 @@ against public NDPC and law-firm sources on 2026-09-23 (see citations inline) �
 not fabricated, but a compliance document of this kind should still have its regulatory
 citations confirmed by Nigerian counsel before anyone relies on them, since secondary
 sources can lag or misstate a regulator's own text.
+**Updated 2026-09-23 (III):** Ademola Yusuf (Founder) named as Hayven's initial Data
+Protection Officer — an informal, founder-wearing-the-hat appointment, not yet
+NDPC-verified under GAID Schedule 3. Closes the "nobody named" half of risk #7 and
+§12 P0-2; does not close the "GAID-verified" half. Sign-off (§14), §7's consultation
+checklist, and §15's open items updated to match; nothing else in this revision.
 **System assessed:** Hayven (paediatric-therapy marketplace web application and PWA)
 **Data controller:** Hayven Health Limited (RC 9879135), registered at No. 17, Aganga
 Williams, Ogba, Ikeja, Lagos State, Nigeria — incorporated 2026-09-22; added once
@@ -285,8 +290,9 @@ remediation → DPO approval → adoption → regulatory filing/record as applic
 
 This document is the first link in that chain. Specifically still needed:
 
-- [ ] A named, GAID-verified Data Protection Officer or equivalent privacy owner to
-      review this document and formally own it.
+- [ ] Ademola Yusuf (Founder), named DPO as of 2026-09-23, to formally review this
+      document end-to-end and record the review here — naming the role is done;
+      the review itself, and NDPC/GAID verification, are not.
 - [ ] The Designated Safeguarding Lead once named (see `docs/safeguarding-procedure.md`,
       which has the same "not yet operative" status as this document, for the same
       reason) — see §4 and risk #6.
@@ -501,7 +507,7 @@ owns this document.
 | 4 | Analytics tooling captures identifying or clinical data by accident | Child, parent | Low — structurally prevented, not just policy | High if it occurred | Allowlist-based `sanitizeProps` (§9.3) | Low |
 | 5 | A therapist's payout is paid twice due to a concurrency bug | Therapist, platform | Was Medium; now fixed and integration-tested | Medium | Atomic claim + real concurrent-request test (§9.6) | Low |
 | 6 | A safeguarding concern about a child is raised but has no defined, working path to a responsible person | Child | **High — no DSL named yet** | **High** | Draft procedure exists but is explicitly not operative | **High — open, launch-blocking; see §12 P0-1** |
-| 7 | A data subject rights request has nowhere specific to go, or no defined SLA is met | Parent, therapist | Medium | Medium | A contact email exists; NDPA-timeframe commitment stated in the Privacy Policy | Medium — no verified DPO named yet |
+| 7 | A data subject rights request has nowhere specific to go, or no defined SLA is met | Parent, therapist | Medium | Medium | A contact email exists; NDPA-timeframe commitment stated in the Privacy Policy; **(2026-09-23) an initial DPO has been named** (founder appointment — Ademola Yusuf) | Medium-Low — a named owner now exists for a rights request to reach, but NDPC DPO verification (GAID Schedule 3) hasn't been completed; see §12 P0-2 |
 | 8 | Cross-border transfers have no documented NDPA transfer mechanism (§6) | All users (Resend); therapists (Cloudmersive) | Medium — a process gap, not a technical one | Medium | Most core data stays UK-based; the transfer register (§6) now documents locations, not yet mechanisms | Medium — open |
 | 9 | Professional/clinical responsibility for a therapy outcome isn't clearly allocated between the therapist and the platform | Child, therapist | Medium | High | Terms of Service frames therapists as independent contractors | Medium — needs a standalone Therapist Agreement; a first draft exists (`docs/therapist-agreement.md`) |
 | 10 | Platform responsibility — what Hayven actually provides versus warrants — isn't precisely scoped alongside risk #9 | Platform, therapist | Medium | Medium | Terms of Service disclaims clinical-outcome liability | Medium — same Therapist Agreement closes this |
@@ -524,11 +530,15 @@ gate a decision to process real children's clinical data at volume.
 1. **Name a Designated Safeguarding Lead and make the safeguarding procedure
    operative** (risk #6) — the single highest-severity item in this document; it's
    about a child in active danger having no defined person to reach.
-2. **Name a Data Protection Officer or equivalent privacy owner** (risk #7) — and note
-   this is more formal under GAID 2025 than "a founder wearing the hat": the GAID's DPO
-   verification/continuous-professional-development framework (Schedule 3) ties DPO
-   status to an NDPC verification and CPD-points mechanism, not a unilateral internal
-   appointment ([Aluko & Oyebode](https://www.aluko-oyebode.com/insights/ndpc-issues-guidance-on-cpd-for-dpos/)).
+2. **Complete NDPC DPO verification for the now-named privacy owner** (risk #7) —
+   **2026-09-23: Ademola Yusuf (founder) has been named as Hayven's initial DPO**, the
+   informal-appointment step the original draft anticipated. This is not yet the full
+   GAID picture: the GAID's DPO verification/continuous-professional-development
+   framework (Schedule 3) ties formal DPO status to an NDPC verification and
+   CPD-points mechanism, not a unilateral internal appointment
+   ([Aluko & Oyebode](https://www.aluko-oyebode.com/insights/ndpc-issues-guidance-on-cpd-for-dpos/)).
+   The remaining action is enrolling in and completing that verification, not naming
+   someone — that part is done.
 3. **Legal review of the lawful-basis matrix and sensitive-data processing** (§3) —
    every "Needs legal review" cell in that table.
 4. **Determine "data controller/processor of major importance" status and register
@@ -607,15 +617,17 @@ Hayven's data. See risk #13 in §11 and P0 item 9 in §12.
 | Role | Name | Date | Outcome |
 |---|---|---|---|
 | Author (this draft) | Claude (Anthropic) | 2026-09-19, restructured 2026-09-23 | Draft complete, not adopted |
-| Data Protection Officer / privacy owner (GAID-verified) | [FILL IN] | | |
+| Data Protection Officer / privacy owner | Ademola Yusuf (Founder) | 2026-09-23 | **Named, initial appointment — NDPC/GAID verification not yet completed (§12 P0-2)** |
 | Legal counsel | [FILL IN] | | |
 | Designated Safeguarding Lead | [FILL IN] | | |
 
-**This DPIA is not in effect until the DPO/privacy-owner row above is completed, and
-that review should follow the chain in §7** (founder/engineering assessment → DPO
-review → legal review → safeguarding review → remediation → DPO approval → adoption →
-regulatory filing/record as applicable). A DPIA that nobody with real authority has
-reviewed is a draft, not a governance control.
+**This DPIA is not fully in effect until the DPO row's NDPC verification is complete
+and legal counsel has reviewed it, following the chain in §7** (founder/engineering
+assessment → DPO review → legal review → safeguarding review → remediation → DPO
+approval → adoption → regulatory filing/record as applicable). Naming a DPO closes
+the "nobody owns this" gap the original draft flagged; it doesn't by itself satisfy
+GAID's formal DPO-verification requirement, and this document should keep saying so
+until that's actually done.
 
 ---
 
@@ -626,7 +638,10 @@ measures section stay in sync rather than duplicating slightly different orderin
 
 ### P0 (launch-blocking)
 
-- [ ] Name a DPO/privacy owner (GAID-verified) and a Designated Safeguarding Lead.
+- [x] Name a DPO/privacy owner — **Ademola Yusuf (Founder), named 2026-09-23** as an
+      initial appointment. Still open: complete NDPC DPO verification/CPD enrollment
+      (GAID Schedule 3) — naming someone isn't the same as GAID-verified status.
+- [ ] Name a Designated Safeguarding Lead.
 - [ ] Legal review of the lawful-basis matrix (§3) and the sensitive-data processing
       it covers.
 - [ ] Determine "data controller/processor of major importance" status and register
