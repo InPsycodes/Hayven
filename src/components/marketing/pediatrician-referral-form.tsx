@@ -174,13 +174,17 @@ export function PediatricianReferralForm() {
       </fieldset>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="additionalInfo">Additional information (optional)</Label>
+        <Label htmlFor="additionalInfo">Anything logistical we should know? (optional)</Label>
         <Textarea
           id="additionalInfo"
           name="additionalInfo"
           rows={3}
-          placeholder="Anything else worth knowing before we reach out"
+          placeholder="e.g. best time to reach the family, a language preference"
         />
+        <p className="text-xs text-muted-foreground">
+          No need to describe the child&apos;s history here — we&apos;ll get clinical detail
+          directly from the family once they&apos;re set up.
+        </p>
       </div>
 
       <label className="flex items-start gap-2.5 text-sm text-ink-soft">

@@ -45,6 +45,13 @@ Sentry, Cloudmersive's fail-closed scanning) rather than generic advice, and reu
 the DPIA's own §10 risk-scoring scale instead of inventing a parallel one. Does not
 close the "tested" half — still needs a tabletop run-through and counsel's
 confirmation of the actual NDPC filing mechanics.
+**Updated 2026-09-23 (VII):** minimised the public referral form's free-text field
+(`src/components/marketing/pediatrician-referral-form.tsx`) — reframed from open
+"anything else worth knowing" to logistics-only, with explicit copy telling the
+referrer clinical detail isn't needed there. Closes §12 P1-14. A copy-level change,
+not a removal: nothing about what's stored, purged, or sent to the parent changed,
+and the underlying lawful-basis question for referral data (risk #14, Part A of
+`docs/counsel-briefing-legal-review.md`) is unaffected by this and still open.
 **System assessed:** Hayven (paediatric-therapy marketplace web application and PWA)
 **Data controller:** Hayven Health Limited (RC 9879135), registered at No. 17, Aganga
 Williams, Ogba, Ikeja, Lagos State, Nigeria — incorporated 2026-09-22; added once
@@ -345,15 +352,17 @@ This document is the first link in that chain. Specifically still needed:
   than free-form event capture — a specific design decision, not a default.
 - Technical/security logs: necessary for account security and incident investigation;
   time-bounded (24 months, see §9.4).
-- **Referral data (added this revision):** the public referral form currently collects
-  more than the minimum needed to *initiate contact* — including free-text clinical
-  context typed by the referring clinician before the family has any relationship with
-  Hayven. A narrower form (predefined support-category options rather than an open
-  "describe the child's clinical history" field, with detailed clinical information
-  deferred until the parent creates their own account) would materially reduce this
-  category's third-party-collection risk. **This is a recommended product change, not
-  yet built** — flagged in §12 (P1) as a decision for the platform owner, not something
-  implemented unilaterally in this pass.
+- **Referral data:** the public referral form's reason-for-referral field was already
+  categorical (predefined tags, e.g. "Speech / language", "Behavior"), but its
+  free-text field was labelled "Additional information" with a placeholder inviting
+  open narrative ("Anything else worth knowing") — collecting more than needed to
+  *initiate contact*, before the family has any relationship with Hayven.
+  **2026-09-23: narrowed.** The field is now framed as logistics only ("best time to
+  reach the family, a language preference"), with explicit copy telling the referrer
+  clinical detail isn't needed there (`src/components/marketing/pediatrician-referral-
+  form.tsx`). This is a copy-level minimisation, not a removal — the field still
+  exists for genuinely logistical notes, and nothing about what's stored, purged, or
+  sent to the parent (still never restated in the parent email, §2.3) changed.
 
 **Could the same purpose be achieved with less data, or less identifiable data?** Two
 places this stays open: Google Analytics (§6) — coarse, non-identifying events already,
@@ -539,7 +548,7 @@ owns this document.
 | 11 | Data-controller/processor responsibility isn't contractually mapped between Hayven, therapists, and any clinics they're affiliated with | Child, therapist, platform | Not assessed | Medium-High | Not mitigated | Medium-High — a marketplace doesn't automatically make every participant the same type of data-protection actor; needs counsel |
 | 12 | No verified backup/restore process exists, and a data-loss incident has no tested recovery path | All users | **Confirmed: Point-in-Time Recovery is disabled** (`pitr_enabled: false`, re-checked live via the Supabase CLI on 2026-09-23) | High if it occurred | None confirmed beyond whatever Supabase's plan tier includes by default | **High — launch-blocking; see §12 P0-8** |
 | 13 | No fully tested personal-data breach response process exists | All users, regulator relationship | Low-Medium — a first-draft runbook now exists (`docs/breach-response-runbook.md`) | High | Runbook covers roles, detection, the 72-hour NDPC clock, and scenario playbooks; not yet tabletop-tested | Medium — written, not yet exercised; see §13 |
-| 14 | Referral data (a child's name, contact details) is collected from a third party before the family's direct consent | Child, prospective parent | Low-Medium — referrer must attest parent awareness | Medium | Referrer attestation, 90-day auto-purge, prompt parent email (§2.3) | Low-Medium — attestation isn't verification; a minimised-form redesign is recommended (§8) but not built |
+| 14 | Referral data (a child's name, contact details) is collected from a third party before the family's direct consent | Child, prospective parent | Low-Medium — referrer must attest parent awareness | Medium | Referrer attestation, 90-day auto-purge, prompt parent email (§2.3), minimised-form copy (§8, done 2026-09-23) | Low-Medium — attestation isn't verification, which the form redesign doesn't change; residual is now about the legal basis (Part A of `docs/counsel-briefing-legal-review.md`), not the volume of data collected |
 | 15 | Hayven hasn't determined "data controller/processor of major importance" status or registered with the NDPC | Regulator relationship, all users indirectly | Not assessed | Medium-High | Not mitigated | **Medium-High — likely launch-blocking; see §12 P0-4.** The NDPC's published threshold is processing 200+ data subjects within a rolling 6-month window, and health-sector organisations are explicitly named among the sectors the "major importance" designation targets ([Michalsons](https://www.michalsons.com/blog/nigeria-data-protection-act-ndpa-controller-and-processor-registration/77465), [KPMG](https://kpmg.com/ng/en/home/insights/2024/03/nigeria-data-protection-commissions-guidance-notice-on-registration-of-data-processors-controllers-of-major-importance.html)) — counsel should treat this as a concrete determination to make, not an abstract question |
 
 ---
@@ -605,10 +614,10 @@ gate a decision to process real children's clinical data at volume.
 13. **Adopt a clinical-information-governance policy** (§9.7) answering who decides
     what belongs in a confidential note, cross-discipline visibility, and what happens
     to clinical access as a care team changes.
-14. **Redesign the public referral form toward minimum-necessary collection** (§8) —
-    predefined support-category options in place of open clinical free text, with
-    detailed clinical detail deferred until the parent has their own account. A
-    product decision, not yet built.
+14. ~~Redesign the public referral form toward minimum-necessary collection~~ —
+    **done, 2026-09-23** (§8). The reason field was already categorical; the
+    free-text field is now framed as logistics-only, with explicit copy steering
+    away from clinical narrative.
 15. **Document a retention rationale for each period in §9.4** — not just the period
     itself, but the legal/professional/organisational reasoning behind each number.
 16. **Set a recurring DPIA review cadence** (annually, and after any material change to
@@ -704,7 +713,8 @@ measures section stay in sync rather than duplicating slightly different orderin
 - [ ] Decide whether MFA becomes mandatory for therapist/supervisor/admin roles.
 - [ ] Confirm Google Analytics' processing location and its NDPA transfer mechanism.
 - [ ] Adopt a clinical-information-governance policy (§9.7).
-- [ ] Decide on and build a minimised redesign of the public referral form (§8).
+- [x] Minimise the public referral form's free-text field — **done, 2026-09-23**
+      (§8). The reason field was already categorical.
 - [ ] Document a retention rationale per category, not just the period (§9.4).
 - [x] ~~Explicit, separate consent for a child's sensitive data at the point it's first
       collected, and guardian-status confirmation~~ — addressed for the "Add a child"
