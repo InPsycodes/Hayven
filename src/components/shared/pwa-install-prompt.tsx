@@ -160,7 +160,7 @@ export function PwaInstallPrompt() {
     <div
       role="complementary"
       aria-label="Install Hayven"
-      className="fixed inset-x-4 bottom-20 z-40 ml-auto flex max-w-[240px] items-center gap-2.5 rounded-sm border border-white/10 bg-[linear-gradient(180deg,rgba(26,26,26,0.9)_0%,rgba(26,26,26,0.82)_100%)] px-3.5 py-2.5 text-offwhite shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_20px_40px_-16px_rgba(0,0,0,0.55)] backdrop-blur-2xl backdrop-saturate-150 md:bottom-4 md:inset-x-auto md:right-4 md:z-50 md:max-w-sm"
+      className="reveal fixed inset-x-4 bottom-20 z-40 ml-auto flex max-w-[240px] items-center gap-2.5 rounded-sm border border-white/10 bg-[linear-gradient(180deg,rgba(26,26,26,0.9)_0%,rgba(26,26,26,0.82)_100%)] px-3.5 py-2.5 text-offwhite shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_20px_40px_-16px_rgba(0,0,0,0.55)] backdrop-blur-2xl backdrop-saturate-150 md:bottom-4 md:inset-x-auto md:right-4 md:z-50 md:max-w-sm"
     >
       {isIos ? (
         <>

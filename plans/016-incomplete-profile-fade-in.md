@@ -1,6 +1,6 @@
 # 016 — Fade in the incomplete-profile notice on first render
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: 5b580d0
 - **Severity**: LOW
 - **Category**: 8. Missed opportunities

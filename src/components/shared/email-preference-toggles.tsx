@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EMAIL_PREF_FIELDS, type EmailPreferences } from "@/lib/notifications/preferences";
 import { updateMyEmailPreferences, updateEmailPreferencesByToken } from "@/lib/notifications/actions";
+import { cn } from "@/lib/utils";
 
 /**
  * The three opt-out email toggles. Auto-saves on change (optimistic, reverts
@@ -57,7 +58,14 @@ export function EmailPreferenceToggles({
         </label>
       ))}
       {error && <p className="text-xs text-error-text">{error}</p>}
-      {saved && !error && <p className="fade-in text-xs text-success-text">Saved.</p>}
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-(--duration-press) ease-(--ease-out)",
+          saved && !error ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <p className="overflow-hidden text-xs text-success-text">Saved.</p>
+      </div>
       <p className="text-[11px] text-muted-foreground">
         Booking confirmations, payment receipts, and published reports are always emailed.
       </p>

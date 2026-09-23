@@ -45,10 +45,10 @@ the app's "delight budget" — that was never its brief). Both reuse only existi
 
 | # | Title | Severity | Depends on | Status |
 |---|---|---|---|---|
-| [013](013-save-confirmation-retrigger.md) | Make "Saved."/"Sent." confirmations retarget instead of restarting | MEDIUM | 001, 006 (pattern) | TODO |
-| [014](014-pwa-prompt-entrance.md) | Give the PWA install prompt an entrance instead of teleporting in | LOW-MEDIUM | — | TODO |
-| [015](015-delete-account-confirm-reveal.md) | Reveal the account-deletion confirm form instead of hard-swapping it in | LOW-MEDIUM | — | TODO |
-| [016](016-incomplete-profile-fade-in.md) | Fade in the incomplete-profile notice on first render | LOW | — | TODO |
+| [013](013-save-confirmation-retrigger.md) | Make "Saved."/"Sent." confirmations retarget instead of restarting | MEDIUM | 001, 006 (pattern) | DONE |
+| [014](014-pwa-prompt-entrance.md) | Give the PWA install prompt an entrance instead of teleporting in | LOW-MEDIUM | — | DONE |
+| [015](015-delete-account-confirm-reveal.md) | Reveal the account-deletion confirm form instead of hard-swapping it in | LOW-MEDIUM | — | DONE |
+| [016](016-incomplete-profile-fade-in.md) | Fade in the incomplete-profile notice on first render | LOW | — | DONE |
 
 One of the parallel subagents from the original 2026-09-18 audit fan-out reported back roughly
 34 hours later (background task, not re-run). Most of its findings duplicated work already

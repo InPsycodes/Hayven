@@ -1,6 +1,6 @@
 # 014 — Give the PWA install prompt an entrance instead of teleporting in
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: 5b580d0
 - **Severity**: LOW-MEDIUM
 - **Category**: 8. Missed opportunities (+ 4. Interruptibility)

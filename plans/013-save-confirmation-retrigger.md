@@ -1,6 +1,6 @@
 # 013 — Make "Saved."/"Sent." confirmations retarget instead of restarting
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: 5b580d0
 - **Severity**: MEDIUM
 - **Category**: 4. Interruptibility

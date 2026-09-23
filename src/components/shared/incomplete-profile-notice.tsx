@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
  */
 export function IncompleteProfileNotice() {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
+    <div className="fade-in flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
       <IconUserExclamation size={32} stroke={1.5} className="text-muted-foreground" />
       <h1 className="font-heading text-xl text-charcoal">Finish setting up your profile</h1>
       <p className="max-w-sm text-sm text-muted-foreground">

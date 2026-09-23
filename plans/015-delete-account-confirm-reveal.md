@@ -1,6 +1,6 @@
 # 015 — Reveal the account-deletion confirm form instead of hard-swapping it in
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: 5b580d0
 - **Severity**: LOW-MEDIUM
 - **Category**: 8. Missed opportunities (+ 4. Interruptibility)

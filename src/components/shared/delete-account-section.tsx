@@ -42,7 +42,7 @@ export function DeleteAccountSection({
           </span>
         </div>
       ) : expanded ? (
-        <form action={formAction} className="flex flex-col gap-3">
+        <form action={formAction} className="reveal flex flex-col gap-3">
           <Textarea
             name="reason"
             rows={3}
