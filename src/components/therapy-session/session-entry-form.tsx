@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -271,6 +272,23 @@ export function SessionEntryForm({
           />
         </div>
       </div>
+
+      {programme.targetBehaviours.length === 0 && programme.skills.length === 0 && programme.goals.length === 0 && (
+        <div className="flex flex-col gap-2 rounded-sm bg-inset p-4 ring-1 ring-border">
+          <p className="text-sm font-medium text-charcoal">Nothing to measure yet</p>
+          <p className="text-sm text-muted-foreground">
+            {childName} has no goals, skills or target behaviours set up, so there is nothing to record data against. The
+            report&apos;s Data summary and Clinical interpretation will be empty until there is.{" "}
+            <Link
+              href={`/therapist/children/${childId}/programme`}
+              className="font-medium text-rust-dark hover:underline"
+            >
+              Set up the programme
+            </Link>{" "}
+            first, then log the session. What you have typed here is kept as a draft on this device.
+          </p>
+        </div>
+      )}
 
       {programme.targetBehaviours.length > 0 && (
         <div className="flex flex-col gap-3">
