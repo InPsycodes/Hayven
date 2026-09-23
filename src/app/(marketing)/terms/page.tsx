@@ -34,15 +34,9 @@ export default function TermsOfServicePage() {
 
         <Section heading="1. Who we are">
           <p>
-            Hayven is operated by Hayven{" "}
-            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
-              [confirm exact registered company name and RC number]
-            </span>{" "}
-            (&quot;Hayven,&quot; &quot;we,&quot; &quot;us&quot;), registered in Nigeria, of{" "}
-            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
-              [registered business address to be added]
-            </span>
-            .
+            Hayven is operated by Hayven Health Limited (RC 9879135)
+            (&quot;Hayven,&quot; &quot;we,&quot; &quot;us&quot;), registered in Nigeria, of No. 17, Aganga
+            Williams, Ogba, Ikeja, Lagos State, Nigeria.
           </p>
           <p>
             <strong className="text-charcoal">Hayven is a platform, not a clinic.</strong> We connect families

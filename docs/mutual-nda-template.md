@@ -15,8 +15,8 @@ instead of one.
 
 This Mutual Non-Disclosure Agreement ("Agreement") is entered into on [DATE] between:
 
-**Hayven**, [registered company name and RC number — see the same open item in the
-Privacy Policy and Terms of Service], of [registered business address] ("Hayven"),
+**Hayven Health Limited** (RC 9879135), of No. 17, Aganga Williams, Ogba, Ikeja, Lagos
+State, Nigeria ("Hayven"),
 
 and
 

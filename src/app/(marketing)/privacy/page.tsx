@@ -40,15 +40,10 @@ export default function PrivacyPolicyPage() {
             clinical supervisors, and administrators using the Hayven platform (the &quot;Service&quot;).
           </p>
           <p>
-            Hayven is operated by Hayven{" "}
-            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
-              [confirm exact registered company name and RC number]
-            </span>{" "}
-            (&quot;Hayven,&quot; &quot;we,&quot; &quot;us&quot;), registered in Nigeria, of{" "}
-            <span className="rounded bg-amber/10 px-1 py-0.5 text-[#6f4519]">
-              [registered business address to be added]
-            </span>
-            . For everything below, Hayven is the data controller.
+            Hayven is operated by Hayven Health Limited (RC 9879135)
+            (&quot;Hayven,&quot; &quot;we,&quot; &quot;us&quot;), registered in Nigeria, of No. 17, Aganga
+            Williams, Ogba, Ikeja, Lagos State, Nigeria. For everything below, Hayven is the data
+            controller.
           </p>
         </Section>
 
