@@ -161,11 +161,11 @@ export default async function SupervisorTeamPage() {
             )}
           </CarePanel.Static>
 
-          <CarePanel label="Account security" href="/supervisor/settings" accent>
+          <CarePanel label="Settings" href="/supervisor/settings" accent>
             <div className="mt-2 flex items-start gap-2.5">
               <IconShieldLock size={18} stroke={1.75} className="mt-0.5 shrink-0 text-care-accent" />
               <p className="text-[12.5px] leading-relaxed text-care-ink-soft">
-                Two-factor authentication for your account.
+                Notifications and two-factor authentication.
               </p>
             </div>
           </CarePanel>
