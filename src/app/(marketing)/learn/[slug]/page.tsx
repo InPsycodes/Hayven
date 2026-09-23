@@ -89,7 +89,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             className="photo-treatment -z-10 object-cover opacity-55"
           />
         )}
-        <div className="mx-auto max-w-3xl px-6 pt-8 pb-10 md:px-10 md:pt-10 md:pb-12">
+        <div className="mx-auto max-w-[1200px] px-6 pt-8 pb-10 md:px-10 md:pt-10 md:pb-12 lg:px-12 lg:pt-14 lg:pb-16 xl:px-16">
           <Link
             href={backHref}
             className="mb-8 inline-flex items-center gap-1.5 text-sm text-canvas-white/75 hover:text-canvas-white"
@@ -118,52 +118,63 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </div>
       </header>
 
-      {/* Body */}
-      <div className="mx-auto grid max-w-4xl gap-10 px-6 py-12 md:grid-cols-[1fr_260px] md:px-10">
-        <div className="min-w-0">
-          {lead && (
-            <p className="text-lg leading-relaxed text-charcoal">{lead}</p>
-          )}
-          <div className="mt-5 flex flex-col gap-4">
-            {rest.map((paragraph, i) => (
-              <p key={i} className="text-base leading-relaxed text-ink-soft">
-                {paragraph}
-              </p>
-            ))}
-          </div>
+      {/* Body -- a wide editorial container (max ~1200px) holding a fixed-width
+          reading column (max 680-720px, capped independently of its 1fr grid
+          track so it never stretches on large monitors) beside a narrower
+          sidebar. Below lg, the grid collapses to one column and the aside
+          (already second in DOM order) naturally falls below the article --
+          no separate mobile markup needed. */}
+      <div className="mx-auto max-w-[1200px] px-6 py-12 md:px-10 md:py-14 lg:px-12 lg:py-16 xl:px-16">
+        <div className="grid gap-10 lg:grid-cols-[1fr_280px] lg:items-start lg:gap-14 xl:grid-cols-[1fr_300px] xl:gap-20">
+          <div className="min-w-0 lg:max-w-[680px] xl:max-w-[720px]">
+            {lead && (
+              <p className="font-serif text-xl leading-[1.55] text-charcoal md:text-[1.35rem]">{lead}</p>
+            )}
+            <div className="mt-6 flex flex-col gap-5 md:mt-8 md:gap-6">
+              {rest.map((paragraph, i) => (
+                <p key={i} className="text-base leading-[1.75] text-ink-soft md:text-[1.0625rem]">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
 
-          <p className="mt-10 border-t border-border pt-5 text-xs text-ink-soft/80">
-            This guide is general information, not a diagnosis or medical advice. If you&apos;re
-            worried about your child, the next step is a conversation with a qualified therapist.
-          </p>
-        </div>
-
-        <aside className="flex flex-col gap-5 md:sticky md:top-6 md:self-start">
-          <div className="rounded-2xl bg-canvas-white p-5 ring-1 ring-charcoal/10">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-rust-dark">
-              In short
+            <p className="mt-12 border-t border-border pt-6 text-xs text-ink-soft/80">
+              This guide is general information, not a diagnosis or medical advice. If you&apos;re
+              worried about your child, the next step is a conversation with a qualified therapist.
             </p>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">{article.excerpt}</p>
           </div>
 
-          {article.reviewedBy && (
-            <div className="rounded-2xl bg-paper/60 p-5">
-              <div className="flex items-start gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-success/15 text-success-text">
-                  <IconCircleCheck size={18} stroke={1.75} />
+          {/* An editorial "spine" (a colored rule, not a boxed card) rather
+              than the previous rounded/ring/shadow treatment -- reads as
+              part of the article's own design instead of a dashboard widget
+              dropped beside it. */}
+          <aside className="flex flex-col gap-8 lg:sticky lg:top-24 lg:self-start">
+            <div className="border-l-2 border-terracotta/40 pl-6">
+              <p className="label-micro text-rust-dark">In short</p>
+              <p className="mt-3 font-serif text-[1.05rem] leading-[1.55] text-charcoal">
+                {article.excerpt}
+              </p>
+            </div>
+
+            {article.reviewedBy && (
+              <div className="flex items-start gap-3 border-l-2 border-charcoal/10 pl-6">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success-text">
+                  <IconCircleCheck size={16} stroke={1.75} />
                 </span>
                 <div>
                   <p className="text-sm font-medium text-charcoal">Clinically reviewed</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-ink-soft">{article.reviewedBy}</p>
                 </div>
               </div>
-            </div>
-          )}
-        </aside>
+            )}
+          </aside>
+        </div>
       </div>
 
-      {/* Related + CTA */}
-      <div className="mx-auto max-w-4xl px-6 pb-16 md:px-10">
+      {/* Related + CTA -- same wide container as the body above, so the
+          whole page reads as one composition rather than the body being an
+          island at a different width than everything around it. */}
+      <div className="mx-auto max-w-[1200px] px-6 pb-16 md:px-10 lg:px-12 xl:px-16">
         {related.length > 0 && (
           <section className="mb-10">
             <p className="label-micro mb-4 text-ink-soft">Keep reading</p>
