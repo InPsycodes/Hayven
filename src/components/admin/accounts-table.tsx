@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { IconSearch } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatDate, initialsFromName } from "@/data/format";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
-import type { AdminUserRow } from "@/lib/admin/queries";
+import type { AdminUserRow, AdminAccountRoleFilter } from "@/lib/admin/queries";
 import {
   setUserAccountStatus,
   resetUserAccountPassword,
@@ -90,7 +91,7 @@ function OffboardControl({ userId }: { userId: string }) {
   );
 }
 
-const ROLE_FILTERS = [
+const ROLE_FILTERS: { key: AdminAccountRoleFilter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "parent", label: "Parents" },
   { key: "therapist", label: "Therapists" },
@@ -243,63 +244,124 @@ function AccountRow({ user, isSelf }: { user: AdminUserRow; isSelf: boolean }) {
   );
 }
 
-export function AccountsTable({ users, currentUserId }: { users: AdminUserRow[]; currentUserId: string }) {
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+function accountsHref({ role, q, page }: { role: AdminAccountRoleFilter; q: string; page: number }) {
+  const params = new URLSearchParams();
+  if (role !== "all") params.set("role", role);
+  if (q) params.set("q", q);
+  if (page > 1) params.set("page", String(page));
+  const query = params.toString();
+  return query ? `/admin/accounts?${query}` : "/admin/accounts";
+}
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return users.filter((u) => {
-      // E9: the "supervisor" filter option means is_supervisor, not a role
-      // value -- the standalone role === "supervisor" mechanism is retired.
-      const matchesRole =
-        roleFilter === "all" || (roleFilter === "supervisor" ? u.isSupervisor : u.role === roleFilter);
-      const matchesSearch = !q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-      return matchesRole && matchesSearch;
-    });
-  }, [users, search, roleFilter]);
+/**
+ * One page of accounts. Search, role filter and page all live in the URL and
+ * are applied by the server (see getUsersForAdminPage), so this only renders
+ * what it's given -- a page can be reloaded or shared, and search covers every
+ * account rather than just the ones already loaded.
+ */
+export function AccountsTable({
+  users,
+  currentUserId,
+  total,
+  page,
+  pageSize,
+  role,
+  search,
+}: {
+  users: AdminUserRow[];
+  currentUserId: string;
+  total: number;
+  page: number;
+  pageSize: number;
+  role: AdminAccountRoleFilter;
+  search: string;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const last = Math.min(page * pageSize, total);
+  const isFiltered = role !== "all" || search !== "";
+  const pagerLink = "rounded-full bg-white px-3 py-1.5 text-xs font-medium text-charcoal transition-colors hover:bg-white/70";
+  const pagerOff = "rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground/60";
 
   return (
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-xs">
-          <IconSearch size={15} stroke={2} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or email"
-            className="pl-8"
-            aria-label="Search accounts"
-          />
-        </div>
+        <form action="/admin/accounts" method="get" role="search" className="flex w-full items-center gap-2 sm:max-w-sm">
+          {role !== "all" && <input type="hidden" name="role" value={role} />}
+          <div className="relative flex-1">
+            <IconSearch size={15} stroke={2} className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              key={search}
+              type="text"
+              name="q"
+              defaultValue={search}
+              placeholder="Search by name or email"
+              className="pl-8"
+              aria-label="Search accounts"
+            />
+          </div>
+          <Button type="submit" variant="outline" size="sm">
+            Search
+          </Button>
+          {search && (
+            <Link href={accountsHref({ role, q: "", page: 1 })} className="text-xs text-muted-foreground hover:underline">
+              Clear
+            </Link>
+          )}
+        </form>
         <div className="flex flex-wrap gap-1.5">
           {ROLE_FILTERS.map((filter) => (
-            <button
+            <Link
               key={filter.key}
-              type="button"
-              onClick={() => setRoleFilter(filter.key)}
+              href={accountsHref({ role: filter.key, q: search, page: 1 })}
+              aria-current={role === filter.key ? "true" : undefined}
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                roleFilter === filter.key ? "bg-charcoal text-offwhite" : "bg-white text-charcoal hover:bg-white/70"
+                role === filter.key ? "bg-charcoal text-offwhite" : "bg-white text-charcoal hover:bg-white/70"
               }`}
             >
               {filter.label}
-            </button>
+            </Link>
           ))}
         </div>
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        {filtered.length} of {users.length} accounts
+        {total === 0
+          ? isFiltered
+            ? "No matching accounts"
+            : "No accounts"
+          : `Showing ${first}–${last} of ${total} ${isFiltered ? "matching " : ""}account${total === 1 ? "" : "s"}`}
       </p>
 
       <div className="mt-3 flex flex-col gap-2">
-        {filtered.length === 0 ? (
+        {users.length === 0 ? (
           <p className="rounded-sm bg-[#F6F4F0] p-4 text-sm text-muted-foreground">No accounts match this search.</p>
         ) : (
-          filtered.map((user) => <AccountRow key={user.id} user={user} isSelf={user.id === currentUserId} />)
+          users.map((user) => <AccountRow key={user.id} user={user} isSelf={user.id === currentUserId} />)
         )}
       </div>
+
+      {totalPages > 1 && (
+        <nav aria-label="Pagination" className="mt-4 flex items-center justify-between gap-3">
+          {page > 1 ? (
+            <Link href={accountsHref({ role, q: search, page: page - 1 })} className={pagerLink}>
+              Previous
+            </Link>
+          ) : (
+            <span className={pagerOff}>Previous</span>
+          )}
+          <span className="text-xs text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          {page < totalPages ? (
+            <Link href={accountsHref({ role, q: search, page: page + 1 })} className={pagerLink}>
+              Next
+            </Link>
+          ) : (
+            <span className={pagerOff}>Next</span>
+          )}
+        </nav>
+      )}
     </div>
   );
 }

@@ -787,21 +787,76 @@ export interface AdminUserRow {
   createdAt: string;
 }
 
-export async function getAllUsersForAdmin(): Promise<AdminUserRow[]> {
-  const supabase = createAdminClient();
-  const { data } = await supabase
-    .from("users")
-    .select("id, full_name, email, phone, role, is_supervisor, status, created_at")
-    .order("created_at", { ascending: false });
+export const ADMIN_ACCOUNTS_PAGE_SIZE = 25;
+export const ADMIN_ACCOUNT_ROLE_FILTERS = ["all", "parent", "therapist", "supervisor", "admin"] as const;
+export type AdminAccountRoleFilter = (typeof ADMIN_ACCOUNT_ROLE_FILTERS)[number];
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    fullName: row.full_name,
-    email: row.email,
-    phone: row.phone,
-    role: row.role,
-    isSupervisor: row.is_supervisor === true,
-    status: row.status,
-    createdAt: row.created_at,
-  }));
+export interface AdminUsersPage {
+  users: AdminUserRow[];
+  total: number;
+  /** The page actually returned -- can differ from the one asked for, if that was past the end. */
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * One page of accounts, filtered and searched in the database.
+ *
+ * This used to load every user and filter in the browser, which had two real
+ * problems: search only covered rows already loaded, and Supabase's API
+ * returns at most 1,000 rows per query by default, so past 1,000 accounts
+ * some would have silently gone missing with the count still looking fine.
+ * `count: "exact"` returns the true total independent of that cap.
+ */
+export async function getUsersForAdminPage(params: {
+  page: number;
+  role: AdminAccountRoleFilter;
+  search: string;
+}): Promise<AdminUsersPage> {
+  const supabase = createAdminClient();
+  const pageSize = ADMIN_ACCOUNTS_PAGE_SIZE;
+
+  // The term goes into a PostgREST filter string, where `,` `(` `)` `"` `\`
+  // and the wildcards `%` `*` are syntax, so they're dropped rather than
+  // letting a search like `a,role.eq.admin` add filter clauses of its own.
+  const term = params.search.replace(/[%*,()"\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 100);
+
+  const fetchPage = (page: number) => {
+    let query = supabase
+      .from("users")
+      .select("id, full_name, email, phone, role, is_supervisor, status, created_at", { count: "exact" });
+    // "supervisor" means is_supervisor, not a role value -- the standalone
+    // role === "supervisor" mechanism is retired (E9).
+    if (params.role === "supervisor") query = query.eq("is_supervisor", true);
+    else if (params.role !== "all") query = query.eq("role", params.role);
+    if (term) query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%`);
+    const from = (page - 1) * pageSize;
+    return query.order("created_at", { ascending: false }).range(from, from + pageSize - 1);
+  };
+
+  let page = Math.max(1, Math.floor(params.page) || 1);
+  let result = await fetchPage(page);
+  // A page number past the end (a stale link, an edited URL) is an error to
+  // PostgREST rather than an empty list -- fall back to the first page.
+  if (result.error && page > 1) {
+    page = 1;
+    result = await fetchPage(page);
+  }
+  if (result.error) console.error("getUsersForAdminPage failed", result.error.message);
+
+  return {
+    users: (result.data ?? []).map((row) => ({
+      id: row.id,
+      fullName: row.full_name,
+      email: row.email,
+      phone: row.phone,
+      role: row.role,
+      isSupervisor: row.is_supervisor === true,
+      status: row.status,
+      createdAt: row.created_at,
+    })),
+    total: result.count ?? 0,
+    page,
+    pageSize,
+  };
 }
