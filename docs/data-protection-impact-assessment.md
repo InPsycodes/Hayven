@@ -9,6 +9,14 @@
 > structure and factual base, not as evidence of compliance on its own.
 
 **Date of this draft:** 2026-09-19
+**Last updated:** 2026-09-23 — see the "2026-09-23 update" notes throughout §2, §3, §6,
+and §7. A second, larger pre-launch security audit closed between the original draft
+and this update (21 findings across access control, payments, and booking — see §6.1),
+and the pediatrician-referral flow gained a new data flow (a parent-facing email) not
+yet reflected in the original draft. Nothing below was rewritten to sound more finished
+than it is — items already marked open in the original draft (PITR, NDPC registration,
+GA4 processing location, DPO/DSL naming) are still open, and are re-confirmed rather
+than assumed stale.
 **System assessed:** Hayven (paediatric-therapy marketplace web application and PWA)
 **Author of this draft:** Written by Claude (Anthropic), from direct knowledge of the
 codebase, its security audit history, and its data model — not a substitute for DPO or
@@ -51,6 +59,7 @@ refunds, and payouts.
 | Messages | Parent–therapist messages tied to a booking | Parents, therapists | Possibly — messages could incidentally contain health information |
 | Technical/security logs | Sign-in timestamps, IP-adjacent access logs kept by infrastructure providers | All users | No |
 | Product analytics | Page views, coarse actions (e.g. "booking started"), role | All users | No — explicitly excludes child data, session notes, report content (enforced by an allowlist, see §6.3) |
+| Referral data *(added 2026-09-23 — pre-existing feature, not previously listed in this table)* | Child's name and age, a category-level reason for referral (e.g. "Speech / language"), free-text clinical context, a parent/guardian contact detail, and the referring clinician's own name/facility/contact | Children and prospective parents (referred by a third party — a pediatrician or other clinician — not self-submitted) | **Yes — health-adjacent (reason for referral, clinical context) and data about a child**, collected from someone other than the child's parent |
 
 ### 2.3 Context
 
@@ -63,6 +72,16 @@ refunds, and payouts.
   what the application's UI happens to show.
 - Confidential clinical notes are a distinct field, never included in the report a
   parent sees, and RLS-scoped separately from the parent-visible report.
+- **Referral data is the one category in this table not initiated by the data subject's
+  own family** *(2026-09-23)*: a pediatrician or other clinician submits it through a
+  public, no-login form, before the parent has necessarily interacted with Hayven at
+  all. The submitting clinician must explicitly confirm the parent/guardian is aware of
+  and agrees to the referral before the form will submit (`src/lib/referrals/actions.ts`)
+  — an attestation, not a verification, and documented as such (see §7, risk #12). A
+  referral that never converts to an active family is automatically deleted after 90
+  days (`purgeStaleReferrals`, `src/lib/referrals/cron.ts`); one that does convert
+  (`status: care_started`) is excluded from that purge and its data lives on under the
+  normal account/child data lifecycle instead.
 
 ### 2.4 Purposes
 
@@ -96,6 +115,20 @@ Credential document (therapist) -> magic-byte + Cloudmersive virus scan (fail-cl
 Payment -> Paystack (amount + reference only; Hayven never receives full card data)
 Booking/session/report events -> audit_log (service-role only, no user-facing grant)
 Coarse product events (role, action, timing — never PII/clinical content) -> PostHog (EU), GA4
+
+Pediatrician/clinician submits referral (public, no-login form;                 [added 2026-09-23]
+  explicit "parent is aware and agrees" confirmation required) -> referrals table
+                    |                                    |
+        Admin notified (dashboard queue)      Parent emailed directly (if an email
+                    |                          contact was given) -- a founder-signed
+       Admin makes first contact               heads-up so the family isn't cold-
+       (target: within 1 business day)         contacted; deliberately omits the
+                    |                          clinical reason tags -- reassurance,
+        Referral converts to a real            not a restated diagnosis category
+        account & child (data now lives
+        under the normal account/child
+        lifecycle) -- OR --
+        referral never converts -> auto-deleted 90 days after submission
 ```
 
 ### 3.1 Processors and sub-processors, and where they run
@@ -199,6 +232,48 @@ what's actually implemented today, not aspirational.
   this system, likely because it only had visibility into the static Privacy Policy/Terms
   text, not the in-app intake flow — worth surfacing to counsel directly rather than
   re-deriving requirements the app has already substantially met here.
+- **2026-09-23 update — a second, independent pre-launch audit closed 21 further
+  findings**, the large majority of them directly strengthening the access-control story
+  in this section rather than adding new features. Not aspirational: every item below is
+  a merged commit, and every fix has a dedicated regression test in
+  `test/integration/` (92 tests total as of this update, run against a real
+  throwaway Supabase project under real RLS, not mocked). Most relevant to this DPIA:
+  - **Suspension now actually revokes database access, not just UI access**
+    (AUTH-01): a suspended parent's or therapist's *existing, already-issued* session
+    token previously kept working against RLS-protected tables even after suspension —
+    now checked centrally and cut off immediately. This directly reduces the residual
+    likelihood on risk #1 in §7 below (a compromised account that gets caught and
+    suspended can no longer be used to keep reading a child's record).
+  - **A supervisor could read more of a supervised therapist's own account row than
+    intended** (RLS-01) — email, phone, and account status, not just the name needed
+    for the team roster — closed at the database level.
+  - **The report supervisor-approval gate was enforced by application code checking a
+    second, unrelated RLS grant to work correctly** (RLS-02/RLS-04) — a fragile
+    indirect dependency, not a hole exactly, but the kind of thing that silently breaks
+    if the unrelated grant ever changes; now enforced directly.
+  - **A therapist could edit or delete another clinician's diagnosis entry** on a
+    shared case (RLS-03) — closed; diagnosis entries are now owner-restricted at the
+    database level, matching the pattern already used for target behaviours/skills.
+  - **`availability_slots` was publicly queryable for a therapist who shouldn't be
+    publicly bookable** (unverified or suspended) (RLS-05) — closed.
+  - **A parent could directly set `intake_forms.therapist_notified_at`** through a raw
+    table update, bypassing the actual notification flow (RLS-06) — closed.
+  - **A parent could directly delete their own child's row**, bypassing the account/
+    clinical data retention and purge lifecycle described in §6.4 (RLS-07) — closed;
+    this one is specifically relevant to this DPIA because an un-audited direct delete
+    would have let a family route around the documented 6-year clinical retention
+    policy without Hayven's own purge logic ever running or being recorded.
+  - **A referral-status lookup could be used to brute-force-guess a reference code**
+    against a *specific* targeted email, because the rate limit was keyed per-code
+    rather than per-target (F1) — closed; relevant given referral data (see §2.2, §3
+    above) includes a child's name and a parent's contact detail, reachable by that
+    lookup once guessed.
+  - Eight further findings closed the same audit pass concern payment/booking
+    integrity rather than access control directly (duplicate charges, refund
+    double-processing, a webhook-retry deadlock, a reconciliation sweep that silently
+    stopped on the first bad record) — listed here for completeness since payment
+    correctness is itself a data-integrity concern (see §6.6), not because they're
+    access-control findings.
 
 ### 6.2 Data minimisation and integrity in transit/storage
 
@@ -245,6 +320,14 @@ years from the transaction date, independent of the clinical timeline,
 (migration 0089) -- the clinical and payment windows don't need the 15-minute/
 hourly cadence the other two crons run on.
 
+**A fifth category, added 2026-09-23 (not previously listed here):** a referral that
+never converts to an active family is deleted 90 days after submission
+(`purgeStaleReferrals`, `src/lib/referrals/cron.ts`) — a shorter, judgment-call
+window (not a legal minimum) specific to this category, since a referral's data only
+ever existed to support a one-time outreach attempt. A referral that does convert is
+excluded from this purge and its data moves under the normal account/child lifecycle
+above instead.
+
 ### 6.5 Accountability
 
 An `audit_log` table (service-role-only, no user-facing grant) records sensitive
@@ -279,8 +362,8 @@ methodology — recalibrate with whoever formally owns this document.
 
 | # | Risk | Data subject | Likelihood (pre-mitigation) | Severity | Mitigation (§6 ref) | Residual risk |
 |---|---|---|---|---|---|---|
-| 1 | A parent or therapist account is compromised (credential stuffing, phishing), exposing a child's clinical record | Child | Medium | High | MFA + step-up (6.1), rate-limited login | Low-Medium — MFA is opt-in, not mandatory; see §10 |
-| 2 | A therapist queries or is granted access to a child not assigned to them | Child | Low | High | RLS row-scoping (6.1) | Low — enforced at the database, not the UI |
+| 1 | A parent or therapist account is compromised (credential stuffing, phishing), exposing a child's clinical record | Child | Medium | High | MFA + step-up (6.1), rate-limited login, **and (2026-09-23) suspension now actually revokes an existing session's RLS access (AUTH-01)** — a compromised account, once caught and suspended, can no longer be used at all, not just hidden from the UI | Low-Medium — MFA is opt-in, not mandatory; see §10. The suspension gap that previously limited this mitigation's effectiveness is now closed. |
+| 2 | A therapist queries or is granted access to a child not assigned to them | Child | Low | High | RLS row-scoping (6.1); **(2026-09-23) further hardened by RLS-01/03/05/06/07** (supervisor over-exposure, cross-therapist diagnosis edits, unverified-therapist visibility, direct intake-consent tampering, direct child-row deletion — see 6.1) | Low — enforced at the database, not the UI, across a now materially larger regression-tested surface (92 integration tests) |
 | 3 | A credential upload contains malware, or a spoofed file type | Therapist, platform | Low | Medium | Magic-byte + fail-closed AV scan (6.2) | Low |
 | 4 | Analytics tooling captures identifying or clinical data by accident | Child, parent | Low (was structurally prevented, not just policy) | High if it occurred | Allowlist-based `sanitizeProps` (6.3) | Low |
 | 5 | A therapist's payout is paid twice due to a concurrency bug, corrupting the financial/audit record | Therapist, platform | Was Medium; now fixed and integration-tested | Medium | Atomic claim + real concurrent-request test (6.6) | Low |
@@ -290,6 +373,7 @@ methodology — recalibrate with whoever formally owns this document.
 | 9 | A therapist's professional liability isn't clearly allocated, and a clinical incident becomes a platform liability question with no contract backing the "independent practitioner" framing | Child, therapist, platform | Medium | High | Terms of Service frames therapists as independent contractors | Medium-High — no standalone Therapist Agreement exists yet; flagged separately as the platform's highest non-technical legal gap |
 | 10 | No verified backup/restore process exists, and a data-loss incident has no tested recovery path | All users | **Confirmed, not just suspected: Point-in-Time Recovery is disabled** (`pitr_enabled: false`, checked via the Supabase CLI against the production project) — the database can likely only be restored to whatever daily snapshot exists, not to a specific moment, and no restore has ever been tested | High if it occurred | None confirmed beyond whatever Supabase's plan tier includes by default (not itself verified) | **High — this is now a known gap, not an unknown one; see §10** |
 | 11 | Hayven has not registered with the Nigeria Data Protection Commission (NDPC), and it's not confirmed whether the platform meets the "data controller/processor of major importance" threshold that would make registration mandatory (NDPA s.44) | Regulator relationship, all users indirectly | Not assessed — a compliance-process gap flagged externally on 2026-09-19, not something this codebase can determine on its own | Medium — a regulatory filing gap, not a data-safety one, but one the NDPC could act on directly | Not mitigated | Medium — open, see §10; needs a "major importance" determination from counsel before the registration question itself can even be answered |
+| 12 | *(added 2026-09-23)* A child's name/age and a parent's contact detail are submitted by a third party (a referring pediatrician), before the family has necessarily interacted with Hayven or given consent directly | Child, prospective parent | Low-Medium — the referrer must explicitly confirm ("the parent/guardian is aware of and agrees to this referral") before the form submits, and submission is rate-limited per referrer contact | Medium — the data is health-adjacent (reason for referral) but limited in volume/fields, and the confirmation is an attestation, not a verified fact | The referrer confirmation checkbox (§2.3); a 90-day auto-purge if the referral never converts (§6.4); a parent-facing email sent promptly after submission so the family is proactively informed rather than only reached by a later admin phone call (added 2026-09-23, see §3) | Low-Medium — the core gap (an attestation isn't a verification) is structural to how any referral-based intake works and isn't fully closeable by code; the auto-purge and prompt parent notification bound how long an unconfirmed referral's data persists and how long the family stays unaware of it |
 
 ---
 
@@ -357,9 +441,10 @@ governance control.
 - [ ] **Enable Point-in-Time Recovery** on the production Supabase project (confirmed
       disabled via `supabase --experimental backups list --project-ref
       cfzbhibpwcerbxgawxqi`, which returned `pitr_enabled: false` and an empty backups
-      list) — this is the one item in this whole document that's both fully confirmed
-      *and* has an unambiguous next action, not a decision to make. Then run a real
-      restore drill and record the result here.
+      list; **re-confirmed still disabled with the same live check on 2026-09-23**) —
+      this is the one item in this whole document that's both fully confirmed *and* has
+      an unambiguous next action, not a decision to make. Then run a real restore drill
+      and record the result here.
 - [ ] Decide whether MFA becomes mandatory for therapist/supervisor/admin roles (§8.6).
 - [ ] Determine whether Hayven is a "data controller/processor of major importance"
       under the NDPA and, if so, register with the NDPC (§8.7, risk #11) — flagged by a
@@ -384,3 +469,10 @@ governance control.
       document — they're a builder's first estimate, not a validated methodology.
 - [ ] Set a review cadence (annually, and after any material change to what data is
       collected or how it's processed) and record it here once decided.
+- [ ] *(added 2026-09-23)* Get counsel's view on whether the referrer's "parent is
+      aware and agrees" confirmation checkbox (§2.3, risk #12) is a sufficient basis
+      under NDPA for processing a child's data collected from a third party, or whether
+      something closer to verification is expected — the same open question already
+      flagged for the guardian-consent checkbox in the "Add a child" form (§10, the
+      NDPA s.30/s.31 item above), now extended to this earlier point in the funnel
+      where a family may not have interacted with Hayven at all yet.
