@@ -223,7 +223,15 @@ export default function PrivacyPolicyPage() {
             only ever query the children actually assigned to them, not the wider platform. Passwords are hashed
             by our authentication provider, never stored by Hayven in readable form. Data is encrypted in transit
             between your device and our servers. Sensitive administrative actions (verification decisions,
-            record access, payment corrections) are recorded in an internal audit trail.
+            record access, payment corrections, report downloads) are recorded in an internal audit trail.
+          </p>
+          <p>
+            <strong className="text-charcoal">Downloading reports.</strong> A therapist can download their own
+            session reports as PDF files, and a parent can download the reports published about their own child.
+            Each download is recorded in our audit trail (who downloaded which report, and when), and every file
+            carries a confidentiality notice with the name of the person who downloaded it. Once a file is on your
+            device it is outside Hayven&apos;s technical controls, so please store it securely and share it only
+            with people who are entitled to see it.
           </p>
           <p>No system is perfectly secure, and we can&apos;t guarantee absolute security of any transmission.</p>
           <p>

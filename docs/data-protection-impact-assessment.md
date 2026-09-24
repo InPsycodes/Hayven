@@ -470,6 +470,15 @@ used), and any account turning two-factor authentication on or off. Ordinary
 parent and therapist sign-ins are deliberately not logged, to keep the log
 meaningful rather than noisy.
 
+Since 2026-09-24 it also records every report download (`report.download`, with
+actor, role, report, child and which version). Reports can be downloaded as PDFs:
+the clinical version only by the therapist who wrote it, and the parent version by
+that therapist or by the child's parent once it is published. Access is checked in
+the download route itself (not only in the UI), downloads are rate-limited, the
+response is not cacheable, and each file carries a confidentiality footer naming the
+person who downloaded it. What the platform cannot control is what happens to the
+file afterwards (risk #16).
+
 ### 9.6 Money-flow correctness (indirect safeguard)
 
 Not a privacy control on its face, but relevant to data integrity: a concurrency bug
@@ -560,6 +569,7 @@ owns this document.
 | 13 | No fully tested personal-data breach response process exists | All users, regulator relationship | Low-Medium — a first-draft runbook now exists (`docs/breach-response-runbook.md`) | High | Runbook covers roles, detection, the 72-hour NDPC clock, and scenario playbooks; not yet tabletop-tested | Medium — written, not yet exercised; see §13 |
 | 14 | Referral data (a child's name, contact details) is collected from a third party before the family's direct consent | Child, prospective parent | Low-Medium — referrer must attest parent awareness | Medium | Referrer attestation, 90-day auto-purge, prompt parent email (§2.3), minimised-form copy (§8, done 2026-09-23) | Low-Medium — attestation isn't verification, which the form redesign doesn't change; residual is now about the legal basis (Part A of `docs/counsel-briefing-legal-review.md`), not the volume of data collected |
 | 15 | Hayven hasn't determined "data controller/processor of major importance" status or registered with the NDPC | Regulator relationship, all users indirectly | Not assessed | Medium-High | Not mitigated | **Medium-High — likely launch-blocking; see §12 P0-4.** The NDPC's published threshold is processing 200+ data subjects within a rolling 6-month window, and health-sector organisations are explicitly named among the sectors the "major importance" designation targets ([Michalsons](https://www.michalsons.com/blog/nigeria-data-protection-act-ndpa-controller-and-processor-registration/77465), [KPMG](https://kpmg.com/ng/en/home/insights/2024/03/nigeria-data-protection-commissions-guidance-notice-on-registration-of-data-processors-controllers-of-major-importance.html)) — counsel should treat this as a concrete determination to make, not an abstract question |
+| 16 | A downloaded PDF report (clinical version or parent version) leaves the platform's technical controls: lost or shared device, forwarding, storage on a personal drive | Child, parent | Medium | Medium-High for the clinical version, Medium for the parent version | Clinical version limited to the owning therapist, parent version to that therapist and the child's parent once published; access enforced in the route, not just the UI; every download audit-logged; not cacheable; rate-limited; confidentiality footer naming the downloader; privacy policy §8 tells users the file is outside Hayven's controls | Medium — inherent once a file exists; the remaining lever is contractual and behavioural (see §12 P1 item 16a) |
 
 ---
 
@@ -632,6 +642,12 @@ gate a decision to process real children's clinical data at volume.
     itself, but the legal/professional/organisational reasoning behind each number.
 16. **Set a recurring DPIA review cadence** (annually, and after any material change to
     what data is collected or how it's processed).
+
+16a. **Add a downloaded-report handling clause to the Therapist Agreement** (risk
+    #16): store clinical PDFs only on devices the therapist controls, keep them
+    within the care team, do not forward outside the platform, delete them when no
+    longer needed. Counsel and the DPO to confirm the wording and whether a
+    retention period applies to downloaded copies.
 
 ### 🟢 P2 — ongoing
 
