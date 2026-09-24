@@ -33,7 +33,7 @@ function ArticleRow({ article }: { article: RealLearningArticle }) {
       <span className="text-xs text-muted-foreground">
         {article.audience === "parent" ? "Parent" : "Therapist"}
       </span>
-      <span className="truncate text-xs text-muted-foreground">{article.categoryName ?? "—"}</span>
+      <span className="truncate text-xs text-muted-foreground">{article.categoryName ?? "Uncategorised"}</span>
       <span>
         <StatusBadge tone={status === "published" ? "sage" : "amber"}>
           {status === "published" ? "Published" : "Draft"}

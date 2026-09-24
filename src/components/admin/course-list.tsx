@@ -29,7 +29,7 @@ function CourseRow({ course }: { course: RealCourse }) {
         <p className="truncate text-sm font-medium text-charcoal">{course.title}</p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">/therapist/learn/{course.slug}</p>
       </div>
-      <span className="truncate text-xs text-muted-foreground">{course.categoryName ?? "—"}</span>
+      <span className="truncate text-xs text-muted-foreground">{course.categoryName ?? "Uncategorised"}</span>
       <span className="text-xs text-muted-foreground">
         {course.lessonCount} lesson{course.lessonCount === 1 ? "" : "s"}
       </span>

@@ -118,7 +118,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
             <CareStat
               icon={IconTargetArrow}
               label="Goals on track"
-              value={goals.length ? `${goalsOnTrack}/${goals.length}` : "—"}
+              value={goals.length ? `${goalsOnTrack}/${goals.length}` : "n/a"}
               sub={goals.length ? "set by your therapist" : "none set yet"}
               bar={goals.length ? { pct: (goalsOnTrack / goals.length) * 100, tone: "sage" } : undefined}
               href={reportsHref}
@@ -128,7 +128,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
             <CareStat
               icon={IconCalendarCheck}
               label="Attendance"
-              value={past.length ? `${attendancePct}%` : "—"}
+              value={past.length ? `${attendancePct}%` : "n/a"}
               sub={past.length ? `${attended} of ${past.length} sessions` : "no sessions yet"}
               bar={past.length ? { pct: attendancePct, tone: "sage" } : undefined}
               href="/parent/sessions"

@@ -258,7 +258,7 @@ function RailAnswer({ label, value }: { label: string; value: string | null }) {
     <div className="flex items-baseline gap-2 text-[11px]">
       <span className="w-16 shrink-0 text-offwhite/40">{label}</span>
       <span className={cn("min-w-0 truncate", value ? "text-offwhite" : "text-offwhite/30")}>
-        {value ?? "—"}
+        {value ?? "Not yet"}
       </span>
     </div>
   );
