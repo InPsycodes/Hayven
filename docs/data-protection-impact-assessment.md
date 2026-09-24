@@ -616,7 +616,9 @@ gate a decision to process real children's clinical data at volume.
    confirmed disabled, re-confirmed live as of this revision. The drill should verify
    accounts, child records, clinical records, consent history, audit logs, and payment
    records all restore correctly into an isolated environment, and the result should be
-   recorded back into this document.
+   recorded back into this document. A step-by-step checklist now exists
+   (`docs/backup-restore-drill.md`, 2026-09-24). It also flags a gap the database
+   backup does not cover: files in Supabase Storage (credential documents, photos).
 9. **Tabletop-test the breach-response runbook** (risk #13, §13) — the runbook
    itself is drafted (`docs/breach-response-runbook.md`); what remains is walking
    through it with the DPO and Deputy Safeguarding Lead and getting counsel's
