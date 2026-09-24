@@ -135,6 +135,57 @@ describe("report PDF download", () => {
     expect(await auditRows(reportId)).toHaveLength(0);
   });
 
+  async function supervise(therapistProfileId: string) {
+    const supervisor = await createTestTherapist();
+    await admin.from("users").update({ is_supervisor: true }).eq("id", supervisor.userId);
+    const { data } = await admin
+      .from("supervisor_assignments")
+      .insert({ supervisor_id: supervisor.userId, therapist_id: therapistProfileId, status: "active" })
+      .select("id")
+      .single();
+    trackForCleanup("supervisor_assignments", data!.id);
+    return supervisor;
+  }
+
+  it("lets a supervisor download the clinical report of a therapist they supervise, and logs it as supervisor", async () => {
+    const { therapist, reportId } = await fixture();
+    const supervisor = await supervise(therapist.therapistProfileId);
+    await signInAs(supervisor);
+
+    const res = await call(reportId, "clinical");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-disposition")).toContain("clinical-report");
+
+    const rows = await auditRows(reportId);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].metadata).toMatchObject({ version: "clinical", as: "supervisor" });
+  });
+
+  it("does not give a supervisor the parent version", async () => {
+    const { therapist, reportId } = await fixture();
+    const supervisor = await supervise(therapist.therapistProfileId);
+    await signInAs(supervisor);
+    expect((await call(reportId, "parent")).status).toBe(403);
+    expect(await auditRows(reportId)).toHaveLength(0);
+  });
+
+  it("does not let a supervisor download a report of a therapist they do not supervise", async () => {
+    const { reportId } = await fixture();
+    const otherTherapist = await createTestTherapist();
+    const supervisor = await supervise(otherTherapist.therapistProfileId);
+    await signInAs(supervisor);
+    expect((await call(reportId, "clinical")).status).toBe(404);
+    expect(await auditRows(reportId)).toHaveLength(0);
+  });
+
+  it("does not let a supervisor whose assignment has ended download it", async () => {
+    const { therapist, reportId } = await fixture();
+    const supervisor = await supervise(therapist.therapistProfileId);
+    await admin.from("supervisor_assignments").update({ status: "ended" }).eq("supervisor_id", supervisor.userId);
+    await signInAs(supervisor);
+    expect((await call(reportId, "clinical")).status).toBe(404);
+  });
+
   it("rejects a malformed report id", async () => {
     const res = await call("not-a-uuid");
     expect(res.status).toBe(404);

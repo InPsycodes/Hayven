@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { DashboardHeader } from "@/components/shared/dashboard-header";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ReportView } from "@/components/therapy-session/report-view";
@@ -44,6 +45,11 @@ export default async function SupervisorTherapySessionPage({
             <Card lift className="p-5">
               <ReportView body={renderReportBody(report.therapistBody, child.firstName)} />
             </Card>
+            <Button asChild variant="outline" className="w-fit">
+              <a href={`/api/reports/${report.id}/pdf?version=clinical`} download>
+                Download PDF
+              </a>
+            </Button>
             {awaitingApproval && <ReportApprovalPanel reportId={report.id} />}
           </>
         ) : (

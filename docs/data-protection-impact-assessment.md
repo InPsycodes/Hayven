@@ -472,8 +472,9 @@ meaningful rather than noisy.
 
 Since 2026-09-24 it also records every report download (`report.download`, with
 actor, role, report, child and which version). Reports can be downloaded as PDFs:
-the clinical version only by the therapist who wrote it, and the parent version by
-that therapist or by the child's parent once it is published. Access is checked in
+the clinical version by the therapist who wrote it and by a supervisor with an
+active assignment to that therapist (logged with `as: supervisor`), and the parent
+version by that therapist or by the child's parent once it is published. Access is checked in
 the download route itself (not only in the UI), downloads are rate-limited, the
 response is not cacheable, and each file carries a confidentiality footer naming the
 person who downloaded it. What the platform cannot control is what happens to the

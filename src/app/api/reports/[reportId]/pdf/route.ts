@@ -28,9 +28,9 @@ function fileName(childName: string, sessionDate: string | null, version: Report
 
 /**
  * PDF download of one report. The clinical version (the therapist's own
- * report) is only ever available to the therapist who wrote it; the parent
- * version is available to that therapist and, once published, to the child's
- * parent. Every download is written to the audit log, and the PDF itself
+ * report) is available to the therapist who wrote it and to a supervisor
+ * actively overseeing them; the parent version is available to that
+ * therapist and, once published, to the child's parent. Every download is written to the audit log, and the PDF itself
  * carries a confidentiality footer naming who downloaded it.
  *
  * Owns its own auth: src/proxy.ts's matcher excludes /api, and therapist_body
@@ -60,23 +60,40 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const admin = createAdminClient();
   let sessionId: string;
   let body: ReportBody | null;
+  let viaSupervision = false;
 
   if (session.role === "therapist") {
-    const therapist = await getRealTherapistProfileByUserId(session.userId);
-    if (!therapist) return notFound();
     const { data: report } = await admin
       .from("reports")
       .select("session_id, therapist_body, parent_body")
       .eq("id", reportId)
       .maybeSingle();
     if (!report) return notFound();
-    const { data: owned } = await admin
+    const { data: reportSession } = await admin
       .from("therapy_sessions")
-      .select("id")
+      .select("therapist_id")
       .eq("id", report.session_id)
-      .eq("therapist_id", therapist.id)
       .maybeSingle();
-    if (!owned) return notFound();
+    if (!reportSession) return notFound();
+
+    const therapist = await getRealTherapistProfileByUserId(session.userId);
+    const isAuthor = therapist?.id === reportSession.therapist_id;
+    if (!isAuthor) {
+      // A supervisor may download the clinical report of a therapist they
+      // actively supervise -- the same, read-only view their oversight page
+      // shows -- and nothing else.
+      if (!session.isSupervisor) return notFound();
+      const { data: supervision } = await admin
+        .from("supervisor_assignments")
+        .select("id")
+        .eq("supervisor_id", session.userId)
+        .eq("therapist_id", reportSession.therapist_id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (!supervision) return notFound();
+      if (version !== "clinical") return NextResponse.json({ error: "Not allowed." }, { status: 403 });
+      viaSupervision = true;
+    }
     sessionId = report.session_id;
     body = (version === "clinical" ? report.therapist_body : report.parent_body) as ReportBody | null;
   } else {
@@ -138,7 +155,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     entityType: "report",
     entityId: reportId,
     childId: therapySession.child_id,
-    metadata: { version },
+    metadata: viaSupervision ? { version, as: "supervisor" } : { version },
   });
 
   return new Response(new Uint8Array(pdf), {

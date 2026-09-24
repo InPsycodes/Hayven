@@ -227,7 +227,8 @@ export default function PrivacyPolicyPage() {
           </p>
           <p>
             <strong className="text-charcoal">Downloading reports.</strong> A therapist can download their own
-            session reports as PDF files, and a parent can download the reports published about their own child.
+            session reports as PDF files, a clinical supervisor can download the clinical reports of the therapists
+            they oversee, and a parent can download the reports published about their own child.
             Each download is recorded in our audit trail (who downloaded which report, and when), and every file
             carries a confidentiality notice with the name of the person who downloaded it. Once a file is on your
             device it is outside Hayven&apos;s technical controls, so please store it securely and share it only
