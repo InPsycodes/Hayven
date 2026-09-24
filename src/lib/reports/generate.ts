@@ -544,15 +544,15 @@ function skillInterpretation(skill: GenerationSkillInput): string | null {
   if (delta === null) {
     return emerging
       ? `${skill.label}: this skill is currently emerging, at ${skill.percentThisSession}% independent. Will continue to be targeted.`
-      : `${skill.label}: first recorded data point at ${skill.percentThisSession}% independent.${masteryNote}`;
+      : `${skill.label}: first recorded data point at ${skill.percentThisSession}% independent${masteryNote || "."}`;
   }
   if (delta >= 10) {
-    return `${skill.label}: clear improvement, up ${delta} points to ${skill.percentThisSession}% independent.${masteryNote}`;
+    return `${skill.label}: clear improvement, up ${delta} points to ${skill.percentThisSession}% independent${masteryNote || "."}`;
   }
   if (delta > -10) {
     return emerging
       ? `${skill.label}: this skill is still emerging, holding at ${skill.percentThisSession}% independent. Continued targeting is recommended.`
-      : `${skill.label}: stable at ${skill.percentThisSession}% independent.${masteryNote}`;
+      : `${skill.label}: stable at ${skill.percentThisSession}% independent${masteryNote || "."}`;
   }
   return `${skill.label}: down ${Math.abs(delta)} points to ${skill.percentThisSession}% independent since the last session.`;
 }

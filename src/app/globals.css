@@ -240,6 +240,15 @@
   --amber-text: var(--care-amber);
   --error-text: #e0a093;
 
+  /* Chart series are declared on :root, so their var() references resolve
+     there (charcoal, on light) and never re-resolve under this theme.
+     Redeclared so the second series is not near-black on dark brown. */
+  --chart-1: var(--care-accent);
+  --chart-2: var(--care-ink);
+  --chart-3: var(--care-sage);
+  --chart-4: var(--care-amber);
+  --chart-5: #e0a093;
+
   background: var(--care-bg);
   color: var(--care-ink);
 }
