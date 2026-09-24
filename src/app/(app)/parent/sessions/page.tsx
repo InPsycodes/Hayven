@@ -13,7 +13,7 @@ import { getSession } from "@/lib/auth/session";
 import { getRealBookingsForParent, getBookingFinancials } from "@/lib/booking/queries";
 import { getMyDisputesByBooking } from "@/lib/disputes/queries";
 import { cancelBooking } from "@/lib/booking/actions";
-import { formatDateTime } from "@/data/format";
+import { formatDateTime, shortName } from "@/data/format";
 
 const DISPUTABLE = new Set(["completed", "no_show", "cancelled"]);
 const DISPUTE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
@@ -96,7 +96,7 @@ export default async function ParentSessionsPage() {
                             href={`/therapists/${booking.therapistId}#reviews`}
                             className="text-xs font-medium text-terracotta hover:underline"
                           >
-                            Review {booking.therapistDisplayName.split(" ")[0]}
+                            Review {shortName(booking.therapistDisplayName)}
                           </Link>
                         )}
                         {canReschedule && <RescheduleBookingButton bookingId={booking.id} />}

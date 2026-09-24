@@ -24,7 +24,7 @@ import { OnboardingChecklist } from "@/components/therapist/onboarding-checklist
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { getOnboardingStatus } from "@/lib/therapist/onboarding";
-import { formatNaira, formatDate, formatTime, formatRelativeToNow, LAGOS_TZ } from "@/data/format";
+import { formatNaira, formatDate, formatTime, formatRelativeToNow, greetingForNow, initialsFromName, shortName, LAGOS_TZ } from "@/data/format";
 import {
   getRealActiveClientCountForTherapist,
   getRealEarningsForTherapist,
@@ -80,8 +80,8 @@ export default async function TherapistDashboardPage() {
     <CareShell>
       <CareHeader
         session={session}
-        initials={session.name.replace("Dr. ", "").slice(0, 2).toUpperCase()}
-        title={`Good morning, ${session.name.split(" ")[0]}`}
+        initials={initialsFromName(session.name)}
+        title={`${greetingForNow()}, ${shortName(session.name)}`}
         status={
           reportSummary.needsReportCount > 0
             ? { label: `${reportSummary.needsReportCount} report${reportSummary.needsReportCount === 1 ? "" : "s"} due`, tone: "warn" }

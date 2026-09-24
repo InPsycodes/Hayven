@@ -88,9 +88,35 @@ export function ageFromDob(dob: string): number {
   return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
 }
 
+const HONORIFICS = new Set([
+  "dr", "mr", "mrs", "ms", "miss", "prof", "professor", "pastor", "engr", "engineer", "chief", "rev",
+  "barr", "barrister", "alhaji", "alhaja", "hajiya", "sir", "madam", "mallam", "deacon", "deaconess", "apostle",
+]);
+
+function isHonorific(word: string): boolean {
+  return HONORIFICS.has(word.replace(/\.$/, "").toLowerCase());
+}
+
+/** How to address someone in a sentence: "Ngozi" for "Ngozi Eze", but "Dr. Okafor" for "Dr. Adaeze Okafor" -- never just the title. */
+export function shortName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (isHonorific(parts[0]) && parts.length > 1) return `${parts[0]} ${parts[parts.length - 1]}`;
+  return parts[0];
+}
+
+/** Good morning / afternoon / evening by the hour in Lagos, where every user is. */
+export function greetingForNow(now: Date = new Date()): string {
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { hour: "numeric", hourCycle: "h23", timeZone: LAGOS_TZ }).format(now));
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export function initialsFromName(name: string): string {
   const initials = name
     .split(" ")
+    .filter((part, i) => !(i === 0 && isHonorific(part) && name.trim().split(/\s+/).length > 1))
     .map((part) => part[0])
     .filter((char): char is string => !!char && /\p{L}/u.test(char))
     .slice(0, 2)

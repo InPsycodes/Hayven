@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { IconArrowLeft, IconSend } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
-import { initialsFromName } from "@/data/format";
+import { initialsFromName, shortName } from "@/data/format";
 import { sendRealMessage } from "@/lib/messages/actions";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
 
@@ -127,7 +127,7 @@ export function MessageThreadView({
         <div className="mx-auto flex max-w-2xl flex-col gap-0.5">
           {messages.length === 0 && (
             <p className="py-16 text-center text-sm text-care-ink-soft">
-              No messages yet. Say hello to {counterpartName.split(" ")[0]}.
+              No messages yet. Say hello to {shortName(counterpartName)}.
             </p>
           )}
           {rows.map(({ message, isOwn, showDivider, label, contWithPrev, contWithNext }) => (
@@ -184,7 +184,7 @@ export function MessageThreadView({
             }
           }}
           rows={1}
-          placeholder={`Message ${counterpartName.split(" ")[0]}`}
+          placeholder={`Message ${shortName(counterpartName)}`}
           aria-label={`Message ${counterpartName}`}
           enterKeyHint="send"
           className="max-h-32 min-h-11 flex-1 resize-none rounded-3xl border border-care-line/60 bg-care-bg px-4 py-2.5 text-base text-care-ink outline-none focus-visible:border-care-accent/60 placeholder:text-care-ink-faint"

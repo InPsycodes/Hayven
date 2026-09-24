@@ -20,7 +20,7 @@ import { CarePanel } from "@/components/care/care-panel";
 import { CareBarChart } from "@/components/care/care-bar-chart";
 import { ChildSwitcher } from "@/components/dashboard/child-switcher";
 import { getSession } from "@/lib/auth/session";
-import { ageFromDob, formatDateTime, formatRelativeToNow, formatShortDate } from "@/data/format";
+import { ageFromDob, formatDateTime, formatRelativeToNow, formatShortDate, shortName } from "@/data/format";
 import { getIntakeFormForChild } from "@/lib/intake/queries";
 import { intakeProgress } from "@/lib/intake/schema";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
@@ -97,7 +97,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
       <CareHeader
         session={session}
         initials={activeChild ? activeChild.firstName.slice(0, 2).toUpperCase() : "H"}
-        title={activeChild ? activeChild.firstName : `Welcome, ${session.name.split(" ")[0]}`}
+        title={activeChild ? activeChild.firstName : `Welcome, ${shortName(session.name)}`}
         status={statusPill}
         meta={metaParts.join(" · ")}
         actions={[
