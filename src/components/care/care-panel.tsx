@@ -72,7 +72,7 @@ function StaticPanel({
       {footer && (
         <Link
           href={footer.href}
-          className="mt-auto inline-flex items-center gap-1 pt-3 text-[11px] font-semibold text-care-accent hover:underline"
+          className="mt-auto inline-flex items-center gap-1 pt-3 text-[11px] font-semibold text-care-accent hover:underline pointer-coarse:min-h-11 pointer-coarse:items-end"
         >
           {footer.label}
           <IconArrowRight size={12} stroke={2.5} aria-hidden />

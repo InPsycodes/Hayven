@@ -21,7 +21,7 @@ export function LogoutButton({ className, label }: { className?: string; label?:
         })
       }
       className={cn(
-        "flex items-center gap-2 text-sm transition-colors disabled:opacity-50",
+        "flex items-center gap-2 text-sm transition-colors pointer-coarse:min-h-10 disabled:opacity-50",
         className
       )}
     >

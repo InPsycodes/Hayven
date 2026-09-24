@@ -253,7 +253,7 @@ function FieldControl({
                   onChange([...next]);
                 }}
                 className={cn(
-                  "rounded-full border px-3 py-1.5 text-[13px] transition-colors",
+                  "rounded-full border px-3 py-1.5 text-[13px] transition-colors pointer-coarse:min-h-11",
                   on
                     ? "border-care-accent/55 bg-care-accent/15 font-medium text-care-ink"
                     : "border-care-line bg-care-raised text-care-ink-soft hover:border-care-ink-faint/50 hover:text-care-ink"
@@ -284,7 +284,7 @@ function FieldControl({
                 aria-pressed={on}
                 onClick={() => onChange(on ? "" : opt.value)}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-[13px] transition-colors",
+                  "rounded-md px-3 py-1.5 text-[13px] transition-colors pointer-coarse:min-h-11",
                   on ? "bg-care-accent font-medium text-white" : "text-care-ink-soft hover:text-care-ink"
                 )}
               >

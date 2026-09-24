@@ -52,7 +52,7 @@ export async function CareHeader({
               </span>
             )}
           </h1>
-          <p className="mt-1 truncate text-xs text-care-ink-faint md:text-[13px]">{meta}</p>
+          <p className="mt-1 text-xs text-care-ink-faint md:truncate md:text-[13px]">{meta}</p>
         </div>
       </div>
 
@@ -62,7 +62,7 @@ export async function CareHeader({
             key={a.href + a.label}
             href={a.href}
             className={cn(
-              "rounded-lg px-3 py-1.5 text-[12.5px] font-semibold whitespace-nowrap transition-colors sm:px-4 sm:py-2",
+              "inline-flex items-center rounded-lg px-3 py-1.5 text-[12.5px] font-semibold whitespace-nowrap transition-colors pointer-coarse:min-h-11 sm:px-4 sm:py-2",
               a.variant === "ghost"
                 ? "border border-care-line text-care-ink hover:bg-care-surface"
                 : "bg-care-accent text-white hover:bg-care-accent-deep"

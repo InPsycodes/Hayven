@@ -33,7 +33,7 @@ export function OnboardingChecklist({ status }: { status: OnboardingStatus }) {
           <li key={step.label}>
             <Link
               href={step.href}
-              className={`flex items-center gap-2 text-sm ${
+              className={`flex items-center gap-2 text-sm pointer-coarse:min-h-11 ${
                 step.done ? "text-care-ink-faint" : "text-care-ink hover:text-care-accent"
               }`}
             >
