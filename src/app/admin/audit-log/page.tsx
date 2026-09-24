@@ -12,6 +12,7 @@ const ACTION_LABEL: Record<string, string> = {
   "report.generate": "Generated a report",
   "report.save": "Edited a report",
   "report.publish": "Published a report to parent",
+  "report.download": "Downloaded a report as a PDF",
   "verification.decide": "Reviewed a verification request",
   "assignment.therapist_child.create": "Assigned therapist to child",
   "assignment.therapist_child.end": "Ended a therapist-child assignment",

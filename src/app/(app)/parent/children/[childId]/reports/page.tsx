@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { DashboardHeader } from "@/components/shared/dashboard-header";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ReportView } from "@/components/therapy-session/report-view";
 import { getSession } from "@/lib/auth/session";
@@ -32,9 +33,16 @@ export default async function ParentChildReportsPage({ params }: { params: Promi
         ) : (
           reports.map((report, i) => (
             <Card key={report.id} lift={i === 0} className="p-5">
-              <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
-                Shared {formatDate(report.publishedAt)}
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">
+                  Shared {formatDate(report.publishedAt)}
+                </p>
+                <Button asChild variant="outline" size="sm" className="w-fit">
+                  <a href={`/api/reports/${report.id}/pdf`} download>
+                    Download PDF
+                  </a>
+                </Button>
+              </div>
               <ReportView body={renderReportBody(report.parentBody, child.firstName)} />
             </Card>
           ))

@@ -14,6 +14,7 @@ export type AuditAction =
   | "report.generate"
   | "report.save"
   | "report.publish"
+  | "report.download"
   | "report.submit_for_approval"
   | "report.approve_and_publish"
   | "verification.decide"

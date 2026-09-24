@@ -92,7 +92,7 @@ export function ParentPreviewPanel({
         </p>
       )}
       {error && <p className="text-sm text-error-text">{error}</p>}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {awaitingApproval ? (
           <StatusBadge tone="amber" className="fade-in w-fit">
             Awaiting supervisor approval
@@ -106,6 +106,11 @@ export function ParentPreviewPanel({
             {isPending ? (hasActiveSupervisor ? "Submitting..." : "Publishing...") : publishLabel}
           </Button>
         )}
+        <Button asChild variant="outline" className="w-fit">
+          <a href={`/api/reports/${reportId}/pdf?version=parent`} download>
+            Download parent version (PDF)
+          </a>
+        </Button>
       </div>
     </div>
   );

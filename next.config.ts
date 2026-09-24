@@ -86,6 +86,15 @@ const nextConfig: NextConfig = {
     },
   },
 
+  // PDF report download (src/app/api/reports/[reportId]/pdf). pdfkit stays
+  // an external package (it pulls in fontkit/brotli, which don't bundle
+  // cleanly), and the bundled fonts are read from disk by filename at
+  // runtime, which file tracing can't see -- so they are listed explicitly.
+  serverExternalPackages: ["pdfkit"],
+  outputFileTracingIncludes: {
+    "/api/reports/[reportId]/pdf": ["./src/assets/fonts/**/*"],
+  },
+
   // Therapist profile photos live in the public `avatars` Supabase Storage
   // bucket -- let next/image optimise them. Same host the CSP img-src
   // already allows.

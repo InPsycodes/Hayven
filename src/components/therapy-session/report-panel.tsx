@@ -24,9 +24,16 @@ export function ReportPanel({ reportId, body }: { reportId: string; body: Report
   return (
     <div className="flex flex-col gap-3">
       <ReportView body={body} />
-      <Button variant="outline" onClick={() => setEditing(true)} className="w-fit">
-        Edit report
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => setEditing(true)} className="w-fit">
+          Edit report
+        </Button>
+        <Button asChild variant="outline" className="w-fit">
+          <a href={`/api/reports/${reportId}/pdf?version=clinical`} download>
+            Download PDF
+          </a>
+        </Button>
+      </div>
     </div>
   );
 }
