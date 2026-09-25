@@ -410,7 +410,7 @@ export function DashboardPreview() {
         </div>
 
         {/* three pillars */}
-        <div data-stagger className="mt-14 grid gap-x-[46px] gap-y-10 sm:grid-cols-3 lg:mt-6 lg:px-[3%]">
+        <div className="mt-14 grid gap-x-[46px] gap-y-10 sm:grid-cols-3 lg:mt-6 lg:px-[3%]">
           {SUPPORT_POINTS.map((point) => (
             <div key={point.title}>
               <span className="grid size-[46px] place-items-center rounded-full bg-terracotta/12 text-terracotta">

@@ -22,7 +22,7 @@ export function TrustSafety() {
           </p>
         </div>
 
-        <div data-stagger className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-3">
           {TRUST_SAFETY_POINTS.map((point, i) => (
             <div key={point.title} className="h-full">
               {/* Title and body are stacked in the same grid cell (both

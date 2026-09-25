@@ -434,28 +434,7 @@
 
   @media (prefers-reduced-motion: no-preference) {
     .reveal {
-      animation: rise 0.5s var(--ease-out) both;
-    }
-
-    /* A section that holds a staggered group fades in on its own and lets
-       the cards carry the movement, so it does not rise twice. */
-    .reveal:has([data-stagger]) {
-      animation: fade-in 0.4s var(--ease-out) both;
-    }
-
-    .reveal [data-stagger] > * {
-      animation: rise 0.5s var(--ease-out) both;
-    }
-    .reveal [data-stagger] > :nth-child(2) { animation-delay: 70ms; }
-    .reveal [data-stagger] > :nth-child(3) { animation-delay: 140ms; }
-    .reveal [data-stagger] > :nth-child(4) { animation-delay: 210ms; }
-    .reveal [data-stagger] > :nth-child(5) { animation-delay: 280ms; }
-    .reveal [data-stagger] > :nth-child(n + 6) { animation-delay: 350ms; }
-
-    /* The signed-in app keeps the quieter, shorter rise -- its screens are
-       used often, so a long entrance would wear thin. */
-    .care-theme .reveal {
-      animation: rise-sm 0.4s ease-out both;
+      animation: rise 0.4s ease-out both;
     }
 
     .fade-in {
@@ -484,17 +463,6 @@
 }
 
 @keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes rise-sm {
   from {
     opacity: 0;
     transform: translateY(6px);

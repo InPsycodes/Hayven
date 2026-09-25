@@ -10,7 +10,7 @@ export function HowItWorks() {
           Four calm steps, start to finish.
         </h2>
 
-        <div data-stagger className="mt-10 grid gap-x-10 gap-y-10 sm:mt-16 sm:gap-y-14 md:grid-cols-4">
+        <div className="mt-10 grid gap-x-10 gap-y-10 sm:mt-16 sm:gap-y-14 md:grid-cols-4">
           {HOW_IT_WORKS_STEPS.map((step, index) => {
             const isLast = index === HOW_IT_WORKS_STEPS.length - 1;
             return (

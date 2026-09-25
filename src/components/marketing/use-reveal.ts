@@ -15,11 +15,6 @@ export function useReveal<T extends HTMLElement>() {
     const el = ref.current;
     if (!el) return;
 
-    // Already on screen when the page loads: leave it alone. Adding the class
-    // now would snap the section to invisible and fade it back in -- a flash
-    // on the content people are already looking at.
-    if (el.getBoundingClientRect().top < window.innerHeight - 80) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {

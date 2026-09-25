@@ -28,7 +28,7 @@ export function Specialties() {
           </p>
         </div>
 
-        <div data-stagger className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-8">
+        <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-8">
           {SPECIALTY_CARDS.map((card, index) => (
             <div key={card.title} className="h-full">
               <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-charcoal/10 bg-canvas-white transition-colors hover:border-charcoal/20">
