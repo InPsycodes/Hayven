@@ -9,7 +9,8 @@ import { createNotification } from "@/lib/notifications/create";
 import { createRefund } from "@/lib/payments/paystack";
 import { isValidDomainBand } from "@/lib/reports/phrase-domains";
 import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
-import { releaseBookingEarnings } from "@/lib/payouts/earnings";
+import { reverseEarningsForRefund } from "@/lib/payouts/earnings";
+import { isDuplicateCharge } from "@/lib/payments/duplicate-charge";
 import { purgeAccountPersonalData } from "@/lib/account/purge";
 import { cancelBookingsForDepartedTherapist } from "@/lib/booking/actions";
 
@@ -232,7 +233,7 @@ export async function markPaymentRefunded(
 
   const { data: updated, error: updateError } = await supabase
     .from("payments")
-    .update({ status: "refunded" })
+    .update({ status: "refunded", refund_status: "manual" })
     .eq("id", paymentId)
     .eq("status", "successful")
     .select("id")
@@ -248,15 +249,12 @@ export async function markPaymentRefunded(
     metadata: { bookingId: payment.booking_id },
   });
 
-  if (payment.booking_id) {
-    await supabase.from("bookings").update({ refund_status: "manual" }).eq("id", payment.booking_id);
-    // A refund handled outside Paystack (dashboard/bank transfer) still
-    // means the parent got their money back -- the therapist's earning on
-    // this booking must be reversed the same as any other refund path, or
-    // Hayven pays it out on top of the refund (M-2, production audit
-    // 2026-09-03).
-    await releaseBookingEarnings(supabase, payment.booking_id, true);
-  }
+  // A refund handled outside Paystack (dashboard/bank transfer) still
+  // means the parent got their money back -- the therapist's earning on
+  // this booking must be reversed the same as any other refund path, or
+  // Hayven pays it out on top of the refund (M-2, production audit
+  // 2026-09-03).
+  await reverseEarningsForRefund(supabase, paymentId);
 
   revalidatePath("/admin/refunds");
   return { ok: true };
@@ -281,14 +279,14 @@ export async function processRefund(
   const supabase = createAdminClient();
   const { data: payment } = await supabase
     .from("payments")
-    .select("id, booking_id, amount, status, gateway_reference, created_at, bookings(refund_amount, refund_status)")
+    .select("id, booking_id, amount, status, refund_status, gateway_reference, created_at, bookings(refund_amount)")
     .eq("id", paymentId)
     .maybeSingle();
   if (!payment) return { ok: false, error: "Payment not found." };
   if (payment.status !== "successful") return { ok: false, error: "This payment can't be refunded." };
 
-  const booking = payment.bookings as unknown as { refund_amount: number | null; refund_status: string | null } | null;
-  if (booking?.refund_status === "processing" || booking?.refund_status === "processed") {
+  const booking = payment.bookings as unknown as { refund_amount: number | null } | null;
+  if (payment.refund_status === "processing" || payment.refund_status === "processed") {
     return { ok: false, error: "A refund for this is already in progress." };
   }
 
@@ -299,17 +297,9 @@ export async function processRefund(
   // hold an amount for a completely unrelated cancellation -- a duplicate
   // payment always owes back its own full amount, never the booking-level
   // figure.
-  let amountNaira = booking?.refund_amount ?? payment.amount;
-  if (payment.booking_id) {
-    const { count } = await supabase
-      .from("payments")
-      .select("id", { count: "exact", head: true })
-      .eq("booking_id", payment.booking_id)
-      .eq("status", "successful")
-      .eq("type", "session_commission")
-      .lt("created_at", payment.created_at);
-    if ((count ?? 0) > 0) amountNaira = payment.amount;
-  }
+  const amountNaira = (await isDuplicateCharge(supabase, payment))
+    ? payment.amount
+    : (booking?.refund_amount ?? payment.amount);
   if (amountNaira <= 0) return { ok: false, error: "The policy says nothing is owed on this booking." };
 
   // BOOK-03, pre-launch audit (P1): claim the refund atomically -- checked
@@ -317,37 +307,34 @@ export async function processRefund(
   // -- BEFORE calling Paystack, not after. The read above is only a fast
   // path for the common "already done" case; this is what actually closes
   // a double-click or two admins racing the same payment. Same pattern as
-  // initiatePaystackPayment's payment_initiated_at lock.
-  if (payment.booking_id) {
-    const { data: claimed, error: claimError } = await supabase
-      .from("bookings")
-      .update({ refund_status: "processing" })
-      .eq("id", payment.booking_id)
-      .or("refund_status.is.null,refund_status.eq.manual")
-      .select("id")
-      .maybeSingle();
-    if (claimError) return { ok: false, error: claimError.message };
-    if (!claimed) return { ok: false, error: "A refund for this is already in progress." };
-  }
+  // initiatePaystackPayment's payment_initiated_at lock. Claimed on the
+  // payment, not the booking (0104): a duplicate charge and the booking's
+  // own charge are refunded independently.
+  const { data: claimed, error: claimError } = await supabase
+    .from("payments")
+    .update({ refund_status: "processing" })
+    .eq("id", paymentId)
+    .eq("status", "successful")
+    .or("refund_status.is.null,refund_status.eq.manual")
+    .select("id")
+    .maybeSingle();
+  if (claimError) return { ok: false, error: claimError.message };
+  if (!claimed) return { ok: false, error: "A refund for this is already in progress." };
 
   try {
     await createRefund(payment.gateway_reference, amountNaira * 100);
   } catch (err) {
     // Release the claim on a genuine failure so a retry isn't blocked --
     // same reasoning as initiatePaystackPayment's catch block.
-    if (payment.booking_id) {
-      await supabase.from("bookings").update({ refund_status: null }).eq("id", payment.booking_id);
-    }
+    await supabase.from("payments").update({ refund_status: null }).eq("id", paymentId);
     return { ok: false, error: err instanceof Error ? err.message : "Paystack refused the refund." };
   }
 
-  if (payment.booking_id) {
-    // Reverse the therapist's earning now, at initiation, the same moment a
-    // dispute resolution does it -- don't wait on the refund.processed
-    // webhook, which is also covered as a defensive backstop (M-2,
-    // production audit 2026-09-03).
-    await releaseBookingEarnings(supabase, payment.booking_id, true);
-  }
+  // Reverse the therapist's earning now, at initiation, the same moment a
+  // dispute resolution does it -- don't wait on the refund.processed
+  // webhook, which is also covered as a defensive backstop (M-2,
+  // production audit 2026-09-03).
+  await reverseEarningsForRefund(supabase, paymentId);
 
   await logAuditEvent({
     actor: session,

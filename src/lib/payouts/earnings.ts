@@ -1,8 +1,9 @@
 import "server-only";
 
 import type { createAdminClient } from "@/lib/supabase/admin";
-import { splitEarning, EARNING_HOLD_MS } from "@/lib/payouts/commission";
+import { splitEarning, earningSourcesReversedByRefund, EARNING_HOLD_MS } from "@/lib/payouts/commission";
 import { paystackFeeNaira } from "@/lib/booking/refund-policy";
+import { isDuplicateCharge } from "@/lib/payments/duplicate-charge";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -114,4 +115,39 @@ export async function releaseBookingEarnings(admin: Admin, bookingId: string, re
       .eq("booking_id", bookingId)
       .eq("status", "held");
   }
+}
+
+/**
+ * A refund of one payment went (or is going) back to the parent -> reverse
+ * the earnings that money paid for, and only those. Used by every refund
+ * path outside dispute resolution (the admin refund queue, the manual
+ * "mark refunded" action and the refund.processed webhook).
+ *
+ * This used to be releaseBookingEarnings(..., true), which reverses every
+ * pending/held earning on the booking. That was right for a dispute but
+ * wrong here: a late-cancel refund also wiped out the therapist's share of
+ * the half the policy kept, and refunding a duplicate charge reversed the
+ * earning for the real session. See earningSourcesReversedByRefund.
+ */
+export async function reverseEarningsForRefund(admin: Admin, paymentId: string): Promise<void> {
+  const { data: payment } = await admin
+    .from("payments")
+    .select("booking_id, created_at, bookings(status)")
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!payment?.booking_id) return;
+
+  const booking = payment.bookings as unknown as { status: string } | null;
+  const sources = earningSourcesReversedByRefund({
+    isDuplicateCharge: await isDuplicateCharge(admin, payment),
+    bookingStatus: booking?.status ?? null,
+  });
+  if (sources.length === 0) return;
+
+  await admin
+    .from("therapist_earnings")
+    .update({ status: "reversed" })
+    .eq("booking_id", payment.booking_id)
+    .in("source", sources)
+    .in("status", ["held", "pending"]);
 }

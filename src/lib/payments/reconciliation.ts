@@ -67,12 +67,18 @@ export async function reconcilePaystackPayments(): Promise<ReconciliationResult>
   let stillUnresolved = 0;
 
   const references = paystackTransactions.map((t) => t.reference);
+  // Any payments row for the reference counts, whatever its status. This
+  // used to match only status "successful", so a charge that had since been
+  // refunded (status "refunded") looked unrecorded again. Paystack still
+  // lists a partially refunded charge (every policy refund keeps the fee)
+  // and one refunded outside Paystack as a success, so the sweep replayed
+  // it into finalizeBookingPayment -- which, finding the booking cancelled
+  // and its slot free, revived the refunded booking as confirmed.
   const alreadyRecorded = new Set<string>();
   if (references.length > 0) {
     const { data: existingPayments } = await admin
       .from("payments")
       .select("gateway_reference")
-      .eq("status", "successful")
       .in("gateway_reference", references);
     for (const row of existingPayments ?? []) alreadyRecorded.add(row.gateway_reference);
   }
