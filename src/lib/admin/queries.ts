@@ -241,9 +241,9 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
   const { data, error } = await supabase
     .from("payments")
     .select(
-      "id, amount, gateway_reference, booking_id, created_at, users!payer_id(full_name, email), bookings(status, cancelled_at, cancellation_reason, children(first_name), therapist_profiles(users(full_name)))"
+      "id, amount, status, refund_status, gateway_reference, booking_id, created_at, users!payer_id(full_name, email), bookings(status, cancelled_at, cancellation_reason, children(first_name), therapist_profiles(users(full_name)))"
     )
-    .eq("status", "successful")
+    .in("status", ["successful", "refunded"])
     .eq("type", "session_commission")
     .order("created_at", { ascending: true });
 
@@ -253,16 +253,14 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
   // Its own resilient query so a pre-0071 DB doesn't empty the whole queue.
   const bookingIds = data.map((r) => r.booking_id).filter((id): id is string => !!id);
   const policyAmounts = new Map<string, number | null>();
-  const refundStatuses = new Map<string, string | null>();
   if (bookingIds.length > 0) {
     const { data: refundRows, error: refundErr } = await supabase
       .from("bookings")
-      .select("id, refund_amount, refund_status")
+      .select("id, refund_amount")
       .in("id", bookingIds);
     if (!refundErr) {
       for (const b of refundRows ?? []) {
         policyAmounts.set(b.id, b.refund_amount ?? null);
-        refundStatuses.set(b.id, (b as { refund_status?: string | null }).refund_status ?? null);
       }
     }
   }
@@ -275,7 +273,10 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
   // bookings.refund_amount (a single column meant for the booking's own
   // cancellation-policy refund, not a second unrelated charge). Rows are
   // ordered oldest-first above, so for any booking with more than one
-  // successful charge, every row after the first is the duplicate.
+  // charge, every row after the first is the duplicate. Refunded rows are
+  // read too, only so an already-refunded original still counts as "first"
+  // -- otherwise its duplicate would be mistaken for the booking's own
+  // charge and offered the cancellation-policy amount.
   const seenBookingIds = new Set<string>();
 
   return data
@@ -292,6 +293,7 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
 
       const isFirstChargeSeen = row.booking_id ? !seenBookingIds.has(row.booking_id) : true;
       if (row.booking_id) seenBookingIds.add(row.booking_id);
+      if (row.status !== "successful") return null;
 
       if (!isFirstChargeSeen) {
         return {
@@ -299,7 +301,7 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
           bookingId: row.booking_id,
           amount: row.amount,
           refundAmount: row.amount,
-          refundStatus: refundStatuses.get(row.booking_id) ?? null,
+          refundStatus: row.refund_status ?? null,
           gatewayReference: row.gateway_reference,
           cancelledAt: null,
           cancellationReason: "duplicate_charge",
@@ -319,7 +321,7 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
         bookingId: row.booking_id,
         amount: row.amount,
         refundAmount: policy ?? row.amount,
-        refundStatus: refundStatuses.get(row.booking_id) ?? null,
+        refundStatus: row.refund_status ?? null,
         gatewayReference: row.gateway_reference,
         cancelledAt: booking.cancelled_at,
         cancellationReason: booking.cancellation_reason,

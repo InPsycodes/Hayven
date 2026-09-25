@@ -40,3 +40,27 @@ export function splitEarning(grossNaira: number): EarningSplit {
   const commission = Math.round(gross * COMMISSION_RATE);
   return { gross, commission, net: gross - commission };
 }
+
+export type EarningSource = "session" | "retained_cancellation";
+
+/**
+ * Which of a booking's earnings a refund of one of its payments takes back.
+ *
+ * - A duplicate charge (a second payment on a booking that already had one)
+ *   was never part of what the therapist earned, so refunding it reverses
+ *   nothing.
+ * - On a cancelled booking the refund being paid is the cancellation
+ *   policy's own refund. A `retained_cancellation` earning there is the
+ *   therapist's share of the part the policy kept back, which that refund
+ *   by definition doesn't return, so it stays.
+ * - Anywhere else (a completed session or a no-show refunded outside a
+ *   dispute), the parent is getting the money the earning was cut from.
+ */
+export function earningSourcesReversedByRefund(params: {
+  isDuplicateCharge: boolean;
+  bookingStatus: string | null;
+}): EarningSource[] {
+  if (params.isDuplicateCharge) return [];
+  if (params.bookingStatus === "cancelled") return ["session"];
+  return ["session", "retained_cancellation"];
+}

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { splitEarning, COMMISSION_RATE, EARNING_HOLD_MS, DISPUTE_WINDOW_MS } from "./commission";
+import {
+  splitEarning,
+  earningSourcesReversedByRefund,
+  COMMISSION_RATE,
+  EARNING_HOLD_MS,
+  DISPUTE_WINDOW_MS,
+} from "./commission";
 
 describe("splitEarning", () => {
   it("takes 20% commission, rest to the therapist", () => {
@@ -26,5 +32,25 @@ describe("EARNING_HOLD_MS / DISPUTE_WINDOW_MS", () => {
   // loudly if a future change to either one reopens the gap.
   it("the earning hold strictly outlasts the dispute window", () => {
     expect(EARNING_HOLD_MS).toBeGreaterThan(DISPUTE_WINDOW_MS);
+  });
+});
+
+describe("earningSourcesReversedByRefund", () => {
+  it("reverses nothing for a duplicate charge", () => {
+    expect(earningSourcesReversedByRefund({ isDuplicateCharge: true, bookingStatus: "confirmed" })).toEqual([]);
+    expect(earningSourcesReversedByRefund({ isDuplicateCharge: true, bookingStatus: "completed" })).toEqual([]);
+  });
+  it("keeps the therapist's retained share on a cancellation refund", () => {
+    expect(earningSourcesReversedByRefund({ isDuplicateCharge: false, bookingStatus: "cancelled" })).toEqual(["session"]);
+  });
+  it("reverses every earning when a delivered or no-show session is refunded", () => {
+    expect(earningSourcesReversedByRefund({ isDuplicateCharge: false, bookingStatus: "completed" })).toEqual([
+      "session",
+      "retained_cancellation",
+    ]);
+    expect(earningSourcesReversedByRefund({ isDuplicateCharge: false, bookingStatus: "no_show" })).toEqual([
+      "session",
+      "retained_cancellation",
+    ]);
   });
 });
