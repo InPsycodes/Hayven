@@ -52,7 +52,7 @@ export function About() {
           </Link>
 
           <div className="mt-8 border-t border-charcoal/10 pt-8">
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div data-stagger className="grid gap-6 sm:grid-cols-2">
               {VALUES.map((value) => (
                 <div key={value.title} className="flex flex-col gap-3">
                   <span className="flex size-10 items-center justify-center rounded-full bg-terracotta/12 text-terracotta">
