@@ -55,3 +55,42 @@ jobs:
 
       - name: Test
         run: npm test
+
+  # Runs against a real (throwaway, non-production) Supabase project --
+  # test/integration/env.ts hard-fails unless the URL matches project ref
+  # sfvwfbgrfmqaaakbepll (hayven_load_test), so these secrets must point at
+  # that exact project once it's restored (AUD-11, external audit
+  # 2026-10-08). Until INTEGRATION_SUPABASE_URL is added under
+  # Settings -> Secrets and variables -> Actions, this job is skipped (not
+  # failed) so CI stays green in the meantime.
+  integration-tests:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.INTEGRATION_SUPABASE_URL != '' }}
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.INTEGRATION_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.INTEGRATION_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.INTEGRATION_SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # env.ts reads credentials from a .env.test file on disk (gitignored
+      # locally), not process.env directly -- write one from the job-level
+      # secrets above so the existing loader finds what it expects, without
+      # changing that file's hard-coded-project-ref safety check.
+      - name: Write .env.test from secrets
+        run: |
+          cat <<EOF > .env.test
+          NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+          SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+          EOF
+
+      - name: Integration tests
+        run: npm run test:integration
