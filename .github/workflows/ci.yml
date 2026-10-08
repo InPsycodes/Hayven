@@ -32,6 +32,14 @@ jobs:
 
       - run: npm ci
 
+      # --omit=dev: only vulnerabilities actually reachable in the deployed
+      # app (a devDependency like the test runner never ships). --audit-level
+      # high: fails the build on High/Critical findings -- this is the check
+      # that would have caught the Next.js next/og ImageResponse RCE
+      # (GHSA-vcvr-r3jv-pc5j) automatically instead of needing a manual audit.
+      - name: Dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
       # Build first: it generates next-env.d.ts (git-ignored, provides the
       # static-asset module declarations) and runs the TypeScript check, so a
       # bare `tsc` afterwards resolves image imports the same way the editor

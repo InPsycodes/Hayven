@@ -66,6 +66,10 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // No functional purpose -- just stops every response from announcing the
+  // framework (and loosely its patch level) to anyone probing the site.
+  poweredByHeader: false,
+
   // Lets the dev server's hot-reload/dev-tooling connections work when
   // testing from a phone on the same network (http://<lan-ip>:3000) instead
   // of localhost -- without this, Next blocks that connection by default,
