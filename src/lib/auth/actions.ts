@@ -40,6 +40,14 @@ export async function signUp(input: SignUpInput): Promise<SignUpResult> {
   if (!input.agreedToTerms) {
     return { ok: false, error: "Please agree to the Privacy Policy and Terms of Service to continue." };
   }
+  // The UI already enforces this (minLength + a client check), both
+  // trivially bypassed by calling this action directly -- updatePassword
+  // (reset-actions.ts) already enforces 8 server-side for a password reset;
+  // signup had no server-side floor at all until this check, which was a
+  // real inconsistency (AUD-07, external audit 2026-10-08).
+  if (input.password.length < 8) {
+    return { ok: false, error: "Use at least 8 characters." };
+  }
 
   // Same shape as signIn's rate limit, keyed by the submitted email --
   // without this, signup can be scripted to spam Supabase's confirmation

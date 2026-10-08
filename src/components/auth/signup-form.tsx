@@ -56,7 +56,7 @@ export function SignupForm({
       signupEmail: emailFormatError(email) ?? undefined,
       phone: digits.length >= 7 ? undefined : "Enter a phone number we can reach you on.",
       signupPassword:
-        password.length >= 6 ? undefined : "Use at least 6 characters for your password.",
+        password.length >= 8 ? undefined : "Use at least 8 characters for your password.",
     };
     if (showErrors(nextErrors, ["firstName", "lastName", "signupEmail", "phone", "signupPassword"])) {
       reset();
@@ -233,7 +233,7 @@ export function SignupForm({
           id="signupPassword"
           type="password"
           required
-          minLength={6}
+          minLength={8}
           value={password}
           aria-invalid={errors.signupPassword ? true : undefined}
           aria-describedby={errors.signupPassword ? "signupPassword-error" : undefined}
