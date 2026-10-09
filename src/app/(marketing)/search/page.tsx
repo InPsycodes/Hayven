@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SearchFilters } from "@/components/search/search-filters";
+import { LaunchPanel } from "@/components/search/launch-panel";
 import { SearchAnalytics } from "@/components/analytics/search-analytics";
 import { TherapistResultRow } from "@/components/shared/therapist-result-row";
 import { getRealSpecialties } from "@/lib/therapist/queries";
@@ -105,7 +106,7 @@ function sortTherapists(therapists: DiscoveryTherapist[], sort: string | undefin
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
-  const [specialties, results] = await Promise.all([
+  const [specialties, results, everyone] = await Promise.all([
     getRealSpecialties(),
     searchDiscoveryTherapists({
       query: params.query,
@@ -115,7 +116,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       sessionType: params.sessionType as "in_person" | "virtual" | undefined,
       availableWithinDays: params.available ? AVAILABLE_DAYS[params.available] : undefined,
     }),
+    // Unfiltered list (same 120s cache) -- tells "nobody is live yet" apart
+    // from "nobody matches these filters".
+    searchDiscoveryTherapists({}),
   ]);
+  const nobodyLive = everyone.length === 0;
 
   const therapists = sortTherapists(results, params.sort);
 
@@ -150,6 +155,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* min-height reserves the filter bar's space so it doesn't shove the
           results list down when SearchFilters (a useSearchParams client
           component) hydrates in -- was a measurable CLS hit on /search. */}
+      {nobodyLive ? (
+        <div className="mt-8">
+          <LaunchPanel specialty={params.specialty} />
+        </div>
+      ) : (
+      <>
       <div className="mt-6 min-h-[168px] sm:min-h-[140px]">
         <Suspense fallback={<SearchFiltersSkeleton />}>
           <SearchFilters specialties={specialties} resultCount={therapists.length} />
@@ -171,6 +182,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           ))
         )}
       </div>
+      </>
+      )}
     </div>
     </>
   );
