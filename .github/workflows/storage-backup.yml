@@ -16,43 +16,67 @@ concurrency:
 jobs:
   backup:
     runs-on: ubuntu-latest
-    # Skipped (not failed) until the eight secrets below are added under
-    # Settings -> Secrets and variables -> Actions. STORAGE_BACKUP_R2_BUCKET
-    # is just the sentinel checked here; all eight are required to actually
-    # run (see the "Write rclone config" step).
-    if: ${{ secrets.STORAGE_BACKUP_R2_BUCKET != '' }}
+    # IMPORTANT: unlike the integration-tests job in ci.yml, this backs up
+    # PRODUCTION data on purpose -- credentials/avatars that real therapists
+    # and parents uploaded live only in the production project (ref
+    # cfzbhibpwcerbxgawxqi), not in the hayven_load_test throwaway project.
+    # Do not point SUPABASE_ENDPOINT anywhere else.
+    env:
+      R2_BUCKET: ${{ secrets.STORAGE_BACKUP_R2_BUCKET }}
+      R2_ENDPOINT: ${{ secrets.STORAGE_BACKUP_R2_ENDPOINT }}
+      R2_ACCESS_KEY_ID: ${{ secrets.STORAGE_BACKUP_R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.STORAGE_BACKUP_R2_SECRET_ACCESS_KEY }}
+      SUPABASE_ENDPOINT: ${{ secrets.STORAGE_BACKUP_SUPABASE_ENDPOINT }}
+      SUPABASE_REGION: ${{ secrets.STORAGE_BACKUP_SUPABASE_REGION }}
+      SUPABASE_ACCESS_KEY_ID: ${{ secrets.STORAGE_BACKUP_SUPABASE_ACCESS_KEY_ID }}
+      SUPABASE_SECRET_ACCESS_KEY: ${{ secrets.STORAGE_BACKUP_SUPABASE_SECRET_ACCESS_KEY }}
     steps:
-      # IMPORTANT: unlike the integration-tests job in ci.yml, this backs up
-      # PRODUCTION data on purpose -- credentials/avatars that real
-      # therapists and parents uploaded live only in the production project
-      # (ref cfzbhibpwcerbxgawxqi), not in the hayven_load_test throwaway
-      # project. Do not point STORAGE_BACKUP_SUPABASE_ENDPOINT anywhere else.
+      # The `secrets` context can't be referenced inside any `if:` condition
+      # -- a job-level `if: secrets.X != ''` is rejected outright by the
+      # GitHub Actions parser ("Unrecognized named-value: 'secrets'"), and a
+      # step-level one is unreliable too. So: read the already-job-scoped
+      # env vars above in a normal shell check instead, and gate every
+      # later step on *this* step's output (the `steps` context, not
+      # `secrets`, is fully supported in `if:`).
+      - name: Check secrets configured
+        id: check
+        run: |
+          if [ -n "$R2_BUCKET" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Storage backup secrets not configured yet -- skipping this run (AUD-09)."
+          fi
+
       - name: Install rclone
+        if: steps.check.outputs.configured == 'true'
         run: sudo apt-get update && sudo apt-get install -y rclone
 
       # Supabase Storage is S3-compatible (Dashboard -> Storage -> S3
       # Access Keys for the access key/secret, distinct from the service
-      # role key). Credentials go in rclone.conf, not on the command line,
-      # so they never appear in a `ps` listing or shell history on the
-      # runner.
+      # role key). Credentials are read from the job's own env here, never
+      # re-interpolated as `${{ secrets.X }}` into the run text -- that
+      # avoids a secret's raw value ever being substituted into a shell
+      # command string before the shell sees it.
       - name: Write rclone config
+        if: steps.check.outputs.configured == 'true'
         run: |
           mkdir -p ~/.config/rclone
           cat <<EOF > ~/.config/rclone/rclone.conf
           [supabase]
           type = s3
           provider = Other
-          endpoint = ${{ secrets.STORAGE_BACKUP_SUPABASE_ENDPOINT }}
-          region = ${{ secrets.STORAGE_BACKUP_SUPABASE_REGION }}
-          access_key_id = ${{ secrets.STORAGE_BACKUP_SUPABASE_ACCESS_KEY_ID }}
-          secret_access_key = ${{ secrets.STORAGE_BACKUP_SUPABASE_SECRET_ACCESS_KEY }}
+          endpoint = $SUPABASE_ENDPOINT
+          region = $SUPABASE_REGION
+          access_key_id = $SUPABASE_ACCESS_KEY_ID
+          secret_access_key = $SUPABASE_SECRET_ACCESS_KEY
 
           [r2]
           type = s3
           provider = Cloudflare
-          endpoint = ${{ secrets.STORAGE_BACKUP_R2_ENDPOINT }}
-          access_key_id = ${{ secrets.STORAGE_BACKUP_R2_ACCESS_KEY_ID }}
-          secret_access_key = ${{ secrets.STORAGE_BACKUP_R2_SECRET_ACCESS_KEY }}
+          endpoint = $R2_ENDPOINT
+          access_key_id = $R2_ACCESS_KEY_ID
+          secret_access_key = $R2_SECRET_ACCESS_KEY
           EOF
 
       # Mirrors each bucket under its own prefix in the backup bucket.
@@ -61,7 +85,9 @@ jobs:
       # version history. Add --backup-dir here later if point-in-time
       # recovery of individual deleted files becomes a requirement.
       - name: Sync credentials bucket
-        run: rclone sync supabase:credentials r2:${{ secrets.STORAGE_BACKUP_R2_BUCKET }}/credentials --s3-no-check-bucket -v
+        if: steps.check.outputs.configured == 'true'
+        run: rclone sync supabase:credentials "r2:$R2_BUCKET/credentials" --s3-no-check-bucket -v
 
       - name: Sync avatars bucket
-        run: rclone sync supabase:avatars r2:${{ secrets.STORAGE_BACKUP_R2_BUCKET }}/avatars --s3-no-check-bucket -v
+        if: steps.check.outputs.configured == 'true'
+        run: rclone sync supabase:avatars "r2:$R2_BUCKET/avatars" --s3-no-check-bucket -v
