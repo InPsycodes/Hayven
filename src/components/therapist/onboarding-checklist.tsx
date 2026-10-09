@@ -17,6 +17,7 @@ export function OnboardingChecklist({ status }: { status: OnboardingStatus }) {
     },
     { done: status.hasAvailability, label: "Add your availability", href: "/therapist/schedule" },
     { done: status.hasBankAccount, label: "Add your payout bank account", href: "/therapist/profile" },
+    { done: status.hasInsurance, label: "Upload current proof of insurance", href: "/therapist/profile" },
   ];
   const remaining = steps.filter((s) => !s.done).length;
 
@@ -26,7 +27,7 @@ export function OnboardingChecklist({ status }: { status: OnboardingStatus }) {
         {remaining} step{remaining === 1 ? "" : "s"} to go before families can book you
       </p>
       <p className="mt-0.5 text-xs text-care-ink-soft">
-        Your profile stays hidden from search until all three are done.
+        Your profile stays hidden from search until all of these are done.
       </p>
       <ul className="mt-3 flex flex-col gap-1.5">
         {steps.map((step) => (

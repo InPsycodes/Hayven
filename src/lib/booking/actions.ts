@@ -125,6 +125,19 @@ export async function createPendingBooking(input: {
     return { ok: false, error: "That therapist isn't currently accepting bookings." };
   }
 
+  // Same defense in depth for the insurance gate (0106): a therapist whose
+  // cover has ended drops out of discovery, and can't take a new hold via a
+  // stale listing either.
+  const { count: currentInsuranceCount } = await admin
+    .from("credentials")
+    .select("id", { count: "exact", head: true })
+    .eq("therapist_id", input.therapistId)
+    .eq("document_type", "insurance")
+    .gt("expires_on", new Date().toISOString().slice(0, 10));
+  if ((currentInsuranceCount ?? 0) === 0) {
+    return { ok: false, error: "That therapist isn't currently accepting bookings." };
+  }
+
   const { data: heldSlot, error: holdError } = await admin
     .from("availability_slots")
     .update({ is_booked: true })

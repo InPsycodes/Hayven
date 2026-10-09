@@ -18,15 +18,12 @@ export async function ComplianceNotices({ therapistProfileId }: { therapistProfi
     THERAPIST_AGREEMENT ? getAcceptedAgreementVersions(therapistProfileId) : Promise.resolve([]),
   ]);
 
-  const coverState = insuranceCoverState(insurance?.expiresOn);
+  // Missing or expired cover is an OnboardingChecklist item (it hides the
+  // therapist from search, 0106); this only warns ahead of the lapse.
   const insuranceMessage =
-    coverState === "missing"
-      ? "Upload proof of your professional indemnity insurance. It's required to practise on Hayven."
-      : coverState === "expired"
-        ? `Your insurance cover ended on ${formatDate(insurance!.expiresOn)}. Upload your renewed certificate.`
-        : coverState === "ending_soon"
-          ? `Your insurance cover ends on ${formatDate(insurance!.expiresOn)}. Upload your renewed certificate when you have it.`
-          : null;
+    insurance && insuranceCoverState(insurance.expiresOn) === "ending_soon"
+      ? `Your insurance cover ends on ${formatDate(insurance.expiresOn)}. Upload your renewed certificate before then, or your profile will be hidden from search.`
+      : null;
 
   const needsAgreement =
     THERAPIST_AGREEMENT !== null && !accepted.some((a) => a.version === THERAPIST_AGREEMENT!.version);

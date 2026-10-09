@@ -104,7 +104,7 @@ export interface TestTherapist extends TestPerson {
 
 /**
  * A fully bookable, payable therapist: verified, bank details set (so
- * runPayouts doesn't skip them), a session price set.
+ * runPayouts doesn't skip them), a session price set, current insurance.
  */
 export async function createTestTherapist(opts: { priceNaira?: number } = {}): Promise<TestTherapist> {
   const person = await createAuthUser("therapist", { role: "therapist", full_name: "Test Therapist" });
@@ -130,6 +130,18 @@ export async function createTestTherapist(opts: { priceNaira?: number } = {}): P
     .select("id")
     .single();
   if (error || !data) throw new Error(`createTestTherapist setup failed: ${error?.message}`);
+
+  // Current indemnity insurance is a booking gate (0106). Cascades away
+  // with the profile (credentials.therapist_id is on delete cascade).
+  const { error: insuranceError } = await admin.from("credentials").insert({
+    therapist_id: data.id,
+    document_type: "insurance",
+    file_url: `${person.authUserId}/test-insurance.pdf`,
+    issuing_body: "Test Insurer",
+    expires_on: new Date(Date.now() + 365 * 86_400_000).toISOString().slice(0, 10),
+  });
+  if (insuranceError) throw new Error(`createTestTherapist insurance setup failed: ${insuranceError.message}`);
+
   // Already tracked for deletion via the users row cascade being *forward*
   // (therapist_profiles.user_id -> users, on delete cascade per 0001) -- but
   // that cascade only fires if nothing NEWER references this profile
