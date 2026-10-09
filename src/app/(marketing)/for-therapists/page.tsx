@@ -7,6 +7,7 @@ import { canonicalFor } from "@/lib/seo/metadata";
 import { formatNaira } from "@/data/format";
 import { COMMISSION_RATE, MIN_PAYOUT_NAIRA, EARNING_HOLD_MS } from "@/lib/payouts/commission";
 import heroImage from "../../../../public/images/for-therapists-hero.jpg";
+import { SwipeRow } from "@/components/marketing/swipe-row";
 
 const TEXT_SHADOW = "0 2px 24px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.45)";
 
@@ -179,7 +180,11 @@ export default function ForTherapistsPage() {
             Built for a real caseload, not a side gig
           </h2>
 
-          <div className="mt-11 grid gap-y-12 gap-x-7 sm:grid-cols-2">
+          <SwipeRow
+            label="What you get"
+            className="mt-11"
+            gridClassName="sm:grid sm:grid-cols-2 sm:gap-x-7 sm:gap-y-12"
+          >
             {/* -- earnings/payout -- */}
             <div>
               <div className="flex min-h-[300px] items-start overflow-hidden rounded-2xl bg-offwhite p-9 pb-11">
@@ -302,7 +307,7 @@ export default function ForTherapistsPage() {
                 rubber stamp.
               </p>
             </div>
-          </div>
+          </SwipeRow>
         </div>
       </section>
 
@@ -317,11 +322,15 @@ export default function ForTherapistsPage() {
             From application to your first booking
           </h2>
 
-          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <SwipeRow
+            label="How it works"
+            className="mt-14"
+            gridClassName="sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-4"
+          >
             {STEPS.map((step, i) => (
               <div
                 key={step.title}
-                className="reveal relative rounded-md border border-offwhite bg-canvas-white p-7 pt-8 shadow-[0_10px_26px_-14px_rgba(33,27,24,0.22)]"
+                className="reveal relative h-full rounded-md border border-offwhite bg-canvas-white p-7 pt-8 shadow-[0_10px_26px_-14px_rgba(33,27,24,0.22)]"
                 style={{ animationDelay: `${60 + i * 110}ms` }}
               >
                 <span className="pointer-events-none absolute top-3.5 right-4.5 font-heading text-[2.6rem] leading-none font-medium text-terracotta/28 select-none">
@@ -331,7 +340,7 @@ export default function ForTherapistsPage() {
                 <p className="mt-2 text-[0.86rem] leading-relaxed text-ink-soft">{step.body}</p>
               </div>
             ))}
-          </div>
+          </SwipeRow>
         </div>
       </section>
 

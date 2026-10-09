@@ -1,5 +1,6 @@
 import { HOW_IT_WORKS_STEPS } from "@/content/marketing/steps";
 import { cn } from "@/lib/utils";
+import { SwipeRow } from "@/components/marketing/swipe-row";
 
 export function HowItWorks() {
   return (
@@ -10,12 +11,22 @@ export function HowItWorks() {
           Four calm steps, start to finish.
         </h2>
 
-        <div className="mt-10 grid gap-x-10 gap-y-10 sm:mt-16 sm:gap-y-14 md:grid-cols-4">
+        <SwipeRow
+          label="How it works"
+          tone="dark"
+          className="mt-10 sm:mt-16"
+          gridClassName="sm:grid sm:gap-y-14 md:grid-cols-4 md:gap-x-10"
+        >
           {HOW_IT_WORKS_STEPS.map((step, index) => {
             const isLast = index === HOW_IT_WORKS_STEPS.length - 1;
             return (
               <div key={step.title}>
-                <div className={cn("flex flex-col gap-3", isLast && "md:-m-5 md:rounded-lg md:border md:border-white/20 md:p-5")}>
+                <div
+                  className={cn(
+                    "flex h-full flex-col gap-3 rounded-lg border border-white/20 p-5 sm:border-0 sm:p-0",
+                    isLast && "md:-m-5 md:border md:p-5"
+                  )}
+                >
                   <span className="font-serif text-4xl leading-none text-canvas-white/70">
                     {String(index + 1).padStart(2, "0")}
                   </span>
@@ -30,7 +41,7 @@ export function HowItWorks() {
               </div>
             );
           })}
-        </div>
+        </SwipeRow>
       </div>
     </section>
   );

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { TRUST_SAFETY_POINTS } from "@/content/marketing/trust-safety";
 import { Icon } from "@/components/ui/icon";
+import { SwipeRow } from "@/components/marketing/swipe-row";
 
 export function TrustSafety() {
   const [revealed, setRevealed] = useState<number | null>(null);
@@ -22,7 +23,12 @@ export function TrustSafety() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-5 sm:mt-14 sm:grid-cols-3">
+        <SwipeRow
+          label="Trust and safety"
+          className="mt-10 sm:mt-14"
+          bleedClassName="-mx-6 px-6 scroll-px-6 -my-4 py-4"
+          gridClassName="sm:my-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:py-0"
+        >
           {TRUST_SAFETY_POINTS.map((point, i) => (
             <div key={point.title} className="h-full">
               {/* Title and body are stacked in the same grid cell (both
@@ -53,7 +59,7 @@ export function TrustSafety() {
               </button>
             </div>
           ))}
-        </div>
+        </SwipeRow>
       </div>
     </section>
   );
