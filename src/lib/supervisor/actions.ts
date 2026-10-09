@@ -9,6 +9,7 @@ import { logAuditEvent } from "@/lib/audit/log";
 import { notifyParentReportPublished } from "@/lib/reports/actions";
 import { captureServer } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { flagPublishedReportForSafeguarding } from "@/lib/safeguarding/alerts";
 
 /** Defense in depth -- real enforcement is the RLS policy from 0024 (is_supervisor_of_therapist), this just gives a friendly error instead of a silent no-op. */
 async function isOwnTeamTherapist(
@@ -237,6 +238,7 @@ export async function approveAndPublishReport(reportId: string): Promise<{ ok: t
   const therapistName =
     (therapistProfile?.users as unknown as { full_name: string } | null)?.full_name ?? "Your therapist";
   await notifyParentReportPublished(admin, therapySession.child_id, reportId, therapistName);
+  await flagPublishedReportForSafeguarding({ actor: session, reportId, childId: therapySession.child_id });
 
   revalidatePath(`/supervisor/children/${therapySession.child_id}/sessions/${report.session_id}`);
   return { ok: true };

@@ -11,6 +11,7 @@ import {
   IconBook,
   IconCreditCard,
   IconUserCircle,
+  IconShieldHeart,
 } from "@tabler/icons-react";
 
 export interface NavItem {
@@ -41,6 +42,7 @@ export const SIDEBAR_NAV: Record<AppRole, NavItem[]> = {
     { label: "Learn", href: "/therapist/learn", icon: IconBook },
     { label: "Earnings", href: "/therapist/earnings", icon: IconWallet },
     { label: "Profile", href: "/therapist/profile", icon: IconUserCircle },
+    { label: "Safeguarding", href: "/therapist/safeguarding", icon: IconShieldHeart },
   ],
 };
 

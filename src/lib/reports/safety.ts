@@ -94,6 +94,33 @@ export function detectFlaggedPhrases(text: string | null | undefined): string[] 
 }
 
 /**
+ * The subset of FLAGGED_PHRASES that point at a child's safety rather than
+ * a clinical observation -- these, found in a published report's session,
+ * alert the safeguarding leads automatically (src/lib/safeguarding/alerts.ts).
+ * "seizure"/"lack of sleep" stay therapist-warning-only: alerting the DSL on
+ * every clinical mention would bury the real signal.
+ */
+const SAFEGUARDING_PHRASES = [
+  "parent argument",
+  "parents arguing",
+  "self-harm",
+  "self harm",
+  "suicid",
+  "abuse",
+  "police",
+  "child protective",
+  "cps",
+  "bruise",
+  "injury at home",
+];
+
+export function detectSafeguardingPhrases(text: string | null | undefined): string[] {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  return SAFEGUARDING_PHRASES.filter((phrase) => lower.includes(phrase));
+}
+
+/**
  * Pulls out exactly the free-text sub-fields of a domain-typed skill's
  * structured_data that actually reach the parent report (see the matching
  * field list in generate.ts's domainSkillParentSentence) -- so the

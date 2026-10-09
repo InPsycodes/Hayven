@@ -18,6 +18,7 @@ import {
   IconShieldLock,
   IconBooks,
   IconStethoscope,
+  IconShieldHeart,
 } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
@@ -43,22 +44,27 @@ const ADMIN_NAV = [
   { label: "Disputes", href: "/admin/disputes", icon: IconGavel },
   { label: "Payouts", href: "/admin/payouts", icon: IconCashBanknote },
   { label: "Support", href: "/admin/support", icon: IconLifebuoy },
+  { label: "Safeguarding", href: "/admin/safeguarding", icon: IconShieldHeart },
   { label: "Settings", href: "/admin/settings", icon: IconShieldLock },
 ];
 
 export function AdminSidebar({
   session,
   counts = {},
+  showSafeguarding = false,
 }: {
   session: AppSession;
   counts?: Record<string, number>;
+  /** Only the safeguarding leads see the entry at all (src/lib/safeguarding/leads.ts). */
+  showSafeguarding?: boolean;
 }) {
   const pathname = usePathname();
+  const navItems = ADMIN_NAV.filter((item) => showSafeguarding || item.href !== "/admin/safeguarding");
 
   return (
     <>
       <StaffMobileSidebar
-        items={ADMIN_NAV.map((item) => ({
+        items={navItems.map((item) => ({
           ...item,
           active: pathname.startsWith(item.href),
           count: counts[item.href] ?? 0,
@@ -73,7 +79,7 @@ export function AdminSidebar({
         <div className="flex flex-col gap-8">
           <BrandMark />
           <nav className="flex flex-col gap-1">
-            {ADMIN_NAV.map((item) => {
+            {navItems.map((item) => {
               const active = pathname.startsWith(item.href);
               const count = counts[item.href] ?? 0;
               return (

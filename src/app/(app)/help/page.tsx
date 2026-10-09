@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { IconChevronDown } from "@tabler/icons-react";
 
@@ -18,6 +19,15 @@ export default async function HelpPage() {
     <div>
       <DashboardHeader session={session} greeting="Help & FAQs" subtext="Answers to common questions" />
       <div className="flex max-w-2xl flex-col gap-6 px-5 py-6 md:px-10 md:py-8">
+        {session.role === "therapist" && (
+          <Link
+            href="/therapist/safeguarding"
+            className="rounded-sm bg-error/8 p-4 text-sm text-charcoal ring-1 ring-error/25 transition-opacity hover:opacity-85"
+          >
+            <span className="font-semibold text-error-text">Worried about a child&apos;s safety?</span> Raise a
+            safeguarding concern. It goes straight to the safeguarding lead, not to support.
+          </Link>
+        )}
         {FAQ_CATEGORIES.map((category) => {
           const entries = category.entries.filter((entry) => !entry.role || entry.role === session.role);
           if (entries.length === 0) return null;

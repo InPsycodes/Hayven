@@ -13,6 +13,7 @@ import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { getGenerationInput, getPhraseVariants } from "./queries";
 import { generateParentReport, generateTherapistReport } from "./generate";
 import type { ReportBody } from "./types";
+import { flagPublishedReportForSafeguarding } from "@/lib/safeguarding/alerts";
 
 /**
  * Shared by publishReport (therapist, unsupervised case) and
@@ -295,6 +296,7 @@ export async function publishReport(
   // never let a notification failure roll back a publish that already
   // succeeded, so this is fire-and-forget after the real write.
   await notifyParentReportPublished(createAdminClient(), childId, reportId, session.name);
+  await flagPublishedReportForSafeguarding({ actor: session, reportId, childId });
 
   revalidatePath(`/therapist/children`);
   return { ok: true };

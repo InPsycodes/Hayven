@@ -69,6 +69,9 @@ export type AuditAction =
   | "review.submit"
   | "review.delete"
   | "referral.status_update"
+  | "safeguarding_concern.raise"
+  | "safeguarding_concern.auto_flag"
+  | "safeguarding_concern.update"
   | "auth.sign_in"
   | "auth.mfa_enrolled"
   | "auth.mfa_disabled";
