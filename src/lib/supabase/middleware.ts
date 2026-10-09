@@ -29,8 +29,17 @@ export async function updateSupabaseSession(request: NextRequest, resolveRole = 
           // was shipping without the Secure attribute even in production,
           // confirmed via a live login. Guarded by NODE_ENV so it still works
           // over plain http://localhost in dev.
+          //
+          // httpOnly: true (AUD-06, external audit 2026-10-08) -- same
+          // reasoning as src/lib/supabase/server.ts: nothing in the app
+          // reads the session cookie client-side, so forcing this on only
+          // closes off document.cookie access, it doesn't change behavior.
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, { ...options, secure: process.env.NODE_ENV === "production" })
+            response.cookies.set(name, value, {
+              ...options,
+              secure: process.env.NODE_ENV === "production",
+              httpOnly: true,
+            })
           );
         },
       },
