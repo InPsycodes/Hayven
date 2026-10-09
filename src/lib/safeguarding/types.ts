@@ -66,3 +66,9 @@ export interface MyRaisedConcern {
   createdAt: string;
   actioned: boolean;
 }
+
+/** A review date that has passed on a concern that isn't closed yet. */
+export function isReviewOverdue(reviewDate: string | null, status: SafeguardingConcernStatus): boolean {
+  if (!reviewDate || status === "closed") return false;
+  return reviewDate < new Date().toISOString().slice(0, 10);
+}
