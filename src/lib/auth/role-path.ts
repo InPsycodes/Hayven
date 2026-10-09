@@ -9,6 +9,6 @@ import type { UserRole } from "@/data/types";
  * duties reachable from there (see SupervisorSidebar's "My dashboard" link).
  */
 export function roleHomePath(role: UserRole): string {
-  if (role === "admin") return "/admin/verification";
+  if (role === "admin") return "/admin/overview";
   return `/${role}`;
 }

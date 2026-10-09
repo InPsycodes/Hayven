@@ -19,6 +19,7 @@ import {
   IconBooks,
   IconStethoscope,
   IconShieldHeart,
+  IconLayoutDashboard,
 } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
@@ -29,23 +30,27 @@ import { cn } from "@/lib/utils";
 import { initialsFromName } from "@/data/format";
 import type { AppSession } from "@/lib/auth/session";
 
+// Grouped by what the admin is doing: today's work, people, money,
+// content, and the system itself. The group heading renders once, above
+// the first item of each group (desktop sidebar and mobile drawer).
 const ADMIN_NAV = [
-  { label: "Verification", href: "/admin/verification", icon: IconShieldCheck },
-  { label: "Accounts", href: "/admin/accounts", icon: IconUserCog },
-  { label: "Assignments", href: "/admin/users", icon: IconUsers },
-  { label: "Referrals", href: "/admin/referrals", icon: IconStethoscope },
-  { label: "Reports", href: "/admin/reports", icon: IconReportAnalytics },
-  { label: "Report phrases", href: "/admin/report-phrases", icon: IconMessage2 },
-  { label: "Learning", href: "/admin/learning", icon: IconBooks },
-  { label: "Metrics", href: "/admin/metrics", icon: IconChartBar },
-  { label: "Audit log", href: "/admin/audit-log", icon: IconHistory },
-  { label: "Deletions", href: "/admin/deletion-requests", icon: IconUserX },
-  { label: "Refunds", href: "/admin/refunds", icon: IconReceiptRefund },
-  { label: "Disputes", href: "/admin/disputes", icon: IconGavel },
-  { label: "Payouts", href: "/admin/payouts", icon: IconCashBanknote },
-  { label: "Support", href: "/admin/support", icon: IconLifebuoy },
-  { label: "Safeguarding", href: "/admin/safeguarding", icon: IconShieldHeart },
-  { label: "Settings", href: "/admin/settings", icon: IconShieldLock },
+  { group: "Today", label: "Overview", href: "/admin/overview", icon: IconLayoutDashboard },
+  { group: "Today", label: "Safeguarding", href: "/admin/safeguarding", icon: IconShieldHeart },
+  { group: "People", label: "Verification", href: "/admin/verification", icon: IconShieldCheck },
+  { group: "People", label: "Accounts", href: "/admin/accounts", icon: IconUserCog },
+  { group: "People", label: "Assignments", href: "/admin/users", icon: IconUsers },
+  { group: "People", label: "Referrals", href: "/admin/referrals", icon: IconStethoscope },
+  { group: "People", label: "Support", href: "/admin/support", icon: IconLifebuoy },
+  { group: "People", label: "Deletions", href: "/admin/deletion-requests", icon: IconUserX },
+  { group: "Money", label: "Payouts", href: "/admin/payouts", icon: IconCashBanknote },
+  { group: "Money", label: "Refunds", href: "/admin/refunds", icon: IconReceiptRefund },
+  { group: "Money", label: "Disputes", href: "/admin/disputes", icon: IconGavel },
+  { group: "Content", label: "Reports", href: "/admin/reports", icon: IconReportAnalytics },
+  { group: "Content", label: "Report phrases", href: "/admin/report-phrases", icon: IconMessage2 },
+  { group: "Content", label: "Learning", href: "/admin/learning", icon: IconBooks },
+  { group: "System", label: "Metrics", href: "/admin/metrics", icon: IconChartBar },
+  { group: "System", label: "Audit log", href: "/admin/audit-log", icon: IconHistory },
+  { group: "System", label: "Settings", href: "/admin/settings", icon: IconShieldLock },
 ];
 
 export function AdminSidebar({
@@ -73,21 +78,25 @@ export function AdminSidebar({
         roleLabel="Admin"
       />
       <aside
-        className="hidden w-full shrink-0 flex-col justify-between px-4 py-8 md:flex md:w-50"
+        className="sticky top-0 hidden h-dvh w-full shrink-0 flex-col justify-between gap-4 self-start px-4 py-6 md:flex md:w-50"
         style={{ background: "linear-gradient(184deg, var(--terracotta), var(--rust-dark) 78%)" }}
       >
-        <div className="flex flex-col gap-8">
+        <div className="flex min-h-0 flex-col gap-6">
           <BrandMark />
-          <nav className="flex flex-col gap-1">
-            {navItems.map((item) => {
+          <nav className="-mx-1 flex min-h-0 flex-col gap-0.5 overflow-y-auto px-1">
+            {navItems.map((item, i) => {
               const active = pathname.startsWith(item.href);
               const count = counts[item.href] ?? 0;
+              const firstInGroup = i === 0 || navItems[i - 1].group !== item.group;
               return (
+                <div key={item.href} className="flex flex-col">
+                {firstInGroup && (
+                  <span className={cn("label-micro px-3 pb-1 text-canvas-white/60", i > 0 && "mt-3")}>{item.group}</span>
+                )}
                 <Link
-                  key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition-colors",
+                    "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] transition-colors",
                     active ? "bg-canvas-white font-semibold text-rust-dark" : "text-canvas-white/85 hover:bg-white/10"
                   )}
                 >
@@ -104,6 +113,7 @@ export function AdminSidebar({
                     </span>
                   )}
                 </Link>
+                </div>
               );
             })}
           </nav>

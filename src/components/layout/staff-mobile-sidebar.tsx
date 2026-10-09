@@ -19,6 +19,8 @@ interface StaffNavItem {
   icon: ComponentType<IconProps>;
   active: boolean;
   count?: number;
+  /** Optional section heading; shown above the first item of each group. */
+  group?: string;
 }
 
 /**
@@ -166,9 +168,12 @@ export function StaffMobileSidebar({
                   </button>
                 </div>
                 <nav className="flex flex-col gap-1">
-                  {items.map((item) => (
+                  {items.map((item, i) => (
+                    <div key={item.href} className="flex flex-col">
+                    {item.group && (i === 0 || items[i - 1].group !== item.group) && (
+                      <span className={cn("label-micro px-3 pb-1 text-canvas-white/60", i > 0 && "mt-3")}>{item.group}</span>
+                    )}
                     <Link
-                      key={item.href}
                       href={item.href}
                       onClick={close}
                       className={cn(
@@ -191,6 +196,7 @@ export function StaffMobileSidebar({
                         </span>
                       )}
                     </Link>
+                    </div>
                   ))}
                 </nav>
               </div>
