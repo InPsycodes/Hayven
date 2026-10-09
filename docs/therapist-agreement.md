@@ -88,7 +88,8 @@ implemented — not a proposal.
 - **Commission**: the Platform retains **20%** of each session's charge; you receive
   **80%** (net of that commission).
 - **Pricing**: you set your own price per session, shown to parents before they book.
-- **Earnings clear 72 hours** after a session, then pay out **weekly, every Monday**,
+- **Earnings clear 8 days** after a session (the 7-day window in which a parent can
+  report a problem, plus one day), then pay out **weekly, every Monday**,
   once your cleared balance is at or above **₦5,000** (balances under that threshold
   roll over to the next week).
 - **A bank account on file is required** before any payout can be made; you're

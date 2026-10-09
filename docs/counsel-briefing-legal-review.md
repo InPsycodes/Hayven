@@ -72,7 +72,7 @@ alongside this brief).
 
 **Context already settled and implemented in the product** (not proposals —
 these are live): therapists are independent contractors; commission is a fixed
-20% to Hayven / 80% to the therapist; earnings clear 72 hours after a session
+20% to Hayven / 80% to the therapist; earnings clear 8 days after a session (the 7-day parent dispute window plus a day)
 and pay out weekly; a bank account is required before any payout; the existing
 Terms of Service already states Hayven "does not warrant... clinical outcomes of
 any therapist" and disclaims liability "for the acts or omissions of an
