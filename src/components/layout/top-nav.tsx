@@ -185,11 +185,11 @@ function HeroNav({ session }: { session?: NavSession | null }) {
             <Link
               href="/signup"
               className={cn(
-                "hidden rounded-full px-5 py-2.5 text-sm font-medium transition-colors duration-[350ms] ease-in-out sm:inline-block",
-                scrolled ? "bg-charcoal text-canvas-white hover:bg-charcoal/85" : "bg-canvas-white text-charcoal hover:bg-canvas-white/85"
+                // Same label and colour as the inner-page nav's Sign up button.
+                "hidden rounded-full bg-terracotta px-5 py-2.5 text-sm font-medium text-white transition-colors duration-[350ms] ease-in-out hover:bg-rust-dark sm:inline-block"
               )}
             >
-              Get started
+              Sign up
             </Link>
           </>
         )}
