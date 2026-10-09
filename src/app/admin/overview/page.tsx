@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { IconAlertTriangle, IconArrowRight } from "@tabler/icons-react";
 
 import { Card } from "@/components/ui/card";
+import { NotifyWaitlistButton } from "@/components/admin/notify-waitlist-button";
 import { getSession } from "@/lib/auth/session";
 import { isSafeguardingLead } from "@/lib/safeguarding/leads";
 import { getAdminOverview, type AdminQueue } from "@/lib/admin/overview";
@@ -123,6 +124,7 @@ export default async function AdminOverviewPage() {
             />
             <Figure label="Confirmed sessions, next 7 days" value={String(platform.sessionsNext7Days)} />
             <Figure label="Families waiting for therapists" value={String(platform.waitlist)} />
+            <NotifyWaitlistButton waiting={platform.waitlist} liveTherapists={platform.liveTherapists} />
           </Card>
         </div>
       </div>

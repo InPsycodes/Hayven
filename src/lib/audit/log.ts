@@ -74,6 +74,7 @@ export type AuditAction =
   | "safeguarding_concern.update"
   | "credential.insurance_upload"
   | "therapist_agreement.accept"
+  | "waitlist.notify"
   | "auth.sign_in"
   | "auth.mfa_enrolled"
   | "auth.mfa_disabled";
