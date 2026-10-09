@@ -1,4 +1,4 @@
-# Safeguarding procedure — DRAFT
+# Safeguarding procedure (DRAFT)
 
 **Responsible entity:** Hayven Health Limited (RC 9879135), registered at No. 17,
 Aganga Williams, Ogba, Ikeja, Lagos State, Nigeria.
@@ -23,8 +23,8 @@ raised by a parent, a therapist, a supervisor, or surfaced by the platform.
 
 | Role | Person | Contact | Cover |
 |---|---|---|---|
-| Designated Safeguarding Lead (DSL) — receives and decides on every concern | Ademola Yusuf (Founder), named 2026-09-23 | +2348122832137 / hayvenmind@gmail.com | Deputy DSL below |
-| Deputy DSL — acts when the DSL is unavailable | Yusuf Omotoyosi, named 2026-09-23 | +2348022884563 / motoyo25@gmail.com | — |
+| Designated Safeguarding Lead (DSL): receives and decides on every concern | Ademola Yusuf (Founder), named 2026-09-23 | +2348122832137 / hayvenmind@gmail.com | Deputy DSL below |
+| Deputy DSL: acts when the DSL is unavailable | Yusuf Omotoyosi, named 2026-09-23 | +2348022884563 / motoyo25@gmail.com | None |
 
 The DSL should be a specific named person, reachable the same working day,
 with the authority to contact a family or an external authority without
@@ -32,11 +32,11 @@ waiting for anyone else's sign-off.
 
 **Both roles named; still not fully operative.** Naming a DSL and a Deputy
 closes the "nobody owns this, no cover" gap this document has flagged since
-its first draft — the single-point-of-failure risk of one person (Ademola
+its first draft. The single-point-of-failure risk of one person (Ademola
 Yusuf) holding founder, DPO, and DSL simultaneously is now mitigated by a
 distinct deputy who can act if the DSL is unreachable. The sections below
 now have draft answers (2026-10-08) for the escalation channel, the external
-referral authority, and the admin steps for a therapist conduct concern —
+referral authority, and the admin steps for a therapist conduct concern,
 researched against public Lagos State/Nigerian sources, not yet reviewed by
 a safeguarding adviser or counsel (see §9). The Deputy DSL should also be
 briefed on §3–§6 before being relied on in practice, not just named.
@@ -44,7 +44,7 @@ briefed on §3–§6 before being relied on in practice, not just named.
 **Real gap found while drafting this revision: the Deputy DSL cannot
 currently act.** §5.3's admin steps (ending an assignment, suspending an
 account) require an admin account on the platform. Ademola Yusuf (the DSL)
-has one as founder; Yusuf Omotoyosi (the Deputy DSL) does not — his admin
+has one as founder; Yusuf Omotoyosi (the Deputy DSL) does not; his admin
 grant is still on hold. Until that's resolved, "the Deputy DSL acts when the
 DSL is unavailable" is only true for the listening/noting/contacting-family
 parts of this procedure, not for the platform-access parts of §5.3.
@@ -55,14 +55,14 @@ Any of the following goes to the DSL:
 
 - A **parent discloses** something suggesting a child is being harmed, is at
   risk, or is unsafe at home.
-- A **therapist raises a concern** — through the in-app support channel, a
-  message, or directly — about a child they're seeing.
+- A **therapist raises a concern** (through the in-app support channel, a
+  message, or directly) about a child they're seeing.
 - A **session report contains flagged language.** The report generator
   (`src/lib/reports/safety.ts`, `detectFlaggedPhrases`) already surfaces a
   warning to the therapist before they publish, for phrases including:
   *suspected seizure, seizure, self-harm, suicid\*, abuse, police, child
   protective / CPS, bruise, injury at home, parents arguing, lack of
-  sleep.* A flag is a prompt to think, not proof of anything — but every
+  sleep.* A flag is a prompt to think, not proof of anything, but every
   flagged report that gets published (or that the therapist is unsure
   about) should also be raised with the DSL.
 - The platform is asked to hand over a child's records by anyone other than
@@ -74,14 +74,14 @@ When in doubt: raise it. Over-reporting to the DSL is fine; the DSL filters.
 
 1. **Listen and note, don't investigate.** Write down what was actually
    said or seen, in the person's own words where possible, with the date
-   and time. Do not question the child or push a parent for detail — that
+   and time. Do not question the child or push a parent for detail, because that
    can compromise a later formal process.
 2. **Don't promise secrecy.** If a parent or therapist asks you to keep it
    confidential, say plainly that you have to pass safety concerns to the
    person responsible for them, but that it will be handled carefully and
    shared only with those who need to know.
 3. **Pass it to the DSL the same working day.** Call or message the DSL
-   directly on the contact in §2 (+2348122832137 / hayvenmind@gmail.com) —
+   directly on the contact in §2 (+2348122832137 / hayvenmind@gmail.com):
    phone for anything urgent, email when it can wait a few hours. If the DSL
    doesn't respond within an hour on something urgent, go to the Deputy DSL
    on the same basis. There's no separate form or shared inbox for this on
@@ -96,50 +96,50 @@ When in doubt: raise it. Over-reporting to the DSL is fine; the DSL filters.
 ## 5. What the DSL does
 
 1. **Log it** in the safeguarding record (see §7) within 24 hours of
-   receiving it — even if the decision is "no further action".
+   receiving it, even if the decision is "no further action".
 2. **Decide, and record the reasoning:**
-   - *Monitor* — note it, ask the therapist to watch, review by a set date.
-   - *Contact the family* — a direct, non-judgmental conversation.
-   - *Refer externally* — to the **Lagos State Domestic and Sexual Violence
+   - *Monitor:* note it, ask the therapist to watch, review by a set date.
+   - *Contact the family:* a direct, non-judgmental conversation.
+   - *Refer externally:* to the **Lagos State Domestic and Sexual Violence
      Response Team (DSVRT)**, toll-free 24/7 on **0800 033 3333**
      (www.dsvrtlagos.org), which takes reports of child abuse, neglect and
      maltreatment as well as domestic/sexual violence, or to the **Lagos
      State Child Protection Unit** (Ministry of Youth and Social
-     Development, Alausa — 08023079008 / 09077333426 / 08172437792) for a
+     Development, Alausa; 08023079008 / 09077333426 / 08172437792) for a
      formal child-welfare referral. If a child under Hayven's care is based
-     outside Lagos State, use that state's equivalent — the DSL should
+     outside Lagos State, use that state's equivalent. The DSL should
      confirm the right contact at the time, not assume DSVRT covers it.
      **This is current as of a 2026-10-08 web search, not a legal
-     confirmation — the safeguarding adviser/counsel in §9 should verify
+     confirmation. The safeguarding adviser/counsel in §9 should verify
      these are still the correct, current contacts before this procedure is
      adopted**, and re-check periodically after.
-   - *Immediate escalation* — Nigeria Police, **112**, if a child is in
+   - *Immediate escalation:* Nigeria Police, **112**, if a child is in
      danger now.
-3. **Manage the therapist relationship** — if the concern is *about* a
+3. **Manage the therapist relationship** if the concern is *about* a
    therapist's conduct:
    - **End their access to that specific child immediately**: Admin →
      the child's care team → end that therapist-child assignment. This
      revokes their access to the child's record right away.
    - **Decide on the wider account** while it's looked into: either
-     **suspend the account** (Admin → Accounts → Suspend — blocks all
+     **suspend the account** (Admin → Accounts → Suspend; this blocks all
      platform access immediately, including any other children on their
      caseload) if the concern is serious enough to pull them off everything,
      or **offboard** (ends every assignment and cancels future bookings,
      without blocking login) if a full removal from caseload is right but
      an outright suspension isn't yet warranted. The DSL decides which;
-     when in doubt, suspend — it's reversible, and under-reacting to a
+     when in doubt, suspend. It's reversible, and under-reacting to a
      conduct concern is the worse failure mode.
-4. **Close the loop** — record the outcome and any review date. Tell the
+4. **Close the loop:** record the outcome and any review date. Tell the
    person who raised it that it was actioned (not necessarily the detail).
 
 ## 6. What NOT to do
 
 - Don't run your own investigation or gather "evidence".
-- Don't delay because you're not certain — that's the DSL's call, not yours.
+- Don't delay because you're not certain. That's the DSL's call, not yours.
 - Don't discuss it beyond the DSL and people who need to act.
 - Don't note it in a place the family or an accused therapist can read
   (e.g. a parent-visible report field, a shared channel).
-- Don't let a safeguarding concern sit in a general support queue — it
+- Don't let a safeguarding concern sit in a general support queue. It
   jumps the queue, straight to the DSL.
 
 ## 7. Records
@@ -147,26 +147,26 @@ When in doubt: raise it. Over-reporting to the DSL is fine; the DSL filters.
 - Safeguarding records are kept in the **in-app safeguarding log** (built
   2026-10-09, migration `0104`), at **Admin → Safeguarding**. It sits apart
   from every clinical table: no therapist, supervisor, or parent session
-  has any database access to it at all (no policies, no grants — the
+  has any database access to it at all (no policies, no grants: the
   same lockdown as the audit log), and the pages are visible only to the
   accounts designated as DSL / Deputy DSL. Every change to a record is
   appended to that record's own history, which cannot be edited or deleted.
 - Concerns arrive two ways: a therapist raises one from **Safeguarding** in
   their sidebar (also linked from Help), or the platform logs one
-  automatically when a report is published whose session — including the
-  confidential note — contains safety-related wording. Both alert the DSL
+  automatically when a report is published whose session (including the
+  confidential note) contains safety-related wording. Both alert the DSL
   and Deputy DSL in-app, by email and by push, with no child's name in the
   alert itself.
 - The form is a record, not a replacement for §4.3: a therapist still
   phones the DSL for anything urgent, and the page tells them so.
 - Retention: **no Nigeria-specific statutory period was found for
   safeguarding/child-protection records specifically.** The Nigeria Data
-  Protection Act 2023 sets a general principle — keep personal data no
-  longer than necessary for its purpose — and explicitly preserves the
+  Protection Act 2023 sets a general principle (keep personal data no
+  longer than necessary for its purpose) and explicitly preserves the
   Child's Rights Act 2003's primacy over children's data, but neither
   specifies a retention period for this category of record. A commonly used
   international default for child-protection records (not Nigeria-specific)
-  is **until the child turns 18, plus a buffer of several years** — proposed
+  is **until the child turns 18, plus a buffer of several years**, proposed
   here as a starting point, not a settled answer. **Counsel must confirm
   the right period under Nigerian law** (and whether the Child's Rights Act
   or NDPC guidance says anything more specific) before this is adopted.
@@ -176,11 +176,11 @@ When in doubt: raise it. Over-reporting to the DSL is fine; the DSL filters.
 ## 8. Review
 
 - This procedure is reviewed **annually, and after any incident that uses
-  it** (whichever comes first resets the clock) — a single "annually or"
+  it** (whichever comes first resets the clock). A single "annually or"
   choice lets a bad incident go unreviewed for up to a year; both triggers
   closes that gap. Owned by the DSL.
 - Every therapist accepts it at onboarding and it's linked from their
-  dashboard. **Not yet built.** Once this procedure is adopted (not before —
+  dashboard. **Not yet built.** Once this procedure is adopted (not before;
   there's no point asking therapists to accept a draft), this needs: a
   clause in the Therapist Agreement referencing it, an explicit acceptance
   step in therapist onboarding (same shape as the existing Terms/Privacy
@@ -189,28 +189,28 @@ When in doubt: raise it. Over-reporting to the DSL is fine; the DSL filters.
 
 ## 9. Open items before this is operative
 
-- [ ] **Legal review** — confirm the draft referral authority (§5.2, Lagos
+- [ ] **Legal review:** confirm the draft referral authority (§5.2, Lagos
       DSVRT / Child Protection Unit), the draft retention period (§7, "until
       18 plus a buffer" is a placeholder), and whether Nigerian law imposes
       any mandatory-reporting duty beyond what §3–§5 already describe.
-- [ ] **Safeguarding adviser review of §3–§6** — the draft escalation
+- [ ] **Safeguarding adviser review of §3–§6:** the draft escalation
       channel, concern triage, and DSL decision process (2026-10-08) have
       not been reviewed by anyone with safeguarding expertise.
-- [x] Name the DSL — **Ademola Yusuf (Founder), named 2026-09-23**, contact
+- [x] Name the DSL: **Ademola Yusuf (Founder), named 2026-09-23**, contact
       published in §2.
-- [x] Name a Deputy DSL — **Yusuf Omotoyosi, named 2026-09-23**, contact
+- [x] Name a Deputy DSL: **Yusuf Omotoyosi, named 2026-09-23**, contact
       published in §2. Still needed: brief the deputy on §3–§6, **and grant
-      the Deputy DSL an admin account** — without one, he cannot execute
+      the Deputy DSL an admin account**. Without one, he cannot execute
       §5.3's access-control steps if the DSL is unreachable (see §2).
-- [x] Decide where safeguarding records live and build it — **in-app
+- [x] Decide where safeguarding records live and build it: **in-app
       safeguarding log, built 2026-10-09** (§7). Still needed: run migration
       `0104`, then designate the DSL and Deputy DSL accounts with the SQL
       at the top of that migration (until then, every admin sees it).
 - [x] Add the "raise a safeguarding concern" route in-app, distinct from
-      general support — **built 2026-10-09** (`/therapist/safeguarding`).
-- [ ] The therapist-onboarding acceptance step (§8) — hold until this
+      general support: **built 2026-10-09** (`/therapist/safeguarding`).
+- [ ] The therapist-onboarding acceptance step (§8): hold until this
       procedure is adopted.
 - [x] DSL notification when a report with safety-related wording is
-      published — **built 2026-10-09** (§7). The adviser should review the
+      published: **built 2026-10-09** (§7). The adviser should review the
       phrase list that triggers it (`SAFEGUARDING_PHRASES` in
       `src/lib/reports/safety.ts`).

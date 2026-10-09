@@ -1,4 +1,4 @@
-# Review Pack — Legal Counsel and Safeguarding Adviser
+# Review Pack: Legal Counsel and Safeguarding Adviser
 
 **Hayven Health Limited** (RC 9879135), No. 17, Aganga Williams, Ogba, Ikeja, Lagos State.
 **Prepared:** 2026-10-09. **Contact:** Ademola Yusuf, Founder, DPO and Designated
@@ -29,9 +29,9 @@ professional. **Please treat nothing in them as settled.**
 | Safeguarding procedure (`safeguarding-procedure.md`) | §5.2, §7, §9 | **All, especially §3–§6** |
 | Data Protection Impact Assessment (`data-protection-impact-assessment.md`) | **All** | §4 (children) |
 | Therapist Agreement (`therapist-agreement.md`) | **All** | §6 (conduct) |
-| Breach response runbook (`breach-response-runbook.md`) | §6–§7 | — |
-| Privacy Policy and Terms of Service (live at hayven.com.ng/privacy and /terms) | **All** | — |
-| Counsel briefing (`counsel-briefing-legal-review.md`) | Detail behind questions C5, C8 and C10–C13 | — |
+| Breach response runbook (`breach-response-runbook.md`) | §6–§7 | Not needed |
+| Privacy Policy and Terms of Service (live at hayven.com.ng/privacy and /terms) | **All** | Not needed |
+| Counsel briefing (`counsel-briefing-legal-review.md`) | Detail behind questions C5, C8 and C10–C13 | Not needed |
 
 ---
 
