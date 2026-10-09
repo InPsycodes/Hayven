@@ -12,6 +12,7 @@ import { StartHere } from "@/components/learn/start-here";
 import { GuideGrid, type GuideGridItem } from "@/components/learn/guide-grid";
 import { LearnCta } from "@/components/learn/learn-cta";
 import { Icon } from "@/components/ui/icon";
+import { GuideCover } from "@/components/learn/guide-card";
 import { LEARN_TOPIC_META } from "@/content/marketing/learn-topics";
 import { LEARN_PATHS, getLearnPath } from "@/content/marketing/learn-paths";
 import { readingLabel } from "@/lib/learning/reading";
@@ -226,7 +227,7 @@ function FeaturedHero({ article }: { article: RealLearningArticle }) {
             className="photo-treatment size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
         ) : (
-          meta && <Icon icon={meta.icon} size="lg" className="text-canvas-white/85" />
+          <GuideCover categoryName={article.categoryName} className="text-canvas-white" large />
         )}
       </div>
     </Link>

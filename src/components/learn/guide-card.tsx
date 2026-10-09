@@ -38,11 +38,7 @@ export function GuideCard({ guide, compact = false }: { guide: GuideCardData; co
             className="photo-treatment size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
         ) : (
-          <div
-            className={`flex size-full items-center justify-center ${meta?.tileClass ?? "bg-paper text-ink-soft"}`}
-          >
-            {meta && <Icon icon={meta.icon} size="lg" />}
-          </div>
+          <GuideCover categoryName={guide.categoryName} className={meta?.tileClass ?? "bg-paper text-ink-soft"} />
         )}
       </div>
 
@@ -77,5 +73,39 @@ export function GuideCard({ guide, compact = false }: { guide: GuideCardData; co
         )}
       </div>
     </Link>
+  );
+}
+
+/**
+ * Stand-in for a guide with no illustration yet: the topic name set large
+ * in the serif face, with two soft discs and a faint topic icon, in the
+ * topic's own tint. Reads as a deliberate cover rather than an empty box.
+ */
+export function GuideCover({
+  categoryName,
+  className,
+  large = false,
+}: {
+  categoryName: string | null;
+  className: string;
+  large?: boolean;
+}) {
+  const meta = categoryName ? LEARN_TOPIC_META[categoryName] : undefined;
+  return (
+    <div className={`relative flex size-full items-end overflow-hidden ${large ? "p-8" : "p-5"} ${className}`}>
+      <span aria-hidden className="absolute -top-6 -right-6 size-28 rounded-full bg-current opacity-[0.09]" />
+      <span aria-hidden className="absolute bottom-6 -left-10 size-24 rounded-full bg-current opacity-[0.06]" />
+      {meta && (
+        <Icon
+          icon={meta.icon}
+          size="lg"
+          aria-hidden
+          className={`absolute opacity-40 ${large ? "top-8 right-8" : "top-5 right-5"}`}
+        />
+      )}
+      <span className={`relative font-serif leading-none ${large ? "text-4xl md:text-5xl" : "text-2xl"}`}>
+        {categoryName ?? "Guide"}
+      </span>
+    </div>
   );
 }
