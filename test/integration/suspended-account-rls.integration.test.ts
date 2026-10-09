@@ -9,7 +9,6 @@ import {
   cleanupAll,
   testAdminClient,
   trackForCleanup,
-  enrollAndVerifyMfa,
 } from "./helpers";
 import { setUserAccountStatus } from "@/lib/admin/actions";
 
@@ -58,7 +57,7 @@ describe("AUTH-01 regression: suspension actually revokes RLS access", () => {
     expect(before.error).toBeNull();
     expect(before.data?.id).toBe(child.id);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     const result = await setUserAccountStatus(therapist.userId, "suspended");
     expect(result.ok).toBe(true);
 
@@ -79,7 +78,7 @@ describe("AUTH-01 regression: suspension actually revokes RLS access", () => {
     const before = await parentClient.from("children").select("id").eq("id", child.id).maybeSingle();
     expect(before.data?.id).toBe(child.id);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     await setUserAccountStatus(parent.userId, "suspended");
 
     const after = await parentClient.from("children").select("id").eq("id", child.id).maybeSingle();
@@ -91,7 +90,7 @@ describe("AUTH-01 regression: suspension actually revokes RLS access", () => {
     const child = await createTestChild(parent.userId);
     const adminUser = await makeTestAdmin();
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     await setUserAccountStatus(parent.userId, "suspended");
 
     // ban_duration should now block a fresh sign-in too, not just RLS.

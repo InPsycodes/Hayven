@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * Landing point for "Continue with Google". Google sign-in is for parents
- * only: therapists and admins keep password + two-factor, so an existing
+ * only: therapists and admins sign in with email and password, so an existing
  * non-parent account (Supabase links identities by verified email) is signed
  * straight back out here rather than handed a Google session that skips the
  * admin sign-in audit trail. New Google accounts are always created as

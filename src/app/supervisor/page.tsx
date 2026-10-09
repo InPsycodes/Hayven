@@ -165,7 +165,7 @@ export default async function SupervisorTeamPage() {
             <div className="mt-2 flex items-start gap-2.5">
               <IconShieldLock size={18} stroke={1.75} className="mt-0.5 shrink-0 text-care-accent" />
               <p className="text-[12.5px] leading-relaxed text-care-ink-soft">
-                Notifications and two-factor authentication.
+                Your email notification preferences.
               </p>
             </div>
           </CarePanel>

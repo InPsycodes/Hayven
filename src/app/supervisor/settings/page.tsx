@@ -3,11 +3,9 @@ import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { EmailPreferenceToggles } from "@/components/shared/email-preference-toggles";
 import { LogoutButton } from "@/components/shared/logout-button";
-import { MfaSection } from "@/components/shared/mfa-section";
 import { PushNotificationsToggle } from "@/components/shared/push-notifications-toggle";
 import { Card } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
-import { getMfaStatus } from "@/lib/auth/mfa-actions";
 import { getMyEmailPreferences } from "@/lib/notifications/preferences-server";
 
 export default async function SupervisorSettingsPage() {
@@ -16,7 +14,7 @@ export default async function SupervisorSettingsPage() {
     redirect("/login");
   }
 
-  const [mfaStatus, emailPrefs] = await Promise.all([getMfaStatus(), getMyEmailPreferences()]);
+  const emailPrefs = await getMyEmailPreferences();
 
   return (
     <div>
@@ -35,8 +33,6 @@ export default async function SupervisorSettingsPage() {
           </p>
           <EmailPreferenceToggles initial={emailPrefs} />
         </Card>
-
-        <MfaSection initialStatus={mfaStatus} />
         <LogoutButton className="text-muted-foreground hover:text-charcoal" />
       </div>
     </div>

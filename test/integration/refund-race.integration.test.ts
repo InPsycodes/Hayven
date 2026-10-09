@@ -10,7 +10,6 @@ import {
   cleanupAll,
   testAdminClient,
   trackForCleanup,
-  enrollAndVerifyMfa,
 } from "./helpers";
 import { paystackMock } from "./mocks";
 import { processRefund } from "@/lib/admin/actions";
@@ -79,7 +78,7 @@ describe("BOOK-03 regression: a refund can't be processed twice", () => {
     if (paymentError || !payment) throw new Error(`payment fixture failed: ${paymentError?.message}`);
     trackForCleanup("payments", payment.id);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
 
     const [a, b] = await Promise.all([processRefund(payment.id), processRefund(payment.id)]);
     const results = [a, b];
@@ -136,7 +135,7 @@ describe("BOOK-03 regression: a refund can't be processed twice", () => {
     if (paymentError || !payment) throw new Error(`payment fixture failed: ${paymentError?.message}`);
     trackForCleanup("payments", payment.id);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
 
     paystackMock.createRefund.mockRejectedValueOnce(new Error("Paystack is briefly unavailable"));
     const first = await processRefund(payment.id);

@@ -11,7 +11,7 @@ import { getSafeguardingLeadIds } from "./leads";
  * Notifies the safeguarding leads that a concern needs them. Deliberately
  * generic -- no child name, no detail: the email lands in an inbox and the
  * push on a lock screen. The detail is one click away, behind the admin
- * login + MFA.
+ * login.
  */
 export async function notifySafeguardingLeads(concernId: string, immediateDanger: boolean): Promise<void> {
   const { ids } = await getSafeguardingLeadIds();

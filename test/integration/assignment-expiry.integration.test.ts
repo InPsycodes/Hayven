@@ -10,7 +10,6 @@ import {
   cleanupAll,
   testAdminClient,
   trackForCleanup,
-  enrollAndVerifyMfa,
 } from "./helpers";
 import { expireInactiveAssignments } from "@/lib/assignments/cron";
 import { endTherapistChildAssignment, renewTherapistChildAssignment } from "@/lib/admin/actions";
@@ -168,7 +167,7 @@ describe("E5 regression: assignment renewal", () => {
       .update({ status: "expired", ended_on: HUNDRED_DAYS_AGO, ended_reason: "inactivity" })
       .eq("id", assignmentId);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
 
     const result = await renewTherapistChildAssignment(assignmentId);
     expect(result.ok).toBe(true);
@@ -200,7 +199,7 @@ describe("E5 regression: manual ending records a reason", () => {
 
     const assignmentId = await createAssignment(therapist.therapistProfileId, child.id, HUNDRED_DAYS_AGO);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
 
     const result = await endTherapistChildAssignment(assignmentId);
     expect(result.ok).toBe(true);

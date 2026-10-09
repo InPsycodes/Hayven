@@ -15,12 +15,10 @@ import { EmailPreferenceToggles } from "@/components/shared/email-preference-tog
 import { PushNotificationsToggle } from "@/components/shared/push-notifications-toggle";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
-import { MfaSection } from "@/components/shared/mfa-section";
 import { SupervisorAccessSection } from "@/components/therapist/supervisor-access-section";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId, getMySupervisorRequestStatus } from "@/lib/therapist/queries";
 import { getRealAccountInfo, getRealPendingDeletionRequest } from "@/lib/account/queries";
-import { getMfaStatus } from "@/lib/auth/mfa-actions";
 import { getMyEmailPreferences } from "@/lib/notifications/preferences-server";
 import { getBankDetails } from "@/lib/payouts/queries";
 import { getCurrentInsurance } from "@/lib/therapist/agreement";
@@ -41,10 +39,9 @@ export default async function TherapistProfilePage() {
   const therapist = await getRealTherapistProfileByUserId(session.userId);
   if (!therapist) return <IncompleteProfileNotice />;
 
-  const [account, pendingDeletionRequest, mfaStatus, supervisorRequest, emailPrefs, bankDetails, insurance] = await Promise.all([
+  const [account, pendingDeletionRequest, supervisorRequest, emailPrefs, bankDetails, insurance] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealPendingDeletionRequest(session.userId),
-    getMfaStatus(),
     getMySupervisorRequestStatus(session.userId),
     getMyEmailPreferences(),
     getBankDetails(therapist.id),
@@ -119,8 +116,6 @@ export default async function TherapistProfilePage() {
           </p>
           <EmailPreferenceToggles initial={emailPrefs} />
         </Card>
-
-        <MfaSection initialStatus={mfaStatus} />
 
         <DeleteAccountSection pendingRequest={pendingDeletionRequest} />
 

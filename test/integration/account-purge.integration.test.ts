@@ -11,7 +11,6 @@ import {
   cleanupAll,
   testAdminClient,
   trackForCleanup,
-  enrollAndVerifyMfa,
   type TestParent,
 } from "./helpers";
 import { purgeAccountPersonalData } from "@/lib/account/purge";
@@ -123,7 +122,7 @@ describe("E3 regression: account personal-data purge", () => {
     const adminUser = await makeTestAdmin();
     const requestId = await insertDeletionRequest(parent.userId);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     const result = await reviewAccountDeletionRequest(requestId, "actioned");
     expect(result.ok).toBe(true);
 

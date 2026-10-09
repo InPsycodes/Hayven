@@ -7,7 +7,7 @@ import { roleHomePath } from "@/lib/auth/role-path";
  * lives under a specific subpath. Without this, visiting/bookmarking
  * /admin directly 404s with a bare, unstyled Next.js error page (no nav,
  * no way back into the app) instead of landing somewhere useful. The admin
- * layout above this still applies its own auth/MFA gating either way.
+ * layout above this still applies its own auth gating either way.
  */
 export default function AdminIndexPage() {
   redirect(roleHomePath("admin"));

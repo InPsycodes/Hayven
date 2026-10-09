@@ -56,6 +56,13 @@ and the underlying lawful-basis question for referral data (risk #14, Part A of
 two-factor changes, closing a gap cross-role QA found: admins' own security-relevant
 actions were absent from the trail that exists to show who did what. Covered by a
 new integration test against a real database.
+**Updated 2026-10-09 (IX): two-factor authentication removed.** At the owner's
+decision, the authenticator-app second factor was removed from the platform for
+every role, including admins (no account had one set up at the time). Sign-in is
+now email + password, or Google for parents. This raises the residual rating of
+risk #1 (§11) and reverses the step-up safeguard in §9.1; counsel and the DPO
+should weigh whether that's acceptable for accounts that can read children's
+clinical data and the safeguarding log.
 **System assessed:** Hayven (paediatric-therapy marketplace web application and PWA)
 **Data controller:** Hayven Health Limited (RC 9879135), registered at No. 17, Aganga
 Williams, Ogba, Ikeja, Lagos State, Nigeria — incorporated 2026-09-22; added once
@@ -394,8 +401,9 @@ aspirational language.
 - Sensitive columns (`role`, `verification_status`, `confidential_note`,
   `reviewer_notes`, `debug_payload`) are column-ACL-revoked-and-regranted, not merely
   row-scoped.
-- MFA (TOTP) with step-up enforcement, checked centrally (`getSession`), not only at
-  the login form.
+- ~~MFA (TOTP) with step-up enforcement~~ — **removed 2026-10-09** (see update IX
+  above). Every account now relies on its password (or Google, for parents), plus
+  login rate-limiting and account suspension.
 - Signup role is server-validated against an allowlist (parent/therapist only) — no
   self-service path to an admin or supervisor account.
 - An explicit, separate checkbox at child-add time (migration `0081`,
@@ -465,8 +473,8 @@ An `audit_log` table (service-role-only, no user-facing grant) records sensitive
 administrative actions — verification decisions, clinical record access patterns,
 payout runs, refund decisions — with actor, action, and metadata. Since
 2026-09-23 it also records privileged-access events, which cross-role QA found
-were missing: every admin sign-in (flagged with whether a second factor was
-used), and any account turning two-factor authentication on or off. Ordinary
+were missing: every admin sign-in (and, until two-factor was removed on
+2026-10-09, any account turning it on or off). Ordinary
 parent and therapist sign-ins are deliberately not logged, to keep the log
 meaningful rather than noisy.
 
@@ -555,7 +563,7 @@ owns this document.
 
 | # | Risk | Data subject | Likelihood | Severity | Mitigation | Residual risk |
 |---|---|---|---|---|---|---|
-| 1 | Account compromised (credential stuffing, phishing), exposing a child's clinical record | Child | Medium | High | MFA + step-up, rate-limited login; suspension now revokes an existing session's RLS access (§9.1, AUTH-01) | Low-Medium — MFA is opt-in, not mandatory |
+| 1 | Account compromised (credential stuffing, phishing), exposing a child's clinical record | Child | Medium | High | Rate-limited login; suspension now revokes an existing session's RLS access (§9.1, AUTH-01). Two-factor removed 2026-10-09. | **Medium** — password-only for every role, including admins |
 | 2 | A therapist queries or is granted access to a child not assigned to them | Child | Low | High | RLS row-scoping, hardened further by 5 findings in the second audit (§9.1) | Low — DB-enforced, 92 regression tests |
 | 3 | A credential upload contains malware, or a spoofed file type | Therapist, platform | Low | Medium | Magic-byte + fail-closed AV scan (§9.2) | Low |
 | 4 | Analytics tooling captures identifying or clinical data by accident | Child, parent | Low — structurally prevented, not just policy | High if it occurred | Allowlist-based `sanitizeProps` (§9.3) | Low |
@@ -630,8 +638,8 @@ gate a decision to process real children's clinical data at volume.
 
 ### 🟠 P1 — before meaningful scale
 
-11. **Consider making MFA mandatory, not opt-in**, for any account with access to
-    clinical data (risk #1).
+11. **Reconsider the 2026-10-09 removal of two-factor authentication** for accounts
+    with access to clinical data, admins first (risk #1).
 12. **Resolve the Google Analytics processing-location question** (§6, risk #8), then
     feed the answer into the Privacy Policy's international-transfers section.
 13. **Adopt a clinical-information-governance policy** (§9.7) answering who decides
@@ -739,7 +747,8 @@ measures section stay in sync rather than duplicating slightly different orderin
 
 ### P1 (before meaningful scale)
 
-- [ ] Decide whether MFA becomes mandatory for therapist/supervisor/admin roles.
+- [x] Decide on MFA for therapist/supervisor/admin roles — **decided 2026-10-09:
+      removed for all roles** (owner's decision). Residual risk #1 raised to Medium.
 - [ ] Confirm Google Analytics' processing location and its NDPA transfer mechanism.
 - [ ] Adopt a clinical-information-governance policy (§9.7).
 - [x] Minimise the public referral form's free-text field — **done, 2026-09-23**

@@ -80,8 +80,7 @@ Do this on staging or the restored copy, never on production.
 - [ ] The latest migration's objects exist (for example the `caller_is_active` and
       `is_supervised_report` functions) and no migration is missing.
 - [ ] The same tables have RLS enabled as before.
-- [ ] A QA parent, therapist and admin can each log in, and the admin still has to
-      complete two-factor.
+- [ ] A QA parent, therapist and admin can each log in.
 - [ ] A therapist still cannot read a child who is not assigned to them (run the RLS
       integration tests against the restored copy).
 - [ ] The newest `audit_log` entry is close to T1, not older.

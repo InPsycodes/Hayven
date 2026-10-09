@@ -52,7 +52,6 @@ export async function updateSupabaseSession(request: NextRequest, resolveRole = 
 
   let role: UserRole | null = null;
   let isSupervisor = false;
-  let mfaEnrolled = false;
   if (user && resolveRole) {
     const { data: profile } = await supabase
       .from("users")
@@ -61,20 +60,7 @@ export async function updateSupabaseSession(request: NextRequest, resolveRole = 
       .single();
     role = (profile?.role as UserRole) ?? null;
     isSupervisor = profile?.is_supervisor === true;
-
-    // nextLevel only ever becomes "aal2" once a verified factor exists on
-    // the account -- true here regardless of whether *this* session has
-    // actually stepped up to it yet. That per-session step-up is a
-    // different, already-covered check: getSession() (src/lib/auth/
-    // session.ts) separately rejects a session sitting at aal1 when
-    // nextLevel is aal2, on every page load, for every role. What nothing
-    // checked before this was whether an admin had enrolled a factor AT
-    // ALL -- nextLevel just stays "aal1" forever for an account with zero
-    // factors, and getSession()'s check never fires because there's
-    // nothing to step up to.
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    mfaEnrolled = aal?.nextLevel === "aal2";
   }
 
-  return { response, user, role, isSupervisor, mfaEnrolled };
+  return { response, user, role, isSupervisor };
 }

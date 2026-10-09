@@ -26,7 +26,6 @@ export type SignUpResult =
 
 export type SignInResult =
   | { ok: true; role: UserRole; userId: string }
-  | { ok: true; mfaRequired: true; factorId: string }
   | { ok: false; error: string };
 
 export async function signUp(input: SignUpInput): Promise<SignUpResult> {
@@ -138,7 +137,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
     return { ok: false, error: "Account setup isn't finished yet. Please try again shortly." };
   }
 
-  // Checked before MFA, with an explicit message -- getSession() also
+  // Checked here, with an explicit message -- getSession() also
   // enforces this everywhere else, but silently failing here would leave
   // someone stuck in a confusing "password worked, then nothing loads" loop
   // instead of a clear explanation. This is the actual mechanism the
@@ -147,33 +146,14 @@ export async function signIn(email: string, password: string): Promise<SignInRes
     return { ok: false, error: "This account has been suspended. Contact support for help." };
   }
 
-  // Password verified is only AAL1 -- an account with an enrolled MFA
-  // factor needs the second-factor step before it's a completed login.
-  // getSession() enforces this same check everywhere else in the app; this
-  // is what turns it into an explicit "enter your code" prompt instead of a
-  // confusing bounce back to /login on the very next page load.
-  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
-    const { data: factors } = await supabase.auth.mfa.listFactors();
-    const factorId = factors?.totp.find((f) => f.status === "verified")?.id;
-    if (!factorId) {
-      return { ok: false, error: "Couldn't complete two-factor sign-in. Please try again." };
-    }
-    return { ok: true, mfaRequired: true, factorId };
-  }
-
-  // A completed sign-in with no second-factor step. Admins only: this log
-  // exists so privileged access is traceable, and logging every parent
-  // login would just be volume. An admin signing in *without* MFA is worth
-  // seeing on its own (mfa: false), since admin routes require enrollment.
-  // The MFA path logs from verifyMfaLogin instead, once the code checks out.
+  // Admins only: this log exists so privileged access is traceable, and
+  // logging every parent login would just be volume.
   if (profile.role === "admin") {
     await logAuditEvent({
       actor: { userId: data.user.id, role: "admin" },
       action: "auth.sign_in",
       entityType: "user",
       entityId: data.user.id,
-      metadata: { mfa: false },
     });
   }
 

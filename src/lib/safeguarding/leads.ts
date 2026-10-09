@@ -10,7 +10,7 @@ import type { AppSession } from "@/lib/auth/session";
  * and before designation the only admin is the founder, who is the DSL.
  *
  * Leads must also be admins: the /admin/safeguarding pages sit behind the
- * admin layout (and its MFA requirement), so a non-admin lead row is
+ * admin layout, so a non-admin lead row is
  * ignored rather than half-working.
  */
 export async function getSafeguardingLeadIds(): Promise<{ ids: string[]; designated: boolean }> {

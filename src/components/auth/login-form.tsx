@@ -13,7 +13,6 @@ import { useSubmitGuard } from "@/hooks/use-submit-guard";
 import { useFieldErrors } from "@/hooks/use-field-errors";
 import { emailDomainSuggestion, emailFormatError } from "@/lib/validation/email";
 import { signIn } from "@/lib/auth/actions";
-import { verifyMfaLogin } from "@/lib/auth/mfa-actions";
 import { identifyUser } from "@/lib/analytics/client";
 import { roleHomePath } from "@/lib/auth/role-path";
 import type { UserRole } from "@/data/types";
@@ -41,9 +40,6 @@ export function LoginForm({
   const [isPending, startTransition] = useTransition();
   const { errors, clearFieldError, setFieldError, showErrors } = useFieldErrors();
   const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
-
-  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
-  const [mfaCode, setMfaCode] = useState("");
 
   function goHome(role: UserRole) {
     // A validated `next` (already relative-path-checked server-side in
@@ -76,79 +72,10 @@ export function LoginForm({
         loginGuard.reset();
         return;
       }
-      if ("mfaRequired" in result) {
-        setMfaFactorId(result.factorId);
-        loginGuard.reset();
-        return;
-      }
       identifyUser(result.userId, result.role);
       goHome(result.role);
     });
   });
-
-  const mfaGuard = useSubmitGuard();
-
-  const handleVerifyMfa = mfaGuard.guard((e: React.FormEvent) => {
-    e.preventDefault();
-    if (!mfaFactorId) return;
-    setError(null);
-    startTransition(async () => {
-      const result = await verifyMfaLogin(mfaFactorId, mfaCode);
-      if (!result.ok) {
-        setError(result.error);
-        mfaGuard.reset();
-        return;
-      }
-      identifyUser(result.userId, result.role);
-      goHome(result.role as UserRole);
-    });
-  });
-
-  if (mfaFactorId) {
-    return (
-      <form onSubmit={handleVerifyMfa} className="flex flex-col gap-5">
-        <div>
-          <h2 className="font-heading text-xl text-charcoal">Enter your code</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Open your authenticator app and enter the 6-digit code for Hayven.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="mfaCode">Verification code</Label>
-          <Input
-            id="mfaCode"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            required
-            autoFocus
-            maxLength={6}
-            value={mfaCode}
-            onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
-            placeholder="123456"
-          />
-        </div>
-
-        {error && <p className="text-sm text-error-text">{error}</p>}
-
-        <Button type="submit" size="lg" disabled={isPending || mfaCode.length !== 6} className="w-full">
-          {isPending ? "Verifying..." : "Verify"}
-        </Button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setMfaFactorId(null);
-            setMfaCode("");
-            setError(null);
-          }}
-          className="text-center text-sm text-muted-foreground hover:underline"
-        >
-          Back to log in
-        </button>
-      </form>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">

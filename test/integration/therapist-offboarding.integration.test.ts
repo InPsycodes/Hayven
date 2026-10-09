@@ -10,7 +10,6 @@ import {
   cleanupAll,
   testAdminClient,
   trackForCleanup,
-  enrollAndVerifyMfa,
 } from "./helpers";
 import { createPendingBooking } from "@/lib/booking/actions";
 import { offboardTherapist } from "@/lib/admin/actions";
@@ -126,7 +125,7 @@ describe("E12 regression: offboarding cascade", () => {
     });
     trackForCleanup("payments", reference, "gateway_reference");
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     const result = await offboardTherapist(therapist.userId);
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("unreachable");
@@ -193,7 +192,7 @@ describe("E12 regression: offboarding cascade", () => {
     if (bookingError || !booking) throw new Error(`booking fixture failed: ${bookingError?.message}`);
     trackForCleanup("bookings", booking.id);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     const result = await offboardTherapist(therapist.userId);
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("unreachable");
@@ -206,7 +205,7 @@ describe("E12 regression: offboarding cascade", () => {
   it("rejects offboarding a non-therapist account", async () => {
     const parent = await createTestParent();
     const adminUser = await makeTestAdmin();
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     const result = await offboardTherapist(parent.userId);
     expect(result.ok).toBe(false);
   });
@@ -223,7 +222,7 @@ describe("E12 regression: offboarding cascade", () => {
     await createActiveAssignment(therapist.therapistProfileId, childWithBackup.id);
     await createActiveAssignment(backupTherapist.therapistProfileId, childWithBackup.id);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     const result = await offboardTherapist(therapist.userId);
     expect(result.ok).toBe(true);
 
@@ -257,7 +256,7 @@ describe("E12 regression: offboarding cascade", () => {
     trackForCleanup("bookings", hold.bookingId);
     signOut();
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     const result = await offboardTherapist(therapist.userId);
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("unreachable");
@@ -298,7 +297,7 @@ describe("E12 regression: offboarding cascade", () => {
     // simulate a payment that was already mid-flight before the cascade's
     // own cancellation reached it -- exactly the race window this guard
     // exists for.
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     await offboardTherapist(therapist.userId);
     await admin
       .from("bookings")
@@ -344,7 +343,7 @@ describe("E12 regression: goal handover after departure", () => {
     if (goalError || !goal) throw new Error(`goal fixture failed: ${goalError?.message}`);
     trackForCleanup("goals", goal.id);
 
-    await enrollAndVerifyMfa(await signInAs(adminUser));
+    await signInAs(adminUser);
     await offboardTherapist(departed.userId);
     signOut();
 
