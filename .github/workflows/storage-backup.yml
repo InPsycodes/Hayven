@@ -84,10 +84,19 @@ jobs:
       # from the backup -- this is a mirror for disaster recovery, not a
       # version history. Add --backup-dir here later if point-in-time
       # recovery of individual deleted files becomes a requirement.
+      #
+      # --checksum: compares files by hash instead of size+modtime, so a
+      # steady-state night (nothing changed) never needs the
+      # set-modtime-after-upload call that hit "501 NotImplemented" against
+      # R2 on the very first run (the object itself still wrote
+      # successfully -- rclone's own retry recovered -- but that's a known
+      # R2 S3-API gap worth not depending on every night). --retries/
+      # --low-level-retries raised above rclone's defaults (3/10) so a
+      # transient R2 hiccup doesn't fail a night's backup outright.
       - name: Sync credentials bucket
         if: steps.check.outputs.configured == 'true'
-        run: rclone sync supabase:credentials "r2:$R2_BUCKET/credentials" --s3-no-check-bucket -v
+        run: rclone sync supabase:credentials "r2:$R2_BUCKET/credentials" --s3-no-check-bucket --checksum --retries 5 --low-level-retries 20 -v
 
       - name: Sync avatars bucket
         if: steps.check.outputs.configured == 'true'
-        run: rclone sync supabase:avatars "r2:$R2_BUCKET/avatars" --s3-no-check-bucket -v
+        run: rclone sync supabase:avatars "r2:$R2_BUCKET/avatars" --s3-no-check-bucket --checksum --retries 5 --low-level-retries 20 -v
