@@ -10,6 +10,7 @@ import { ProfileForm } from "@/components/shared/profile-form";
 import { ProfessionalProfileForm } from "@/components/therapist/professional-profile-form";
 import { TherapistPhotoCard } from "@/components/therapist/photo-card";
 import { TherapistBankCard } from "@/components/therapist/bank-card";
+import { TherapistInsuranceCard } from "@/components/therapist/insurance-card";
 import { EmailPreferenceToggles } from "@/components/shared/email-preference-toggles";
 import { PushNotificationsToggle } from "@/components/shared/push-notifications-toggle";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
@@ -22,6 +23,7 @@ import { getRealAccountInfo, getRealPendingDeletionRequest } from "@/lib/account
 import { getMfaStatus } from "@/lib/auth/mfa-actions";
 import { getMyEmailPreferences } from "@/lib/notifications/preferences-server";
 import { getBankDetails } from "@/lib/payouts/queries";
+import { getCurrentInsurance } from "@/lib/therapist/agreement";
 
 type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
 
@@ -39,13 +41,14 @@ export default async function TherapistProfilePage() {
   const therapist = await getRealTherapistProfileByUserId(session.userId);
   if (!therapist) return <IncompleteProfileNotice />;
 
-  const [account, pendingDeletionRequest, mfaStatus, supervisorRequest, emailPrefs, bankDetails] = await Promise.all([
+  const [account, pendingDeletionRequest, mfaStatus, supervisorRequest, emailPrefs, bankDetails, insurance] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealPendingDeletionRequest(session.userId),
     getMfaStatus(),
     getMySupervisorRequestStatus(session.userId),
     getMyEmailPreferences(),
     getBankDetails(therapist.id),
+    getCurrentInsurance(therapist.id),
   ]);
 
   const verification = VERIFICATION_LABEL[therapist.verificationStatus] ?? {
@@ -62,6 +65,8 @@ export default async function TherapistProfilePage() {
         <TherapistPhotoCard name={session.name} photoUrl={therapist.photoUrl} />
 
         <TherapistBankCard current={bankDetails} />
+
+        <TherapistInsuranceCard current={insurance} />
 
         <Card className="p-5">
           <div className="flex items-center justify-between">

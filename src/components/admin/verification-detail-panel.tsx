@@ -90,7 +90,13 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm text-charcoal">{cred.fileName}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {cred.issuingBody} · {formatDate(cred.uploadedAt)}
+                    {cred.documentType === "insurance" ? "Insurance: " : ""}
+                    {cred.issuingBody} · uploaded {formatDate(cred.uploadedAt)}
+                    {cred.expiresOn && (
+                      <span className={cred.expiresOn <= new Date().toISOString().slice(0, 10) ? "font-semibold text-error-text" : ""}>
+                        {" "}· cover ends {formatDate(cred.expiresOn)}
+                      </span>
+                    )}
                   </p>
                 </div>
                 {cred.signedUrl ? (
@@ -118,6 +124,12 @@ export function VerificationDetailPanel({ request }: { request: RealVerification
             <ChecklistRow checked label="Certificate matches claimed credential" />
             <ChecklistRow checked label="Membership number confirmed with the professional body" />
             <ChecklistRow checked={false} label='Membership status confirmed "in good standing"' />
+            <ChecklistRow
+              checked={request.credentials.some(
+                (c) => c.documentType === "insurance" && !!c.expiresOn && c.expiresOn > new Date().toISOString().slice(0, 10)
+              )}
+              label="Current professional indemnity insurance uploaded (check the certificate matches)"
+            />
           </div>
         </Card>
       </div>

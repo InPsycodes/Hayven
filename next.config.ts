@@ -82,11 +82,12 @@ const nextConfig: NextConfig = {
   // FILE_BYTES in src/lib/therapist/actions.ts), so a real ~1.5-2MB scanned
   // certificate photo hit Next's framework-level limit first and crashed to
   // a generic error page instead of ever reaching the app's own check --
-  // confirmed via a live pre-launch audit. 3mb leaves headroom above 2.5MB
-  // for multipart's own boundary/header overhead per Next's own guidance.
+  // confirmed via a live pre-launch audit. 6mb covers the credentials step's
+  // two 2.5MB files (certificate + insurance, 0105) plus multipart's own
+  // boundary/header overhead per Next's own guidance.
   experimental: {
     serverActions: {
-      bodySizeLimit: "3mb",
+      bodySizeLimit: "6mb",
     },
   },
 

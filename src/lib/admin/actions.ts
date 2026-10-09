@@ -63,6 +63,9 @@ export async function reviewVerificationRequestReal(
       .from("credentials")
       .select("issuing_body")
       .eq("therapist_id", request.therapist_id)
+      // Never the insurance row (0105): its issuing_body is the insurer.
+      .neq("document_type", "insurance")
+      .order("uploaded_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 

@@ -72,6 +72,8 @@ export type AuditAction =
   | "safeguarding_concern.raise"
   | "safeguarding_concern.auto_flag"
   | "safeguarding_concern.update"
+  | "credential.insurance_upload"
+  | "therapist_agreement.accept"
   | "auth.sign_in"
   | "auth.mfa_enrolled"
   | "auth.mfa_disabled";

@@ -21,6 +21,7 @@ import { CarePanel } from "@/components/care/care-panel";
 import { CareAreaChart } from "@/components/care/care-area-chart";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { OnboardingChecklist } from "@/components/therapist/onboarding-checklist";
+import { ComplianceNotices } from "@/components/therapist/compliance-notices";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { getOnboardingStatus } from "@/lib/therapist/onboarding";
@@ -108,6 +109,7 @@ export default async function TherapistDashboardPage() {
       )}
 
       <OnboardingChecklist status={onboarding} />
+      <ComplianceNotices therapistProfileId={therapist.id} />
 
       {session.isSupervisor && (
         <Link

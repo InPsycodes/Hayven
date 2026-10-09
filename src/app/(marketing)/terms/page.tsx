@@ -68,6 +68,11 @@ export default function TermsOfServicePage() {
             of any therapist. If you have a concern about a therapist&apos;s conduct or credentials, report it to
             us immediately at the contact in Section 14.
           </p>
+          <p>
+            Therapists must hold current professional indemnity insurance covering the services they provide
+            through Hayven, provide proof of it during verification, and keep it in force while they practise on
+            Hayven. We may suspend a therapist&apos;s listing if their cover lapses.
+          </p>
         </Section>
 
         <Section heading="4. Bookings, payments, and cancellations">

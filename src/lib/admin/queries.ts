@@ -11,6 +11,8 @@ export interface RealCredential {
   issuingBody: string;
   membershipNumber: string | null;
   uploadedAt: string;
+  /** Insurance cover end date (0105); null for other document types. */
+  expiresOn: string | null;
   filePath: string;
   signedUrl: string | null;
 }
@@ -377,7 +379,7 @@ export async function getRealVerificationRequests(
             .eq("therapist_id", request.therapist_id),
           supabase
             .from("credentials")
-            .select("id, document_type, file_url, issuing_body, membership_number, uploaded_at")
+            .select("id, document_type, file_url, issuing_body, membership_number, uploaded_at, expires_on")
             .eq("therapist_id", request.therapist_id)
             // Resubmission after "needs more info" inserts a new row rather
             // than replacing the old one (no link to a specific verification
@@ -388,6 +390,9 @@ export async function getRealVerificationRequests(
 
       const user = profile?.users as unknown as { full_name: string; email: string } | null;
       const credentials = credentialRows ?? [];
+      // Insurance rows (0105) carry the insurer in issuing_body -- the
+      // professional-body fields below must come from a membership document.
+      const membershipCredential = credentials.find((c) => c.document_type !== "insurance");
 
       return {
         id: request.id,
@@ -404,8 +409,8 @@ export async function getRealVerificationRequests(
           specialties: (specialtyRows ?? []).map(
             (row) => (row.specialties as unknown as { name: string } | null)?.name ?? ""
           ),
-          professionalBody: credentials[0]?.issuing_body ?? null,
-          membershipNumber: credentials[0]?.membership_number ?? null,
+          professionalBody: membershipCredential?.issuing_body ?? null,
+          membershipNumber: membershipCredential?.membership_number ?? null,
           yearsPracticing: profile?.years_practicing ?? null,
         },
         credentials: await Promise.all(
@@ -420,6 +425,7 @@ export async function getRealVerificationRequests(
               issuingBody: c.issuing_body,
               membershipNumber: c.membership_number,
               uploadedAt: c.uploaded_at,
+              expiresOn: c.expires_on ?? null,
               filePath: c.file_url,
               signedUrl: signed?.signedUrl ?? null,
             };

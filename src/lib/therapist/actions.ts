@@ -15,6 +15,8 @@ import { checkRateLimit } from "@/lib/rate-limit/check";
 import { logAuditEvent } from "@/lib/audit/log";
 import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 import { createNotification } from "@/lib/notifications/create";
+import { THERAPIST_AGREEMENT } from "@/content/therapist-agreement";
+import { recordAgreementAcceptance } from "./agreement";
 
 export interface FormState {
   error?: string;
@@ -47,6 +49,56 @@ async function detectSafeCredentialExtension(file: File): Promise<string | null>
   if (startsWith([0xff, 0xd8, 0xff])) return "jpg"; // JPEG SOI marker
   if (startsWith([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return "png"; // PNG signature
   return null;
+}
+
+/**
+ * Size-check, type-sniff, virus-scan, then store a credential file in the
+ * private bucket. Shared by the signup credentials step (certificate +
+ * insurance) and the later insurance-renewal upload.
+ */
+async function storeCredentialFile(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  file: File
+): Promise<{ path: string } | { error: string }> {
+  if (file.size > MAX_CREDENTIAL_FILE_BYTES) {
+    return { error: "File is too large. Please upload a file under 2.5MB." };
+  }
+  const extension = await detectSafeCredentialExtension(file);
+  if (!extension) {
+    return { error: "Please upload a PDF, JPG, or PNG file." };
+  }
+
+  // Scanned before it ever touches storage -- fails closed, not open, if
+  // the scan itself can't be completed.
+  const scanResult = await scanFileForViruses(file);
+  if (!scanResult.clean) {
+    return { error: scanResult.reason };
+  }
+
+  // Generated name, not the client-supplied file.name -- no path
+  // traversal, no attacker-chosen extension, no collisions.
+  const path = `${userId}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+  const contentType = extension === "pdf" ? "application/pdf" : `image/${extension === "jpg" ? "jpeg" : extension}`;
+  const { error: uploadError } = await supabase.storage
+    .from("credentials")
+    .upload(path, file, { upsert: false, contentType });
+  if (uploadError) {
+    return { error: `File upload failed: ${uploadError.message}` };
+  }
+  return { path };
+}
+
+/** Insurance cover must still be running; a YYYY-MM-DD string from <input type="date">. */
+function parseCoverEndDate(raw: FormDataEntryValue | null): { date: string } | { error: string } {
+  if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return { error: "Please enter the date your insurance cover ends." };
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  if (raw <= today) {
+    return { error: "That insurance cover has already ended. Please upload your current certificate." };
+  }
+  return { date: raw };
 }
 
 export async function saveCredentialsStep(
@@ -98,6 +150,25 @@ export async function saveCredentialsStep(
     return { ...echo, error: "Please upload your certificate or membership document." };
   }
 
+  // Professional indemnity insurance is required at verification
+  // (Therapist Agreement §7, decided 2026-10-09).
+  const insuranceFile = formData.get("insuranceFile");
+  const insurer = formData.get("insurer");
+  const policyNumber = formData.get("policyNumber");
+  if (typeof insurer !== "string" || !insurer.trim()) {
+    return { ...echo, error: "Please enter your insurer's name." };
+  }
+  const coverEnd = parseCoverEndDate(formData.get("insuranceExpiresOn"));
+  if ("error" in coverEnd) return { ...echo, error: coverEnd.error };
+  if (!(insuranceFile instanceof File) || insuranceFile.size === 0) {
+    return { ...echo, error: "Please upload your professional indemnity insurance certificate." };
+  }
+
+  // Only asked for once the agreement is adopted (src/content/therapist-agreement.ts).
+  if (THERAPIST_AGREEMENT && formData.get("acceptAgreement") !== "on") {
+    return { ...echo, error: "Please read and accept the Therapist Agreement to continue." };
+  }
+
   const supabase = await createClient();
 
   const { data: profile, error: profileError } = await supabase
@@ -126,43 +197,35 @@ export async function saveCredentialsStep(
     return { ...echo, error: specialtyError.message };
   }
 
-  if (file instanceof File && file.size > 0) {
-    if (file.size > MAX_CREDENTIAL_FILE_BYTES) {
-      return { ...echo, error: "File is too large. Please upload a file under 2.5MB." };
-    }
-    const extension = await detectSafeCredentialExtension(file);
-    if (!extension) {
-      return { ...echo, error: "Please upload a PDF, JPG, or PNG file." };
-    }
+  const stored = await storeCredentialFile(supabase, session.userId, file);
+  if ("error" in stored) return { ...echo, error: stored.error };
+  const { error: credentialError } = await supabase.from("credentials").insert({
+    therapist_id: profile.id,
+    document_type: "membership_id",
+    file_url: stored.path,
+    issuing_body: professionalBodyLabel(professionalBody),
+    membership_number: membershipNumber,
+  });
+  if (credentialError) {
+    return { ...echo, error: credentialError.message };
+  }
 
-    // Scanned before it ever touches storage -- fails closed, not open, if
-    // the scan itself can't be completed.
-    const scanResult = await scanFileForViruses(file);
-    if (!scanResult.clean) {
-      return { ...echo, error: scanResult.reason };
-    }
+  const storedInsurance = await storeCredentialFile(supabase, session.userId, insuranceFile);
+  if ("error" in storedInsurance) return { ...echo, error: storedInsurance.error };
+  const { error: insuranceError } = await supabase.from("credentials").insert({
+    therapist_id: profile.id,
+    document_type: "insurance",
+    file_url: storedInsurance.path,
+    issuing_body: insurer.trim(),
+    membership_number: typeof policyNumber === "string" && policyNumber.trim() ? policyNumber.trim() : null,
+    expires_on: coverEnd.date,
+  });
+  if (insuranceError) {
+    return { ...echo, error: insuranceError.message };
+  }
 
-    // Generated name, not the client-supplied file.name -- no path
-    // traversal, no attacker-chosen extension, no collisions.
-    const path = `${session.userId}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
-    const contentType = extension === "pdf" ? "application/pdf" : `image/${extension === "jpg" ? "jpeg" : extension}`;
-    const { error: uploadError } = await supabase.storage
-      .from("credentials")
-      .upload(path, file, { upsert: false, contentType });
-    if (uploadError) {
-      return { ...echo, error: `File upload failed: ${uploadError.message}` };
-    }
-
-    const { error: credentialError } = await supabase.from("credentials").insert({
-      therapist_id: profile.id,
-      document_type: "membership_id",
-      file_url: path,
-      issuing_body: professionalBodyLabel(professionalBody),
-      membership_number: membershipNumber,
-    });
-    if (credentialError) {
-      return { ...echo, error: credentialError.message };
-    }
+  if (THERAPIST_AGREEMENT) {
+    await recordAgreementAcceptance(profile.id, THERAPIST_AGREEMENT.version);
   }
 
   redirect("/signup/profile");
@@ -573,4 +636,98 @@ export async function updateBankDetails(_prevState: FormState, formData: FormDat
   revalidatePath("/search");
   revalidateDiscoveryCache();
   return {};
+}
+
+/**
+ * Renewing (or first adding) professional indemnity insurance after
+ * onboarding, from the therapist's profile page. Same scan/store path as
+ * the signup step; a new credentials row each time, so the history of
+ * cover is kept and getCurrentInsurance picks the latest end date.
+ */
+export async function uploadInsuranceCertificate(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") {
+    return { error: "You must be signed in as a therapist." };
+  }
+  const rateLimitOk = await checkRateLimit(`credential-upload:${session.userId}`, 10, 15 * 60);
+  if (!rateLimitOk) return { error: "Too many attempts. Please try again in a few minutes." };
+
+  const insuranceFile = formData.get("insuranceFile");
+  const insurer = formData.get("insurer");
+  const policyNumber = formData.get("policyNumber");
+  if (typeof insurer !== "string" || !insurer.trim()) {
+    return { error: "Please enter your insurer's name." };
+  }
+  const coverEnd = parseCoverEndDate(formData.get("insuranceExpiresOn"));
+  if ("error" in coverEnd) return { error: coverEnd.error };
+  if (!(insuranceFile instanceof File) || insuranceFile.size === 0) {
+    return { error: "Please upload your insurance certificate." };
+  }
+
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("therapist_profiles")
+    .select("id")
+    .eq("user_id", session.userId)
+    .maybeSingle();
+  if (!profile) return { error: "Finish setting up your profile first." };
+
+  const stored = await storeCredentialFile(supabase, session.userId, insuranceFile);
+  if ("error" in stored) return { error: stored.error };
+  const { data: row, error } = await supabase
+    .from("credentials")
+    .insert({
+      therapist_id: profile.id,
+      document_type: "insurance",
+      file_url: stored.path,
+      issuing_body: insurer.trim(),
+      membership_number: typeof policyNumber === "string" && policyNumber.trim() ? policyNumber.trim() : null,
+      expires_on: coverEnd.date,
+    })
+    .select("id")
+    .single();
+  if (error || !row) return { error: error?.message ?? "Couldn't save your certificate. Please try again." };
+
+  await logAuditEvent({
+    actor: session,
+    action: "credential.insurance_upload",
+    entityType: "credential",
+    entityId: row.id,
+    metadata: { expiresOn: coverEnd.date },
+  });
+
+  revalidatePath("/therapist/profile");
+  revalidatePath("/therapist");
+  return {};
+}
+
+/** Accepting the current Therapist Agreement version from the dashboard prompt (after a material change, or for therapists who joined before it was adopted). */
+export async function acceptTherapistAgreement(version: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") return { ok: false, error: "Not authorized." };
+  if (!THERAPIST_AGREEMENT || THERAPIST_AGREEMENT.version !== version) {
+    return { ok: false, error: "The agreement has changed. Please reload the page." };
+  }
+
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("therapist_profiles")
+    .select("id")
+    .eq("user_id", session.userId)
+    .maybeSingle();
+  if (!profile) return { ok: false, error: "Finish setting up your profile first." };
+
+  if (!(await recordAgreementAcceptance(profile.id, version))) {
+    return { ok: false, error: "Couldn't record your acceptance. Please try again." };
+  }
+  await logAuditEvent({
+    actor: session,
+    action: "therapist_agreement.accept",
+    entityType: "therapist_profile",
+    entityId: profile.id,
+    metadata: { version },
+  });
+
+  revalidatePath("/therapist");
+  return { ok: true };
 }

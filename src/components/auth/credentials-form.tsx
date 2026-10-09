@@ -18,6 +18,7 @@ import { UploadDropzone } from "@/components/shared/upload-dropzone";
 import { saveCredentialsStep, type FormState } from "@/lib/therapist/actions";
 import { PROFESSIONAL_BODIES } from "@/lib/therapist/professional-bodies";
 import type { Specialty } from "@/data/types";
+import { THERAPIST_AGREEMENT } from "@/content/therapist-agreement";
 
 const UNDERLINE_INPUT =
   "rounded-none border-0 border-b border-input bg-transparent px-0 focus-visible:ring-0 focus-visible:border-charcoal";
@@ -116,6 +117,46 @@ export function CredentialsForm({ specialties }: { specialties: Specialty[] }) {
         <Label>Upload certificate / membership document</Label>
         <UploadDropzone name="file" required />
       </div>
+
+      <div className="flex flex-col gap-4 border-t border-border pt-6">
+        <div>
+          <h2 className="font-heading text-base text-charcoal">Professional indemnity insurance</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Required to practise on Hayven. Upload your current certificate showing the insurer and when your cover ends.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="insurer">Insurer</Label>
+            <Input id="insurer" name="insurer" required className={UNDERLINE_INPUT} placeholder="e.g. Leadway Assurance" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="policyNumber">Policy number (optional)</Label>
+            <Input id="policyNumber" name="policyNumber" className={UNDERLINE_INPUT} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="insuranceExpiresOn">Cover ends on</Label>
+            <Input id="insuranceExpiresOn" name="insuranceExpiresOn" type="date" required className={UNDERLINE_INPUT} />
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label>Upload insurance certificate</Label>
+          <UploadDropzone name="insuranceFile" required />
+        </div>
+      </div>
+
+      {THERAPIST_AGREEMENT && (
+        <label className="flex items-start gap-2.5 text-sm text-charcoal">
+          <input type="checkbox" name="acceptAgreement" required className="mt-0.5 size-4 shrink-0 accent-[var(--terracotta)]" />
+          <span>
+            I have read and agree to the{" "}
+            <Link href="/therapist-agreement" target="_blank" className="font-medium text-terracotta underline">
+              Therapist Agreement
+            </Link>{" "}
+            (version {THERAPIST_AGREEMENT.version}).
+          </span>
+        </label>
+      )}
 
       <div className="flex items-start gap-2.5 rounded-sm bg-paper p-4">
         <IconInfoCircle size={18} stroke={1.75} className="mt-0.5 shrink-0 text-charcoal" />

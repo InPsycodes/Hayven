@@ -242,8 +242,11 @@ agree to this Therapist Agreement, the Platform's Terms of Service, Privacy Poli
       existing framing but hasn't itself been reviewed.
 - [x] Decide the professional liability insurance requirement (§7) — **required at
       verification, decided 2026-10-09.** Minimum coverage amount still open.
-- [ ] Build the insurance-proof upload into therapist verification, and add the
-      insurance requirement to the Terms of Service.
+- [x] Build the insurance-proof upload into therapist verification, and add the
+      insurance requirement to the Terms of Service — **built 2026-10-09**
+      (migration `0105`; required at the signup credentials step, renewable from the
+      therapist profile, shown to admins in the verification panel; Terms §3).
+      Not automatic: an expired cover does not hide the therapist from search yet.
 - [ ] Draft the actual indemnification clause (§7) with counsel.
 - [x] Decide the non-circumvention window (§6) and termination notice period (§8) —
       **12 months and 30 days, decided 2026-10-09** (commission-change notice also 30
@@ -253,7 +256,10 @@ agree to this Therapist Agreement, the Platform's Terms of Service, Privacy Poli
 - [ ] Once `docs/safeguarding-procedure.md` is finalised, confirm the cross-reference in
       §6 still points to the right section/obligation.
 - [x] Decide the signing mechanism — **click-to-accept at verification, version +
-      timestamp recorded, re-accept on material change (2026-10-09).** Not yet built.
+      timestamp recorded, re-accept on material change (2026-10-09).** Built but
+      switched off until adoption: put the final text and a version in
+      `src/content/therapist-agreement.ts` to turn on the checkbox, the
+      /therapist-agreement page and the dashboard re-accept prompt.
       Original question: a checkbox at verification time, a proper
       e-signature flow, or a physical/PDF signature — and whether this needs to be
       re-accepted if the terms change materially later.
