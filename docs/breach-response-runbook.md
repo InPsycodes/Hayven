@@ -10,8 +10,8 @@ Aganga Williams, Ogba, Ikeja, Lagos State, Nigeria.
 > Nigerian legal counsel's confirmation of the exact NDPC notification mechanics
 > (the portal process, required fields, and any sector-specific wrinkles for
 > health-adjacent data) before anyone relies on this during a real incident. Use
-> this as a starting structure, not a tested plan. See `docs/data-protection-impact-
-> assessment.md` §13 (Breach response) and risk #13, which this document exists to
+> this as a starting structure, not a tested plan. See `docs/data-protection-impact-assessment.md`
+>  §13 (Breach response) and risk #13, which this document exists to
 > close.
 
 **Draft date:** 2026-09-23
@@ -109,8 +109,8 @@ What would actually surface a breach, given what's built today:
 
 ## 5. Severity and notification-trigger assessment
 
-Use the same likelihood/impact scale as the DPIA (`docs/data-protection-impact-
-assessment.md` §10) rather than inventing a separate one:
+Use the same likelihood/impact scale as the DPIA (`docs/data-protection-impact-assessment.md`
+ §10) rather than inventing a separate one:
 
 **Likelihood:** 1 Rare · 2 Unlikely · 3 Possible · 4 Likely · 5 Almost certain
 **Impact:** 1 Negligible · 2 Minor · 3 Moderate · 4 Major · 5 Severe
@@ -240,8 +240,8 @@ threshold: what was raised, by whom, when; what was found; the severity
 assessment and who made it; what was done; whether NDPC/data-subject notification
 happened and when; outcome; review date. **Where this record lives and how long
 it's kept is not yet decided**. It should follow the same review as the
-safeguarding procedure's own open record-keeping question (`docs/safeguarding-
-procedure.md` §7, §9).
+safeguarding procedure's own open record-keeping question (`docs/safeguarding-procedure.md`
+ §7, §9).
 
 ---
 
