@@ -3,6 +3,7 @@ import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getBookedTherapistInfo } from "@/lib/therapist/booked-names";
 
 export interface RealMessage {
   id: string;
@@ -62,11 +63,7 @@ export const getRealMessageThreadsForParent = cache(async function getRealMessag
   if (!bookingsData || bookingsData.length === 0) return [];
 
   const therapistIds = [...new Set(bookingsData.map((b) => b.therapist_id))];
-  const { data: therapistRows } = await supabase
-    .from("therapist_public_profiles")
-    .select("id, display_name")
-    .in("id", therapistIds);
-  const therapistNameById = new Map((therapistRows ?? []).map((t) => [t.id, t.display_name]));
+  const therapistInfo = await getBookedTherapistInfo(therapistIds);
 
   return Promise.all(
     bookingsData.map(async (b) => {
@@ -79,7 +76,7 @@ export const getRealMessageThreadsForParent = cache(async function getRealMessag
         .maybeSingle();
       return {
         bookingId: b.id,
-        counterpartName: therapistNameById.get(b.therapist_id) ?? "Therapist",
+        counterpartName: therapistInfo.get(b.therapist_id)?.displayName ?? "Therapist",
         lastMessage: lastMsg?.content ?? null,
         lastMessageSenderId: lastMsg?.sender_id ?? null,
       };

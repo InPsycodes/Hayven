@@ -9,6 +9,7 @@ import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { bookingWindow } from "@/lib/booking/window";
 import { recordSessionEarnings } from "@/lib/payouts/earnings";
 import { toLagosWallClock } from "@/data/format";
+import { getBookedTherapistInfo } from "@/lib/therapist/booked-names";
 import type { AvailabilitySlot } from "@/data/types";
 
 /**
@@ -190,19 +191,14 @@ export async function getRealBookingsForParent(parentId: string): Promise<RealPa
     };
   });
 
-  const therapistIds = [...new Set(bookings.map((b) => b.therapistId))];
-  const { data: therapistRows } = await supabase
-    .from("therapist_public_profiles")
-    .select("id, display_name, location")
-    .in("id", therapistIds);
-  const therapistById = new Map((therapistRows ?? []).map((t) => [t.id, t]));
+  const therapistById = await getBookedTherapistInfo([...new Set(bookings.map((b) => b.therapistId))]);
 
   return bookings
     .map((b) => {
       const therapist = therapistById.get(b.therapistId);
       return {
         ...b,
-        therapistDisplayName: therapist?.display_name ?? "Your therapist",
+        therapistDisplayName: therapist?.displayName ?? "Your therapist",
         therapistLocation: therapist?.location ?? null,
       };
     })
@@ -242,17 +238,13 @@ export async function getRealNextUpcomingBookingForChild(childId: string): Promi
   const next = upcoming[0];
   if (!next) return null;
 
-  const { data: therapistPublic } = await supabase
-    .from("therapist_public_profiles")
-    .select("display_name, location")
-    .eq("id", next.therapistId)
-    .maybeSingle();
+  const therapistPublic = (await getBookedTherapistInfo([next.therapistId])).get(next.therapistId);
 
   return {
     sessionType: next.sessionType,
     location: next.location,
     slotStartTime: next.slotStartTime,
-    therapistDisplayName: therapistPublic?.display_name ?? "Your therapist",
+    therapistDisplayName: therapistPublic?.displayName ?? "Your therapist",
     therapistLocation: therapistPublic?.location ?? null,
   };
 }
