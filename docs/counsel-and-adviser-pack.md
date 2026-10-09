@@ -49,8 +49,9 @@ Therapist Agreement terms (decided 2026-10-09):
   fraud.
 - **Acceptance:** click-to-accept at verification, with the version and time
   recorded, and re-acceptance after a material change.
-- Commission is 20% to Hayven and 80% to the therapist, paid out weekly. This is
-  already live.
+- Commission is 20% to Hayven and 80% to the therapist. Earnings clear 8 days after
+  a session (the 7-day window for a parent to report a problem, plus a day) and are
+  paid every Monday. This is already live.
 
 Safeguarding:
 
@@ -145,6 +146,16 @@ in the counsel briefing, Part C.
 **C9. Breach notification.** Please confirm the NDPC filing mechanics and the
 72-hour window in the breach runbook §6, and when we must notify affected families
 (§7).
+
+**C16. Launch waitlist.** While no therapist is live, the search page lets anyone
+leave an email address to be told once when therapists are available. Does the
+Privacy Policy need to say this, and on what lawful basis do we keep these addresses?
+
+**C17. Account security.** On 9 October 2026 we removed two-factor authentication for
+every account, admins included. Sign-in is now email and password (or Google, for
+parents), with rate-limited login and account suspension. Is that adequate for
+accounts that can read children's health data and the safeguarding log? (DPIA, update
+IX and risk #1.)
 
 ### Therapist Agreement
 
