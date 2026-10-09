@@ -100,9 +100,9 @@ implemented — not a proposal.
 - **Disputes and refunds**: if a booking is refunded (through the dispute process or
   otherwise), any earning already recorded against that booking is reversed before
   payout, or clawed back from a future payout if it was already paid.
-- Commission and payout terms may change with [FILL IN — counsel/business to decide:
-  how much advance notice, e.g. 30 days, applies to a commission-rate change for
-  existing therapists].
+- Commission and payout terms may change with **at least 30 days' written notice**
+  to existing therapists (decided 2026-10-09). A change never applies to a session
+  booked before the change takes effect.
 
 ---
 
@@ -134,10 +134,9 @@ implemented — not a proposal.
   where it applies, is an oversight relationship for platform purposes, not a
   substitute for your own required clinical supervision under your licensing body).
 - You will not attempt to arrange or accept payment for a session outside the Platform
-  once a family found you through Hayven, for a period of [FILL IN — a
-  non-circumvention window is standard in marketplace agreements, e.g. 12 months;
-  needs a business decision, not just a legal one] after your last Platform-facilitated
-  session with that family.
+  once a family found you through Hayven, for a period of **12 months** after your last
+  Platform-facilitated session with that family (decided 2026-10-09; counsel to confirm
+  it's enforceable as drafted, not as a restraint of trade).
 - You accept the Platform's safeguarding procedure (`docs/safeguarding-procedure.md`,
   once finalised) as a condition of practising on Hayven, including the duty to raise a
   concern about a child's safety through the defined channel rather than handling it
@@ -154,11 +153,13 @@ questions (plus the labour-classification question in §1) lives in
 `docs/counsel-briefing-legal-review.md` Part B, alongside the DPIA's lawful-basis
 matrix and transfer register — hand that single document to whoever reviews this.
 
-- **Professional liability insurance.** [FILL IN — will the Platform require
-  therapists to carry their own professional indemnity/liability insurance as a
-  condition of verification, and if so, what minimum coverage amount? Many therapy
-  marketplaces require this; Hayven's Terms of Service doesn't currently mention it at
-  all.]
+- **Professional indemnity insurance — required.** You must hold current
+  professional indemnity/liability insurance covering the services you provide
+  through the Platform, provide proof of cover at verification, and keep it current
+  for as long as you practise on Hayven (telling us promptly if it lapses or is
+  cancelled). A lapse in cover is grounds to suspend your verified status until it's
+  restored. Decided 2026-10-09. [FILL IN — the minimum coverage amount, to be set
+  with counsel and/or an insurer.]
 - **Allocation of liability for clinical care.** The Platform's Terms of Service
   already states Hayven "does not warrant... clinical outcomes of any therapist" and
   disclaims liability "for the acts or omissions of an independent therapist" — this
@@ -166,9 +167,12 @@ matrix and transfer register — hand that single document to whoever reviews th
   indemnification clause: should the therapist indemnify the Platform against claims
   arising from their own clinical conduct? This is standard in marketplace models but
   needs counsel to draft correctly under Nigerian contract law, not template language.]
-- **Platform's own liability to the therapist.** [FILL IN — any cap on the Platform's
-  liability to the therapist, e.g. for a payout error, and the process for the
-  therapist to raise a payment dispute.]
+- **Platform's own liability to the therapist.** The Platform's total liability to you
+  under this agreement is capped at the commission the Platform earned from your
+  sessions in the 12 months before the claim arose. The cap does not apply to (a)
+  earnings actually owed to you and not paid, or (b) loss caused by the Platform's
+  fraud or wilful misconduct. Decided 2026-10-09; counsel to finalise the wording.
+  [FILL IN — the process for a therapist to raise a payment dispute.]
 
 ---
 
@@ -183,8 +187,8 @@ matrix and transfer register — hand that single document to whoever reviews th
   credential or conduct issue, or if immediate suspension is necessary to protect a
   child or the integrity of the Platform. You'll be told the reason as soon as it's
   safe and appropriate to do so.
-- **The Platform may otherwise terminate this agreement with [FILL IN — a standard
-  notice period, e.g. 30 days] notice**, for a material breach of this agreement, the
+- **The Platform may otherwise terminate this agreement with 30 days' written
+  notice**, for a material breach of this agreement, the
   Terms of Service, or the Acceptable Use policy, or for any other reason with that
   same notice.
 - On termination, any cleared, unpaid earnings are still paid out on the normal
@@ -216,7 +220,10 @@ specifically, given therapists may practise from anywhere in Nigeria.]
 
 ## 11. Acceptance
 
-By checking the box during verification / signing below, you confirm you have read and
+Acceptance is by checking a box during verification (click-to-accept, the same
+mechanism as the Terms of Service at signup). The Platform records which version of
+this agreement you accepted and when; if the agreement changes materially, you'll be
+asked to accept the new version before you can take new bookings. By checking that box, you confirm you have read and
 agree to this Therapist Agreement, the Platform's Terms of Service, Privacy Policy, and
 (once finalised) the safeguarding procedure referenced in Section 6.
 
@@ -233,15 +240,21 @@ agree to this Therapist Agreement, the Platform's Terms of Service, Privacy Poli
 
 - [ ] Legal review of the entire document — this draft mirrors the Terms of Service's
       existing framing but hasn't itself been reviewed.
-- [ ] Decide the professional liability insurance requirement (§7) — whether it's
-      required at all, and the minimum coverage.
+- [x] Decide the professional liability insurance requirement (§7) — **required at
+      verification, decided 2026-10-09.** Minimum coverage amount still open.
+- [ ] Build the insurance-proof upload into therapist verification, and add the
+      insurance requirement to the Terms of Service.
 - [ ] Draft the actual indemnification clause (§7) with counsel.
-- [ ] Decide the non-circumvention window (§6) and termination notice period (§8) —
-      business decisions, not just legal ones.
-- [ ] Decide whether a Platform liability cap applies (§7).
+- [x] Decide the non-circumvention window (§6) and termination notice period (§8) —
+      **12 months and 30 days, decided 2026-10-09** (commission-change notice also 30
+      days, §4).
+- [x] Decide whether a Platform liability cap applies (§7) — **yes, capped at 12
+      months' commission, decided 2026-10-09.**
 - [ ] Once `docs/safeguarding-procedure.md` is finalised, confirm the cross-reference in
       §6 still points to the right section/obligation.
-- [ ] Decide the signing mechanism — a checkbox at verification time, a proper
+- [x] Decide the signing mechanism — **click-to-accept at verification, version +
+      timestamp recorded, re-accept on material change (2026-10-09).** Not yet built.
+      Original question: a checkbox at verification time, a proper
       e-signature flow, or a physical/PDF signature — and whether this needs to be
       re-accepted if the terms change materially later.
 - [ ] Confirm with counsel whether Nigerian labour law has any bearing on the

@@ -144,18 +144,21 @@ When in doubt: raise it. Over-reporting to the DSL is fine; the DSL filters.
 
 ## 7. Records
 
-- Safeguarding records are kept **outside the main Hayven application
-  database** — not in `therapy_sessions`, `reports`, or any table a
-  therapist, supervisor, or parent's session can ever touch, even via a bug.
-  Until a dedicated system is built, the draft recommendation is a
-  restricted, access-logged store the DSL and Deputy DSL alone can reach —
-  e.g. a dedicated, access-controlled folder (not a general shared drive),
-  with access limited to those two named accounts and changes to that access
-  list logged. **This needs a real decision, not just this draft**: building
-  a proper in-app safeguarding-records table (admin-only RLS, its own audit
-  trail, matching the existing `audit_log` pattern) is the stronger
-  long-term answer and is a concrete, scoped build — flag to engineering
-  once the adviser/counsel review in §9 confirms what a record must contain.
+- Safeguarding records are kept in the **in-app safeguarding log** (built
+  2026-10-09, migration `0104`), at **Admin → Safeguarding**. It sits apart
+  from every clinical table: no therapist, supervisor, or parent session
+  has any database access to it at all (no policies, no grants — the
+  same lockdown as the audit log), and the pages are visible only to the
+  accounts designated as DSL / Deputy DSL. Every change to a record is
+  appended to that record's own history, which cannot be edited or deleted.
+- Concerns arrive two ways: a therapist raises one from **Safeguarding** in
+  their sidebar (also linked from Help), or the platform logs one
+  automatically when a report is published whose session — including the
+  confidential note — contains safety-related wording. Both alert the DSL
+  and Deputy DSL in-app, by email and by push, with no child's name in the
+  alert itself.
+- The form is a record, not a replacement for §4.3: a therapist still
+  phones the DSL for anything urgent, and the page tells them so.
 - Retention: **no Nigeria-specific statutory period was found for
   safeguarding/child-protection records specifically.** The Nigeria Data
   Protection Act 2023 sets a general principle — keep personal data no
@@ -199,13 +202,15 @@ When in doubt: raise it. Over-reporting to the DSL is fine; the DSL filters.
       published in §2. Still needed: brief the deputy on §3–§6, **and grant
       the Deputy DSL an admin account** — without one, he cannot execute
       §5.3's access-control steps if the DSL is unreachable (see §2).
-- [ ] Decide where safeguarding records live (§7 has a draft recommendation
-      — a restricted, access-logged store short-term, a proper in-app table
-      as the real answer) and build/configure it.
-- [ ] Add the "raise a safeguarding concern" route in-app (distinct from
-      general support) and the therapist-onboarding acceptance step (§8) —
-      hold until this procedure is adopted.
-- [ ] Add a DSL-notification hook when a report with flagged phrases is
-      published, so a flagged report reaches the DSL automatically instead
-      of relying on the therapist to raise it (§3 already asks them to, but
-      this closes the gap if one doesn't).
+- [x] Decide where safeguarding records live and build it — **in-app
+      safeguarding log, built 2026-10-09** (§7). Still needed: run migration
+      `0104`, then designate the DSL and Deputy DSL accounts with the SQL
+      at the top of that migration (until then, every admin sees it).
+- [x] Add the "raise a safeguarding concern" route in-app, distinct from
+      general support — **built 2026-10-09** (`/therapist/safeguarding`).
+- [ ] The therapist-onboarding acceptance step (§8) — hold until this
+      procedure is adopted.
+- [x] DSL notification when a report with safety-related wording is
+      published — **built 2026-10-09** (§7). The adviser should review the
+      phrase list that triggers it (`SAFEGUARDING_PHRASES` in
+      `src/lib/reports/safety.ts`).

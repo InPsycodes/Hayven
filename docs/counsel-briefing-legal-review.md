@@ -80,6 +80,12 @@ independent therapist." What's missing is a standalone agreement that mirrors
 that liability position from the therapist's own side, with real terms instead
 of a platform-wide consumer-facing disclaimer.
 
+**Update 2026-10-09:** Hayven has since decided the business terms. Insurance is
+required at verification, the non-circumvention window is 12 months, both notice
+periods are 30 days, and the liability cap is 12 months' commission. The questions
+below now ask for the minimum cover, the clause wording and enforceability, not the
+decisions themselves. See `docs/counsel-and-adviser-pack.md` C10–C15.
+
 **Three open questions, verbatim from the draft:**
 
 1. **Professional liability insurance.** Should the Platform require therapists
