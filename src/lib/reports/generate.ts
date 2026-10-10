@@ -161,7 +161,7 @@ function buildSessionSummary(input: GenerationInput): ReportSection {
   }
 
   if (session.therapistNotes && session.therapistNotes.trim()) {
-    blocks.push({ type: "quote", label: "Therapist's session note", text: session.therapistNotes.trim() });
+    blocks.push({ type: "quote", label: "Therapist's session note", text: readableNotes(session.therapistNotes) });
   } else {
     blocks.push({ type: "paragraph", text: "No additional session notes were recorded." });
   }
@@ -705,20 +705,72 @@ function pickVariantDomain(
 
 /** The parent-facing name for a behaviour: the therapist's own plain-language phrasing if they've set one, otherwise the clinical label as a fallback. */
 function behaviourParentName(b: GenerationBehaviourInput): string {
-  return b.parentLabel && b.parentLabel.trim() ? b.parentLabel.trim() : b.label.toLowerCase();
+  return b.parentLabel && b.parentLabel.trim() ? b.parentLabel.trim() : lowerFirst(b.label.trim());
+}
+
+/**
+ * Lowercases only the first letter, and only when it starts an ordinary
+ * word: "Two-word requesting" -> "two-word requesting", but "AAC use" and
+ * "PECS exchange" keep their capitals (a whole-string toLowerCase turned
+ * them into "aac use").
+ */
+export function lowerFirst(s: string): string {
+  if (s.length > 1 && s[1] === s[1].toUpperCase() && s[1] !== s[1].toLowerCase()) return s;
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+// Goal titles are usually written as instructions ("Increase verbal
+// requesting"), which read badly mid-sentence ("getting started on increase
+// verbal requesting"). The leading verb becomes its -ing form instead. Only
+// verbs that are rarely nouns at the start of a title: "Name recognition"
+// or "Transition tolerance" must not become "naming ..." or "transitioning ...".
+const GOAL_VERB_ING: Record<string, string> = {
+  accept: "accepting", achieve: "achieving", build: "building", communicate: "communicating",
+  complete: "completing", decrease: "decreasing", develop: "developing", engage: "engaging",
+  enhance: "enhancing", establish: "establishing", expand: "expanding", follow: "following",
+  identify: "identifying", imitate: "imitating", improve: "improving", increase: "increasing",
+  initiate: "initiating", learn: "learning", maintain: "maintaining", minimise: "minimising",
+  minimize: "minimizing", promote: "promoting", reduce: "reducing", respond: "responding",
+  strengthen: "strengthening", tolerate: "tolerating", use: "using",
+};
+
+/** A goal or skill title as a phrase that sits naturally inside a sentence. */
+export function parentPhrase(title: string): string {
+  const trimmed = title.trim().replace(/^to\s+/i, "");
+  const match = trimmed.match(/^([A-Za-z]+)(\s[\s\S]*)$/);
+  // "Use of AAC" is a noun phrase, not an instruction.
+  if (match && !/^\s+of\b/i.test(match[2])) {
+    const ing = GOAL_VERB_ING[match[1].toLowerCase()];
+    if (ing) return ing + match[2];
+  }
+  return lowerFirst(trimmed);
+}
+
+/**
+ * The therapist's guided notes are stored with their form labels
+ * ("Arrived: …", "Biggest win: …", see stitchSessionNotes). Quoted as-is
+ * they read like a form, and an answer that already starts "Arrived happy"
+ * came out as "Arrived: Arrived happy". This turns the labels into prose.
+ */
+export function readableNotes(notes: string): string {
+  // The answer's own capitalisation is kept: it may open with the child's name.
+  return notes
+    .replace(/Arrived:\s*(?=(\S+))/g, (_m, firstWord: string) => (/^arriv/i.test(firstWord) ? "" : "On arrival: "))
+    .replace(/Biggest win:\s*/g, "The biggest win today: ")
+    .trim();
 }
 
 function goalHighlight(goal: GenerationGoalInput): string | null {
   if (goal.percentComplete === null) return null;
   const delta = goal.previousPercentComplete === null ? null : goal.percentComplete - goal.previousPercentComplete;
-  const name = goal.title.toLowerCase();
+  const name = parentPhrase(goal.title);
   const emerging = goal.percentComplete < EMERGING_THRESHOLD;
 
   if (delta === null) {
     return emerging
       ? pickVariant(
           [
-            `This is an early step for ${name}, we'll keep building on it together.`,
+            `This is an early step for ${name}. We'll keep building on it together.`,
             `We're just getting started on ${name}. It's early days, and that's exactly where we'd expect to be.`,
           ],
           goal.id
@@ -733,7 +785,7 @@ function goalHighlight(goal: GenerationGoalInput): string | null {
       [
         `${CHILD} made wonderful progress on ${name} this session.`,
         `${CHILD} took a real step forward on ${name} today.`,
-        `Today was a strong one for ${name}, real progress.`,
+        `Today was a strong one for ${name}, with real progress.`,
       ],
       goal.id
     );
@@ -751,14 +803,14 @@ function goalHighlight(goal: GenerationGoalInput): string | null {
     return emerging
       ? pickVariant(
           [
-            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early goal for ${CHILD}, we're continuing to build toward it step by step.`,
+            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early goal for ${CHILD}. We're continuing to build toward it step by step.`,
             `We're staying consistent with ${name}. This is still early progress, and that's expected at this stage.`,
           ],
           goal.id
         )
       : pickVariant(
           [
-            `${CHILD} kept steady with ${name}, no big change either way.`,
+            `${CHILD} kept steady with ${name}, with no big change either way.`,
             `${name.charAt(0).toUpperCase()}${name.slice(1)} held about the same as last time, which is normal between bigger jumps.`,
           ],
           goal.id
@@ -776,14 +828,14 @@ function goalHighlight(goal: GenerationGoalInput): string | null {
 function skillHighlight(skill: GenerationSkillInput): string | null {
   if (skill.percentThisSession === null) return null;
   const delta = skill.previousPercent === null ? null : skill.percentThisSession - skill.previousPercent;
-  const name = skill.label.toLowerCase();
+  const name = parentPhrase(skill.label);
   const emerging = skill.percentThisSession < EMERGING_THRESHOLD;
 
   if (delta === null) {
     return emerging
       ? pickVariant(
           [
-            `This is an early stage for ${name}, we'll keep practising and building on it.`,
+            `This is an early stage for ${name}. We'll keep practising and building on it.`,
             `We're just introducing ${name}. It's early days, which is exactly where we'd expect to be.`,
           ],
           skill.id
@@ -806,7 +858,7 @@ function skillHighlight(skill: GenerationSkillInput): string | null {
     return emerging
       ? pickVariant(
           [
-            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early skill for ${CHILD}, we're continuing to build on it with consistent practice.`,
+            `${name.charAt(0).toUpperCase()}${name.slice(1)} is still an early skill for ${CHILD}. We're continuing to build on it with consistent practice.`,
             `We're staying consistent with ${name}. This is still early progress, and that's expected at this stage.`,
           ],
           skill.id
@@ -814,7 +866,7 @@ function skillHighlight(skill: GenerationSkillInput): string | null {
       : pickVariant(
           [
             `${CHILD} continued practising ${name} at a steady pace.`,
-            `${name.charAt(0).toUpperCase()}${name.slice(1)} is progressing steadily, nothing dramatic, just consistent practice.`,
+            `${name.charAt(0).toUpperCase()}${name.slice(1)} is progressing steadily. Nothing dramatic, just consistent practice.`,
           ],
           skill.id
         );
@@ -862,7 +914,7 @@ function behaviourFocusNote(b: GenerationBehaviourInput): string | null {
     return pickVariant(
       [
         `${name.charAt(0).toUpperCase()}${name.slice(1)} came up a little more than usual this session. We're staying consistent with our strategy and keeping an eye on it.`,
-        `We saw a bit more of ${name} today than usual. That can happen, we're not changing our approach, just staying consistent.`,
+        `We saw a bit more of ${name} today than usual. That can happen. We're not changing our approach, just staying consistent.`,
       ],
       b.id
     );
@@ -977,14 +1029,14 @@ function collectDomainBuckets(
 function focusAreaList(input: GenerationInput): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
-  const add = (raw: string | null | undefined) => {
-    const v = raw?.trim().toLowerCase();
-    if (!v || seen.has(v)) return;
-    seen.add(v);
-    out.push(v);
+  const add = (phrase: string | null | undefined) => {
+    const key = phrase?.trim().toLowerCase();
+    if (!phrase || !key || seen.has(key)) return;
+    seen.add(key);
+    out.push(phrase.trim());
   };
-  for (const g of input.goals) if (g.percentComplete !== null) add(g.title);
-  for (const s of input.skills) if (s.percentThisSession !== null) add(s.label);
+  for (const g of input.goals) if (g.percentComplete !== null) add(parentPhrase(g.title));
+  for (const s of input.skills) if (s.percentThisSession !== null) add(parentPhrase(s.label));
   for (const b of input.behaviours) if (b.perHour !== null) add(behaviourParentName(b));
   return out;
 }
@@ -1026,7 +1078,7 @@ function buildSessionNarrative(input: GenerationInput, ctx: ToneContext): Report
     .replace(/\s*Home practice focus:[\s\S]*$/, "")
     .trim();
   if (quotableNotes) {
-    const parentFriendly = applyParentFriendlyLanguage(quotableNotes, input.behaviours);
+    const parentFriendly = applyParentFriendlyLanguage(readableNotes(quotableNotes), input.behaviours);
     blocks.push({ type: "quote", label: "In the therapist's words", text: parentFriendly });
   }
 
@@ -1073,7 +1125,7 @@ function buildTodaysWins(input: GenerationInput): ReportSection {
       .filter((g) => g.percentComplete !== null)
       .map((g) => ({
         id: g.id,
-        name: g.title.toLowerCase(),
+        name: parentPhrase(g.title),
         current: g.percentComplete as number,
         delta: g.previousPercentComplete === null ? null : (g.percentComplete as number) - g.previousPercentComplete,
       })),
@@ -1081,7 +1133,7 @@ function buildTodaysWins(input: GenerationInput): ReportSection {
       .filter((s) => s.percentThisSession !== null)
       .map((s) => ({
         id: s.id,
-        name: s.label.toLowerCase(),
+        name: parentPhrase(s.label),
         current: s.percentThisSession as number,
         delta: s.previousPercent === null ? null : (s.percentThisSession as number) - s.previousPercent,
       })),
@@ -1366,7 +1418,7 @@ function domainSkillParentSentence(
       {
         warm: [
           `We're still working on ${CHILD} following instructions consistently. This is an early stage, and that's completely normal.`,
-          `${CHILD} is just starting to follow this kind of instruction${instructionPhrase}, that's completely normal at this stage.`,
+          `${CHILD} is just starting to follow this kind of instruction${instructionPhrase}. That's completely normal at this stage.`,
         ],
         direct: [
           `${CHILD} is not yet consistently following instructions${instructionPhrase}. This is an early-stage skill.`,
@@ -1527,7 +1579,7 @@ function domainSkillParentSentence(
               ctx,
               [
                 ` ${CHILD} needed some support with this today, which is a normal part of learning.`,
-                ` ${CHILD} needed a bit of help with this today, that's a normal part of the process.`,
+                ` ${CHILD} needed a bit of help with this today. That's a normal part of the process.`,
               ],
               [
                 ` ${CHILD} needed support with this today.`,
@@ -1602,7 +1654,7 @@ function buildNextSteps(input: GenerationInput): ReportSection {
       .filter((g) => g.percentComplete !== null && g.previousPercentComplete !== null)
       .map((g) => ({
         id: g.id,
-        name: g.title.toLowerCase(),
+        name: parentPhrase(g.title),
         delta: (g.percentComplete as number) - (g.previousPercentComplete as number),
         current: g.percentComplete as number,
       })),
@@ -1610,7 +1662,7 @@ function buildNextSteps(input: GenerationInput): ReportSection {
       .filter((s) => s.percentThisSession !== null && s.previousPercent !== null)
       .map((s) => ({
         id: s.id,
-        name: s.label.toLowerCase(),
+        name: parentPhrase(s.label),
         delta: (s.percentThisSession as number) - (s.previousPercent as number),
         current: s.percentThisSession as number,
       })),
@@ -1639,8 +1691,8 @@ function buildNextSteps(input: GenerationInput): ReportSection {
 
   if (items.length === 0) {
     const touched = [
-      ...input.goals.filter((g) => g.percentComplete !== null).map((g) => g.title.toLowerCase()),
-      ...input.skills.filter((s) => s.percentThisSession !== null).map((s) => s.label.toLowerCase()),
+      ...input.goals.filter((g) => g.percentComplete !== null).map((g) => parentPhrase(g.title)),
+      ...input.skills.filter((s) => s.percentThisSession !== null).map((s) => parentPhrase(s.label)),
     ];
     if (touched.length > 0) {
       add(
