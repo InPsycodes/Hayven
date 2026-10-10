@@ -1,3 +1,8 @@
+"use client";
+
+import { useState } from "react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+
 import { cn } from "@/lib/utils";
 import { formatTime, toLagosWallClock } from "@/data/format";
 import { OpenSlotChip } from "@/components/therapist/open-slot-chip";
@@ -42,6 +47,17 @@ export function WeekScheduleGrid({
 
   const todayISO = toLagosWallClock(new Date()).toISOString().slice(0, 10);
 
+  // Phones: a 3-day window with arrows, opening on today when it's in this
+  // week. From md up the full week shows and the window is ignored.
+  const WINDOW = 3;
+  const todayIndex = days.findIndex((d) => d.toISOString().slice(0, 10) === todayISO);
+  const [windowStart, setWindowStart] = useState(() =>
+    Math.min(Math.max(todayIndex, 0), days.length - WINDOW)
+  );
+  const inWindow = (i: number) => i >= windowStart && i < windowStart + WINDOW;
+  const dayLabel = (d: Date) =>
+    `${d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })} ${d.getUTCDate()}`;
+
   const bookingBySlotId = new Map(bookings.map((b) => [b.availabilitySlotId, b]));
   const nextBooking = bookings
     .filter((b) => b.status === "confirmed")
@@ -68,10 +84,33 @@ export function WeekScheduleGrid({
 
   return (
     <div>
-      <div className="overflow-x-auto">
-        <div className="grid min-w-[720px] grid-cols-[56px_repeat(7,1fr)]">
+      <div className="mb-3 flex items-center justify-between gap-2 md:hidden">
+        <button
+          type="button"
+          onClick={() => setWindowStart((w) => Math.max(0, w - 1))}
+          disabled={windowStart === 0}
+          aria-label="Earlier days"
+          className="flex size-10 items-center justify-center rounded-md ring-1 ring-border transition-opacity disabled:opacity-35"
+        >
+          <IconChevronLeft size={18} stroke={1.75} aria-hidden />
+        </button>
+        <span className="text-sm text-charcoal" aria-live="polite">
+          {dayLabel(days[windowStart])} – {dayLabel(days[windowStart + WINDOW - 1])}
+        </span>
+        <button
+          type="button"
+          onClick={() => setWindowStart((w) => Math.min(days.length - WINDOW, w + 1))}
+          disabled={windowStart === days.length - WINDOW}
+          aria-label="Later days"
+          className="flex size-10 items-center justify-center rounded-md ring-1 ring-border transition-opacity disabled:opacity-35"
+        >
+          <IconChevronRight size={18} stroke={1.75} aria-hidden />
+        </button>
+      </div>
+      <div className="md:overflow-x-auto">
+        <div className="grid grid-cols-[44px_repeat(3,1fr)] md:min-w-[720px] md:grid-cols-[56px_repeat(7,1fr)]">
           <div />
-          {days.map((day) => {
+          {days.map((day, dayIndex) => {
             const iso = day.toISOString().slice(0, 10);
             const isToday = iso === todayISO;
             const isWeekend = [0, 6].includes(day.getUTCDay());
@@ -79,7 +118,8 @@ export function WeekScheduleGrid({
               <div
                 key={iso}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 border-b border-border py-2 text-center",
+                  "flex-col items-center gap-0.5 border-b border-border py-2 text-center md:flex",
+                  inWindow(dayIndex) ? "flex" : "hidden",
                   isToday && "bg-terracotta/10",
                   isWeekend && !isToday && "bg-paper/40"
                 )}
@@ -105,7 +145,7 @@ export function WeekScheduleGrid({
                 {hour % 12 === 0 ? 12 : hour % 12}
                 {hour < 12 ? "am" : "pm"}
               </div>
-              {days.map((day) => {
+              {days.map((day, dayIndex) => {
                 const iso = day.toISOString().slice(0, 10);
                 const isWeekend = [0, 6].includes(day.getUTCDay());
                 const { state, slot, booking } = stateFor(iso, hour);
@@ -113,7 +153,8 @@ export function WeekScheduleGrid({
                   <div
                     key={`${iso}-${hour}`}
                     className={cn(
-                      "min-h-14 border-b border-l border-border p-1",
+                      "min-h-14 border-b border-l border-border p-1 md:block",
+                      inWindow(dayIndex) ? "block" : "hidden",
                       isWeekend && !slot && "bg-paper/30"
                     )}
                   >
