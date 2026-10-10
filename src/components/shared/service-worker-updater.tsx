@@ -31,8 +31,18 @@ export function ServiceWorkerUpdater() {
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+    // On a first visit there is no controller yet: the SW installs, claims
+    // the page (clientsClaim), and fires controllerchange. That is not an
+    // update, and reloading then threw away whatever the visitor had started
+    // typing a few seconds after landing (seen live on /therapist after
+    // sign-in). Only reload when an existing controller is being replaced.
+    let hadController = Boolean(navigator.serviceWorker.controller);
     let reloaded = false;
     const onControllerChange = () => {
+      if (!hadController) {
+        hadController = true;
+        return;
+      }
       if (reloaded) return;
       reloaded = true;
       window.location.reload();
