@@ -11,7 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { getReportForSession } from "@/lib/reports/queries";
 import { renderReportBody } from "@/lib/reports/generate";
-import { detectFlaggedPhrases, extractDomainFreeText } from "@/lib/reports/safety";
+import { detectFlaggedPhrases, reportBodyText, extractDomainFreeText } from "@/lib/reports/safety";
 import { getConfidentialNote } from "@/lib/therapy-sessions/confidential";
 import { formatDate } from "@/data/format";
 
@@ -74,6 +74,8 @@ export default async function TherapySessionPage({
       ...detectFlaggedPhrases(therapySession.therapist_notes),
       ...detectFlaggedPhrases(therapySession.general_presentation),
       ...domainFreeText.flatMap((text) => detectFlaggedPhrases(text)),
+      // The parent version can be edited by hand, so check what it now says too.
+      ...detectFlaggedPhrases(reportBodyText(report?.parentBody)),
     ]),
   ];
 

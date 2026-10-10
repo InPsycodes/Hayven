@@ -13,6 +13,7 @@ export type AuditAction =
   | "skill.toggle_active"
   | "report.generate"
   | "report.save"
+  | "report.save_parent"
   | "report.publish"
   | "report.download"
   | "report.submit_for_approval"

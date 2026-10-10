@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 
+import { ReportEditor } from "@/components/therapy-session/report-editor";
 import { ReportView } from "@/components/therapy-session/report-view";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -29,6 +30,7 @@ export function ParentPreviewPanel({
   const [currentStatus, setCurrentStatus] = useState(status);
   const [published, setPublished] = useState(publishedAt);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
 
   const awaitingApproval = hasActiveSupervisor && currentStatus === "in_review";
   const needsRepublish = !hasActiveSupervisor && published !== null && currentStatus === "in_review";
@@ -72,12 +74,21 @@ export function ParentPreviewPanel({
           <p className="font-medium text-error-text">Your session notes mention something worth a second look:</p>
           <p className="mt-1">
             &quot;{flaggedPhrases.join('", "')}&quot; {flaggedPhrases.length === 1 ? "was" : "were"} found in your
-            session notes, which are shown to the parent above. If this is sensitive or internal, consider moving it
-            to the confidential note instead before publishing.
+            session notes or the parent version above, which the parent will see. If this is sensitive or internal,
+            consider moving it to the confidential note instead before publishing.
           </p>
         </div>
       )}
-      <ReportView body={body} />
+      {editing ? (
+        <div className="flex flex-col gap-3">
+          <ReportEditor reportId={reportId} body={body} version="parent" />
+          <Button variant="ghost" size="sm" onClick={() => setEditing(false)} className="w-fit">
+            Done editing
+          </Button>
+        </div>
+      ) : (
+        <ReportView body={body} />
+      )}
       {needsRepublish && (
         <p className="rounded-sm bg-terracotta/10 px-3 py-2 text-xs text-charcoal">
           The clinical report was edited after this was published. The parent is still seeing the version from{" "}
@@ -102,8 +113,14 @@ export function ParentPreviewPanel({
             Published to parent
           </StatusBadge>
         ) : (
-          <Button onClick={handlePublish} disabled={isPending} className="w-fit">
+          <Button onClick={handlePublish} disabled={isPending || editing} className="w-fit">
             {isPending ? (hasActiveSupervisor ? "Submitting..." : "Publishing...") : publishLabel}
+          </Button>
+        )}
+        {/* The parent reads this copy directly, so it can only be changed before it's published. */}
+        {!published && !editing && (
+          <Button variant="outline" onClick={() => setEditing(true)} className="w-fit">
+            Edit parent version
           </Button>
         )}
         <Button asChild variant="outline" className="w-fit">

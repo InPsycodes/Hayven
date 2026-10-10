@@ -3,7 +3,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createNotification } from "@/lib/notifications/create";
 import { logAuditEvent } from "@/lib/audit/log";
-import { detectSafeguardingPhrases, extractDomainFreeText } from "@/lib/reports/safety";
+import { detectSafeguardingPhrases, reportBodyText, extractDomainFreeText } from "@/lib/reports/safety";
 import type { AppSession } from "@/lib/auth/session";
 import { getSafeguardingLeadIds } from "./leads";
 
@@ -50,7 +50,11 @@ export async function flagPublishedReportForSafeguarding(params: {
 }): Promise<void> {
   try {
     const admin = createAdminClient();
-    const { data: report } = await admin.from("reports").select("session_id").eq("id", params.reportId).maybeSingle();
+    const { data: report } = await admin
+      .from("reports")
+      .select("session_id, therapist_body, parent_body")
+      .eq("id", params.reportId)
+      .maybeSingle();
     if (!report?.session_id) return;
 
     const { data: session } = await admin
@@ -71,7 +75,15 @@ export async function flagPublishedReportForSafeguarding(params: {
 
     const matched = [
       ...new Set(
-        [session.therapist_notes, session.general_presentation, session.confidential_note, ...domainFreeText].flatMap(
+        [
+          session.therapist_notes,
+          session.general_presentation,
+          session.confidential_note,
+          ...domainFreeText,
+          // Both report versions can be edited by hand after generation.
+          reportBodyText(report.therapist_body),
+          reportBodyText(report.parent_body),
+        ].flatMap(
           (text) => detectSafeguardingPhrases(text)
         )
       ),

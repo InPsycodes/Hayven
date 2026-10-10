@@ -1,16 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { Block } from "@/components/therapy-session/report-view";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
-import { saveReport } from "@/lib/reports/actions";
+import { saveParentReport, saveReport } from "@/lib/reports/actions";
 import type { ReportBlock, ReportBody } from "@/lib/reports/types";
 
 const READ_ONLY_SECTIONS = new Set(["data_summary"]);
+
+/** Charts and tables are drawn from the recorded data, so they're shown, not edited. */
+const isTextBlock = (block: ReportBlock) =>
+  block.type === "paragraph" || block.type === "quote" || block.type === "bullets";
 
 function blockToText(block: ReportBlock): string {
   if (block.type === "paragraph" || block.type === "quote") return block.text ?? "";
@@ -31,7 +36,17 @@ function textToBlock(block: ReportBlock, text: string): ReportBlock {
   return { ...block, text };
 }
 
-export function ReportEditor({ reportId, body }: { reportId: string; body: ReportBody }) {
+export function ReportEditor({
+  reportId,
+  body,
+  version = "clinical",
+}: {
+  reportId: string;
+  body: ReportBody;
+  /** Which copy this edits: the clinical report, or the version the parent receives. */
+  version?: "clinical" | "parent";
+}) {
+  const router = useRouter();
   const [texts, setTexts] = useState<Record<string, string[]>>(
     Object.fromEntries(
       body.sections.filter((s) => !READ_ONLY_SECTIONS.has(s.key)).map((s) => [s.key, s.blocks.map(blockToText)])
@@ -59,7 +74,8 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
               }
         ),
       };
-      const result = await saveReport(reportId, editedBody);
+      const result =
+        version === "parent" ? await saveParentReport(reportId, editedBody) : await saveReport(reportId, editedBody);
       reset(); // a draft report is saved repeatedly, not a one-time submit
       if (!result.ok) {
         setStatus("error");
@@ -67,6 +83,7 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
         return;
       }
       setStatus("saved");
+      router.refresh();
     });
   });
 
@@ -86,7 +103,13 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
         ) : (
           <div key={section.key} className="flex flex-col gap-3 rounded-sm bg-card p-4 ring-1 ring-border">
             <Label>{section.heading}</Label>
-            {section.blocks.map((block, i) => (
+            {section.blocks.map((block, i) =>
+              !isTextBlock(block) ? (
+                <div key={i} className="flex flex-col gap-1">
+                  <p className="text-xs text-muted-foreground">Drawn from the session data, not editable.</p>
+                  <Block block={block} />
+                </div>
+              ) : (
               <div key={i} className="flex flex-col gap-1">
                 {block.label && (
                   <Label htmlFor={`section-${section.key}-${i}`} className="text-xs text-muted-foreground">
@@ -107,7 +130,8 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
                   }}
                 />
               </div>
-            ))}
+              )
+            )}
           </div>
         )
       )}
@@ -116,7 +140,7 @@ export function ReportEditor({ reportId, body }: { reportId: string; body: Repor
 
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} disabled={isPending}>
-          {isPending ? "Saving..." : "Save report"}
+          {isPending ? "Saving..." : version === "parent" ? "Save parent version" : "Save report"}
         </Button>
         {status === "saved" && <span className="fade-in text-sm text-success-text">Saved.</span>}
       </div>

@@ -189,6 +189,55 @@ export async function saveReport(
 }
 
 /**
+ * Saves the therapist's edits to the parent version. Allowed until the
+ * report is published: the parent reads parent_body directly, so an edit
+ * after publishing would change a report they have already been sent (and,
+ * for a supervised therapist, skip the supervisor's approval). While it is
+ * awaiting approval it can still be edited; the supervisor approves
+ * whatever is saved.
+ */
+export async function saveParentReport(
+  reportId: string,
+  parentBody: ReportBody
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await getSession();
+  if (!session || session.role !== "therapist") {
+    return { ok: false, error: "Not authorized." };
+  }
+
+  const therapist = await getRealTherapistProfileByUserId(session.userId);
+  if (!therapist) return { ok: false, error: "Finish setting up your profile first." };
+
+  const supabase = await createClient();
+  const childId = await reportBelongsToTherapist(supabase, reportId, therapist.id);
+  if (!childId) {
+    return { ok: false, error: "Report not found." };
+  }
+
+  const { data, error } = await supabase
+    .from("reports")
+    .update({ parent_body: parentBody })
+    .eq("id", reportId)
+    .is("published_at", null)
+    .select("id")
+    .maybeSingle();
+
+  // 42501: the column grant from migration 0108 isn't in place.
+  if (error?.code === "42501") {
+    return { ok: false, error: "Editing the parent version isn't available yet. Please contact Hayven." };
+  }
+  if (error) return { ok: false, error: error.message };
+  if (!data) {
+    return { ok: false, error: "This report has already been published to the parent, so their copy can't be changed." };
+  }
+
+  await logAuditEvent({ actor: session, action: "report.save_parent", entityType: "report", entityId: reportId, childId });
+
+  revalidatePath(`/therapist/children`);
+  return { ok: true };
+}
+
+/**
  * Publishes for the first time, or re-publishes after an edit -- either way
  * this is the therapist's explicit sign-off that the parent should see the
  * current state. E10/D5, external PRD review: a therapist with an active

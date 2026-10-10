@@ -175,3 +175,17 @@ export function extractDomainFreeText(
   }
   return texts;
 }
+
+/**
+ * Every piece of free text in a report body (paragraphs, quotes, bullet
+ * items), joined. Report text is editable by the therapist, so the phrase
+ * checks above must look at what the report actually says, not only at the
+ * session notes it was generated from.
+ */
+export function reportBodyText(body: { sections: { blocks: { text?: string; items?: string[] }[] }[] } | null | undefined): string {
+  if (!body?.sections) return "";
+  return body.sections
+    .flatMap((s) => s.blocks.flatMap((b) => [b.text ?? "", ...(b.items ?? [])]))
+    .filter(Boolean)
+    .join("\n");
+}
