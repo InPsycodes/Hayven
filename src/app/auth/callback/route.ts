@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/lib/auth/safe-next";
 
 /**
  * Landing point for "Continue with Google". Google sign-in is for parents
@@ -15,7 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const nextParam = searchParams.get("next") ?? "";
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/parent";
+  const next = safeNextPath(nextParam) ?? "/parent";
 
   const fail = (code: string) => {
     const url = request.nextUrl.clone();

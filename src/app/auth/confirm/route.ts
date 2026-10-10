@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/lib/auth/safe-next";
 
 /**
  * Landing point for email links (password recovery, and any future email
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
   const type = (OTP_TYPES as readonly string[]).includes(rawType) ? (rawType as (typeof OTP_TYPES)[number]) : "recovery";
 
   const nextParam = searchParams.get("next") ?? "/";
-  const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
+  const next = safeNextPath(nextParam) ?? "/";
 
   const dest = request.nextUrl.clone();
   dest.search = "";

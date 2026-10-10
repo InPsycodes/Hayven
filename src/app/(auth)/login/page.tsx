@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { SplitAuthPanel } from "@/components/shared/split-auth-panel";
+import { safeNextPath } from "@/lib/auth/safe-next";
 
 export const metadata: Metadata = { title: "Log in" };
 
@@ -16,7 +17,7 @@ export default async function LoginPage({
   // (src/proxy.ts) push unauthenticated users here with ?next=<path> so
   // they land back where they were going, e.g. mid-booking, instead of
   // always at their role's dashboard (L-9, production audit 2026-09-03).
-  const next = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : undefined;
+  const next = safeNextPath(nextParam) ?? undefined;
 
   return (
     <SplitAuthPanel

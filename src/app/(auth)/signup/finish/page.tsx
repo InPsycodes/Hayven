@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { FinishSignupForm } from "@/components/auth/finish-signup-form";
 import { SplitAuthPanel } from "@/components/shared/split-auth-panel";
 import { getSession } from "@/lib/auth/session";
+import { safeNextPath } from "@/lib/auth/safe-next";
 
 export const metadata: Metadata = { title: "Finish signing up" };
 
@@ -12,7 +13,7 @@ export default async function FinishSignupPage({ searchParams }: { searchParams:
   if (!session || session.role !== "parent") redirect("/login");
 
   const { next: nextParam } = await searchParams;
-  const next = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/parent";
+  const next = safeNextPath(nextParam) ?? "/parent";
 
   return (
     <SplitAuthPanel
