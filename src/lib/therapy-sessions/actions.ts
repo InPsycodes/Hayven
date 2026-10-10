@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { logAuditEvent } from "@/lib/audit/log";
 import { getChildProgramme } from "./queries";
+import { homePracticeLines, homePracticeLinesError, replaceHomePracticeForSession } from "@/lib/home-practice/sessions";
 
 export interface FormState {
   error?: string;
@@ -76,12 +77,21 @@ export async function createTherapySession(
   const setting = formData.get("setting");
   const noteArrival = formData.get("noteArrival");
   const noteWin = formData.get("noteWin");
-  const noteHomework = formData.get("noteHomework");
   const noteOther = formData.get("noteOther");
+  // "What should we practise at home?" plus up to two more lines. Each
+  // becomes an activity the parent can log tries against; together they
+  // still feed the report's "How you can help at home".
+  const homeLines = homePracticeLines([
+    formData.get("noteHomework"),
+    formData.get("homeActivity2"),
+    formData.get("homeActivity3"),
+  ]);
+  const homeLinesError = homePracticeLinesError(homeLines);
+  if (homeLinesError) return { error: homeLinesError };
   const therapistNotes = stitchSessionNotes(
     typeof noteArrival === "string" && noteArrival.trim() ? noteArrival.trim() : null,
     typeof noteWin === "string" && noteWin.trim() ? noteWin.trim() : null,
-    typeof noteHomework === "string" && noteHomework.trim() ? noteHomework.trim() : null,
+    homeLines.length > 0 ? homeLines.map(cleanSentence).join(". ") : null,
     typeof noteOther === "string" && noteOther.trim() ? noteOther.trim() : null
   );
   const confidentialNote = formData.get("confidentialNote");
@@ -360,6 +370,14 @@ export async function createTherapySession(
     entityType: "therapy_session",
     entityId: sessionId,
     childId,
+  });
+
+  await replaceHomePracticeForSession({
+    childId,
+    therapistProfileId: therapist.id,
+    sessionId,
+    sessionDate,
+    lines: homeLines,
   });
 
   redirect(`/therapist/children/${childId}/sessions/${sessionId}`);

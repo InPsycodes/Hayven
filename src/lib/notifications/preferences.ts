@@ -6,12 +6,14 @@ export interface EmailPreferences {
   email_session_reminders: boolean;
   email_messages: boolean;
   email_report_nudges: boolean;
+  email_home_practice: boolean;
 }
 
 export const EMAIL_PREF_DEFAULTS: EmailPreferences = {
   email_session_reminders: true,
   email_messages: true,
   email_report_nudges: true,
+  email_home_practice: true,
 };
 
 export const EMAIL_PREF_FIELDS: {
@@ -33,6 +35,11 @@ export const EMAIL_PREF_FIELDS: {
     key: "email_report_nudges",
     label: "Report nudges",
     hint: "A reminder when a published report is still unread.",
+  },
+  {
+    key: "email_home_practice",
+    label: "Home practice reminders",
+    hint: "A nudge midweek if nothing has been logged for your child's home practice yet.",
   },
 ];
 

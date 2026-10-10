@@ -12,9 +12,10 @@ export const EMAIL_PREF_BY_TYPE: Partial<Record<NotificationType, keyof EmailPre
   session_reminder: "email_session_reminders",
   new_message: "email_messages",
   report_reminder: "email_report_nudges",
+  home_practice_reminder: "email_home_practice",
 };
 
-const PREF_COLUMNS = "email_session_reminders, email_messages, email_report_nudges";
+const PREF_COLUMNS = "email_session_reminders, email_messages, email_report_nudges, email_home_practice";
 
 function coerce(row: Partial<EmailPreferences> | null): EmailPreferences {
   return row ? { ...EMAIL_PREF_DEFAULTS, ...row } : EMAIL_PREF_DEFAULTS;

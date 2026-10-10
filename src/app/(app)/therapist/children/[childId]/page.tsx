@@ -23,6 +23,8 @@ import {
   toSkillAcquisitionSeries,
 } from "@/lib/therapy-sessions/chart-series";
 import { ageFromDob, formatDate } from "@/data/format";
+import { getHomePracticeForTherapist } from "@/lib/home-practice/queries";
+import { HomePracticePanel } from "@/components/therapist/home-practice-panel";
 
 export default async function ChildOverviewPage({
   params,
@@ -39,9 +41,10 @@ export default async function ChildOverviewPage({
   const child = await getAssignedChildById(childId, therapist.id);
   if (!child) notFound();
 
-  const [window, careTeam] = await Promise.all([
+  const [window, careTeam, homePractice] = await Promise.all([
     getSessionSeriesWindow(childId),
     getCareTeamForChild(childId, therapist.id),
+    getHomePracticeForTherapist(therapist.id, childId),
   ]);
   const attendance = toAttendanceSeries(window);
   const goalMatrix = toGoalProgressMatrix(window);
@@ -68,6 +71,14 @@ export default async function ChildOverviewPage({
             <Link href={`/therapist/children/${childId}/intake`}>Intake form</Link>
           </Button>
         </div>
+
+        {homePractice && homePractice.length > 0 && (
+          <HomePracticePanel
+            childName={child.firstName}
+            activities={homePractice}
+            therapistProfileId={therapist.id}
+          />
+        )}
 
         {careTeam.length > 0 && (
           <div className="rounded-sm bg-card p-5 ring-1 ring-border">

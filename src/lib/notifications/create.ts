@@ -27,7 +27,8 @@ export type NotificationType =
   | "referral_new"
   | "report_needs_approval"
   | "safeguarding_concern_new"
-  | "safeguarding_concern_actioned";
+  | "safeguarding_concern_actioned"
+  | "home_practice_reminder";
 
 /**
  * P6/E16 from the external PRD review: push payloads previously reused the
@@ -60,6 +61,7 @@ const PUSH_GENERIC_TITLE: Record<NotificationType, string> = {
   report_needs_approval: "A report needs your approval",
   safeguarding_concern_new: "Safeguarding update",
   safeguarding_concern_actioned: "Safeguarding update",
+  home_practice_reminder: "Home practice",
 };
 const PUSH_GENERIC_BODY = "Open Hayven to see what's new.";
 

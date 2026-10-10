@@ -29,6 +29,8 @@ import { getRealNextUpcomingBookingForChild, getRealBookingsForParent } from "@/
 import { getPublishedReportsForChild } from "@/lib/reports/queries";
 import { renderReportBody, extractReportSnippet } from "@/lib/reports/generate";
 import { getChildGoalsForParent, weeklyAttendance } from "@/lib/dashboard/care";
+import { getHomePracticeForParent } from "@/lib/home-practice/queries";
+import { HomePracticeCard } from "@/components/parent/home-practice-card";
 
 interface ParentDashboardProps {
   searchParams: Promise<{ child?: string }>;
@@ -44,13 +46,26 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
   const allChildren = await getRealChildrenForParent(session.userId);
   const activeChild = allChildren.find((c) => c.id === childParam) ?? allChildren[0];
 
-  const [nextSession, reports, allBookings, intakeForm, goals] = await Promise.all([
+  const [nextSession, reports, allBookings, intakeForm, goals, homePractice] = await Promise.all([
     activeChild ? getRealNextUpcomingBookingForChild(activeChild.id) : null,
     activeChild ? getPublishedReportsForChild(activeChild.id) : [],
     getRealBookingsForParent(session.userId),
     activeChild ? getIntakeFormForChild(activeChild.id) : null,
     activeChild ? getChildGoalsForParent(activeChild.id) : [],
+    activeChild ? getHomePracticeForParent(session.userId, activeChild.id) : null,
   ]);
+
+  // Shown in both the first-run and the full dashboard: a family can have
+  // practice from a session before they have a published report.
+  const homePracticeCard =
+    activeChild && homePractice && homePractice.activities.length > 0 ? (
+      <HomePracticeCard
+        childName={activeChild.firstName}
+        activities={homePractice.activities}
+        week={homePractice.week}
+        today={homePractice.today}
+      />
+    ) : null;
 
   const intakeProg = intakeProgress(
     intakeForm?.details ?? {},
@@ -163,6 +178,8 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
           </Suspense>
         )}
 
+        {homePracticeCard}
+
         <CareGettingStarted
           title={activeChild ? `Getting ${name} started` : "Welcome to Hayven"}
           subtitle={
@@ -200,6 +217,8 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
           <ChildSwitcher kids={allChildren} activeId={activeChild.id} />
         </Suspense>
       )}
+
+      {homePracticeCard}
 
       <div className="mt-5 grid grid-cols-1 gap-3.5 md:grid-cols-12">
         <div className="grid grid-cols-2 gap-3.5 md:contents">

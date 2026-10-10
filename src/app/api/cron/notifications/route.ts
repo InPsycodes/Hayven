@@ -10,6 +10,7 @@ import {
   notifyOnboardingCheckins,
 } from "@/lib/notifications/cron";
 import { purgeStaleReferrals } from "@/lib/referrals/cron";
+import { notifyHomePracticeReminders } from "@/lib/home-practice/cron";
 import { purgeReviewedAccountDeletions } from "@/lib/account/cron";
 import { purgeExpiredAuditLogs } from "@/lib/audit/cron";
 
@@ -39,13 +40,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [started, finished, reminders, upcoming, checkins, referralsPurged, accountsPurged, auditLogsPurged] =
+  const [started, finished, reminders, upcoming, checkins, homePractice, referralsPurged, accountsPurged, auditLogsPurged] =
     await Promise.all([
       notifySessionsStarted(),
       notifySessionsFinished(),
       notifyUnreadReportReminders(),
       notifyUpcomingSessions(),
       notifyOnboardingCheckins(),
+      notifyHomePracticeReminders(),
       purgeStaleReferrals(),
       purgeReviewedAccountDeletions(),
       purgeExpiredAuditLogs(),
@@ -57,6 +59,7 @@ export async function GET(req: NextRequest) {
     reportReminders: reminders,
     upcomingReminders: upcoming,
     onboardingCheckins: checkins,
+    homePracticeReminders: homePractice,
     referralsPurged: referralsPurged.purged,
     accountsPurged: accountsPurged.purged,
     auditLogsPurged: auditLogsPurged.purged,

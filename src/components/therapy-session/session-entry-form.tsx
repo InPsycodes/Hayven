@@ -445,9 +445,33 @@ export function SessionEntryForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="noteHomework" className="text-xs">
-            What should we practice at home?
+            What should we practise at home?
           </Label>
-          <Textarea id="noteHomework" name="noteHomework" rows={2} />
+          <Textarea
+            id="noteHomework"
+            name="noteHomework"
+            rows={2}
+            maxLength={500}
+            placeholder="At snack time, wait a few seconds so they can ask with two words"
+          />
+          <Input
+            id="homeActivity2"
+            name="homeActivity2"
+            maxLength={500}
+            aria-label="Another home activity (optional)"
+            placeholder="Another activity (optional)"
+          />
+          <Input
+            id="homeActivity3"
+            name="homeActivity3"
+            maxLength={500}
+            aria-label="A third home activity (optional)"
+            placeholder="A third activity (optional)"
+          />
+          <p className="text-xs text-muted-foreground">
+            Each line becomes something {childName}&apos;s family can log during the week. You&apos;ll see how it went
+            before your next session.
+          </p>
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="noteOther" className="text-xs">

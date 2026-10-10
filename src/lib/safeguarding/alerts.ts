@@ -129,3 +129,55 @@ export async function flagPublishedReportForSafeguarding(params: {
     console.error("safeguarding auto-flag threw", params.reportId, err);
   }
 }
+
+/**
+ * A parent's home-practice note is free text from the family, so it gets the
+ * same safety-wording check as therapist text. A match reaches the
+ * safeguarding leads as an automatic concern. The note itself goes into the
+ * concern: the leads can't otherwise see home-practice logs, and the concern
+ * table is only readable by them.
+ *
+ * Fire-and-forget: never throws, never affects the parent's log.
+ */
+export async function flagHomePracticeNoteForSafeguarding(params: {
+  actor: AppSession;
+  childId: string;
+  note: string;
+}): Promise<void> {
+  try {
+    const matched = detectSafeguardingPhrases(params.note);
+    if (matched.length === 0) return;
+
+    const admin = createAdminClient();
+    const { data: concern, error } = await admin
+      .from("safeguarding_concerns")
+      .insert({
+        source: "auto_flag",
+        child_id: params.childId,
+        description: `Automatic flag: a parent's home practice note contains safety-related wording (${matched.join(", ")}). The note reads: "${params.note}"`,
+        matched_phrases: matched,
+      })
+      .select("id")
+      .single();
+    if (error || !concern) {
+      console.error("home practice safeguarding flag insert failed", error?.message);
+      return;
+    }
+
+    await admin.from("safeguarding_concern_events").insert({
+      concern_id: concern.id,
+      actor_id: params.actor.userId,
+      kind: "auto_flagged",
+      note: `Flagged from a home practice note. Matched: ${matched.join(", ")}.`,
+    });
+    await logAuditEvent({
+      actor: params.actor,
+      action: "safeguarding_concern.auto_flag",
+      entityType: "safeguarding_concern",
+      entityId: concern.id,
+    });
+    await notifySafeguardingLeads(concern.id, false);
+  } catch (err) {
+    console.error("home practice safeguarding flag threw", err);
+  }
+}
