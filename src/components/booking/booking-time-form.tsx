@@ -24,10 +24,13 @@ export function BookingTimeForm({
   therapist,
   kids,
   slots,
+  initialSessionType,
 }: {
   therapist: DiscoveryTherapist;
   kids: BookingChild[];
   slots: AvailabilitySlot[];
+  /** The type chosen on the profile page; wins over a stale draft. */
+  initialSessionType?: SessionType;
 }) {
   const router = useRouter();
   const { draft, setDraft } = useBookingStore();
@@ -36,7 +39,7 @@ export function BookingTimeForm({
 
   const [childId, setChildId] = useState(draft.childId ?? kids[0]?.id);
   const [sessionType, setSessionType] = useState<SessionType>(
-    draft.sessionType ?? therapist.sessionTypes[0]
+    initialSessionType ?? draft.sessionType ?? therapist.sessionTypes[0]
   );
 
   const openSlots = useMemo(
@@ -187,7 +190,7 @@ export function BookingTimeForm({
       {activeDay && (
         <div className="flex flex-col gap-2">
           <Label id="booking-time-label">
-            Available times --{" "}
+            Available times:{" "}
             {new Date(`${activeDay}T00:00:00Z`).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",

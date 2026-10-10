@@ -296,7 +296,10 @@ export const getRealTodaysBookingsForTherapist = cache(async function getRealTod
 });
 
 /**
- * Distinct children this therapist has had a non-cancelled booking with.
+ * Distinct children this therapist has had a paid booking with (confirmed,
+ * completed or no-show). Unpaid holds are left out, so a parent who abandons
+ * checkout never shows up as a client; this matches the Caseload page, whose
+ * assignments are only created once a booking is confirmed.
  * Wrapped in cache(): both the therapist dashboard page and AppShell (for
  * the sidebar's caseload-count badge) call this with the same therapistId
  * within one request -- see src/lib/messages/queries.ts for the same pattern.
@@ -307,7 +310,7 @@ export const getRealActiveClientCountForTherapist = cache(async function getReal
     .from("bookings")
     .select("child_id")
     .eq("therapist_id", therapistId)
-    .neq("status", "cancelled");
+    .in("status", ["confirmed", "completed", "no_show"]);
   if (error || !data) return 0;
   return new Set(data.map((r) => r.child_id)).size;
 });

@@ -13,10 +13,10 @@ export default async function BookingTimePage({
   searchParams,
 }: {
   params: Promise<{ therapistId: string }>;
-  searchParams: Promise<{ resumed?: string }>;
+  searchParams: Promise<{ resumed?: string; type?: string }>;
 }) {
   const { therapistId } = await params;
-  const { resumed } = await searchParams;
+  const { resumed, type } = await searchParams;
   const session = await getSession();
   if (!session || session.role !== "parent") {
     redirect(`/login?next=/book/${therapistId}/time`);
@@ -25,6 +25,9 @@ export default async function BookingTimePage({
   const context = await getBookingPageContext(therapistId, session.userId);
   if (!context) notFound();
   const { therapist, slots, kids } = context;
+  // The session type picked on the profile page, when it is one this
+  // therapist offers.
+  const initialSessionType = therapist.sessionTypes.find((t) => t === type);
 
   return (
     <div>
@@ -42,11 +45,11 @@ export default async function BookingTimePage({
         // a hold that's since expired. Say so explicitly rather than
         // silently resetting to step one with no explanation.
         <p className="mx-6 mt-4 rounded-sm bg-amber/10 p-3 text-sm text-amber-text md:mx-8">
-          Your booking session couldn&apos;t be found -- it may have expired, or this page was opened in a
+          Your booking session couldn&apos;t be found. It may have expired, or this page was opened in a
           new tab. Please pick a time to start again.
         </p>
       )}
-      <BookingTimeForm therapist={therapist} kids={kids} slots={slots} />
+      <BookingTimeForm therapist={therapist} kids={kids} slots={slots} initialSessionType={initialSessionType} />
     </div>
   );
 }

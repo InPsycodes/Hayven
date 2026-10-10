@@ -80,7 +80,7 @@ export function BookingPanel({
       </div>
 
       <Button asChild variant="accent" className="w-full">
-        <Link href={`/book/${therapistId}/time`}>Book a session</Link>
+        <Link href={`/book/${therapistId}/time?type=${selectedType}`}>Book a session</Link>
       </Button>
     </div>
   );
