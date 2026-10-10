@@ -4,6 +4,7 @@ import { useActionState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   Select,
   SelectContent,
@@ -22,7 +23,10 @@ export function TherapistBankCard({ current }: { current: BankDetails | null }) 
 
   return (
     <form action={formAction} className="flex flex-col gap-3 rounded-sm bg-card p-5 ring-1 ring-foreground/10">
-      <h2 className="font-heading text-base text-charcoal">Payout bank account</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-heading text-base text-charcoal">Payout bank account</h2>
+        <StatusBadge tone={current ? "sage" : "error"}>{current ? "On file" : "Missing"}</StatusBadge>
+      </div>
       <p className="-mt-1 text-xs text-muted-foreground">
         Where Hayven sends your earnings. We verify it with your bank before saving. Until this is set, your
         profile won&apos;t appear in search.

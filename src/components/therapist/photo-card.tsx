@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { AvatarUploadDropzone } from "@/components/shared/avatar-upload-dropzone";
 import { TherapistAvatar } from "@/components/shared/therapist-avatar";
@@ -11,6 +11,8 @@ const initialState: FormState = {};
 
 export function TherapistPhotoCard({ name, photoUrl }: { name: string; photoUrl: string | null }) {
   const [state, formAction, isPending] = useActionState(updateTherapistPhoto, initialState);
+  // The save button only makes sense once a new photo has been picked.
+  const [chosen, setChosen] = useState(false);
 
   return (
     <form action={formAction} className="flex flex-col gap-3 rounded-sm bg-card p-5 ring-1 ring-foreground/10">
@@ -21,10 +23,14 @@ export function TherapistPhotoCard({ name, photoUrl }: { name: string; photoUrl:
 
       <div className="flex flex-wrap items-center gap-4">
         <TherapistAvatar name={name} photoUrl={photoUrl} size={72} fallbackClassName="bg-paper text-charcoal" />
-        <AvatarUploadDropzone />
-        <Button type="submit" size="sm" disabled={isPending}>
-          {isPending ? "Uploading..." : "Save photo"}
-        </Button>
+        <AvatarUploadDropzone onFileChosen={() => setChosen(true)} />
+        {chosen ? (
+          <Button type="submit" size="sm" disabled={isPending}>
+            {isPending ? "Uploading..." : "Save photo"}
+          </Button>
+        ) : (
+          <span className="text-xs text-muted-foreground">Tap the camera to choose a photo</span>
+        )}
       </div>
 
       {state.error && <p className="text-sm text-error-text">{state.error}</p>}
