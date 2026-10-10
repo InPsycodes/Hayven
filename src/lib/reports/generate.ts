@@ -746,6 +746,36 @@ export function parentPhrase(title: string): string {
   return lowerFirst(trimmed);
 }
 
+// Verbs whose goal the progress bar measures directly: "Increase verbal
+// requesting" at 55% is 55% of the way to more requesting. Reduce/decrease
+// goals keep their full title, since a bar labelled just "Elopement 55%"
+// would read as 55% elopement.
+const GROWTH_VERBS = new Set([
+  "build", "develop", "enhance", "establish", "expand", "improve", "increase", "maintain", "promote", "strengthen",
+]);
+
+/** A goal title as a short label for the parent's progress bars and charts: "Increase verbal requesting" -> "Verbal requesting". */
+export function parentGoalLabel(title: string): string {
+  const trimmed = title.trim().replace(/^to\s+/i, "");
+  const match = trimmed.match(/^([A-Za-z]+)\s+([\s\S]+)$/);
+  if (match && GROWTH_VERBS.has(match[1].toLowerCase()) && !/^of\b/i.test(match[2])) {
+    return match[2].charAt(0).toUpperCase() + match[2].slice(1);
+  }
+  return trimmed;
+}
+
+/**
+ * The therapist's answer to "What was the biggest win today?", lifted out of
+ * the stitched notes ("... Biggest win: X. ..."; see stitchSessionNotes).
+ * The answer runs to the end of its first sentence.
+ */
+export function extractBiggestWin(notes: string | null | undefined): string | null {
+  if (!notes) return null;
+  const match = notes.match(/Biggest win:\s*([\s\S]*?\.)(?=\s|$)/);
+  const win = match?.[1].trim();
+  return win && win.length > 1 ? win : null;
+}
+
 /**
  * The therapist's guided notes are stored with their form labels
  * ("Arrived: …", "Biggest win: …", see stitchSessionNotes). Quoted as-is
@@ -1074,8 +1104,10 @@ function buildSessionNarrative(input: GenerationInput, ctx: ToneContext): Report
   // The "Home practice focus: …" sentence is lifted out into buildNextSteps
   // ("How you can help at home") -- drop it from the quoted note here so the
   // same guidance doesn't appear in two sections.
+  // Likewise the "Biggest win" answer, which leads "Today's wins".
   const quotableNotes = (input.session.therapistNotes ?? "")
     .replace(/\s*Home practice focus:[\s\S]*$/, "")
+    .replace(/\s*Biggest win:\s*[\s\S]*?\.(?=\s|$)/, "")
     .trim();
   if (quotableNotes) {
     const parentFriendly = applyParentFriendlyLanguage(readableNotes(quotableNotes), input.behaviours);
@@ -1119,6 +1151,11 @@ function buildTodaysWins(input: GenerationInput): ReportSection {
     seen.add(text);
     items.push(text);
   };
+
+  // The therapist's own answer to "What was the biggest win today?" comes
+  // first: it's the most specific thing a parent can be told.
+  const therapistWin = extractBiggestWin(input.session.therapistNotes);
+  if (therapistWin) add(applyParentFriendlyLanguage(therapistWin, input.behaviours));
 
   const movers = [
     ...input.goals
@@ -1198,7 +1235,12 @@ function buildTrendLines(
   for (const goal of input.goals) {
     const h = input.history.goals.find((x) => x.id === goal.id);
     if (h && countKnown(h.values) >= minPoints) {
-      lines.push({ label: goal.title, points: h.values, unit: "percent", improvement: "up" });
+      lines.push({
+        label: opts?.parentLabels ? parentGoalLabel(goal.title) : goal.title,
+        points: h.values,
+        unit: "percent",
+        improvement: "up",
+      });
     }
   }
   for (const skill of input.skills) {
@@ -1236,7 +1278,7 @@ function buildProgressSnapshot(input: GenerationInput): ReportSection | null {
   const bars: ReportProgressBar[] = [];
   for (const goal of input.goals) {
     if (goal.percentComplete === null) continue;
-    bars.push({ label: goal.title, value: goal.percentComplete, previousValue: goal.previousPercentComplete });
+    bars.push({ label: parentGoalLabel(goal.title), value: goal.percentComplete, previousValue: goal.previousPercentComplete });
   }
   for (const skill of input.skills) {
     if (skill.percentThisSession === null) continue;
