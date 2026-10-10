@@ -15,6 +15,7 @@ import {
 } from "@tabler/icons-react";
 
 import { CareShell } from "@/components/care/care-shell";
+import { CareGettingStarted, CareLaterNote, type GettingStartedStep } from "@/components/care/care-getting-started";
 import { CareHeader } from "@/components/care/care-header";
 import { CareStat } from "@/components/care/care-stat";
 import { CarePanel } from "@/components/care/care-panel";
@@ -76,6 +77,95 @@ export default async function TherapistDashboardPage() {
                 : "Verification pending. Your credentials are being reviewed (2–5 business days).",
           }
         : null;
+
+  // First run: a therapist who isn't live yet and has no work on Hayven
+  // gets the setup steps as their dashboard instead of zeros and an empty
+  // chart. Anyone with clients, sessions or reports keeps the full
+  // dashboard (with the checklist above it) even if a step lapses later.
+  const hasWork =
+    activeClients > 0 || todaysBookings.length > 0 || reportSummary.draftCount + reportSummary.publishedCount > 0;
+  if (!onboarding.complete && !hasWork) {
+    const status = therapist.verificationStatus;
+    const raw: { step: Omit<GettingStartedStep, "state">; done: boolean; waiting: boolean; primary: string }[] = [
+      {
+        step: {
+          title: status === "verified" ? "Credentials verified" : "Credentials checked",
+          detail:
+            status === "verified"
+              ? "Approved by Hayven"
+              : status === "rejected"
+                ? "Not approved. See your profile for the reason."
+                : status === "flagged"
+                  ? "We need more information. See your profile."
+                  : "Under review, usually 2 to 5 business days",
+          href: "/therapist/profile",
+          cta: "See details",
+        },
+        done: status === "verified",
+        waiting: status === "pending",
+        primary: "See verification details",
+      },
+      {
+        step: {
+          title: "Insurance on file",
+          detail: onboarding.hasInsurance ? "Current cover uploaded" : "Upload your professional indemnity certificate",
+          href: "/therapist/profile",
+          cta: "Upload",
+        },
+        done: onboarding.hasInsurance,
+        waiting: false,
+        primary: "Upload your insurance",
+      },
+      {
+        step: { title: "Add your availability", detail: "The times families can book you", href: "/therapist/schedule", cta: "Add times" },
+        done: onboarding.hasAvailability,
+        waiting: false,
+        primary: "Add your availability",
+      },
+      {
+        step: {
+          title: "Add your payout bank account",
+          detail: "Where your 80% is paid every Monday",
+          href: "/therapist/profile",
+          cta: "Add",
+        },
+        done: onboarding.hasBankAccount,
+        waiting: false,
+        primary: "Add your bank account",
+      },
+    ];
+    // The next step is the first one the therapist can act on; a pending
+    // review is shown as "In review" and skipped over.
+    const nextIndex = raw.findIndex((r) => !r.done && !r.waiting);
+    const steps: GettingStartedStep[] = raw.map((r, i) => ({
+      ...r.step,
+      state: r.done ? "done" : r.waiting ? "waiting" : i === nextIndex ? "current" : "todo",
+    }));
+    const doneCount = raw.filter((r) => r.done).length;
+    const next = nextIndex >= 0 ? raw[nextIndex] : null;
+
+    return (
+      <CareShell>
+        <CareHeader
+          session={session}
+          initials={initialsFromName(session.name)}
+          title={`${greetingForNow()}, ${shortName(session.name)}`}
+          meta={`${doneCount} of ${raw.length} steps done before families can book you`}
+          actions={next?.step.href ? [{ label: next.primary, href: next.step.href }] : []}
+        />
+        <ComplianceNotices therapistProfileId={therapist.id} />
+        <CareGettingStarted
+          title="Get ready for families"
+          subtitle="Your profile appears in search once all four are done."
+          steps={steps}
+        />
+        <div className="mt-3.5 grid grid-cols-1 gap-3.5 md:grid-cols-2">
+          <CareLaterNote title="Your caseload and earnings" text="Appear here once families start booking you." />
+          <CareLaterNote title="While you wait" text="The therapist courses in Learn are open to you now." />
+        </div>
+      </CareShell>
+    );
+  }
 
   return (
     <CareShell>

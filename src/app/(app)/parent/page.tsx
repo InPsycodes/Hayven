@@ -18,6 +18,7 @@ import { CareHeader } from "@/components/care/care-header";
 import { CareStat } from "@/components/care/care-stat";
 import { CarePanel } from "@/components/care/care-panel";
 import { CareBarChart } from "@/components/care/care-bar-chart";
+import { CareGettingStarted, CareLaterNote, type GettingStartedStep } from "@/components/care/care-getting-started";
 import { ChildSwitcher } from "@/components/dashboard/child-switcher";
 import { getSession } from "@/lib/auth/session";
 import { ageFromDob, formatDateTime, formatRelativeToNow, formatShortDate, shortName } from "@/data/format";
@@ -91,6 +92,94 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
         `${reports.length} report${reports.length === 1 ? "" : "s"}`,
       ]
     : ["Let's get set up"];
+
+  // First run: until the child has had a session or a report, the stat
+  // tiles and panels would all read "n/a" / "0". Show the steps to the
+  // first session instead.
+  const firstRun = !activeChild || (past.length === 0 && reports.length === 0);
+  if (firstRun) {
+    const name = activeChild?.firstName ?? "your child";
+    const intakeComplete = Boolean(activeChild) && intakeDone === intakeTotal;
+    const booked = Boolean(nextSession);
+    // `primary` is the header button label while that step is the next one.
+    const raw: (Omit<GettingStartedStep, "state"> & { done: boolean; primary: string })[] = [
+      ...(!activeChild
+        ? [{ title: "Add your child", detail: "Their first name, birthday and what you've noticed", href: "/parent/children", cta: "Add child", primary: "Add your child", done: false }]
+        : []),
+      {
+        title: `Tell us about ${name}`,
+        detail: intakeComplete
+          ? "Intake form complete"
+          : `Intake form · about 10 minutes · ${activeChild ? intakeDone : 0} of ${intakeTotal} sections`,
+        href: intakeHref,
+        cta: activeChild && intakeDone > 0 ? "Continue" : "Start",
+        primary: activeChild && intakeDone > 0 ? "Continue intake" : `Start ${name}'s intake`,
+        done: intakeComplete,
+      },
+      {
+        title: "Find a therapist",
+        detail: booked && nextSession ? `Booked with ${nextSession.therapistDisplayName}` : "Take the 2-minute quiz or browse verified therapists",
+        href: "/search",
+        cta: "Find",
+        primary: "Find a therapist",
+        done: booked,
+      },
+      {
+        title: "Book the first session",
+        detail:
+          booked && nextSession
+            ? `${formatDateTime(nextSession.slotStartTime)} · ${formatRelativeToNow(nextSession.slotStartTime)}`
+            : "Pay securely; reschedule up to 24 hours before",
+        href: "/search",
+        cta: "Book",
+        primary: "Book a session",
+        done: booked,
+      },
+    ];
+    const firstOpen = raw.findIndex((s) => !s.done);
+    const steps: GettingStartedStep[] = raw.map((s, i) => ({
+      title: s.title,
+      detail: s.detail,
+      href: s.href,
+      cta: s.cta,
+      state: s.done ? "done" : i === firstOpen ? "current" : "todo",
+    }));
+    const current = firstOpen >= 0 ? raw[firstOpen] : null;
+
+    return (
+      <CareShell>
+        <CareHeader
+          session={session}
+          initials={activeChild ? activeChild.firstName.slice(0, 2).toUpperCase() : "H"}
+          title={activeChild ? activeChild.firstName : `Welcome, ${shortName(session.name)}`}
+          status={activeChild && !intakeComplete ? { label: "Getting started", tone: "warn" } : undefined}
+          meta={activeChild ? `Age ${ageFromDob(activeChild.dateOfBirth)} · let's get ${name} started` : "Let's get set up"}
+          actions={current?.href ? [{ label: current.primary, href: current.href }] : []}
+        />
+
+        {allChildren.length > 1 && activeChild && (
+          <Suspense>
+            <ChildSwitcher kids={allChildren} activeId={activeChild.id} />
+          </Suspense>
+        )}
+
+        <CareGettingStarted
+          title={activeChild ? `Getting ${name} started` : "Welcome to Hayven"}
+          subtitle={
+            current
+              ? "A few steps to the first session. You can stop and come back at any point."
+              : `All set. ${name}'s first session is ${nextSession ? formatRelativeToNow(nextSession.slotStartTime) : "booked"}.`
+          }
+          steps={steps}
+        />
+
+        <div className="mt-3.5 grid grid-cols-1 gap-3.5 md:grid-cols-2">
+          <CareLaterNote title="Progress and goals" text={`Appear here after ${name}'s first session.`} />
+          <CareLaterNote title="Reports" text="Your therapist's progress reports will show here once published." />
+        </div>
+      </CareShell>
+    );
+  }
 
   return (
     <CareShell>
