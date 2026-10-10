@@ -224,15 +224,27 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
     users: { full_name: string } | null;
   } | null;
 
-  const { data: priorSession } = await supabase
+  // This session and the completed sessions before it, newest first. Ordered
+  // by date and then by when each was logged: a child can have two sessions
+  // on one day (say speech in the morning, OT in the afternoon), and ordering
+  // by date alone returned those in arbitrary order, so the trend chart could
+  // end on the wrong session and "previous session" skipped a same-day one.
+  // Same-day sessions logged after this one are dropped, so regenerating an
+  // older report never pulls in later results.
+  const HISTORY_LIMIT = 8;
+  const { data: candidates } = await supabase
     .from("therapy_sessions")
-    .select("id, duration_minutes")
+    .select("id, session_date, duration_minutes, created_at")
     .eq("child_id", therapySession.child_id)
-    .eq("status", "complete")
-    .lt("session_date", therapySession.session_date)
+    .lte("session_date", therapySession.session_date)
+    .or(`status.eq.complete,id.eq.${sessionId}`)
     .order("session_date", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("created_at", { ascending: false })
+    .limit(HISTORY_LIMIT * 2);
+  const ordered = candidates ?? [];
+  const selfIndex = ordered.findIndex((s) => s.id === sessionId);
+  const upToThis = selfIndex === -1 ? [] : ordered.slice(selfIndex);
+  const priorSession = upToThis[1] ?? null;
 
   const [
     { data: goals },
@@ -331,16 +343,7 @@ export async function getGenerationInput(sessionId: string): Promise<GenerationI
 
   // Recent-session window backing the report's progress bars + sparklines --
   // this session and up to seven completed sessions before it, oldest first.
-  const HISTORY_LIMIT = 8;
-  const { data: histSessionsDesc } = await supabase
-    .from("therapy_sessions")
-    .select("id, session_date, duration_minutes")
-    .eq("child_id", therapySession.child_id)
-    .lte("session_date", therapySession.session_date)
-    .or(`status.eq.complete,id.eq.${sessionId}`)
-    .order("session_date", { ascending: false })
-    .limit(HISTORY_LIMIT);
-  const histSessions = (histSessionsDesc ?? []).slice().reverse();
+  const histSessions = upToThis.slice(0, HISTORY_LIMIT).reverse();
   const histIds = histSessions.map((s) => s.id);
 
   const [{ data: histGoalEntries }, { data: histSkillEntries }, { data: histBehaviourEntries }] = await Promise.all([
