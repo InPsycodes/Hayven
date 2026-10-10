@@ -293,8 +293,9 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
           <CarePanel label="Next appointment" href="/parent/sessions" accent>
             {nextSession ? (
               <>
-                <h3 className="mt-2 font-heading text-lg font-medium capitalize text-care-ink">
-                  {nextSession.sessionType.replace("_", " ")} with {nextSession.therapistDisplayName}
+                <h3 className="mt-2 font-heading text-lg font-medium text-care-ink">
+                  {nextSession.sessionType === "virtual" ? "Virtual" : "In-person"} session with{" "}
+                  {nextSession.therapistDisplayName}
                 </h3>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-care-ink-soft">
                   <span className="inline-flex items-center gap-1.5">

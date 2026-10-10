@@ -32,7 +32,12 @@ export default async function ParentSessionsPage() {
   const session = await getSession();
   if (!session || session.role !== "parent") redirect("/login");
 
-  const bookings = await getRealBookingsForParent(session.userId);
+  // A checkout the parent never paid for ends up cancelled with its hold
+  // expiry still set (confirmation always clears it). It was never a session,
+  // so leave it out rather than listing it as a cancelled one.
+  const bookings = (await getRealBookingsForParent(session.userId)).filter(
+    (b) => !(b.status === "cancelled" && b.expiresAt)
+  );
   const financials = await getBookingFinancials(bookings.map((b) => b.id));
   const disputes = await getMyDisputesByBooking(
     bookings.filter((b) => DISPUTABLE.has(b.status)).map((b) => b.id)
@@ -61,7 +66,9 @@ export default async function ParentSessionsPage() {
               {bookings.map((booking) => {
                 const status = STATUS_LABEL[booking.status] ?? { label: booking.status, tone: "grey" as const };
                 const format =
-                  booking.sessionType === "virtual" ? "Virtual" : (booking.location ?? booking.therapistLocation);
+                  booking.sessionType === "virtual"
+                    ? "Virtual"
+                    : ["In person", booking.location ?? booking.therapistLocation].filter(Boolean).join(" · ");
                 const isUpcoming = booking.slotStartTime && new Date(booking.slotStartTime) > now;
                 const canCancel =
                   isUpcoming && (booking.status === "confirmed" || booking.status === "pending_payment");
@@ -84,9 +91,8 @@ export default async function ParentSessionsPage() {
                         <p className="text-sm font-medium text-charcoal">
                           {booking.childFirstName} with {booking.therapistDisplayName}
                         </p>
-                        <p className="text-xs text-muted-foreground capitalize">
-                          {booking.slotStartTime ? formatDateTime(booking.slotStartTime) : "Time not set"} ·{" "}
-                          {booking.sessionType.replace("_", " ")} · {format}
+                        <p className="text-xs text-muted-foreground">
+                          {booking.slotStartTime ? formatDateTime(booking.slotStartTime) : "Time not set"} · {format}
                         </p>
                       </div>
                       <div className="flex shrink-0 flex-wrap items-center gap-3">

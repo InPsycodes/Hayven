@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { IconArrowLeft, IconSend } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
-import { initialsFromName, shortName } from "@/data/format";
+import { formatShortDate, formatTime, initialsFromName, shortName } from "@/data/format";
 import { sendRealMessage } from "@/lib/messages/actions";
 import { useSubmitGuard } from "@/hooks/use-submit-guard";
 
@@ -17,19 +17,21 @@ export interface ThreadMessage {
   content: string;
 }
 
+// Days and times are read in Lagos time, like the rest of the app. Using the
+// runtime's own zone made the server (UTC) and the browser disagree, which
+// broke hydration on the thread page.
+const lagosDay = (ms: number) => new Date(ms).toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" });
+
 function dayLabel(iso: string): string {
-  const date = new Date(iso);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
-  if (sameDay(date, today)) return "Today";
-  if (sameDay(date, yesterday)) return "Yesterday";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const day = lagosDay(new Date(iso).getTime());
+  const now = Date.now();
+  if (day === lagosDay(now)) return "Today";
+  if (day === lagosDay(now - 86_400_000)) return "Yesterday";
+  return formatShortDate(iso);
 }
 
 function timeLabel(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return formatTime(iso);
 }
 
 const GROUP_GAP_MS = 4 * 60 * 1000;

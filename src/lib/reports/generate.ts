@@ -114,6 +114,13 @@ function joinList(items: string[]): string {
 
 const CHILD = "{{CHILD}}";
 
+/** "2026-10-10" -> "10 October 2026", for the sentences families read. */
+function formatSessionDate(date: string): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return date;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}
+
 function formatSetting(setting: string | null): string {
   if (setting === "in_person") return "in-person";
   if (setting === "virtual") return "virtual";
@@ -136,7 +143,7 @@ function buildSessionSummary(input: GenerationInput): ReportSection {
   const blocks: ReportBlock[] = [
     {
       type: "paragraph",
-      text: `${CHILD} attended a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session${therapistPhrase} on ${session.date}.`.replace(
+      text: `${CHILD} attended a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session${therapistPhrase} on ${formatSessionDate(session.date)}.`.replace(
         "  ",
         " "
       ),
@@ -878,7 +885,7 @@ function sessionOpeningSentence(input: GenerationInput): string {
   const { session } = input;
   const duration = session.durationMinutes ? `${session.durationMinutes}-minute` : "";
   const therapistPhrase = session.therapistName ? ` with ${session.therapistName}` : "";
-  const base = `${CHILD} had a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session${therapistPhrase} on ${session.date}.`.replace(
+  const base = `${CHILD} had a ${duration ? duration + " " : ""}${formatSetting(session.setting)} session${therapistPhrase} on ${formatSessionDate(session.date)}.`.replace(
     "  ",
     " "
   );
