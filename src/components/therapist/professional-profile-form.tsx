@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { updateTherapistProfile } from "@/lib/therapist/actions";
 import type { FormState } from "@/lib/therapist/actions";
+import { MAX_SESSION_PRICE, MIN_SESSION_PRICE } from "@/lib/therapist/pricing";
 
 const initialState: FormState = {};
 
@@ -42,7 +43,8 @@ export function ProfessionalProfileForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="price">Session price (NGN)</Label>
-          <Input id="price" name="price" type="number" min={0} required defaultValue={initialPrice} />
+          <Input id="price" name="price" type="number" min={MIN_SESSION_PRICE}
+            max={MAX_SESSION_PRICE} required defaultValue={initialPrice} />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="location">Location</Label>

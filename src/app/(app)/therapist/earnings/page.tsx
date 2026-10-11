@@ -9,7 +9,8 @@ import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId } from "@/lib/therapist/queries";
 import { getEarningsSummary, getEarningRows } from "@/lib/payouts/queries";
-import { COMMISSION_RATE, MIN_PAYOUT_NAIRA, EARNING_HOLD_MS } from "@/lib/payouts/commission";
+import { MIN_PAYOUT_NAIRA, EARNING_HOLD_MS, formatRate } from "@/lib/payouts/commission";
+import { getCommissionSummary, getTherapistClinic } from "@/lib/clinics/queries";
 import { formatDate, formatNaira } from "@/data/format";
 
 const EARNING_HOLD_DAYS = Math.round(EARNING_HOLD_MS / (24 * 60 * 60 * 1000));
@@ -31,14 +32,20 @@ export default async function TherapistEarningsPage() {
   const therapist = await getRealTherapistProfileByUserId(session.userId);
   if (!therapist) return <IncompleteProfileNotice />;
 
-  const [summary, rows] = await Promise.all([
+  const [summary, rows, commission, clinic] = await Promise.all([
     getEarningsSummary(therapist.id),
     getEarningRows(therapist.id),
+    getCommissionSummary(therapist.id),
+    getTherapistClinic(therapist.id),
   ]);
+
+  const commissionLine = commission.pilotEndsOn
+    ? `${commission.clinicName} pilot: Hayven takes ${formatRate(commission.rateToday)} until ${formatDate(commission.pilotEndsOn)}, then ${formatRate(commission.rateAfterPilot ?? 0)}`
+    : `Hayven takes ${formatRate(commission.rateToday)} per session`;
 
   return (
     <div>
-      <DashboardHeader session={session} greeting="Earnings" subtext={`Hayven takes ${COMMISSION_RATE * 100}% per session`} />
+      <DashboardHeader session={session} greeting="Earnings" subtext={commissionLine} />
       <div className="flex flex-col gap-6 px-5 py-6 md:px-10 md:py-8">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <StatCard label="Ready to pay out" value={formatNaira(summary.available)} emphasis />
@@ -49,7 +56,10 @@ export default async function TherapistEarningsPage() {
 
         <p className="-mt-2 text-xs text-muted-foreground">
           Earnings clear {EARNING_HOLD_DAYS} days after each session (room for a parent to report a problem), then pay out weekly on Monday once you&apos;re above{" "}
-          {formatNaira(MIN_PAYOUT_NAIRA)}. Add your bank details on your Profile so payouts can be sent.
+          {formatNaira(MIN_PAYOUT_NAIRA)}.{" "}
+          {clinic
+            ? `Your payouts go to ${clinic.name}'s bank account.`
+            : "Add your bank details on your Profile so payouts can be sent."}
         </p>
 
         {rows.length === 0 ? (
@@ -71,7 +81,8 @@ export default async function TherapistEarningsPage() {
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {formatDate(row.createdAt)} · {formatNaira(row.grossAmount)} charged, less{" "}
-                        {formatNaira(row.commissionAmount)} fee
+                        {formatNaira(row.commissionAmount)} Hayven fee
+                        {row.grossAmount > 0 && ` (${formatRate(row.commissionAmount / row.grossAmount)})`}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">

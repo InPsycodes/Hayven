@@ -123,12 +123,21 @@ export default async function TherapistDashboardPage() {
         primary: "Add your availability",
       },
       {
-        step: {
-          title: "Add your payout bank account",
-          detail: "Where your 80% is paid every Monday",
-          href: "/therapist/profile",
-          cta: "Add",
-        },
+        step: onboarding.clinicName
+          ? {
+              title: `Payouts go to ${onboarding.clinicName}`,
+              detail: onboarding.hasBankAccount
+                ? "Your clinic receives your session earnings every Monday"
+                : "Waiting for your clinic's bank account to be added",
+              href: "/therapist/earnings",
+              cta: "View",
+            }
+          : {
+              title: "Add your payout bank account",
+              detail: "Where your share of each session is paid every Monday",
+              href: "/therapist/profile",
+              cta: "Add",
+            },
         done: onboarding.hasBankAccount,
         waiting: false,
         primary: "Add your bank account",

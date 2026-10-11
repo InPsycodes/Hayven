@@ -11,6 +11,7 @@ import { AvatarUploadDropzone } from "@/components/shared/avatar-upload-dropzone
 import { AreasOfFocusChips } from "@/components/auth/areas-of-focus-chips";
 import { WeeklyAvailabilityGrid } from "@/components/auth/weekly-availability-grid";
 import { saveProfileStep, type FormState } from "@/lib/therapist/actions";
+import { MAX_SESSION_PRICE, MIN_SESSION_PRICE } from "@/lib/therapist/pricing";
 
 const UNDERLINE_INPUT =
   "rounded-none border-0 border-b border-input bg-transparent px-0 focus-visible:ring-0 focus-visible:border-charcoal";
@@ -48,7 +49,8 @@ export function ProfileSetupForm() {
             id="price"
             name="price"
             type="number"
-            min={0}
+            min={MIN_SESSION_PRICE}
+            max={MAX_SESSION_PRICE}
             required
             className={UNDERLINE_INPUT}
             placeholder="15000"

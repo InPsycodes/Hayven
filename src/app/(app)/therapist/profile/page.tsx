@@ -23,6 +23,7 @@ import { getMyEmailPreferences } from "@/lib/notifications/preferences-server";
 import { getBankDetails } from "@/lib/payouts/queries";
 import { getCurrentInsurance } from "@/lib/therapist/agreement";
 import { cn } from "@/lib/utils";
+import { getTherapistClinic } from "@/lib/clinics/queries";
 
 type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
 
@@ -45,13 +46,14 @@ export default async function TherapistProfilePage({ searchParams }: { searchPar
   const { tab: rawTab } = await searchParams;
   const tab: Tab = rawTab === "account" ? "account" : "practice";
 
-  const [account, pendingDeletionRequest, supervisorRequest, emailPrefs, bankDetails, insurance] = await Promise.all([
+  const [account, pendingDeletionRequest, supervisorRequest, emailPrefs, bankDetails, insurance, clinic] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealPendingDeletionRequest(session.userId),
     getMySupervisorRequestStatus(session.userId),
     getMyEmailPreferences(),
     getBankDetails(therapist.id),
     getCurrentInsurance(therapist.id),
+    getTherapistClinic(therapist.id),
   ]);
 
   const verification = VERIFICATION_LABEL[therapist.verificationStatus] ?? {
@@ -117,7 +119,23 @@ export default async function TherapistProfilePage({ searchParams }: { searchPar
                 </p>
               </Card>
               <TherapistInsuranceCard current={insurance} />
-              <TherapistBankCard current={bankDetails} />
+              {clinic ? (
+                <Card className="p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="font-heading text-base text-charcoal">Payout account</h2>
+                    <StatusBadge tone={clinic.hasBank ? "sage" : "amber"}>
+                      {clinic.hasBank ? "Clinic account" : "Waiting for clinic"}
+                    </StatusBadge>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {clinic.hasBank
+                      ? `Your session earnings are paid to ${clinic.name}'s bank account. Speak to your clinic about how you're paid.`
+                      : `Your earnings will be paid to ${clinic.name}'s bank account once Hayven has it on file.`}
+                  </p>
+                </Card>
+              ) : (
+                <TherapistBankCard current={bankDetails} />
+              )}
               {showSupervisorAccess && (
                 <SupervisorAccessSection isSupervisor={session.isSupervisor} latestRequest={supervisorRequest} />
               )}

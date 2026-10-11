@@ -40,3 +40,41 @@ export function splitEarning(grossNaira: number): EarningSplit {
   const commission = Math.round(gross * COMMISSION_RATE);
   return { gross, commission, net: gross - commission };
 }
+
+/** A clinic's terms, as stored (rates are fractions, e.g. 0.1 for 10%). */
+export interface ClinicTerms {
+  commissionRate: number;
+  pilotRate: number;
+  /** YYYY-MM-DD; sessions on or before this day use pilotRate. */
+  pilotEndsOn: string | null;
+}
+
+/**
+ * Hayven's share for one session, by the session's date (YYYY-MM-DD):
+ * a therapist's own rate wins; otherwise their clinic's pilot rate while
+ * the pilot runs, then the clinic's rate; otherwise the standard 20%.
+ */
+export function resolveCommissionRate(params: {
+  override: number | null;
+  clinic: ClinicTerms | null;
+  sessionDate: string;
+}): number {
+  if (params.override !== null) return params.override;
+  if (params.clinic) {
+    const { pilotEndsOn, pilotRate, commissionRate } = params.clinic;
+    return pilotEndsOn && params.sessionDate <= pilotEndsOn ? pilotRate : commissionRate;
+  }
+  return COMMISSION_RATE;
+}
+
+/** The same split as splitEarning, at a given rate. */
+export function splitEarningAt(grossNaira: number, rate: number): EarningSplit {
+  const gross = Math.max(0, Math.round(grossNaira));
+  const commission = Math.round(gross * rate);
+  return { gross, commission, net: gross - commission };
+}
+
+/** "20%", "0%", "12.5%" */
+export function formatRate(rate: number): string {
+  return `${Math.round(rate * 1000) / 10}%`;
+}

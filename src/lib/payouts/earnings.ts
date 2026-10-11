@@ -1,10 +1,37 @@
 import "server-only";
 
 import type { createAdminClient } from "@/lib/supabase/admin";
-import { splitEarning, EARNING_HOLD_MS } from "@/lib/payouts/commission";
+import { splitEarningAt, EARNING_HOLD_MS } from "@/lib/payouts/commission";
+import { lagosDate, loadTherapistTerms, rateFor } from "@/lib/payouts/rates";
 import { paystackFeeNaira } from "@/lib/booking/refund-policy";
 
 type Admin = ReturnType<typeof createAdminClient>;
+
+type EarningRow = Record<string, unknown> & { commission_rate: number };
+
+/**
+ * Upserts earnings with the rate that applied. If the commission_rate
+ * column doesn't exist yet (migration 0111 not run), retries without it so
+ * an earning is never lost over a missing column.
+ */
+async function upsertEarnings(admin: Admin, rows: EarningRow[]): Promise<void> {
+  if (rows.length === 0) return;
+  const { error } = await admin
+    .from("therapist_earnings")
+    .upsert(rows, { onConflict: "booking_id,source", ignoreDuplicates: true });
+  if (error && /commission_rate/.test(error.message)) {
+    await admin
+      .from("therapist_earnings")
+      .upsert(
+        rows.map((row) => {
+          const copy: Record<string, unknown> = { ...row };
+          delete copy.commission_rate;
+          return copy;
+        }),
+        { onConflict: "booking_id,source", ignoreDuplicates: true }
+      );
+  }
+}
 
 /**
  * Records a therapist earning for each newly-completed session. Idempotent
@@ -19,13 +46,17 @@ export async function recordSessionEarnings(admin: Admin, bookingIds: string[]):
     .select("id, therapist_id, payout_hold, availability_slots(end_time), payments(amount, status, type)")
     .in("id", bookingIds);
 
-  const rows = [];
+  const terms = await loadTherapistTerms(admin, [...new Set((bookings ?? []).map((b) => b.therapist_id))]);
+  const rows: EarningRow[] = [];
   for (const b of bookings ?? []) {
     const payments = (b.payments ?? []) as { amount: number; status: string; type: string }[];
     const paid = payments.find((p) => p.status === "successful" && p.type === "session_commission");
     if (!paid || paid.amount <= 0) continue;
     const end = (b.availability_slots as unknown as { end_time: string } | null)?.end_time;
-    const { gross, commission, net } = splitEarning(paid.amount);
+    // The rate is the one in force on the session's date (a clinic pilot
+    // covers sessions up to its last day), stored so it never changes.
+    const rate = rateFor(terms.get(b.therapist_id), lagosDate(end));
+    const { gross, commission, net } = splitEarningAt(paid.amount, rate);
     rows.push({
       therapist_id: b.therapist_id,
       booking_id: b.id,
@@ -33,13 +64,12 @@ export async function recordSessionEarnings(admin: Admin, bookingIds: string[]):
       gross_amount: gross,
       commission_amount: commission,
       net_amount: net,
+      commission_rate: rate,
       status: b.payout_hold ? ("held" as const) : ("pending" as const),
       payable_at: new Date((end ? new Date(end).getTime() : Date.now()) + EARNING_HOLD_MS).toISOString(),
     });
   }
-  if (rows.length > 0) {
-    await admin.from("therapist_earnings").upsert(rows, { onConflict: "booking_id,source", ignoreDuplicates: true });
-  }
+  await upsertEarnings(admin, rows);
 }
 
 /**
@@ -55,12 +85,15 @@ export async function recordRetainedEarning(
   if (retainedNaira <= 0) return;
   const { data: b } = await admin
     .from("bookings")
-    .select("therapist_id")
+    .select("therapist_id, availability_slots(start_time)")
     .eq("id", bookingId)
     .maybeSingle();
   if (!b) return;
-  const { gross, commission, net } = splitEarning(retainedNaira);
-  await admin.from("therapist_earnings").upsert(
+  const terms = await loadTherapistTerms(admin, [b.therapist_id]);
+  const start = (b.availability_slots as unknown as { start_time: string } | null)?.start_time;
+  const rate = rateFor(terms.get(b.therapist_id), lagosDate(start));
+  const { gross, commission, net } = splitEarningAt(retainedNaira, rate);
+  await upsertEarnings(admin, [
     {
       therapist_id: b.therapist_id,
       booking_id: bookingId,
@@ -68,11 +101,11 @@ export async function recordRetainedEarning(
       gross_amount: gross,
       commission_amount: commission,
       net_amount: net,
+      commission_rate: rate,
       status: "pending" as const,
       payable_at: new Date(Date.now() + EARNING_HOLD_MS).toISOString(),
     },
-    { onConflict: "booking_id,source", ignoreDuplicates: true }
-  );
+  ]);
 }
 
 /** No-show: the parent forfeits the whole charge; the therapist earns their

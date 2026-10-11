@@ -48,7 +48,11 @@ export default async function AdminPayoutsPage() {
                 {preview.map((p) => (
                   <div key={p.therapistId} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 text-sm">
                     <span className="min-w-0 text-charcoal">
-                      {p.name} <span className="text-xs text-muted-foreground">· {p.earningCount} item{p.earningCount === 1 ? "" : "s"}</span>
+                      {p.name}{" "}
+                      <span className="text-xs text-muted-foreground">
+                        · {p.earningCount} item{p.earningCount === 1 ? "" : "s"}
+                        {p.clinicName && ` · paid to ${p.clinicName}`}
+                      </span>
                     </span>
                     <span className="flex items-center gap-2">
                       <span className="font-medium text-charcoal">{formatNaira(p.clearedNaira)}</span>

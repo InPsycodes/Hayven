@@ -5,12 +5,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth/session";
 import { getCurrentInsurance } from "@/lib/therapist/agreement";
 import { insuranceCoverState } from "@/lib/therapist/insurance-status";
+import { getTherapistClinic } from "@/lib/clinics/queries";
 
 export interface OnboardingStatus {
   verified: boolean;
   verificationPending: boolean;
   hasAvailability: boolean;
+  /** Their own payout account, or their clinic's. */
   hasBankAccount: boolean;
+  /** Set when the therapist belongs to a clinic, which receives their payouts. */
+  clinicName: string | null;
   /** Current professional indemnity insurance on file (0105/0106). */
   hasInsurance: boolean;
   /** All gates cleared -> the therapist is live in search and bookable. */
@@ -33,7 +37,7 @@ export async function getOnboardingStatus(therapistProfileId: string): Promise<O
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  const [{ data: profile }, { count: slotCount }, { data: bankRow }, insurance] = await Promise.all([
+  const [{ data: profile }, { count: slotCount }, { data: bankRow }, insurance, clinic] = await Promise.all([
     supabase
       .from("therapist_profiles")
       .select("verification_status")
@@ -51,13 +55,15 @@ export async function getOnboardingStatus(therapistProfileId: string): Promise<O
           .maybeSingle()
       : Promise.resolve({ data: null }),
     getCurrentInsurance(therapistProfileId),
+    getTherapistClinic(therapistProfileId),
   ]);
 
   const verified = profile?.verification_status === "verified";
   const verificationPending =
     profile?.verification_status === "pending" || profile?.verification_status === "flagged";
   const hasAvailability = (slotCount ?? 0) > 0;
-  const hasBankAccount = !!(bankRow?.user_id === session?.userId && bankRow?.bank_account_number);
+  const hasBankAccount =
+    !!(bankRow?.user_id === session?.userId && bankRow?.bank_account_number) || !!clinic?.hasBank;
 
   const coverState = insuranceCoverState(insurance?.expiresOn);
   const hasInsurance = coverState === "current" || coverState === "ending_soon";
@@ -67,6 +73,7 @@ export async function getOnboardingStatus(therapistProfileId: string): Promise<O
     verificationPending,
     hasAvailability,
     hasBankAccount,
+    clinicName: clinic?.name ?? null,
     hasInsurance,
     complete: verified && hasAvailability && hasBankAccount && hasInsurance,
   };

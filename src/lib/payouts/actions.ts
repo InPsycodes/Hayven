@@ -60,30 +60,45 @@ export async function runPayouts(): Promise<PayoutRunResult> {
     return { ok: true, created: 0, paidNaira: 0, skipped: [], errors: [] };
   }
 
-  const { data: profiles } = await admin
-    .from("therapist_profiles")
-    .select("id, user_id, bank_code, bank_account_number, bank_account_name, paystack_recipient_code, users(full_name)")
-    .in("id", eligible.map(([tid]) => tid));
-  const profById = new Map((profiles ?? []).map((p) => [p.id, p]));
+  const profiles = await loadPayoutProfiles(admin, eligible.map(([tid]) => tid));
+  const profById = new Map(profiles.map((p) => [p.id, p]));
 
   for (const [therapistId, group] of eligible) {
     const p = profById.get(therapistId);
     const name = (p?.users as unknown as { full_name: string } | null)?.full_name ?? "Unknown therapist";
 
-    if (!p || !p.bank_account_number || !p.bank_code) {
-      skipped.push({ name, reason: "No bank account on file" });
+    // A clinic's therapists are paid into the clinic's account.
+    const clinic = p?.clinics ?? null;
+    const account = clinic
+      ? {
+          code: clinic.bank_code,
+          number: clinic.bank_account_number,
+          holder: clinic.bank_account_name ?? clinic.name,
+          recipient: clinic.paystack_recipient_code,
+        }
+      : p
+        ? { code: p.bank_code, number: p.bank_account_number, holder: p.bank_account_name ?? name, recipient: p.paystack_recipient_code }
+        : null;
+    if (!p || !account || !account.number || !account.code) {
+      skipped.push({ name, reason: clinic ? `${clinic.name} has no bank account on file` : "No bank account on file" });
       continue;
     }
 
     try {
-      let recipient = p.paystack_recipient_code as string | null;
+      let recipient = account.recipient;
       if (!recipient) {
         recipient = await createTransferRecipient({
-          name: p.bank_account_name ?? name,
-          accountNumber: p.bank_account_number,
-          bankCode: p.bank_code,
+          name: account.holder,
+          accountNumber: account.number,
+          bankCode: account.code,
         });
-        await admin.from("therapist_profiles").update({ paystack_recipient_code: recipient }).eq("id", therapistId);
+        if (clinic) {
+          await admin.from("clinics").update({ paystack_recipient_code: recipient }).eq("id", clinic.id);
+          // Later therapists of the same clinic in this run reuse it.
+          clinic.paystack_recipient_code = recipient;
+        } else {
+          await admin.from("therapist_profiles").update({ paystack_recipient_code: recipient }).eq("id", therapistId);
+        }
       }
 
       const reference = `payout_${therapistId}_${Date.now()}`;
@@ -148,7 +163,9 @@ export async function runPayouts(): Promise<PayoutRunResult> {
         const transfer = await initiateTransfer({
           amountNaira: claimedTotal,
           recipientCode: recipient,
-          reason: `Hayven payout, ${claimedIds.length} item${claimedIds.length === 1 ? "" : "s"}`,
+          reason: clinic
+            ? `Hayven payout for ${name}, ${claimedIds.length} item${claimedIds.length === 1 ? "" : "s"}`
+            : `Hayven payout, ${claimedIds.length} item${claimedIds.length === 1 ? "" : "s"}`,
           reference,
         });
         const settled = transfer.status === "success";
@@ -168,7 +185,9 @@ export async function runPayouts(): Promise<PayoutRunResult> {
             userId: p.user_id,
             type: "payment_receipt",
             title: "Payout sent",
-            body: `A payout of ${formatNaira(claimedTotal)} is on its way to your bank account.`,
+            body: clinic
+              ? `A payout of ${formatNaira(claimedTotal)} for your sessions is on its way to ${clinic.name}'s account.`
+              : `A payout of ${formatNaira(claimedTotal)} is on its way to your bank account.`,
             url: "/therapist/earnings",
           });
         }
@@ -205,4 +224,44 @@ export async function runPayouts(): Promise<PayoutRunResult> {
   revalidatePath("/admin/payouts");
   revalidatePath("/therapist/earnings");
   return { ok: true, created, paidNaira, skipped, errors };
+}
+
+interface PayoutClinic {
+  id: string;
+  name: string;
+  bank_code: string | null;
+  bank_account_number: string | null;
+  bank_account_name: string | null;
+  paystack_recipient_code: string | null;
+}
+
+interface PayoutProfile {
+  id: string;
+  user_id: string | null;
+  bank_code: string | null;
+  bank_account_number: string | null;
+  bank_account_name: string | null;
+  paystack_recipient_code: string | null;
+  users: unknown;
+  clinics: PayoutClinic | null;
+}
+
+/**
+ * Bank details for each therapist being paid, with their clinic's when they
+ * belong to one. Falls back to the therapist's own details alone if the
+ * clinics table isn't there yet (before migration 0111), so a payout run
+ * never stalls on it.
+ */
+async function loadPayoutProfiles(
+  admin: ReturnType<typeof createAdminClient>,
+  ids: string[]
+): Promise<PayoutProfile[]> {
+  const base = "id, user_id, bank_code, bank_account_number, bank_account_name, paystack_recipient_code, users(full_name)";
+  const withClinic = await admin
+    .from("therapist_profiles")
+    .select(`${base}, clinics(id, name, bank_code, bank_account_number, bank_account_name, paystack_recipient_code)`)
+    .in("id", ids);
+  if (!withClinic.error) return (withClinic.data ?? []) as unknown as PayoutProfile[];
+  const plain = await admin.from("therapist_profiles").select(base).in("id", ids);
+  return ((plain.data ?? []) as unknown as Omit<PayoutProfile, "clinics">[]).map((p) => ({ ...p, clinics: null }));
 }

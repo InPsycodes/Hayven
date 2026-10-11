@@ -17,6 +17,7 @@ import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 import { createNotification } from "@/lib/notifications/create";
 import { THERAPIST_AGREEMENT } from "@/content/therapist-agreement";
 import { recordAgreementAcceptance } from "./agreement";
+import { sessionPriceError } from "@/lib/therapist/pricing";
 
 export interface FormState {
   error?: string;
@@ -249,9 +250,8 @@ export async function saveProfileStep(
   if (typeof bio !== "string" || !bio.trim()) {
     return { error: "Please add a short bio." };
   }
-  if (!Number.isFinite(price) || price <= 0) {
-    return { error: "Please enter a valid session price." };
-  }
+  const priceError = sessionPriceError(price);
+  if (priceError) return { error: priceError };
   if (!inPerson && !virtual) {
     return { error: "Select at least one session type." };
   }
@@ -365,9 +365,8 @@ export async function updateTherapistProfile(_prevState: FormState, formData: Fo
   if (typeof bio !== "string" || !bio.trim()) {
     return { error: "Please add a short bio." };
   }
-  if (!Number.isFinite(price) || price <= 0) {
-    return { error: "Please enter a valid session price." };
-  }
+  const priceError = sessionPriceError(price);
+  if (priceError) return { error: priceError };
   if (!inPerson && !virtual) {
     return { error: "Select at least one session type." };
   }

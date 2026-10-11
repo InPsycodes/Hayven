@@ -89,6 +89,8 @@ export interface PayoutPreviewRow {
   clearedNaira: number;
   earningCount: number;
   hasBank: boolean;
+  /** Set when the payout goes to the therapist's clinic. */
+  clinicName: string | null;
   eligible: boolean;
 }
 
@@ -112,23 +114,38 @@ export async function getPayoutPreview(): Promise<PayoutPreviewRow[]> {
   }
 
   const ids = [...byTherapist.keys()];
-  const { data: profiles } = await admin
+  // With the therapist's clinic when they have one (payouts then go to the
+  // clinic's account); without it if the clinics table isn't there yet.
+  type PreviewProfile = {
+    id: string;
+    bank_account_number: string | null;
+    users: unknown;
+    clinics?: { name: string; bank_account_number: string | null } | null;
+  };
+  const withClinic = await admin
     .from("therapist_profiles")
-    .select("id, bank_account_number, users(full_name)")
+    .select("id, bank_account_number, users(full_name), clinics(name, bank_account_number)")
     .in("id", ids);
+  const profiles = (
+    withClinic.error
+      ? (await admin.from("therapist_profiles").select("id, bank_account_number, users(full_name)").in("id", ids)).data
+      : withClinic.data
+  ) as unknown as PreviewProfile[] | null;
   const profById = new Map((profiles ?? []).map((p) => [p.id, p]));
 
   return ids
     .map((id) => {
       const g = byTherapist.get(id)!;
       const p = profById.get(id);
-      const hasBank = !!p?.bank_account_number;
+      const clinic = p?.clinics ?? null;
+      const hasBank = clinic ? !!clinic.bank_account_number : !!p?.bank_account_number;
       return {
         therapistId: id,
         name: (p?.users as unknown as { full_name: string } | null)?.full_name ?? "Unknown",
         clearedNaira: g.total,
         earningCount: g.count,
         hasBank,
+        clinicName: clinic?.name ?? null,
         eligible: hasBank && g.total >= MIN_PAYOUT_NAIRA,
       };
     })
