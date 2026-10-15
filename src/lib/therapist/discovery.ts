@@ -14,7 +14,7 @@ const DISCOVERY_TAG = "discovery-therapists";
  * Supabase (`therapist_public_profiles`). The demo/mock therapist layer was
  * removed ahead of the pilot -- every profile here is a real, admin-verified
  * therapist who set their own availability, so the booking flow always has a
- * real booking row and real Paystack checkout behind it.
+ * real booking row and real Flutterwave checkout behind it.
  */
 export interface DiscoveryTherapist {
   id: string;

@@ -24,6 +24,7 @@ import { getBankDetails } from "@/lib/payouts/queries";
 import { getCurrentInsurance } from "@/lib/therapist/agreement";
 import { cn } from "@/lib/utils";
 import { getTherapistClinic } from "@/lib/clinics/queries";
+import { getBanks } from "@/lib/payments/banks";
 
 type Tone = NonNullable<VariantProps<typeof statusBadgeVariants>["tone"]>;
 
@@ -46,7 +47,7 @@ export default async function TherapistProfilePage({ searchParams }: { searchPar
   const { tab: rawTab } = await searchParams;
   const tab: Tab = rawTab === "account" ? "account" : "practice";
 
-  const [account, pendingDeletionRequest, supervisorRequest, emailPrefs, bankDetails, insurance, clinic] = await Promise.all([
+  const [account, pendingDeletionRequest, supervisorRequest, emailPrefs, bankDetails, insurance, clinic, banks] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealPendingDeletionRequest(session.userId),
     getMySupervisorRequestStatus(session.userId),
@@ -54,6 +55,7 @@ export default async function TherapistProfilePage({ searchParams }: { searchPar
     getBankDetails(therapist.id),
     getCurrentInsurance(therapist.id),
     getTherapistClinic(therapist.id),
+    getBanks(),
   ]);
 
   const verification = VERIFICATION_LABEL[therapist.verificationStatus] ?? {
@@ -134,7 +136,7 @@ export default async function TherapistProfilePage({ searchParams }: { searchPar
                   </p>
                 </Card>
               ) : (
-                <TherapistBankCard current={bankDetails} />
+                <TherapistBankCard current={bankDetails} banks={banks} />
               )}
               {showSupervisorAccess && (
                 <SupervisorAccessSection isSupervisor={session.isSupervisor} latestRequest={supervisorRequest} />

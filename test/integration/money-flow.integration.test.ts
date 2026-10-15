@@ -14,10 +14,10 @@ import {
   type TestParent,
   type TestTherapist,
 } from "./helpers";
-import { paystackMock } from "./mocks";
+import { flutterwaveMock } from "./mocks";
 import { createPendingBooking, markNoShow } from "@/lib/booking/actions";
 import { finalizeBookingPayment } from "@/lib/booking/finalize-payment";
-import { initiatePaystackPayment } from "@/lib/payments/actions";
+import { initiateFlutterwavePayment } from "@/lib/payments/actions";
 import { runPayouts } from "@/lib/payouts/actions";
 import { recordSessionEarnings } from "@/lib/payouts/earnings";
 import { processRefund } from "@/lib/admin/actions";
@@ -26,11 +26,10 @@ import { splitEarning, EARNING_HOLD_MS, DISPUTE_WINDOW_MS } from "@/lib/payouts/
 const admin = testAdminClient;
 
 beforeEach(() => {
-  paystackMock.initializeTransaction.mockClear();
-  paystackMock.verifyTransaction.mockClear();
-  paystackMock.createRefund.mockClear();
-  paystackMock.createTransferRecipient.mockClear();
-  paystackMock.initiateTransfer.mockClear();
+  flutterwaveMock.createPaymentLink.mockClear();
+  flutterwaveMock.verifyTransaction.mockClear();
+  flutterwaveMock.createRefund.mockClear();
+  flutterwaveMock.initiateTransfer.mockClear();
 });
 
 afterEach(async () => {
@@ -61,12 +60,15 @@ async function setupPayableEarning(priceNaira = 15000) {
   if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
   trackForCleanup("bookings", hold.bookingId);
 
-  const pay = await initiatePaystackPayment(hold.bookingId, therapist.therapistProfileId);
-  if (!pay.ok) throw new Error(`initiatePaystackPayment failed: ${pay.error}`);
+  const pay = await initiateFlutterwavePayment(hold.bookingId, therapist.therapistProfileId);
+  if (!pay.ok) throw new Error(`initiateFlutterwavePayment failed: ${pay.error}`);
 
   const reference = `test_ref_${hold.bookingId}`;
-  const amountKobo = priceNaira * 100;
-  const finalize = await finalizeBookingPayment(hold.bookingId, reference, amountKobo);
+  const finalize = await finalizeBookingPayment(hold.bookingId, {
+    reference,
+    transactionId: reference,
+    amountNaira: priceNaira,
+  });
   if (!finalize.ok) throw new Error(`finalizeBookingPayment failed: ${finalize.error}`);
   trackForCleanup("payments", reference, "gateway_reference");
 
@@ -112,7 +114,7 @@ describe("money flow: create hold -> pay -> complete -> earn -> payout", () => {
     expect(result.ok).toBe(true);
     expect(result.created).toBe(1);
     expect(result.paidNaira).toBe(net);
-    expect(paystackMock.initiateTransfer).toHaveBeenCalledTimes(1);
+    expect(flutterwaveMock.initiateTransfer).toHaveBeenCalledTimes(1);
 
     const { data: earning } = await admin
       .from("therapist_earnings")
@@ -161,7 +163,7 @@ describe("H-1 regression: concurrent runPayouts cannot double-pay", () => {
 
     // The therapist was transferred money exactly once, not twice -- this
     // is the actual money-loss H-1 described, not just a row-count check.
-    expect(paystackMock.initiateTransfer).toHaveBeenCalledTimes(1);
+    expect(flutterwaveMock.initiateTransfer).toHaveBeenCalledTimes(1);
 
     const { data: earning } = await admin
       .from("therapist_earnings")
@@ -192,10 +194,13 @@ describe("M-2 regression: a refund outside the dispute flow reverses the therapi
     // completing 2FA setup (rather than the pre-E8 world where a bare role
     // flip was enough).
     await signInAs(adminUser);
+    // Flutterwave can finish a refund at once; this test is about the
+    // "still processing" state, so the fake answers "processing".
+    flutterwaveMock.createRefund.mockResolvedValueOnce({ id: "RF_processing", status: "processing" });
     const result = await processRefund(payment!.id);
 
     expect(result.ok).toBe(true);
-    expect(paystackMock.createRefund).toHaveBeenCalledTimes(1);
+    expect(flutterwaveMock.createRefund).toHaveBeenCalledTimes(1);
 
     const { data: booking } = await admin.from("bookings").select("refund_status").eq("id", bookingId).single();
     expect(booking?.refund_status).toBe("processing");
@@ -273,7 +278,7 @@ describe("M-5 regression: markNoShow can't be used on an already-completed sessi
     if (!hold.ok) throw new Error(hold.error);
     trackForCleanup("bookings", hold.bookingId);
 
-    const finalize = await finalizeBookingPayment(hold.bookingId, `test_ref_${hold.bookingId}`, 1500000);
+    const finalize = await finalizeBookingPayment(hold.bookingId, { reference: `test_ref_${hold.bookingId}`, transactionId: `test_ref_${hold.bookingId}`, amountNaira: 15000 });
     if (!finalize.ok) throw new Error(finalize.error);
     trackForCleanup("payments", `test_ref_${hold.bookingId}`, "gateway_reference");
 
@@ -312,7 +317,7 @@ describe("E1 regression: an earning isn't payable until the dispute window on it
     if (!hold.ok) throw new Error(`createPendingBooking failed: ${hold.error}`);
     trackForCleanup("bookings", hold.bookingId);
 
-    const finalize = await finalizeBookingPayment(hold.bookingId, `test_ref_${hold.bookingId}`, 1500000);
+    const finalize = await finalizeBookingPayment(hold.bookingId, { reference: `test_ref_${hold.bookingId}`, transactionId: `test_ref_${hold.bookingId}`, amountNaira: 15000 });
     if (!finalize.ok) throw new Error(`finalizeBookingPayment failed: ${finalize.error}`);
     trackForCleanup("payments", `test_ref_${hold.bookingId}`, "gateway_reference");
 
@@ -395,7 +400,7 @@ describe("E2 regression: a Paystack confirmation that lands after the 15-minute 
     await admin.from("availability_slots").update({ is_booked: false }).eq("id", slot.id);
 
     const reference = `test_ref_late_${hold.bookingId}`;
-    const finalize = await finalizeBookingPayment(hold.bookingId, reference, 1500000);
+    const finalize = await finalizeBookingPayment(hold.bookingId, { reference: reference, transactionId: reference, amountNaira: 15000 });
     trackForCleanup("payments", reference, "gateway_reference");
 
     // The old behavior returned ok:true here too (the "already finalized"
@@ -446,7 +451,7 @@ describe("E2 regression: a Paystack confirmation that lands after the 15-minute 
     await admin.from("availability_slots").update({ is_booked: true }).eq("id", slot.id);
 
     const reference = `test_ref_orphaned_${hold.bookingId}`;
-    const finalize = await finalizeBookingPayment(hold.bookingId, reference, 1500000);
+    const finalize = await finalizeBookingPayment(hold.bookingId, { reference: reference, transactionId: reference, amountNaira: 15000 });
     trackForCleanup("payments", reference, "gateway_reference");
 
     // The bug this closes: this used to be ok:true with nothing recorded

@@ -309,7 +309,7 @@ describe("E12 regression: offboarding cascade", () => {
     const { finalizeBookingPayment } = await import("@/lib/booking/finalize-payment");
     const reference = `test_book04_${hold.bookingId}`;
     trackForCleanup("payments", reference, "gateway_reference");
-    const result = await finalizeBookingPayment(hold.bookingId, reference, 1500000);
+    const result = await finalizeBookingPayment(hold.bookingId, { reference: reference, transactionId: reference, amountNaira: 15000 });
     expect(result.ok).toBe(false);
 
     const { data: bookingRow } = await admin.from("bookings").select("status").eq("id", hold.bookingId).single();

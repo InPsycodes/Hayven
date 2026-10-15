@@ -78,7 +78,7 @@ What would actually surface a breach, given what's built today:
   about something that looks wrong (wrong recipient, unexpected access, a
   suspicious login notification).
 - **A vendor notification**: Supabase, Vercel, Resend, Cloudmersive, Sentry,
-  Paystack, or PostHog reporting their own incident that could implicate Hayven's
+  Flutterwave, or PostHog reporting their own incident that could implicate Hayven's
   data. **Whether each vendor is contractually obligated to notify Hayven, and on
   what timeline, is not yet confirmed**. This is the same "DPA execution" gap the
   DPIA's transfer register (§6) already flags as open. Don't assume a vendor will
@@ -177,7 +177,7 @@ adapted for once before.
 ## 8. Vendor/processor breach handling
 
 If the breach originates at a vendor (Supabase, Vercel, Resend, Cloudmersive,
-Sentry, Paystack, PostHog) rather than in Hayven's own code:
+Sentry, Flutterwave, PostHog) rather than in Hayven's own code:
 
 - Hayven is still the data controller for personal data those processors handle
   on its behalf. A vendor's breach doesn't relieve Hayven's own NDPC/data-subject

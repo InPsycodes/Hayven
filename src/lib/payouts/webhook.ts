@@ -1,42 +1,43 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { transferOutcome } from "@/lib/payments/flutterwave-shared";
 
 /**
- * Paystack transfer webhooks. `transfer.success` finalises a payout;
- * `transfer.failed` / `transfer.reversed` unwind it -- the earnings go back
- * to pending so the next payout run retries them.
+ * Flutterwave transfer.completed (status SUCCESSFUL or FAILED), or a status
+ * found by checking a transfer still processing. Success finalises the
+ * payout; failure unwinds it, putting the earnings back to pending so the
+ * next payout run retries them.
  */
 export async function finalizeTransfer(
-  event: "transfer.success" | "transfer.failed" | "transfer.reversed",
+  status: string | undefined,
   reference: string | undefined,
-  transferCode: string | undefined
+  transferId: string | undefined
 ): Promise<void> {
-  if (!reference && !transferCode) return;
+  if (!reference && !transferId) return;
+  const outcome = transferOutcome(status);
+  if (outcome === "pending") return;
   const admin = createAdminClient();
 
   let query = admin.from("payouts").select("id, status").limit(1);
-  query = reference ? query.eq("paystack_reference", reference) : query.eq("paystack_transfer_code", transferCode!);
+  query = reference ? query.eq("transfer_reference", reference) : query.eq("transfer_id", transferId!);
   const { data: payout } = await query.maybeSingle();
   if (!payout) return;
 
-  if (event === "transfer.success") {
+  if (outcome === "paid") {
     if (payout.status === "paid") return;
     await admin.from("payouts").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", payout.id);
     await admin.from("therapist_earnings").update({ status: "paid" }).eq("payout_id", payout.id);
     return;
   }
 
-  // failed / reversed -- a `transfer.reversed` can arrive *after*
-  // `transfer.success` already landed (bank bounce, recall), so this path is
-  // deliberately not gated on payout.status. `payout_status` has no distinct
-  // "reversed" value, so this reuses `failed`; `failure_reason` still
-  // records which webhook actually caused it. Earnings go back to pending so
-  // the next payout run retries them -- otherwise the ledger overstates
-  // money that came back to the balance (M-6, production audit 2026-09-03).
+  // Failed: not gated on payout.status, since a failure can be reported
+  // after an earlier success (a bank bounce). Earnings go back to pending so
+  // the ledger never counts money that came back to the balance (M-6,
+  // production audit 2026-09-03).
   await admin
     .from("payouts")
-    .update({ status: "failed", failure_reason: event })
+    .update({ status: "failed", failure_reason: `transfer ${status ?? "failed"}` })
     .eq("id", payout.id);
   await admin
     .from("therapist_earnings")

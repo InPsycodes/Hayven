@@ -3,7 +3,7 @@ import "server-only";
 import type { createAdminClient } from "@/lib/supabase/admin";
 import { splitEarningAt, EARNING_HOLD_MS } from "@/lib/payouts/commission";
 import { lagosDate, loadTherapistTerms, rateFor } from "@/lib/payouts/rates";
-import { paystackFeeNaira } from "@/lib/booking/refund-policy";
+import { gatewayFeeNaira } from "@/lib/booking/refund-policy";
 
 type Admin = ReturnType<typeof createAdminClient>;
 
@@ -75,7 +75,7 @@ export async function recordSessionEarnings(admin: Admin, bookingIds: string[]):
 /**
  * Records the therapist's share of money a parent forfeited on a late
  * cancel or no-show. `retainedNaira` is the amount kept BEFORE splitting;
- * the Paystack fee should already be excluded by the caller.
+ * the payment processing fee should already be excluded by the caller.
  */
 export async function recordRetainedEarning(
   admin: Admin,
@@ -109,7 +109,7 @@ export async function recordRetainedEarning(
 }
 
 /** No-show: the parent forfeits the whole charge; the therapist earns their
- *  share of it, minus the (non-refundable, non-earnable) Paystack fee. */
+ *  share of it, minus the (non-refundable, non-earnable) payment processing fee. */
 export async function recordNoShowEarning(admin: Admin, bookingId: string): Promise<void> {
   const { data: payments } = await admin
     .from("payments")
@@ -119,7 +119,7 @@ export async function recordNoShowEarning(admin: Admin, bookingId: string): Prom
     .eq("type", "session_commission");
   const paid = (payments ?? [])[0]?.amount ?? 0;
   if (paid <= 0) return;
-  await recordRetainedEarning(admin, bookingId, paid - paystackFeeNaira(paid));
+  await recordRetainedEarning(admin, bookingId, paid - gatewayFeeNaira(paid));
 }
 
 /** Dispute opened -> hold any pending earnings for that booking. */

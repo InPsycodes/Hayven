@@ -135,7 +135,7 @@ compliance record.
 |---|---|---|---|---|
 | 1 | Supabase | Clinical, account, full dataset | UK (eu-west-2) | Medium. Core data, but UK is the more favourable jurisdiction of this list |
 | 2 | Vercel | Application/request data | UK (lhr1) | Medium. Same reasoning as Supabase |
-| 3 | Paystack | Transaction references, amounts | Nigeria | Low. Domestic, likely no international-transfer question at all |
+| 3 | Flutterwave (replaced Paystack, October 2026) | Transaction references, amounts, payer name and email | Not confirmed | To confirm. Flutterwave operates in Nigeria and abroad; where it stores and processes this data decides whether a transfer question arises |
 | 4 | PostHog | Allowlisted coarse events only | EU Cloud | Low. Minimised data, EU jurisdiction |
 | 5 | Sentry | Error/stack-trace metadata; PII explicitly disabled in config | Confirmed EU (Frankfurt, Germany) | Medium |
 | 6 | Resend | Email content/metadata, recipient address | **US by default**, confirmed via vendor documentation | **High** |

@@ -19,7 +19,7 @@ Confirmed during the breach-response runbook work (`docs/breach-response-runbook
 §2) and the DPIA (`docs/data-protection-impact-assessment.md`): Ademola Yusuf
 (Founder) currently holds the DPO role, the Designated Safeguarding Lead role, and
 is the **only person with any actual production system access** — Supabase,
-Vercel, the domain, Paystack, and the `hayvenmind@gmail.com` inbox itself.
+Vercel, the domain, Flutterwave, and the `hayvenmind@gmail.com` inbox itself.
 Yusuf Omotoyosi (Deputy Safeguarding Lead) has decision-making cover if the
 founder is unreachable during an incident, but currently has no technical means
 to act on that decision.
@@ -80,7 +80,7 @@ narrow, task-specific API-key access to, not the accounts themselves).
 | Supabase dashboard | The production database, auth, storage, backups | Founder only |
 | Vercel dashboard | Deployment, environment variables, domains | Founder only |
 | Domain registrar | DNS, the `hayven.com.ng` domain itself | Founder only |
-| Paystack dashboard | Live payment processing, payouts | Founder only |
+| Flutterwave dashboard | Live payment processing, refunds, payouts | Founder only |
 | `hayvenmind@gmail.com` | The email address every processor account (Supabase, Vercel, Resend, Sentry, Cloudmersive, PostHog) is very likely registered to, and the account-recovery path for most of them | Founder only |
 
 **The standard, low-effort way to close this**: a password manager with a

@@ -2,190 +2,203 @@ import "server-only";
 import * as Sentry from "@sentry/nextjs";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { listSuccessfulTransactions, verifyTransaction } from "@/lib/payments/paystack";
-import { finalizeBookingPayment } from "@/lib/booking/finalize-payment";
+import {
+  getRefund,
+  getTransfer,
+  isFlutterwaveConfigured,
+  listSuccessfulTransactions,
+  verifyTransaction,
+} from "@/lib/payments/flutterwave";
+import { bookingIdFromTxRef, refundOutcome, transferOutcome } from "@/lib/payments/flutterwave-shared";
+import { confirmFlutterwavePayment } from "@/lib/payments/confirm";
+import { finalizeRefundByTransaction } from "@/lib/booking/webhook-refund";
+import { finalizeTransfer } from "@/lib/payouts/webhook";
 
-// E18(b), external PRD review. E2 (finalizeBookingPayment, src/lib/booking/
-// actions.ts) closed the "late confirmation" race -- a webhook or redirect
-// callback that eventually landed, just after the hold had already expired.
-// It did not close the case where BOTH the webhook delivery and the
-// redirect-verify fallback fail to fire at all (browser closed mid-redirect,
-// an outage that outlasts Paystack's retry budget, ...) -- nothing ever
-// calls finalizeBookingPayment for that charge, so it never gets a chance to
-// run its own recovery logic. This sweep is what eventually calls it.
+// E18(b), external PRD review. The webhook and the checkout redirect are
+// the two normal ways a payment gets confirmed; this sweep is the backstop
+// for when both fail (browser closed mid-redirect, an outage longer than
+// Flutterwave's 3 retries). It also re-checks the other direction, and the
+// refunds and payouts still waiting on Flutterwave.
 //
-// Plain "server-only", not "use server" -- meant to run only from the cron
-// route below (src/app/api/cron/reconciliation/route.ts), on the same
-// pattern as src/lib/referrals/cron.ts: nothing here does its own auth
-// check, so nothing should make it reachable from a client bundle.
+// Plain "server-only", not "use server": run only from the cron route
+// (src/app/api/cron/reconciliation/route.ts), which checks the cron secret.
 
 // Wide enough that a charge missed by one run is still inside the window on
-// the next few runs (this job's own reliability isn't assumed), narrow
-// enough to keep each run's Paystack page count small at pilot-stage volume.
-// Revisit if transaction volume grows enough to make the per-run scan (and
-// the reverse-direction check's one verifyTransaction call per DB row)
-// expensive.
+// the next few, narrow enough to keep each run's page count small.
 const RECONCILIATION_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 export interface ReconciliationResult {
-  paystackChecked: number;
+  gatewayChecked: number;
   replayed: number;
   stillUnresolved: number;
   dbRowsChecked: number;
   mismatched: number;
   confirmedWithoutPayment: number;
+  refundsSettled: number;
+  payoutsSettled: number;
 }
 
-export async function reconcilePaystackPayments(): Promise<ReconciliationResult> {
+const EMPTY: ReconciliationResult = {
+  gatewayChecked: 0,
+  replayed: 0,
+  stillUnresolved: 0,
+  dbRowsChecked: 0,
+  mismatched: 0,
+  confirmedWithoutPayment: 0,
+  refundsSettled: 0,
+  payoutsSettled: 0,
+};
+
+const ymd = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+export async function reconcilePayments(): Promise<ReconciliationResult> {
+  if (!isFlutterwaveConfigured()) return EMPTY;
   const admin = createAdminClient();
   const now = Date.now();
   const windowStart = new Date(now - RECONCILIATION_WINDOW_MS);
+  const result = { ...EMPTY };
 
-  let paystackTransactions: Awaited<ReturnType<typeof listSuccessfulTransactions>> = [];
+  // 1. Flutterwave says a payment succeeded: does Hayven have it? If not,
+  // confirm it now. confirmFlutterwavePayment is idempotent and handles a
+  // hold that expired in the meantime (reclaim the slot, or refund).
+  let transactions: Awaited<ReturnType<typeof listSuccessfulTransactions>> = [];
   try {
-    paystackTransactions = await listSuccessfulTransactions({
-      from: windowStart.toISOString(),
-      to: new Date(now).toISOString(),
+    // Flutterwave's from/to are whole days; one extra day either side is harmless.
+    transactions = await listSuccessfulTransactions({
+      from: ymd(windowStart.getTime() - 86_400_000),
+      to: ymd(now + 86_400_000),
     });
   } catch (err) {
-    Sentry.captureMessage("Paystack reconciliation: failed to list transactions", {
+    Sentry.captureMessage("Payment reconciliation: failed to list Flutterwave transactions", {
       level: "error",
       tags: { anomaly: "reconciliation_list_failed" },
       extra: { error: err instanceof Error ? err.message : String(err) },
     });
-    return { paystackChecked: 0, replayed: 0, stillUnresolved: 0, dbRowsChecked: 0, mismatched: 0, confirmedWithoutPayment: 0 };
   }
+  result.gatewayChecked = transactions.length;
 
-  // Forward direction: Paystack says a charge succeeded -- does Hayven have
-  // a matching successful payments row? If not, and the charge is a session
-  // booking (carries a booking_id in its metadata, same shape the webhook
-  // route reads), replay finalizeBookingPayment. It's fully idempotent
-  // post-E2 -- safe to call redundantly, and it only actually writes
-  // anything when the DB genuinely doesn't reflect the charge yet, so this
-  // sweep doesn't need to duplicate any of its reclaim-or-refund logic.
-  let replayed = 0;
-  let stillUnresolved = 0;
-
-  const references = paystackTransactions.map((t) => t.reference);
-  const alreadyRecorded = new Set<string>();
-  if (references.length > 0) {
-    const { data: existingPayments } = await admin
+  const refs = transactions.map((t) => t.txRef);
+  const recorded = new Set<string>();
+  if (refs.length > 0) {
+    const { data } = await admin
       .from("payments")
       .select("gateway_reference")
       .eq("status", "successful")
-      .in("gateway_reference", references);
-    for (const row of existingPayments ?? []) alreadyRecorded.add(row.gateway_reference);
+      .in("gateway_reference", refs);
+    for (const row of data ?? []) recorded.add(row.gateway_reference);
   }
-
-  for (const txn of paystackTransactions) {
-    if (alreadyRecorded.has(txn.reference)) continue;
-    const bookingId = (txn.metadata as { booking_id?: unknown } | null)?.booking_id;
-    if (typeof bookingId !== "string") continue; // not a session-booking charge -- out of scope for this sweep
-
-    // BOOK-06, pre-launch audit (P1): this call had no per-iteration error
-    // handling, unlike the reverse-direction loop just below -- a single
-    // throw (as opposed to a clean {ok:false}) aborted the `for` loop
-    // entirely, leaving every remaining transaction in this run's batch
-    // unprocessed until the next scheduled run. Self-healing given the
-    // 48h overlapping window, but inconsistent with this file's own
-    // defensive style. Caught per-row now, same as the reverse check.
+  for (const txn of transactions) {
+    if (recorded.has(txn.txRef) || !bookingIdFromTxRef(txn.txRef)) continue;
     try {
-      const result = await finalizeBookingPayment(bookingId, txn.reference, txn.amountKobo);
-      if (result.ok) {
-        replayed += 1;
+      const r = await confirmFlutterwavePayment(txn.id, txn);
+      if (r.ok) {
+        result.replayed += 1;
       } else {
-        stillUnresolved += 1;
-        Sentry.captureMessage("Paystack reconciliation: a successful charge could not be resolved against Hayven's booking", {
+        result.stillUnresolved += 1;
+        Sentry.captureMessage("Payment reconciliation: a successful charge could not be resolved against a booking", {
           level: "error",
           tags: { anomaly: "reconciliation_unresolved_charge" },
-          extra: { bookingId, reference: txn.reference, amountKobo: txn.amountKobo, error: result.error },
+          extra: { transactionId: txn.id, txRef: txn.txRef, amountNaira: txn.amountNaira, error: r.error },
         });
       }
     } catch (err) {
-      stillUnresolved += 1;
-      Sentry.captureMessage("Paystack reconciliation: finalizeBookingPayment threw while replaying a charge", {
+      result.stillUnresolved += 1;
+      Sentry.captureMessage("Payment reconciliation: replaying a charge threw", {
         level: "error",
         tags: { anomaly: "reconciliation_replay_threw" },
-        extra: { bookingId, reference: txn.reference, amountKobo: txn.amountKobo, thrown: err instanceof Error ? err.message : String(err) },
+        extra: { transactionId: txn.id, thrown: err instanceof Error ? err.message : String(err) },
       });
     }
   }
 
-  // Reverse direction: a payments row Hayven already marked successful --
-  // does Paystack still agree? Catches drift (a refund/chargeback whose
-  // webhook delivery failed, a bad manual DB edit) that nothing else
-  // watches for. A mismatch here is purely a signal for a human to
-  // investigate through the existing admin/disputes tooling -- this never
-  // auto-reverses a payment or touches a booking.
-  let dbRowsChecked = 0;
-  let mismatched = 0;
-
-  const { data: recentDbPayments } = await admin
+  // 2. A payment Hayven marked successful: does Flutterwave still agree?
+  // A mismatch is only flagged for a person; nothing is reversed here.
+  const { data: recent } = await admin
     .from("payments")
-    .select("gateway_reference, amount")
+    .select("gateway_transaction_id, amount")
     .eq("status", "successful")
     .eq("type", "session_commission")
+    .eq("gateway", "flutterwave")
+    .not("gateway_transaction_id", "is", null)
     .gte("created_at", windowStart.toISOString());
-
-  for (const payment of recentDbPayments ?? []) {
-    dbRowsChecked += 1;
+  for (const p of recent ?? []) {
+    result.dbRowsChecked += 1;
     try {
-      const verified = await verifyTransaction(payment.gateway_reference);
-      if (verified.status !== "success") {
-        mismatched += 1;
-        Sentry.captureMessage("Paystack reconciliation: a payment Hayven marked successful no longer matches Paystack", {
+      const verified = await verifyTransaction(p.gateway_transaction_id as string);
+      if (verified.status !== "successful") {
+        result.mismatched += 1;
+        Sentry.captureMessage("Payment reconciliation: a payment Hayven marked successful no longer matches Flutterwave", {
           level: "error",
-          tags: { anomaly: "reconciliation_db_paystack_mismatch" },
-          extra: { reference: payment.gateway_reference, dbAmount: payment.amount, paystackStatus: verified.status },
+          tags: { anomaly: "reconciliation_db_gateway_mismatch" },
+          extra: { transactionId: p.gateway_transaction_id, dbAmount: p.amount, gatewayStatus: verified.status },
         });
       }
     } catch (err) {
-      // A single lookup failure (network blip, a transient Paystack error)
-      // isn't worth alerting on its own -- this window overlaps the next
-      // run, so it gets re-checked rather than silently skipped forever.
-      console.error("Reconciliation: verifyTransaction failed", payment.gateway_reference, err);
+      // One failed lookup isn't worth an alert; the next run re-checks it.
+      console.error("Reconciliation: verifyTransaction failed", p.gateway_transaction_id, err);
     }
   }
 
-  // Third direction: a booking marked confirmed with no matching
-  // successful payments row at all (BOOK-07, pre-launch audit). The
-  // status flip and the payments insert in applyConfirmedBookingEffects
-  // (src/lib/booking/finalize-payment.ts) aren't one transaction -- if the
-  // insert ever failed for a reason other than the already-handled 23505
-  // duplicate, the booking stays confirmed with nothing to show for it.
-  // Sentry already alerts the moment that happens; this is what actually
-  // keeps checking for it afterward, the same as the forward/reverse
-  // directions above. Surfaced only -- there's no charge amount on hand to
-  // safely fabricate a payments row from, so a human has to reconcile it
-  // against Paystack's own dashboard directly.
-  let confirmedWithoutPayment = 0;
-
-  const { data: confirmedBookings } = await admin
+  // 3. A confirmed booking with no successful payment row at all (BOOK-07).
+  // Surfaced only: there's no safe amount to invent a payment row from.
+  const { data: confirmed } = await admin
     .from("bookings")
     .select("id")
     .eq("status", "confirmed")
     .gte("created_at", windowStart.toISOString());
-
-  if (confirmedBookings && confirmedBookings.length > 0) {
-    const bookingIds = confirmedBookings.map((b) => b.id);
-    const { data: paidBookings } = await admin
+  if (confirmed && confirmed.length > 0) {
+    const { data: paid } = await admin
       .from("payments")
       .select("booking_id")
       .eq("status", "successful")
       .eq("type", "session_commission")
-      .in("booking_id", bookingIds);
-    const paidSet = new Set((paidBookings ?? []).map((p) => p.booking_id));
-
-    for (const booking of confirmedBookings) {
-      if (paidSet.has(booking.id)) continue;
-      confirmedWithoutPayment += 1;
-      Sentry.captureMessage("Paystack reconciliation: a confirmed booking still has no successful payment row", {
+      .in(
+        "booking_id",
+        confirmed.map((b) => b.id)
+      );
+    const paidSet = new Set((paid ?? []).map((p) => p.booking_id));
+    for (const b of confirmed) {
+      if (paidSet.has(b.id)) continue;
+      result.confirmedWithoutPayment += 1;
+      Sentry.captureMessage("Payment reconciliation: a confirmed booking still has no successful payment row", {
         level: "error",
         tags: { anomaly: "reconciliation_confirmed_booking_missing_payment" },
-        extra: { bookingId: booking.id },
+        extra: { bookingId: b.id },
       });
     }
   }
 
-  return { paystackChecked: paystackTransactions.length, replayed, stillUnresolved, dbRowsChecked, mismatched, confirmedWithoutPayment };
+  // 4. Refunds still processing: ask Flutterwave in case the webhook was lost.
+  const { data: refunding } = await admin
+    .from("payments")
+    .select("gateway_transaction_id, refund_gateway_id")
+    .eq("status", "successful")
+    .not("refund_gateway_id", "is", null);
+  for (const p of refunding ?? []) {
+    try {
+      const refund = await getRefund(p.refund_gateway_id as string);
+      await finalizeRefundByTransaction(refund.status, p.gateway_transaction_id as string);
+      if (refundOutcome(refund.status) === "processed") result.refundsSettled += 1;
+    } catch (err) {
+      console.error("Reconciliation: getRefund failed", p.refund_gateway_id, err);
+    }
+  }
+
+  // 5. Payouts still processing: the same for transfers.
+  const { data: processing } = await admin
+    .from("payouts")
+    .select("transfer_id, transfer_reference")
+    .eq("status", "processing")
+    .not("transfer_id", "is", null);
+  for (const p of processing ?? []) {
+    try {
+      const transfer = await getTransfer(p.transfer_id as string);
+      await finalizeTransfer(transfer.status, p.transfer_reference ?? undefined, p.transfer_id as string);
+      if (transferOutcome(transfer.status) === "paid") result.payoutsSettled += 1;
+    } catch (err) {
+      console.error("Reconciliation: getTransfer failed", p.transfer_id, err);
+    }
+  }
+
+  return result;
 }

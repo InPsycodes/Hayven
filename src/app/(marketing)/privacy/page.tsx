@@ -72,7 +72,7 @@ export default function PrivacyPolicyPage() {
           <p>
             <strong className="text-charcoal">Booking, payment, and messages.</strong> Session bookings, and
             messages exchanged between a parent and therapist about a booking. Payments are processed by
-            Paystack. Hayven never receives or stores your full card details (see Section 5).
+            Flutterwave. Hayven never receives or stores your full card details (see Section 5).
           </p>
           <p>
             <strong className="text-charcoal">Technical information.</strong> Basic device and access logs kept
@@ -138,7 +138,7 @@ export default function PrivacyPolicyPage() {
               providers, bound by their own security and confidentiality obligations.
             </li>
             <li>
-              <strong className="text-charcoal">Paystack</strong> for payments. Paystack receives
+              <strong className="text-charcoal">Flutterwave</strong> for payments. Flutterwave receives
               what&apos;s needed to complete your transaction directly; Hayven never sees or stores your full card
               number.
             </li>

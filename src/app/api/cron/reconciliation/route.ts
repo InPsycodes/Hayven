@@ -2,9 +2,9 @@ import crypto from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { reconcilePaystackPayments } from "@/lib/payments/reconciliation";
+import { reconcilePayments } from "@/lib/payments/reconciliation";
 
-// Timing-safe, same reasoning as the notifications cron and the Paystack
+// Timing-safe, same reasoning as the notifications cron and the Flutterwave
 // webhook's signature check: a plain `===` leaks how many leading
 // characters matched via response-time differences.
 function timingSafeEqualString(a: string, b: string): boolean {
@@ -28,6 +28,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await reconcilePaystackPayments();
+  const result = await reconcilePayments();
   return NextResponse.json(result);
 }

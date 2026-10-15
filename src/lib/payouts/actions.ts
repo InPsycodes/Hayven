@@ -6,7 +6,8 @@ import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
 import { createNotification } from "@/lib/notifications/create";
-import { createTransferRecipient, initiateTransfer } from "@/lib/payments/paystack";
+import { initiateTransfer, isFlutterwaveConfigured } from "@/lib/payments/flutterwave";
+import { transferOutcome } from "@/lib/payments/flutterwave-shared";
 import { MIN_PAYOUT_NAIRA } from "@/lib/payouts/commission";
 import { formatNaira } from "@/data/format";
 
@@ -29,8 +30,8 @@ export async function runPayouts(): Promise<PayoutRunResult> {
   if (!session || session.role !== "admin") {
     return { ok: false, error: "Not authorized.", created: 0, paidNaira: 0, skipped: [], errors: [] };
   }
-  if (!process.env.PAYSTACK_SECRET_KEY) {
-    return { ok: false, error: "PAYSTACK_SECRET_KEY isn't set.", created: 0, paidNaira: 0, skipped: [], errors: [] };
+  if (!isFlutterwaveConfigured()) {
+    return { ok: false, error: "FLUTTERWAVE_SECRET_KEY isn't set.", created: 0, paidNaira: 0, skipped: [], errors: [] };
   }
 
   const admin = createAdminClient();
@@ -70,37 +71,18 @@ export async function runPayouts(): Promise<PayoutRunResult> {
     // A clinic's therapists are paid into the clinic's account.
     const clinic = p?.clinics ?? null;
     const account = clinic
-      ? {
-          code: clinic.bank_code,
-          number: clinic.bank_account_number,
-          holder: clinic.bank_account_name ?? clinic.name,
-          recipient: clinic.paystack_recipient_code,
-        }
+      ? { code: clinic.bank_code, number: clinic.bank_account_number }
       : p
-        ? { code: p.bank_code, number: p.bank_account_number, holder: p.bank_account_name ?? name, recipient: p.paystack_recipient_code }
+        ? { code: p.bank_code, number: p.bank_account_number }
         : null;
     if (!p || !account || !account.number || !account.code) {
       skipped.push({ name, reason: clinic ? `${clinic.name} has no bank account on file` : "No bank account on file" });
       continue;
     }
 
+    const bankCode = account.code;
+    const accountNumber = account.number;
     try {
-      let recipient = account.recipient;
-      if (!recipient) {
-        recipient = await createTransferRecipient({
-          name: account.holder,
-          accountNumber: account.number,
-          bankCode: account.code,
-        });
-        if (clinic) {
-          await admin.from("clinics").update({ paystack_recipient_code: recipient }).eq("id", clinic.id);
-          // Later therapists of the same clinic in this run reuse it.
-          clinic.paystack_recipient_code = recipient;
-        } else {
-          await admin.from("therapist_profiles").update({ paystack_recipient_code: recipient }).eq("id", therapistId);
-        }
-      }
-
       const reference = `payout_${therapistId}_${Date.now()}`;
       const { data: payout, error: pErr } = await admin
         .from("payouts")
@@ -109,7 +91,7 @@ export async function runPayouts(): Promise<PayoutRunResult> {
           amount: group.total,
           earning_count: group.ids.length,
           status: "processing",
-          paystack_reference: reference,
+          transfer_reference: reference,
         })
         .select("id")
         .single();
@@ -162,17 +144,19 @@ export async function runPayouts(): Promise<PayoutRunResult> {
       try {
         const transfer = await initiateTransfer({
           amountNaira: claimedTotal,
-          recipientCode: recipient,
-          reason: clinic
+          bankCode,
+          accountNumber,
+          narration: clinic
             ? `Hayven payout for ${name}, ${claimedIds.length} item${claimedIds.length === 1 ? "" : "s"}`
             : `Hayven payout, ${claimedIds.length} item${claimedIds.length === 1 ? "" : "s"}`,
           reference,
         });
-        const settled = transfer.status === "success";
+        // Flutterwave usually answers "NEW"; transfer.completed confirms later.
+        const settled = transferOutcome(transfer.status) === "paid";
         await admin
           .from("payouts")
           .update({
-            paystack_transfer_code: transfer.transferCode,
+            transfer_id: transfer.id,
             status: settled ? "paid" : "processing",
             paid_at: settled ? new Date().toISOString() : null,
           })
@@ -204,8 +188,8 @@ export async function runPayouts(): Promise<PayoutRunResult> {
           .eq("id", payout.id);
         errors.push(`${name}: ${transferErr instanceof Error ? transferErr.message : "transfer failed"}`);
       }
-    } catch (recipientErr) {
-      errors.push(`${name}: ${recipientErr instanceof Error ? recipientErr.message : "recipient setup failed"}`);
+    } catch (setupErr) {
+      errors.push(`${name}: ${setupErr instanceof Error ? setupErr.message : "payout setup failed"}`);
     }
   }
 
@@ -232,7 +216,6 @@ interface PayoutClinic {
   bank_code: string | null;
   bank_account_number: string | null;
   bank_account_name: string | null;
-  paystack_recipient_code: string | null;
 }
 
 interface PayoutProfile {
@@ -241,7 +224,6 @@ interface PayoutProfile {
   bank_code: string | null;
   bank_account_number: string | null;
   bank_account_name: string | null;
-  paystack_recipient_code: string | null;
   users: unknown;
   clinics: PayoutClinic | null;
 }
@@ -256,10 +238,10 @@ async function loadPayoutProfiles(
   admin: ReturnType<typeof createAdminClient>,
   ids: string[]
 ): Promise<PayoutProfile[]> {
-  const base = "id, user_id, bank_code, bank_account_number, bank_account_name, paystack_recipient_code, users(full_name)";
+  const base = "id, user_id, bank_code, bank_account_number, bank_account_name, users(full_name)";
   const withClinic = await admin
     .from("therapist_profiles")
-    .select(`${base}, clinics(id, name, bank_code, bank_account_number, bank_account_name, paystack_recipient_code)`)
+    .select(`${base}, clinics(id, name, bank_code, bank_account_number, bank_account_name)`)
     .in("id", ids);
   if (!withClinic.error) return (withClinic.data ?? []) as unknown as PayoutProfile[];
   const plain = await admin.from("therapist_profiles").select(base).in("id", ids);

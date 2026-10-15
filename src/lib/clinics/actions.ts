@@ -6,8 +6,9 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
-import { resolveBankAccount } from "@/lib/payments/paystack";
-import { bankName } from "@/lib/payments/nigerian-banks";
+import { isFlutterwaveConfigured, resolveBankAccount } from "@/lib/payments/flutterwave";
+import { getBanks } from "@/lib/payments/banks";
+import { bankNameIn } from "@/lib/payments/nigerian-banks";
 import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 
 /** Admin pages use plain forms: each action ends by redirecting back with a message. */
@@ -83,11 +84,11 @@ export async function updateClinicTerms(clinicId: string, formData: FormData): P
 
 export async function updateClinicBank(clinicId: string, formData: FormData): Promise<void> {
   const session = await requireAdmin();
-  if (!process.env.PAYSTACK_SECRET_KEY) back(clinicId, { error: "Payouts aren't set up (PAYSTACK_SECRET_KEY is missing)." });
+  if (!isFlutterwaveConfigured()) back(clinicId, { error: "Payouts aren't set up (FLUTTERWAVE_SECRET_KEY is missing)." });
 
   const bankCode = String(formData.get("bankCode") ?? "");
   const accountNumber = String(formData.get("accountNumber") ?? "").trim();
-  if (!bankName(bankCode)) back(clinicId, { error: "Choose the clinic's bank from the list." });
+  if (!bankNameIn(await getBanks(), bankCode)) back(clinicId, { error: "Choose the clinic's bank from the list." });
   if (!/^\d{10}$/.test(accountNumber)) back(clinicId, { error: "Enter the 10-digit account number." });
 
   let resolved: { accountNumber: string; accountName: string };
@@ -103,8 +104,6 @@ export async function updateClinicBank(clinicId: string, formData: FormData): Pr
       bank_code: bankCode,
       bank_account_number: resolved.accountNumber,
       bank_account_name: resolved.accountName,
-      // A new account needs a new Paystack recipient; the next payout run makes it.
-      paystack_recipient_code: null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", clinicId);

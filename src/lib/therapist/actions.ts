@@ -9,8 +9,9 @@ import { getSession } from "@/lib/auth/session";
 import { lagosWallClockToUtcIso } from "@/data/format";
 import { professionalBodyLabel } from "./professional-bodies";
 import { scanFileForViruses } from "@/lib/uploads/scan-file";
-import { resolveBankAccount } from "@/lib/payments/paystack";
-import { bankName } from "@/lib/payments/nigerian-banks";
+import { isFlutterwaveConfigured, resolveBankAccount } from "@/lib/payments/flutterwave";
+import { getBanks } from "@/lib/payments/banks";
+import { bankNameIn } from "@/lib/payments/nigerian-banks";
 import { checkRateLimit } from "@/lib/rate-limit/check";
 import { logAuditEvent } from "@/lib/audit/log";
 import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
@@ -590,22 +591,22 @@ export async function updateTherapistPhoto(_prevState: FormState, formData: Form
 
 /**
  * Save the therapist's payout bank account. The account number is resolved
- * against Paystack first so a typo can't strand a payout. Changing it
- * clears the cached Paystack recipient code -- the next payout run creates
- * a fresh one.
+ * with Flutterwave first so a typo can't strand a payout. Payouts transfer
+ * straight to the saved account, so nothing else needs resetting when it
+ * changes.
  */
 export async function updateBankDetails(_prevState: FormState, formData: FormData): Promise<FormState> {
   const session = await getSession();
   if (!session || session.role !== "therapist") {
     return { error: "You must be signed in as a therapist." };
   }
-  if (!process.env.PAYSTACK_SECRET_KEY) {
+  if (!isFlutterwaveConfigured()) {
     return { error: "Payouts aren't set up yet. Try again later." };
   }
 
   const bankCode = formData.get("bankCode");
   const accountNumber = formData.get("accountNumber");
-  if (typeof bankCode !== "string" || !bankName(bankCode)) {
+  if (typeof bankCode !== "string" || !bankNameIn(await getBanks(), bankCode)) {
     return { error: "Choose your bank from the list." };
   }
   if (typeof accountNumber !== "string" || !/^\d{10}$/.test(accountNumber.trim())) {
@@ -626,7 +627,6 @@ export async function updateBankDetails(_prevState: FormState, formData: FormDat
       bank_code: bankCode,
       bank_account_number: resolved.accountNumber,
       bank_account_name: resolved.accountName,
-      paystack_recipient_code: null,
     })
     .eq("user_id", session.userId);
   if (error) return { error: error.message };

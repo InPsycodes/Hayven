@@ -6,7 +6,7 @@ import { purgeAgedOutClinicalRecords } from "@/lib/clinical/purge";
 import { purgeAgedOutPayments } from "@/lib/payments/retention";
 import { expireInactiveAssignments } from "@/lib/assignments/cron";
 
-// Timing-safe, same reasoning as the notifications cron and the Paystack
+// Timing-safe, same reasoning as the notifications cron and the Flutterwave
 // webhook's signature check: a plain `===` leaks how many leading
 // characters matched via response-time differences.
 function timingSafeEqualString(a: string, b: string): boolean {

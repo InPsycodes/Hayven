@@ -117,7 +117,7 @@ export async function resolveDispute(
   if (!dispute) return { ok: false, error: "Dispute not found." };
   if (dispute.status !== "open") return { ok: false, error: "This dispute is already resolved." };
 
-  // Clamp to what was actually charged -- Paystack itself rejects a refund
+  // Clamp to what was actually charged -- Flutterwave itself rejects a refund
   // bigger than the original transaction, so this was never a way to move
   // more money than was paid, but the displayed "refund owed" and any
   // downstream reporting weren't bounded (L-13, production audit

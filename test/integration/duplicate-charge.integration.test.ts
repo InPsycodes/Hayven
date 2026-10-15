@@ -22,10 +22,10 @@ afterEach(async () => {
   await cleanupAll();
 });
 
-// BOOK-01 regression (pre-launch audit, P0): initiatePaystackPayment's
+// BOOK-01 regression (pre-launch audit, P0): initiateFlutterwavePayment's
 // payment-init lock used to expire (5 min) well inside the 15-minute
 // booking hold, so a parent who retried a stalled checkout could get a
-// second, genuinely different Paystack reference for the same booking. If
+// second, genuinely different payment reference for the same booking. If
 // both got paid, finalizeBookingPayment's "booking is already confirmed"
 // check used to treat that as proof the SECOND charge was accounted for
 // too, silently dropping it -- no payments row, no refund, no alert.
@@ -52,15 +52,15 @@ describe("BOOK-01 regression: a second real charge on a confirmed booking is nev
     trackForCleanup("payments", reference1, "gateway_reference");
     trackForCleanup("payments", reference2, "gateway_reference");
 
-    const first = await finalizeBookingPayment(hold.bookingId, reference1, 1500000);
+    const first = await finalizeBookingPayment(hold.bookingId, { reference: reference1, transactionId: reference1, amountNaira: 15000 });
     expect(first.ok).toBe(true);
 
     const { data: bookingAfterFirst } = await admin.from("bookings").select("status").eq("id", hold.bookingId).single();
     expect(bookingAfterFirst?.status).toBe("confirmed");
 
-    // The retried checkout's second, genuinely different Paystack reference
+    // The retried checkout's second, genuinely different payment reference
     // lands after the booking is already confirmed.
-    const second = await finalizeBookingPayment(hold.bookingId, reference2, 1500000);
+    const second = await finalizeBookingPayment(hold.bookingId, { reference: reference2, transactionId: reference2, amountNaira: 15000 });
     expect(second.ok).toBe(false); // no longer silently swallowed
 
     // The booking itself stays confirmed -- it's a real, legitimate booking,
@@ -112,8 +112,8 @@ describe("BOOK-01 regression: a second real charge on a confirmed booking is nev
     // SAME reference -- one wins the status flip, the other calls
     // finalizeBookingPayment again with the identical reference.
     const [a, b] = await Promise.all([
-      finalizeBookingPayment(hold.bookingId, reference, 1500000),
-      finalizeBookingPayment(hold.bookingId, reference, 1500000),
+      finalizeBookingPayment(hold.bookingId, { reference: reference, transactionId: reference, amountNaira: 15000 }),
+      finalizeBookingPayment(hold.bookingId, { reference: reference, transactionId: reference, amountNaira: 15000 }),
     ]);
     expect([a.ok, b.ok]).toContain(true);
 

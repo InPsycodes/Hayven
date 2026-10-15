@@ -175,13 +175,13 @@ export async function createPendingBooking(input: {
     return { ok: false, error: bookingError?.message ?? "Couldn't create the booking. Please try again." };
   }
 
-  // Snapshot the price now, as a separate best-effort update -- initiatePaystackPayment
+  // Snapshot the price now, as a separate best-effort update -- initiateFlutterwavePayment
   // charges this, not a fresh read of therapist_profiles.price_per_session,
   // so a price change during the 15-minute hold window can't silently
   // change what the parent pays (L-10, production audit 2026-09-03). Split
   // out from the insert above, and its error ignored, so a pre-0080
   // database (no price_naira column yet) still creates the booking --
-  // initiatePaystackPayment already falls back to the live price when this
+  // initiateFlutterwavePayment already falls back to the live price when this
   // is null, same pattern as recordSessionEarnings' pre-0073 fallback.
   if (therapistProfile?.price_per_session != null) {
     await admin.from("bookings").update({ price_naira: therapistProfile.price_per_session }).eq("id", booking.id);
@@ -208,7 +208,7 @@ function refundNotificationBody(childName: string, when: string, outcome: Refund
   }
   const feeNote =
     outcome.feeNaira > 0
-      ? ` The Paystack processing fee (${formatNaira(outcome.feeNaira)}) is non-refundable.`
+      ? ` The payment processing fee (${formatNaira(outcome.feeNaira)}) is non-refundable.`
       : "";
   const tierNote =
     outcome.tier === "partial" ? " (50%, as it was within 24 hours of the start time)" : "";
@@ -269,7 +269,7 @@ export async function cancelBooking(
 
   if (outcome) {
     // Late cancel: the therapist held the slot -> they earn their share of
-    // what was retained (excluding the non-earnable Paystack fee).
+    // what was retained (excluding the non-earnable payment processing fee).
     if (outcome.tier === "partial") {
       await recordRetainedEarning(admin, bookingId, outcome.withheldNaira - outcome.feeNaira);
     }

@@ -12,13 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { NIGERIAN_BANKS, bankName } from "@/lib/payments/nigerian-banks";
+import { bankNameIn, type NigerianBank } from "@/lib/payments/nigerian-banks";
 import { updateBankDetails, type FormState } from "@/lib/therapist/actions";
 import type { BankDetails } from "@/lib/payouts/queries";
 
 const initialState: FormState = {};
 
-export function TherapistBankCard({ current }: { current: BankDetails | null }) {
+export function TherapistBankCard({ current, banks }: { current: BankDetails | null; banks: NigerianBank[] }) {
   const [state, formAction, isPending] = useActionState(updateBankDetails, initialState);
 
   return (
@@ -35,7 +35,7 @@ export function TherapistBankCard({ current }: { current: BankDetails | null }) 
       {current && (
         <p className="rounded-sm bg-inset px-3 py-2 text-xs text-charcoal">
           Currently: <span className="font-medium">{current.accountName}</span> ·{" "}
-          {bankName(current.bankCode) ?? current.bankCode} · {current.accountNumberMasked}
+          {bankNameIn(banks, current.bankCode) ?? current.bankCode} · {current.accountNumberMasked}
         </p>
       )}
 
@@ -45,7 +45,7 @@ export function TherapistBankCard({ current }: { current: BankDetails | null }) 
             <SelectValue placeholder="Select your bank" />
           </SelectTrigger>
           <SelectContent>
-            {NIGERIAN_BANKS.map((b) => (
+            {banks.map((b) => (
               <SelectItem key={b.code} value={b.code}>
                 {b.name}
               </SelectItem>

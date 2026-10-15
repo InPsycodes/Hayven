@@ -11,15 +11,15 @@ import {
   testAdminClient,
   trackForCleanup,
 } from "./helpers";
-import { paystackMock } from "./mocks";
+import { flutterwaveMock } from "./mocks";
 import { createPendingBooking } from "@/lib/booking/actions";
-import { reconcilePaystackPayments } from "@/lib/payments/reconciliation";
+import { reconcilePayments } from "@/lib/payments/reconciliation";
 
 const admin = testAdminClient;
 
 beforeEach(() => {
-  paystackMock.listSuccessfulTransactions.mockClear();
-  paystackMock.verifyTransaction.mockClear();
+  flutterwaveMock.listSuccessfulTransactions.mockClear();
+  flutterwaveMock.verifyTransaction.mockClear();
 });
 
 afterEach(async () => {
@@ -31,8 +31,8 @@ afterEach(async () => {
 // actions.ts finalizeBookingPayment) left open -- a charge whose webhook AND
 // redirect-verify fallback both never fired, so finalizeBookingPayment was
 // never even called for it.
-describe("E18(b) regression: Paystack reconciliation sweep", () => {
-  it("replays a successful Paystack charge that never reached finalizeBookingPayment", async () => {
+describe("E18(b) regression: payment reconciliation sweep", () => {
+  it("replays a successful Flutterwave charge that never reached finalizeBookingPayment", async () => {
     const parent = await createTestParent();
     const child = await createTestChild(parent.userId);
     const therapist = await createTestTherapist({ priceNaira: 15000 });
@@ -53,20 +53,16 @@ describe("E18(b) regression: Paystack reconciliation sweep", () => {
     // fallback ever ran finalizeBookingPayment for this charge -- the
     // booking is still sitting at pending_payment, no payments row exists,
     // exactly as if the browser closed mid-redirect during an outage.
-    const reference = `test_ref_unseen_${hold.bookingId}`;
-    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([
-      {
-        reference,
-        status: "success",
-        amountKobo: 1500000,
-        metadata: { booking_id: hold.bookingId },
-      },
+    // Our tx_ref format, which is how the sweep finds the booking.
+    const reference = `hv_${hold.bookingId}_1`;
+    flutterwaveMock.listSuccessfulTransactions.mockResolvedValueOnce([
+      { id: "9100000001", txRef: reference, status: "successful", amountNaira: 15000, currency: "NGN" },
     ]);
     trackForCleanup("payments", reference, "gateway_reference");
 
-    const result = await reconcilePaystackPayments();
+    const result = await reconcilePayments();
 
-    expect(result.paystackChecked).toBe(1);
+    expect(result.gatewayChecked).toBe(1);
     expect(result.replayed).toBe(1);
     expect(result.stillUnresolved).toBe(0);
 
@@ -101,7 +97,7 @@ describe("E18(b) regression: Paystack reconciliation sweep", () => {
 
     // This time the webhook DID land already -- a normal successful payment
     // sitting in the DB. The sweep must recognize it and leave it alone.
-    const reference = `test_ref_already_recorded_${hold.bookingId}`;
+    const reference = `hv_${hold.bookingId}_2`;
     await admin.from("bookings").update({ status: "confirmed" }).eq("id", hold.bookingId);
     await admin.from("payments").insert({
       booking_id: hold.bookingId,
@@ -113,16 +109,16 @@ describe("E18(b) regression: Paystack reconciliation sweep", () => {
     });
     trackForCleanup("payments", reference, "gateway_reference");
 
-    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([
-      { reference, status: "success", amountKobo: 1500000, metadata: { booking_id: hold.bookingId } },
+    flutterwaveMock.listSuccessfulTransactions.mockResolvedValueOnce([
+      { id: "9100000002", txRef: reference, status: "successful", amountNaira: 15000, currency: "NGN" },
     ]);
 
-    const result = await reconcilePaystackPayments();
+    const result = await reconcilePayments();
     expect(result.replayed).toBe(0);
     expect(result.stillUnresolved).toBe(0);
   });
 
-  it("flags a DB-recorded payment that Paystack no longer confirms as successful", async () => {
+  it("flags a DB-recorded payment that Flutterwave no longer confirms as successful", async () => {
     const parent = await createTestParent();
     const child = await createTestChild(parent.userId);
     const therapist = await createTestTherapist({ priceNaira: 15000 });
@@ -146,20 +142,23 @@ describe("E18(b) regression: Paystack reconciliation sweep", () => {
       payer_id: parent.userId,
       amount: 15000,
       type: "session_commission",
+      gateway: "flutterwave",
       gateway_reference: reference,
+      gateway_transaction_id: "9100000003",
       status: "successful",
     });
     trackForCleanup("payments", reference, "gateway_reference");
 
-    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([]);
-    paystackMock.verifyTransaction.mockResolvedValueOnce({
-      status: "reversed",
-      reference,
-      amountKobo: 1500000,
-      metadata: null,
+    flutterwaveMock.listSuccessfulTransactions.mockResolvedValueOnce([]);
+    flutterwaveMock.verifyTransaction.mockResolvedValueOnce({
+      id: "9100000003",
+      txRef: reference,
+      status: "failed",
+      amountNaira: 15000,
+      currency: "NGN",
     });
 
-    const result = await reconcilePaystackPayments();
+    const result = await reconcilePayments();
     expect(result.dbRowsChecked).toBeGreaterThanOrEqual(1);
     expect(result.mismatched).toBe(1);
   });
@@ -190,8 +189,8 @@ describe("E18(b) regression: Paystack reconciliation sweep", () => {
     if (bookingError || !booking) throw new Error(`booking fixture failed: ${bookingError?.message}`);
     trackForCleanup("bookings", booking.id);
 
-    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([]);
-    const result = await reconcilePaystackPayments();
+    flutterwaveMock.listSuccessfulTransactions.mockResolvedValueOnce([]);
+    const result = await reconcilePayments();
     expect(result.confirmedWithoutPayment).toBeGreaterThanOrEqual(1);
   });
 
@@ -227,8 +226,8 @@ describe("E18(b) regression: Paystack reconciliation sweep", () => {
     });
     trackForCleanup("payments", reference, "gateway_reference");
 
-    paystackMock.listSuccessfulTransactions.mockResolvedValueOnce([]);
-    const result = await reconcilePaystackPayments();
+    flutterwaveMock.listSuccessfulTransactions.mockResolvedValueOnce([]);
+    const result = await reconcilePayments();
     // Same convention as this file's other exact-count assertions --
     // afterEach's cleanupAll() means no other test in this file leaves a
     // confirmed booking behind for this one to trip over.

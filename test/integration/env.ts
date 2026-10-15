@@ -38,5 +38,6 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("sfvwfbgrfmqaaakbepll")) {
       "rather than risk running against the wrong database."
   );
 }
-process.env.PAYSTACK_SECRET_KEY ??= "sk_test_integration_placeholder";
+process.env.FLUTTERWAVE_SECRET_KEY ??= "FLWSECK_TEST-integration-placeholder";
+process.env.FLUTTERWAVE_WEBHOOK_HASH ??= "integration-test-webhook-hash";
 process.env.UNSUBSCRIBE_SECRET ??= "integration-test-unsubscribe-secret-placeholder";

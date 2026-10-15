@@ -1,6 +1,6 @@
 // Client-safe. Hayven's commission and the money split. Set 2026-09-02:
 // 20% to Hayven, 80% to the therapist, on the gross the parent paid.
-// A cancellation's retained amount (after the Paystack fee) splits the
+// A cancellation's retained amount (after the payment processing fee) splits the
 // same way.
 
 export const COMMISSION_RATE = 0.2;

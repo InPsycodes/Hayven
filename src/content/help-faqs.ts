@@ -47,7 +47,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
     entries: [
       {
         question: "How do I pay?",
-        answer: "Through Paystack at checkout, in Naira.",
+        answer: "Through Flutterwave at checkout, in Naira.",
       },
       {
         question: "What happens to my money if a paid session is cancelled?",

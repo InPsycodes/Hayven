@@ -98,7 +98,7 @@ export function DisputeRow({ dispute }: { dispute: AdminDispute }) {
                 className="h-8 w-32 text-xs"
               />
               <span className="text-[11px] text-muted-foreground">
-                queued to the refund list; move the money in Paystack
+                queued to the refund list; send the refund from there
               </span>
             </div>
           )}

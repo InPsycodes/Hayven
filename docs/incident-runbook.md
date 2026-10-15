@@ -35,7 +35,7 @@
 
 - Vercel (hosting): https://vercel.com/[FILL IN: team]/[FILL IN: project] · status: https://www.vercel-status.com
 - Supabase (DB, auth, storage): https://supabase.com/dashboard/project/[FILL IN: ref] · status: https://status.supabase.com
-- Paystack (payments): https://dashboard.paystack.com · status: https://status.paystack.com
+- Flutterwave (payments): https://app.flutterwave.com · status: https://status.flutterwave.com
 - Resend (email): https://resend.com/emails · status: https://resend-status.com
 - Cloudmersive (credential virus scan): https://account.cloudmersive.com
 - GitHub Actions (cron backstop): repo → Actions
@@ -55,17 +55,18 @@
 4. Cookie `secure` flag is set only in production (`src/lib/supabase/server.ts`) — irrelevant on https, would break local http only.
 
 ### Payments failing / bookings stuck on `pending_payment`
-1. Paystack → status, and Dashboard → is the account in good standing (not restricted)?
-2. Paystack → Settings → API Keys & Webhooks — is the webhook URL still
-   `https://[FILL IN: domain]/api/webhooks/paystack` and enabled? Check
+1. Flutterwave → status, and Dashboard → is the account in good standing (not restricted)?
+2. Flutterwave → Settings → Webhooks — is the webhook URL still
+   `https://[FILL IN: domain]/api/webhooks/flutterwave`, enabled, and does its
+   secret hash match FLUTTERWAVE_WEBHOOK_HASH in Vercel? Check
    recent webhook deliveries for failures.
 3. Even if the webhook is down, the confirmation page calls
-   `finalizeFromReference` (a direct Paystack `/verify`) as a fallback — a
+   `finalizeFromTransaction` (a direct Flutterwave verify) as a fallback — a
    parent who paid but sees "finalizing…" should resolve on refresh.
 4. A booking held >15 min with no payment auto-releases (the slot frees on
    the next read of that therapist's availability, or via the cron).
 5. Manual fix for a genuinely-paid-but-stuck booking: confirm the charge in
-   Paystack, then an admin can... [FILL IN: is there an admin action, or is
+   Flutterwave, then an admin can... [FILL IN: is there an admin action, or is
    it a direct DB update? document the exact step].
 
 ### Reports won't generate

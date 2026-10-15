@@ -6,8 +6,8 @@ import { computeRefund, type RefundOutcome } from "@/lib/booking/refund-policy";
 /**
  * Applies the cancellation refund policy (src/lib/booking/refund-policy.ts):
  * finds the paid amount, computes what the parent is owed, and records it on
- * the booking (`refund_amount`). The actual money movement is still manual
- * (admin refund queue) until the Paystack refund API is wired in -- this
+ * the booking (`refund_amount`). The money itself moves when an admin
+ * processes it from the refund queue (via Flutterwave) -- this
  * just makes the amount deterministic and visible instead of "the team will
  * work it out". Returns null for an unpaid booking (nothing to refund).
  */

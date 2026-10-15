@@ -79,7 +79,7 @@ export function BookingConfirmationContent({
     return (
       <ConfirmationPanel
         heading="Finalizing your payment..."
-        subtext="This can take a few seconds. Refresh once you see a confirmation from Paystack."
+        subtext="This can take a few seconds. Refresh once you see a confirmation from Flutterwave."
         actions={
           <Button className="flex-1" onClick={() => router.refresh()}>
             Refresh

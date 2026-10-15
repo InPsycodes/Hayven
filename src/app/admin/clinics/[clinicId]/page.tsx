@@ -12,7 +12,8 @@ import {
   updateClinicBank,
   updateClinicTerms,
 } from "@/lib/clinics/actions";
-import { NIGERIAN_BANKS, bankName } from "@/lib/payments/nigerian-banks";
+import { bankNameIn } from "@/lib/payments/nigerian-banks";
+import { getBanks } from "@/lib/payments/banks";
 import { formatRate } from "@/lib/payouts/commission";
 import { formatDate } from "@/data/format";
 
@@ -30,7 +31,7 @@ export default async function AdminClinicPage({
   searchParams: Promise<{ error?: string; saved?: string }>;
 }) {
   const [{ clinicId }, { error, saved }] = await Promise.all([params, searchParams]);
-  const clinic = await getClinicDetail(clinicId);
+  const [clinic, banks] = await Promise.all([getClinicDetail(clinicId), getBanks()]);
   if (!clinic) notFound();
 
   const today = new Date().toISOString().slice(0, 10);
@@ -47,7 +48,7 @@ export default async function AdminClinicPage({
           {inPilot
             ? `Free pilot: Hayven takes ${formatRate(clinic.pilotRate)} until ${formatDate(clinic.pilotEndsOn!)}, then ${formatRate(clinic.commissionRate)}.`
             : `Hayven takes ${formatRate(clinic.commissionRate)} of each session.`}{" "}
-          Hayven pays the Paystack fee either way.
+          Hayven pays the payment processing fee either way.
         </p>
         {saved && (
           <p role="status" className="mt-3 rounded-sm bg-success/10 px-3 py-2 text-sm text-success-text">
@@ -102,7 +103,7 @@ export default async function AdminClinicPage({
           </p>
           {clinic.hasBank && (
             <p className="mt-2 text-sm text-charcoal">
-              {clinic.bankAccountName} · {bankName(clinic.bankCode) ?? clinic.bankCode} · {clinic.bankAccountMasked}
+              {clinic.bankAccountName} · {bankNameIn(banks, clinic.bankCode) ?? clinic.bankCode} · {clinic.bankAccountMasked}
             </p>
           )}
           <form action={updateClinicBank.bind(null, clinic.id)} className="mt-3 flex flex-col gap-3">
@@ -110,7 +111,7 @@ export default async function AdminClinicPage({
               <label htmlFor="bankCode" className="text-xs text-muted-foreground">Bank</label>
               <select id="bankCode" name="bankCode" defaultValue={clinic.bankCode ?? ""} required className={SELECT_CLASS}>
                 <option value="" disabled>Choose a bank</option>
-                {NIGERIAN_BANKS.map((b) => (
+                {banks.map((b) => (
                   <option key={b.code} value={b.code}>{b.name}</option>
                 ))}
               </select>

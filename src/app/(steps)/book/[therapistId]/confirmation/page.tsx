@@ -5,7 +5,7 @@ import { StepHeader } from "@/components/shared/step-header";
 import { BookingConfirmationContent } from "@/components/booking/booking-confirmation-content";
 import { getSession } from "@/lib/auth/session";
 import { getBookingPageContext, getRealBookingStatus } from "@/lib/booking/queries";
-import { finalizeFromReference } from "@/lib/payments/actions";
+import { finalizeFromTransaction } from "@/lib/payments/actions";
 
 export const metadata: Metadata = { title: "Booking confirmed" };
 
@@ -14,7 +14,7 @@ export default async function BookingConfirmationPage({
   searchParams,
 }: {
   params: Promise<{ therapistId: string }>;
-  searchParams: Promise<{ reference?: string; bookingId?: string }>;
+  searchParams: Promise<{ transaction_id?: string; status?: string; bookingId?: string }>;
 }) {
   const { therapistId } = await params;
   const session = await getSession();
@@ -22,11 +22,12 @@ export default async function BookingConfirmationPage({
     redirect(`/login?next=/book/${therapistId}/confirmation`);
   }
 
-  const { reference, bookingId } = await searchParams;
-  if (reference) {
-    // Best-effort immediate confirmation; the webhook is the reliable
-    // backstop if this call or the redirect itself doesn't land.
-    await finalizeFromReference(reference);
+  // Flutterwave sends the parent back with ?status=...&tx_ref=...&transaction_id=...
+  const { transaction_id: transactionId, bookingId } = await searchParams;
+  if (transactionId) {
+    // Best-effort immediate confirmation, re-checked with Flutterwave; the
+    // webhook is the reliable backstop if this call or the redirect doesn't land.
+    await finalizeFromTransaction(transactionId);
   }
 
   // Re-check the real booking status rather than trusting optimistic client

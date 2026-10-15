@@ -32,7 +32,7 @@ Confirm it took effect: the Point in Time tab shows an earliest restorable time.
 | Tables, rows, RLS policies, functions, triggers, migrations | Yes |
 | Auth users and their password hashes, MFA factors | Yes (auth schema is in the database) |
 | **Files in Supabase Storage** (therapist credential documents, profile photos) | **No.** The database holds only the file records, not the files. Verify in Supabase docs. |
-| Vercel environment variables, Paystack, Resend, PostHog data | No, separate systems |
+| Vercel environment variables, Flutterwave, Resend, PostHog data | No, separate systems |
 
 **Open gap to close:** decide how credential documents and photos are backed up
 (a scheduled export of the storage buckets to a location you control, or storage
@@ -110,7 +110,7 @@ DPO sign-off: ____________________  Date: ____________
 4. Restore. Point the app at the restored project (URL and keys change if it is a new
    project, so update the Vercel environment variables and redeploy).
 5. **Reconcile money before anything else runs.** Bookings and payments made between the
-   restore point and the incident exist at Paystack but may not exist in the database.
+   restore point and the incident exist at Flutterwave but may not exist in the database.
    Run the payments reconciliation before the Monday payout, and hold payouts until
    it is clean, so nobody is paid twice or not at all.
 6. Expect some duplicate emails and push notifications from jobs that re-run.

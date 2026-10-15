@@ -11,7 +11,7 @@ export default async function AdminRefundsPage() {
         <h1 className="font-heading text-xl text-charcoal">Refunds owed</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Cancelling a paid session never refunds it automatically -- process each of these manually
-          (Paystack dashboard, bank transfer), then mark it here.
+          (Flutterwave dashboard, bank transfer), then mark it here.
         </p>
       </div>
 

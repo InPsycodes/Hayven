@@ -20,7 +20,7 @@ export const ANALYTICS_EVENTS = {
   searchPerformed: "search_performed",
   /** Parent reached the payment step and clicked pay. */
   bookingStarted: "booking_started",
-  /** Paystack charge confirmed for a booking (server-side). */
+  /** Flutterwave payment confirmed for a booking (server-side). */
   bookingPaid: "booking_paid",
   /** A booked session's end time passed and it was marked completed (server-side, cron). */
   sessionCompleted: "session_completed",

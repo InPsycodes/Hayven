@@ -125,7 +125,7 @@ refunds, and payouts.
 | Clinical/session data | Session notes, goals, target behaviours, ABC observations, published reports | Children | **Yes: health data** |
 | Confidential clinical notes | A subset of session observations never shown to the parent, visible only to the assigned therapist(s)/supervisor | Children | **Yes: health data** |
 | Therapist professional data | Bio, qualifications, licence/credential documents, years of practice | Therapists | Professional/sensitive by nature of the document type (may include identity documents) |
-| Booking & payment | Session bookings, amounts, Paystack transaction references | Parents, therapists | No (financial, not special-category, but sensitive) |
+| Booking & payment | Session bookings, amounts, Flutterwave transaction references | Parents, therapists | No (financial, not special-category, but sensitive) |
 | Messages | Parent–therapist messages tied to a booking | Parents, therapists | Possibly: messages could incidentally contain health information |
 | Technical/security logs | Sign-in timestamps, IP-adjacent access logs kept by infrastructure providers | All users | No |
 | Product analytics | Page views, coarse actions (e.g. "booking started"), role | All users | No: explicitly excludes child data, session notes, report content (enforced by an allowlist, see §9.3) |
@@ -183,7 +183,7 @@ whoever reviews this, rather than this full DPIA.
 | Session notes, goals, reports | Health data | Care documentation and continuity | **Needs legal review** | Special-category processing |
 | Confidential clinical notes | Health data | Clinical record-keeping distinct from the parent report | **Needs legal review** | Same special-category analysis as above, plus a minimisation argument (§8) |
 | Therapist credential verification | Licence/credential documents | Professional verification | **Needs legal review**: legal obligation, legitimate purpose, or contract, depending on how NDPA characterises marketplace vetting | Counsel to determine |
-| Booking and payment | Transaction data | Deliver and charge for the service | Contract; also likely a legal obligation basis for the underlying payment-processing/tax record | Paystack is the processor |
+| Booking and payment | Transaction data | Deliver and charge for the service | Contract; also likely a legal obligation basis for the underlying payment-processing/tax record | Flutterwave is the processor (Paystack before 15 October 2026, test mode only) |
 | Security/audit logs | Technical identifiers, actor/action metadata | Security, incident investigation, accountability | Legitimate interest, or legal obligation depending on the specific log | Time-bounded (§9.4) |
 | Marketing communications | Contact data | Marketing (if/when Hayven sends any) | Consent | Kept separate from transactional/service email, which doesn't need marketing consent |
 | Product analytics | Allowlisted usage events | Product improvement | **Needs legal review**: consent, legitimate interest, or another basis, depending on counsel's read of the NDPA on non-identifying analytics | Already minimised by allowlist (§9.3) regardless of the basis chosen |
@@ -266,7 +266,7 @@ flowchart TD
   E --> F[Parent reads report]
   G[Credential upload] --> H[Magic-byte + AV scan<br/>fail-closed]
   H --> I[Private storage bucket]
-  J[Payment] --> K[Paystack:<br/>amount + reference only]
+  J[Payment] --> K[Flutterwave:<br/>amount, reference,<br/>payer name and email]
 ```
 
 ```mermaid
@@ -300,7 +300,7 @@ this table with priority ranking and the specific per-vendor questions.
 |---|---|---|---|---|---|---|
 | Supabase | Clinical, account, full dataset | Database, auth, file storage | UK (eu-west-2, London) | Not confirmed | Needs counsel | 🟠 Open |
 | Vercel | Application/request data | Hosting, serverless functions | UK (functions pinned to lhr1) | Not confirmed | Needs counsel | 🟠 Open |
-| Paystack | Transaction references, amounts | Payment processing | Nigeria | Not confirmed | Domestic: likely lowest-risk of this table | 🟢 Lower priority |
+| Flutterwave | Transaction references, amounts, payer name and email | Payment processing, refunds, payouts to therapists | Not confirmed: Flutterwave operates in Nigeria and abroad | Not confirmed | Ask Flutterwave where data is stored and processed before treating this as domestic | 🟡 Confirm |
 | PostHog | Allowlisted coarse events only | Product analytics | EU Cloud | Not confirmed | Needs counsel | 🟢 Lower priority (minimised, EU) |
 | Sentry | Error/stack-trace metadata; PII explicitly disabled | Error monitoring | Confirmed EU (Frankfurt, Germany) | Not confirmed | Needs counsel | 🟠 Open |
 | Resend | Email content/metadata, recipient address | Transactional email | US by default (confirmed via vendor docs) | Not confirmed | Needs counsel | 🔴 Priority |
@@ -436,7 +436,7 @@ Credential document uploads are magic-byte sniffed, scanned by Cloudmersive with
 fail-closed behaviour, stored under generated paths in a private bucket with per-user
 folder RLS. The `avatars` bucket (the one public-by-design bucket) is restricted to
 image MIME types and a size cap. Passwords are hashed by the authentication provider.
-Paystack webhook payloads are verified with an HMAC-SHA512 timing-safe signature check
+Flutterwave webhook payloads are accepted only with the dashboard secret hash (constant-time comparison), and every payment they report is re-verified with Flutterwave's API before a booking is confirmed
 before any write.
 
 ### 9.3 Analytics minimisation
@@ -692,7 +692,7 @@ Scenarios the runbook covers: a therapist's account compromised; the database
 itself compromised; a malicious credential document that evades scanning; a
 clinical report sent to the wrong parent; a therapist accessing information they
 shouldn't; referral data exposed; a vendor (Supabase, Vercel, Resend, Cloudmersive,
-PostHog, Sentry, Paystack) suffering its own breach that implicates Hayven's data.
+PostHog, Sentry, Flutterwave) suffering its own breach that implicates Hayven's data.
 See risk #13 in §11 and P0 item 9 in §12.
 
 ---

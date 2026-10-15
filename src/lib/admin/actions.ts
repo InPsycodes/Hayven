@@ -6,7 +6,9 @@ import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
 import { createNotification } from "@/lib/notifications/create";
-import { createRefund } from "@/lib/payments/paystack";
+import { createRefund, isFlutterwaveConfigured } from "@/lib/payments/flutterwave";
+import { refundOutcome } from "@/lib/payments/flutterwave-shared";
+import { finalizeRefundByTransaction } from "@/lib/booking/webhook-refund";
 import { isValidDomainBand } from "@/lib/reports/phrase-domains";
 import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 import { releaseBookingEarnings } from "@/lib/payouts/earnings";
@@ -209,7 +211,7 @@ export async function reviewAccountDeletionRequest(
 }
 
 /**
- * Records that a refund was processed manually (Paystack dashboard, bank
+ * Records that a refund was processed manually (Flutterwave dashboard, bank
  * transfer, whatever the team actually used) -- there's no refund API
  * integration in this codebase, so this never moves money itself, only
  * tracks that it's been handled outside the app.
@@ -253,7 +255,7 @@ export async function markPaymentRefunded(
 
   if (payment.booking_id) {
     await supabase.from("bookings").update({ refund_status: "manual" }).eq("id", payment.booking_id);
-    // A refund handled outside Paystack (dashboard/bank transfer) still
+    // A refund handled outside Flutterwave (dashboard/bank transfer) still
     // means the parent got their money back -- the therapist's earning on
     // this booking must be reversed the same as any other refund path, or
     // Hayven pays it out on top of the refund (M-2, production audit
@@ -266,29 +268,34 @@ export async function markPaymentRefunded(
 }
 
 /**
- * Fires the Paystack refund for the amount the policy computed
+ * Starts the Flutterwave refund for the amount the policy computed
  * (bookings.refund_amount, or the full charge for a legacy cancellation).
- * Paystack processes it asynchronously -- the refund.* webhook flips the
- * payment to 'refunded' and notifies the parent. Falls back to a clear
- * error if refunds aren't configured.
+ * Flutterwave may finish it at once or later: the refund webhook (or the
+ * reconciliation sweep checking refunds still processing) flips the payment
+ * to 'refunded' and notifies the parent. Falls back to a clear error if
+ * refunds aren't configured.
  */
 export async function processRefund(
   paymentId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await getSession();
   if (!session || session.role !== "admin") return { ok: false, error: "Not authorized." };
-  if (!process.env.PAYSTACK_SECRET_KEY) {
-    return { ok: false, error: "Paystack isn't configured. Refund it manually and mark it done." };
+  if (!isFlutterwaveConfigured()) {
+    return { ok: false, error: "Flutterwave isn't configured. Refund it manually and mark it done." };
   }
 
   const supabase = createAdminClient();
   const { data: payment } = await supabase
     .from("payments")
-    .select("id, booking_id, amount, status, gateway_reference, created_at, bookings(refund_amount, refund_status)")
+    .select("id, booking_id, amount, status, gateway, gateway_transaction_id, created_at, bookings(refund_amount, refund_status)")
     .eq("id", paymentId)
     .maybeSingle();
   if (!payment) return { ok: false, error: "Payment not found." };
   if (payment.status !== "successful") return { ok: false, error: "This payment can't be refunded." };
+  if (!payment.gateway_transaction_id) {
+    // Taken through Paystack (test mode only) before the switch to Flutterwave.
+    return { ok: false, error: "This payment wasn't taken through Flutterwave. Refund it manually and mark it done." };
+  }
 
   const booking = payment.bookings as unknown as { refund_amount: number | null; refund_status: string | null } | null;
   if (booking?.refund_status === "processing" || booking?.refund_status === "processed") {
@@ -317,10 +324,10 @@ export async function processRefund(
 
   // BOOK-03, pre-launch audit (P1): claim the refund atomically -- checked
   // in the WHERE clause of the update itself, not the separate read above
-  // -- BEFORE calling Paystack, not after. The read above is only a fast
+  // -- BEFORE calling Flutterwave, not after. The read above is only a fast
   // path for the common "already done" case; this is what actually closes
   // a double-click or two admins racing the same payment. Same pattern as
-  // initiatePaystackPayment's payment_initiated_at lock.
+  // initiateFlutterwavePayment's payment_initiated_at lock.
   if (payment.booking_id) {
     const { data: claimed, error: claimError } = await supabase
       .from("bookings")
@@ -333,15 +340,21 @@ export async function processRefund(
     if (!claimed) return { ok: false, error: "A refund for this is already in progress." };
   }
 
+  let refund: { id: string; status: string };
   try {
-    await createRefund(payment.gateway_reference, amountNaira * 100);
+    refund = await createRefund(payment.gateway_transaction_id, amountNaira);
   } catch (err) {
     // Release the claim on a genuine failure so a retry isn't blocked --
-    // same reasoning as initiatePaystackPayment's catch block.
+    // same reasoning as initiateFlutterwavePayment's catch block.
     if (payment.booking_id) {
       await supabase.from("bookings").update({ refund_status: null }).eq("id", payment.booking_id);
     }
-    return { ok: false, error: err instanceof Error ? err.message : "Paystack refused the refund." };
+    return { ok: false, error: err instanceof Error ? err.message : "Flutterwave refused the refund." };
+  }
+  // Kept so a refund still processing can be checked later.
+  await supabase.from("payments").update({ refund_gateway_id: refund.id }).eq("id", payment.id);
+  if (refundOutcome(refund.status) !== "pending") {
+    await finalizeRefundByTransaction(refund.status, payment.gateway_transaction_id);
   }
 
   if (payment.booking_id) {

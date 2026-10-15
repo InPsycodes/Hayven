@@ -1,22 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { computeRefund, paystackFeeNaira } from "./refund-policy";
+import { computeRefund, gatewayFeeNaira } from "./refund-policy";
 
 const HOUR = 60 * 60 * 1000;
 const NOW = 1_000_000_000_000;
 
-describe("paystackFeeNaira", () => {
-  it("is 1.5% under ₦2,500 (no flat fee)", () => {
-    expect(paystackFeeNaira(2000)).toBe(30);
+describe("gatewayFeeNaira", () => {
+  it("is 2% plus 7.5% VAT on the fee", () => {
+    expect(gatewayFeeNaira(15000)).toBe(323); // 300 + 22.50 VAT
+    expect(gatewayFeeNaira(2000)).toBe(43);
   });
-  it("adds ₦100 at ₦2,500 and above", () => {
-    expect(paystackFeeNaira(10000)).toBe(250); // 150 + 100
-  });
-  it("caps at ₦2,000", () => {
-    expect(paystackFeeNaira(1_000_000)).toBe(2000);
+  it("has no cap", () => {
+    expect(gatewayFeeNaira(1_000_000)).toBe(21500);
   });
   it("is 0 for a non-positive amount", () => {
-    expect(paystackFeeNaira(0)).toBe(0);
+    expect(gatewayFeeNaira(0)).toBe(0);
   });
 });
 
@@ -26,7 +24,7 @@ describe("computeRefund — parent-initiated", () => {
   it("full refund minus fee, 24h+ before", () => {
     const o = computeRefund({ ...base, slotStartMs: NOW + 25 * HOUR });
     expect(o.tier).toBe("full");
-    expect(o.feeNaira).toBe(paystackFeeNaira(20000));
+    expect(o.feeNaira).toBe(gatewayFeeNaira(20000));
     expect(o.refundNaira).toBe(20000 - o.feeNaira);
     expect(o.refundNaira + o.withheldNaira).toBe(20000);
   });

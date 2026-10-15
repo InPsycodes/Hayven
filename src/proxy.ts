@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Every route except Next internals, API routes (they own their auth and
-  // the Paystack webhook must not take an extra Supabase round-trip), the
+  // the payment webhook must not take an extra Supabase round-trip), the
   // PostHog reverse-proxy paths (ingest/, see next.config.ts -- a logged-in
   // user fires many analytics beacons and none of them should cost a
   // Supabase Auth round-trip), and static assets. The session-refresh needs

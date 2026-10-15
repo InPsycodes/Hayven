@@ -92,7 +92,7 @@ export function CancelBookingButton({
         ? `You'll be refunded about ${formatNaira(estimate.refundNaira)}${
             estimate.tier === "partial" ? " (50%, since it's within 24 hours of the start)" : ""
           }${
-            estimate.feeNaira > 0 ? `. The Paystack fee (${formatNaira(estimate.feeNaira)}) is non-refundable` : ""
+            estimate.feeNaira > 0 ? `. The payment processing fee (${formatNaira(estimate.feeNaira)}) is non-refundable` : ""
           }. It's processed within 5-10 business days.`
         : "No refund applies for a cancellation this close to the session."
       : "A refund, if any, follows the cancellation policy and is processed by our team.";

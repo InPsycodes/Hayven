@@ -35,42 +35,43 @@ vi.mock("@/lib/supabase/server", () => ({
   },
 }));
 
-// Paystack itself is the one dependency this suite deliberately never calls
-// for real (a throwaway DB is fine to hammer; a third party's API is not,
-// and its test-mode transfers/OTP behavior would make timing-sensitive
-// concurrency tests flaky for reasons that have nothing to do with our own
-// code). Deterministic fakes stand in; each test can override via
-// vi.mocked(...).mockResolvedValueOnce(...) for a specific scenario (e.g. a
-// failed transfer).
-export const paystackMock = {
-  initializeTransaction: vi.fn(async (params: { reference: string }) => ({
-    authorizationUrl: `https://checkout.paystack.com/${params.reference}`,
-    reference: params.reference,
+// Flutterwave itself is the one dependency this suite deliberately never
+// calls for real (a throwaway DB is fine to hammer; a third party API is
+// not, and test-mode timing would make the concurrency tests flaky for
+// reasons that have nothing to do with our own code). Deterministic fakes
+// stand in; each test can override via vi.mocked(...).mockResolvedValueOnce(...)
+// for a specific scenario (e.g. a failed transfer).
+export const flutterwaveMock = {
+  isFlutterwaveConfigured: vi.fn(() => true),
+  createPaymentLink: vi.fn(async (params: { txRef: string }) => `https://checkout.flutterwave.com/pay/${params.txRef}`),
+  verifyTransaction: vi.fn(async (transactionId: string) => ({
+    id: transactionId,
+    txRef: "",
+    status: "successful",
+    amountNaira: 0,
+    currency: "NGN",
   })),
-  verifyTransaction: vi.fn(async (reference: string) => ({
-    status: "success",
-    reference,
-    amountKobo: 0,
-    metadata: null,
+  verifyTransactionByRef: vi.fn(async (txRef: string) => ({
+    id: "0",
+    txRef,
+    status: "successful",
+    amountNaira: 0,
+    currency: "NGN",
   })),
-  createRefund: vi.fn(async () => ({ status: "processed" })),
-  resolveBankAccount: vi.fn(async () => ({ accountName: "Test Therapist", accountNumber: "0000000000" })),
-  createTransferRecipient: vi.fn(async () => `RCP_test_${Math.random().toString(36).slice(2)}`),
-  initiateTransfer: vi.fn(async (params: { reference: string }) => ({
-    status: "success",
-    transferCode: `TRF_test_${Math.random().toString(36).slice(2)}`,
-    reference: params.reference,
-  })),
-  verifyWebhookSignature: vi.fn(() => true),
   listSuccessfulTransactions: vi.fn(
-    async () =>
-      [] as Array<{
-        reference: string;
-        status: string;
-        amountKobo: number;
-        metadata: Record<string, unknown> | null;
-      }>
+    async () => [] as Array<{ id: string; txRef: string; status: string; amountNaira: number; currency: string }>
   ),
+  createRefund: vi.fn(async () => ({ id: `RF_test_${Math.random().toString(36).slice(2)}`, status: "completed" })),
+  getRefund: vi.fn(async (id: string) => ({ id, status: "completed" })),
+  listBanks: vi.fn(async () => [{ code: "058", name: "Guaranty Trust Bank (GTBank)" }]),
+  resolveBankAccount: vi.fn(async () => ({ accountName: "Test Therapist", accountNumber: "0000000000" })),
+  initiateTransfer: vi.fn(async (params: { reference: string }) => ({
+    id: String(Math.floor(Math.random() * 1e9)),
+    status: "SUCCESSFUL",
+    reference: params.reference,
+  })),
+  getTransfer: vi.fn(async (id: string) => ({ id, status: "SUCCESSFUL", reference: "" })),
+  verifyWebhookHash: vi.fn(() => true),
 };
 
-vi.mock("@/lib/payments/paystack", () => paystackMock);
+vi.mock("@/lib/payments/flutterwave", () => flutterwaveMock);

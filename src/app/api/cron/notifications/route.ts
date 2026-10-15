@@ -14,7 +14,7 @@ import { notifyHomePracticeReminders } from "@/lib/home-practice/cron";
 import { purgeReviewedAccountDeletions } from "@/lib/account/cron";
 import { purgeExpiredAuditLogs } from "@/lib/audit/cron";
 
-// Timing-safe, same reasoning as the Paystack webhook's signature check: a
+// Timing-safe, same reasoning as the payment webhook's secret check: a
 // plain `===` leaks how many leading characters matched via response-time
 // differences.
 function timingSafeEqualString(a: string, b: string): boolean {

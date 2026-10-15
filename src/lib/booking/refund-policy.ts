@@ -2,8 +2,8 @@
 // parent's cancel dialog and the server action agree on the number.
 //
 // Policy (set 2026-09-02):
-//   - Parent cancels 24+ h before start -> full refund, minus the Paystack
-//     processing fee (which Paystack keeps on a refund). Parent bears the fee.
+//   - Parent cancels 24+ h before start -> full refund, minus the Flutterwave
+//     processing fee (which Flutterwave keeps on a refund). Parent bears the fee.
 //   - Parent cancels < 24 h before start -> 50% refund, minus the fee.
 //   - No-show, or a cancel after the start time -> no refund.
 //   - Therapist cancels -> full refund, Hayven absorbs the fee (the family
@@ -25,22 +25,26 @@ export interface RefundOutcome {
   refundNaira: number;
   /** Naira withheld (fee + any retained portion). */
   withheldNaira: number;
-  /** The non-refundable Paystack fee, when the parent bears it (0 otherwise). */
+  /** The non-refundable Flutterwave fee, when the parent bears it (0 otherwise). */
   feeNaira: number;
 }
 
 export const FREE_CANCEL_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Paystack Nigeria local-card pricing: 1.5% + ₦100, the ₦100 waived below
- * ₦2,500, capped at ₦2,000. Paystack keeps this fee when a charge is
- * refunded, so it's the amount that can't come back to the parent.
+ * Flutterwave Nigeria local pricing (flutterwave.com/ng/pricing, checked
+ * 2026-10-15): 2% per transaction (1.4% transaction fee + 0.6% platform
+ * fee), no cap listed, plus 7.5% VAT on the fee. Treated as kept by
+ * Flutterwave when a charge is refunded, so it's the amount that can't
+ * come back to the parent. Confirm both points with Flutterwave; if your
+ * account has a cap or different rate, change it here.
  */
-export function paystackFeeNaira(amountNaira: number): number {
+export const GATEWAY_FEE_RATE = 0.02;
+export const GATEWAY_FEE_VAT = 0.075;
+
+export function gatewayFeeNaira(amountNaira: number): number {
   if (amountNaira <= 0) return 0;
-  const pct = amountNaira * 0.015;
-  const flat = amountNaira >= 2500 ? 100 : 0;
-  return Math.min(Math.round(pct + flat), 2000);
+  return Math.round(amountNaira * GATEWAY_FEE_RATE * (1 + GATEWAY_FEE_VAT));
 }
 
 export function computeRefund(input: RefundInput): RefundOutcome {
@@ -58,7 +62,7 @@ export function computeRefund(input: RefundInput): RefundOutcome {
     return { tier: "none", refundNaira: 0, withheldNaira: amountPaidNaira, feeNaira: 0 };
   }
 
-  const fee = paystackFeeNaira(amountPaidNaira);
+  const fee = gatewayFeeNaira(amountPaidNaira);
   const notice = slotStartMs - nowMs;
 
   if (notice >= FREE_CANCEL_MS) {

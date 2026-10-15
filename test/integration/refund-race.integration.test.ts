@@ -11,13 +11,16 @@ import {
   testAdminClient,
   trackForCleanup,
 } from "./helpers";
-import { paystackMock } from "./mocks";
+import { flutterwaveMock } from "./mocks";
 import { processRefund } from "@/lib/admin/actions";
 
 const admin = testAdminClient;
 
 beforeEach(() => {
-  paystackMock.createRefund.mockClear();
+  flutterwaveMock.createRefund.mockClear();
+  // These tests are about the claim on refund_status; the fake answers
+  // "processing" so the refund stays in that state for the assertions.
+  flutterwaveMock.createRefund.mockResolvedValue({ id: "RF_processing", status: "processing" });
 });
 
 afterEach(async () => {
@@ -32,12 +35,12 @@ async function makeTestAdmin() {
 }
 
 // BOOK-03 regression (pre-launch audit, P1): processRefund used to call
-// Paystack's refund API BEFORE claiming bookings.refund_status -- the claim
+// Flutterwave's refund API BEFORE claiming bookings.refund_status -- the claim
 // was a plain read-then-write, not atomic. A double-click, or two admins
 // acting on the same refund queue, could both read refund_status as unset
-// and both call Paystack before either write landed.
+// and both call Flutterwave before either write landed.
 describe("BOOK-03 regression: a refund can't be processed twice", () => {
-  it("two truly concurrent processRefund calls for the same payment only fire Paystack once", async () => {
+  it("two truly concurrent processRefund calls for the same payment only fire Flutterwave once", async () => {
     const parent = await createTestParent();
     const child = await createTestChild(parent.userId);
     const therapist = await createTestTherapist({ priceNaira: 15000 });
@@ -70,7 +73,9 @@ describe("BOOK-03 regression: a refund can't be processed twice", () => {
         payee_id: therapist.userId,
         amount: 15000,
         type: "session_commission",
+        gateway: "flutterwave",
         gateway_reference: reference,
+        gateway_transaction_id: reference,
         status: "successful",
       })
       .select("id")
@@ -88,13 +93,13 @@ describe("BOOK-03 regression: a refund can't be processed twice", () => {
     expect(failed).toHaveLength(1);
     expect(failed[0].ok || failed[0].error).toBeTruthy();
 
-    expect(paystackMock.createRefund).toHaveBeenCalledTimes(1);
+    expect(flutterwaveMock.createRefund).toHaveBeenCalledTimes(1);
 
     const { data: bookingAfter } = await admin.from("bookings").select("refund_status").eq("id", booking.id).single();
     expect(bookingAfter?.refund_status).toBe("processing");
   });
 
-  it("releases the claim on a genuine Paystack failure so a retry can still succeed", async () => {
+  it("releases the claim on a genuine Flutterwave failure so a retry can still succeed", async () => {
     const parent = await createTestParent();
     const child = await createTestChild(parent.userId);
     const therapist = await createTestTherapist({ priceNaira: 15000 });
@@ -127,7 +132,9 @@ describe("BOOK-03 regression: a refund can't be processed twice", () => {
         payee_id: therapist.userId,
         amount: 15000,
         type: "session_commission",
+        gateway: "flutterwave",
         gateway_reference: reference,
+        gateway_transaction_id: reference,
         status: "successful",
       })
       .select("id")
@@ -137,7 +144,7 @@ describe("BOOK-03 regression: a refund can't be processed twice", () => {
 
     await signInAs(adminUser);
 
-    paystackMock.createRefund.mockRejectedValueOnce(new Error("Paystack is briefly unavailable"));
+    flutterwaveMock.createRefund.mockRejectedValueOnce(new Error("Flutterwave is briefly unavailable"));
     const first = await processRefund(payment.id);
     expect(first.ok).toBe(false);
 
@@ -146,6 +153,6 @@ describe("BOOK-03 regression: a refund can't be processed twice", () => {
 
     const second = await processRefund(payment.id);
     expect(second.ok).toBe(true);
-    expect(paystackMock.createRefund).toHaveBeenCalledTimes(2);
+    expect(flutterwaveMock.createRefund).toHaveBeenCalledTimes(2);
   });
 });

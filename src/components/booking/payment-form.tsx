@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBookingStore } from "@/lib/booking-store";
 import { formatDateTime, formatNaira } from "@/data/format";
-import { initiatePaystackPayment } from "@/lib/payments/actions";
+import { initiateFlutterwavePayment } from "@/lib/payments/actions";
 import { trackEvent } from "@/lib/analytics/client";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import type { DiscoveryTherapist } from "@/lib/therapist/discovery";
@@ -67,7 +67,7 @@ export function PaymentForm({
     });
 
     startTransition(async () => {
-      const result = await initiatePaystackPayment(draft.bookingId!, therapist.id);
+      const result = await initiateFlutterwavePayment(draft.bookingId!, therapist.id);
       if (!result.ok) {
         setError(result.error);
         hasSubmittedRef.current = false; // allow retrying after a failure
@@ -97,18 +97,18 @@ export function PaymentForm({
       </div>
 
       <p className="text-sm text-muted-foreground">
-        You&apos;ll be taken to Paystack&apos;s secure checkout to pay by card, bank transfer, or USSD.
+        You&apos;ll be taken to Flutterwave&apos;s secure checkout to pay by card, bank transfer, or USSD.
       </p>
 
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <IconLock size={13} stroke={1.75} />
-        Payments secured via Paystack. Hayven never stores your card details.
+        Payments secured by Flutterwave. Hayven never stores your card details.
       </p>
 
       {error && <p className="text-sm text-error-text">{error}</p>}
 
       <Button type="submit" variant="accent" size="lg" className="w-full" disabled={isPending}>
-        {isPending ? "Redirecting to Paystack..." : `Pay ${formatNaira(total)} & confirm booking`}
+        {isPending ? "Redirecting to Flutterwave..." : `Pay ${formatNaira(total)} & confirm booking`}
       </Button>
     </form>
   );

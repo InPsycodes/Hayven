@@ -16,25 +16,32 @@ type ActionResult<T> = { ok: true } & T | { ok: false; error: string };
 // "use server" file imported by client components for its OTHER exports
 // (createPendingBooking, etc.) -- which puts the whole module on the
 // client-reference graph. finalizeBookingPayment itself is only ever called
-// from server-only contexts (the Paystack webhook route, the redirect
-// callback in payments/actions.ts, and the reconciliation sweep), never a
+// from server-only contexts (confirmFlutterwavePayment in payments/confirm.ts,
+// used by the webhook route, the checkout redirect and the reconciliation sweep), never a
 // client component, so per-export dead-code elimination SHOULD strip its
 // action id from the built client bundle -- but Next's own docs warn not to
 // rely on that alone for something this sensitive: "you should still treat
 // Server Actions as reachable via direct POST requests and verify
 // authentication and authorization inside each one." This function
-// confirms real money; nothing inside it re-verifies the charge against
-// Paystack, so if it were ever reachable, a caller could confirm any
+// confirms real money; the charge is re-verified with Flutterwave by its
+// caller, not in here, so if it were ever reachable, a caller could confirm any
 // bookingId with a self-chosen amount. Moving it into a plain server-only
 // module (no "use server", so it never gets a Server Action id at all) is
 // the same Data Access Layer pattern those docs recommend, and is a
 // stronger guarantee than a build-time optimization.
 export async function finalizeBookingPayment(
   bookingId: string,
-  gatewayReference: string,
-  amountKobo: number
+  payment: {
+    /** Our tx_ref: the unique key for this charge in the payments table. */
+    reference: string;
+    /** Flutterwave's transaction id, needed later for refunds. */
+    transactionId: string;
+    amountNaira: number;
+  }
 ): Promise<ActionResult<object>> {
   const admin = createAdminClient();
+  const gatewayReference = payment.reference;
+  const amountNaira = Math.round(payment.amountNaira);
 
   const { data: booking } = await admin
     .from("bookings")
@@ -99,9 +106,11 @@ export async function finalizeBookingPayment(
       booking_id: bookingId,
       payer_id: booking.parent_id,
       payee_id: therapistProfile?.user_id ?? null,
-      amount: Math.round(amountKobo / 100),
+      amount: amountNaira,
       type: "session_commission",
+      gateway: "flutterwave",
       gateway_reference: gatewayReference,
+      gateway_transaction_id: payment.transactionId,
       status: "successful",
     });
     if (paymentError) {
@@ -146,13 +155,13 @@ export async function finalizeBookingPayment(
         userId: therapistProfile.user_id,
         type: "payment_receipt",
         title: "Payment received",
-        body: `You received ${formatNaira(Math.round(amountKobo / 100))} for your session with ${child?.first_name ?? "a client"}.`,
+        body: `You received ${formatNaira(amountNaira)} for your session with ${child?.first_name ?? "a client"}.`,
         url: "/therapist/earnings",
       });
     }
 
     await captureServer(booking.parent_id, ANALYTICS_EVENTS.bookingPaid, {
-      amount_naira: Math.round(amountKobo / 100),
+      amount_naira: amountNaira,
       session_type: booking.session_type ?? undefined,
     });
 
@@ -162,7 +171,7 @@ export async function finalizeBookingPayment(
     revalidatePath("/therapist/caseload");
   };
 
-  // Shared by both "unaccounted charge" scenarios below: a real Paystack
+  // Shared by both "unaccounted charge" scenarios below: a real Flutterwave
   // charge landed but nothing in Hayven has a record of THIS SPECIFIC
   // gatewayReference yet. Records it, queues a full refund (the existing
   // "not the parent's fault" tier), notifies the parent, and alerts --
@@ -188,9 +197,11 @@ export async function finalizeBookingPayment(
       booking_id: bookingId,
       payer_id: booking.parent_id,
       payee_id: therapistProfile?.user_id ?? null,
-      amount: Math.round(amountKobo / 100),
+      amount: amountNaira,
       type: "session_commission",
+      gateway: "flutterwave",
       gateway_reference: gatewayReference,
+      gateway_transaction_id: payment.transactionId,
       status: "successful",
     });
     if (paymentError) {
@@ -199,7 +210,7 @@ export async function finalizeBookingPayment(
         // this exact charge. Nothing left to do.
         return { ok: true };
       }
-      Sentry.captureMessage("Failed to record an unaccounted Paystack charge", {
+      Sentry.captureMessage("Failed to record an unaccounted Flutterwave charge", {
         level: "error",
         tags: { anomaly: "orphaned_payment_record_failed" },
         extra: { bookingId, gatewayReference, dbError: paymentError.message },
@@ -229,7 +240,7 @@ export async function finalizeBookingPayment(
     Sentry.captureMessage(params.sentryMessage, {
       level: "error",
       tags: { anomaly: params.anomalyTag },
-      extra: { bookingId, gatewayReference, amountKobo },
+      extra: { bookingId, gatewayReference, amountNaira },
     });
 
     return { ok: false, error: "A refund has been recorded for this payment." };
@@ -241,7 +252,7 @@ export async function finalizeBookingPayment(
   // to confirmed. If it moved to cancelled instead -- the 15-minute hold
   // (src/lib/booking/actions.ts createPendingBooking) lazily expired via
   // releaseExpiredHolds (src/lib/therapist/queries.ts) before a late webhook
-  // delivery, a slow Paystack redirect, or a retry after an outage landed --
+  // delivery, a slow Flutterwave redirect, or a retry after an outage landed --
   // the charge was real but nothing in Hayven ever recorded it: no payments
   // row, no booking, no refund-queue entry, no alert. handleMissedConfirmation
   // is what closes that gap.
@@ -254,7 +265,7 @@ export async function finalizeBookingPayment(
     if (current.status === "confirmed") {
       // BOOK-01, pre-launch audit (P0): "the booking is confirmed" used to
       // be treated as proof THIS charge was accounted for. It isn't --
-      // initiatePaystackPayment's lock (now matched to the hold TTL, see
+      // initiateFlutterwavePayment's lock (now matched to the hold TTL, see
       // that file) used to let a retried checkout mint a second, genuinely
       // different gatewayReference for the same booking. If a *different*
       // reference already won the confirmation race, this specific charge
@@ -269,7 +280,7 @@ export async function finalizeBookingPayment(
       }
       return recordUnaccountedCharge({
         anomalyTag: "duplicate_charge_on_confirmed_booking",
-        sentryMessage: "A second real Paystack charge landed on an already-confirmed booking",
+        sentryMessage: "A second real Flutterwave charge landed on an already-confirmed booking",
         cancellationReason: null,
         applyCancellationRefundPolicy: false,
         notificationTitle: "You may have been charged twice",
@@ -281,7 +292,7 @@ export async function finalizeBookingPayment(
       // pending_payment can in practice only become confirmed or cancelled
       // -- never drop a real charge silently for a status this doesn't
       // recognize.
-      Sentry.captureMessage("Paystack confirmation landed on a booking in an unexpected status", {
+      Sentry.captureMessage("Flutterwave confirmation landed on a booking in an unexpected status", {
         level: "error",
         tags: { anomaly: "unexpected_booking_status_on_payment" },
         extra: { bookingId, status: current.status, gatewayReference },
@@ -329,7 +340,7 @@ export async function finalizeBookingPayment(
     // parent was genuinely charged for nothing.
     return recordUnaccountedCharge({
       anomalyTag: "orphaned_payment",
-      sentryMessage: "Paystack payment confirmed after the booking hold had already expired",
+      sentryMessage: "Flutterwave payment confirmed after the booking hold had already expired",
       cancellationReason: "hold_expired_before_payment_confirmed",
       applyCancellationRefundPolicy: true,
       notificationTitle: "Payment received, but the slot was lost",
@@ -355,7 +366,7 @@ export async function finalizeBookingPayment(
     await admin.from("availability_slots").update({ is_booked: false }).eq("id", booking.availability_slot_id);
     return recordUnaccountedCharge({
       anomalyTag: "payment_against_inactive_therapist",
-      sentryMessage: "A Paystack charge landed for a booking whose therapist is no longer active",
+      sentryMessage: "A Flutterwave charge landed for a booking whose therapist is no longer active",
       cancellationReason: "therapist_no_longer_active",
       applyCancellationRefundPolicy: false,
       notificationTitle: "Your therapist is no longer available",

@@ -29,7 +29,7 @@ export default async function AdminPayoutsPage() {
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">
           Therapist earnings clear {EARNING_HOLD_DAYS} days after a session (long enough to outlast the 7-day
           window a parent has to report a problem). A run pays everyone at or above{" "}
-          {formatNaira(MIN_PAYOUT_NAIRA)} via Paystack Transfer; the rest rolls to next time. Disputed
+          {formatNaira(MIN_PAYOUT_NAIRA)} via Flutterwave transfer; the rest rolls to next time. Disputed
           sessions are held out automatically.
         </p>
         <div className="mt-4">

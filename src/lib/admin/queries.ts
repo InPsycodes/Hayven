@@ -231,7 +231,7 @@ export interface RealRefundOwed {
 
 /**
  * Successful session payments whose booking has since been cancelled --
- * cancelling never auto-refunds (no Paystack refund integration exists),
+ * cancelling never auto-refunds (an admin starts each refund),
  * this is the queue an admin works through to process each one manually and
  * mark it done. Filters cancelled-status in JS rather than at the query
  * level since PostgREST's embedded-resource filtering isn't exercised
@@ -270,7 +270,7 @@ export async function getBookingsNeedingRefund(): Promise<RealRefundOwed[]> {
   }
 
   // BOOK-01, pre-launch audit: a retried checkout can mint a second,
-  // genuinely paid Paystack reference for the same booking (see
+  // genuinely paid payment reference for the same booking (see
   // finalizeBookingPayment's "duplicate charge on an already-confirmed
   // booking" path). That second row is real money owed back regardless of
   // whether the booking itself was ever cancelled -- it's not covered by

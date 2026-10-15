@@ -9,7 +9,7 @@
  * `process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"` locally. A
  * reasonable dev convenience, but it meant a production misconfiguration
  * (the env var unset on a new deploy environment, a typo'd var name) would
- * fail *silently* rather than loudly -- password-reset links, the Paystack
+ * fail *silently* rather than loudly -- password-reset links, the Flutterwave
  * payment callback URL, and unsubscribe links would all have silently
  * pointed at localhost for real users. Centralized here and thrown loudly
  * at import time instead, in production only (dev/test/CI builds still

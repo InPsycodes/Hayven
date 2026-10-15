@@ -78,7 +78,7 @@ export default function TermsOfServicePage() {
         <Section heading="4. Bookings, payments, and cancellations">
           <p>
             Each therapist sets their own session price, shown before you book. Payments are processed securely
-            by Paystack; Hayven never sees or stores your full card details. A booking is held for you for 15
+            by Flutterwave; Hayven never sees or stores your full card details. A booking is held for you for 15
             minutes while payment completes. If payment isn&apos;t finished in that window, the slot is
             released. Hayven may retain a portion of each payment as a platform fee.
           </p>
@@ -143,7 +143,7 @@ export default function TermsOfServicePage() {
 
         <Section heading="9. Third-party services">
           <p>
-            Payments are handled by Paystack under its own terms and privacy practices. We&apos;re not
+            Payments are handled by Flutterwave under its own terms and privacy practices. We&apos;re not
             responsible for the availability or performance of third-party services we rely on to run Hayven.
           </p>
         </Section>
