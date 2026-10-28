@@ -1,23 +1,12 @@
 import type { Metadata } from "next";
-import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import {
-  IconArrowRight,
-  IconBook2,
-  IconChartLine,
-  IconHome,
-  IconMessageCircleHeart,
-  IconMessages,
-  IconSchool,
-  type Icon as TablerIcon,
-} from "@tabler/icons-react";
+import { IconArrowRight, IconBook2, IconChartLine, IconHome, IconMessages } from "@tabler/icons-react";
 
+import { AgeGroupPortrait } from "@/components/marketing/age-group-portrait";
 import { Reveal } from "@/components/marketing/reveal";
 import { Icon } from "@/components/ui/icon";
+import { AGE_GROUPS } from "@/content/marketing/age-groups";
 import { canonicalFor } from "@/lib/seo/metadata";
-
-import earlyYearsImage from "../../../../public/images/about-family-session.webp";
-import youngChildImage from "../../../../public/images/quote-breather-mother-child.webp";
 
 export const metadata: Metadata = {
   title: "Who We Serve",
@@ -25,60 +14,6 @@ export const metadata: Metadata = {
     "Hayven supports children from babies to teenagers, and the parents and caregivers around them, with verified psychologists and speech, occupational and ABA therapists across Nigeria.",
   alternates: canonicalFor("/who-we-serve"),
 };
-
-interface AgeGroup {
-  title: string;
-  ages: string;
-  line: string;
-  concerns: string[];
-  article: { href: string; label: string };
-  /** Real photography where the site has it; the others get a brand-toned stand-in until photos are commissioned. */
-  image?: { src: StaticImageData; alt: string; position: string };
-  fallbackIcon: TablerIcon;
-}
-
-// Hayven serves ages 0-18 (confirmed by Dr. Abike, 28 Oct 2026). Each
-// group's concerns still await her clinical review.
-const AGE_GROUPS: AgeGroup[] = [
-  {
-    title: "Babies and toddlers",
-    ages: "0–2",
-    line: "Notice early, act early. Help with late babbling, feeding, movement and the milestones that worry you.",
-    concerns: ["Late talking", "Feeding and eating", "Sitting, crawling, walking"],
-    article: { href: "/learn/child-not-talking-as-much", label: "If your child isn't talking yet" },
-    image: {
-      src: earlyYearsImage,
-      alt: "A toddler stacking cups during a session with her mother and a clinician",
-      position: "60% 50%",
-    },
-    fallbackIcon: IconMessageCircleHeart,
-  },
-  {
-    title: "Young children",
-    ages: "3–5",
-    line: "Ready for school and for friends. Support with speech, play, big feelings and getting through the day.",
-    concerns: ["Speech and talking", "Big feelings and behaviour", "Play and social skills"],
-    article: { href: "/learn/signs-of-autism-early-childhood", label: "Early signs of autism, explained" },
-    image: { src: youngChildImage, alt: "A young boy building a block tower with his mother", position: "78% 55%" },
-    fallbackIcon: IconMessageCircleHeart,
-  },
-  {
-    title: "School age",
-    ages: "6–12",
-    line: "Help them learn, focus and fit in, at home and in the classroom.",
-    concerns: ["Attention and focus", "Reading and learning", "Making friends"],
-    article: { href: "/learn/adhd-or-just-a-lot-of-energy", label: "Is it ADHD, or just energy?" },
-    fallbackIcon: IconSchool,
-  },
-  {
-    title: "Teenagers",
-    ages: "13–18",
-    line: "Steady support through the changes of adolescence, with a psychologist who listens.",
-    concerns: ["Worry and low mood", "Autism and ADHD support", "School pressure"],
-    article: { href: "/learn/talking-to-your-child-about-therapy", label: "Talking to your child about therapy" },
-    fallbackIcon: IconMessageCircleHeart,
-  },
-];
 
 const PARENT_SUPPORT = [
   {
@@ -132,44 +67,24 @@ export default function WhoWeServePage() {
           {AGE_GROUPS.map((group, index) => (
             <Reveal key={group.title} delayMs={index * 60}>
               <article className="flex h-full flex-col gap-6 rounded-2xl bg-canvas-white p-6 sm:flex-row sm:items-center sm:p-8">
-                <div className="relative size-28 shrink-0 overflow-hidden rounded-full sm:size-36">
-                  {group.image ? (
-                    <Image
-                      src={group.image.src}
-                      alt={group.image.alt}
-                      fill
-                      placeholder="blur"
-                      sizes="144px"
-                      className="photo-treatment object-cover"
-                      style={{ objectPosition: group.image.position }}
-                    />
-                  ) : (
-                    <div
-                      aria-hidden
-                      className="flex size-full items-center justify-center text-canvas-white"
-                      style={{ background: "linear-gradient(135deg, #9c5934 0%, #dcd3be 100%)" }}
-                    >
-                      <Icon icon={group.fallbackIcon} size="lg" className="size-10" />
-                    </div>
-                  )}
-                </div>
+                <AgeGroupPortrait group={group} sizes="144px" className="size-28 rounded-full sm:size-36" />
                 <div className="min-w-0 flex-1">
                   <h2 className="font-serif text-2xl text-charcoal">
                     {group.title} <span className="text-rust-dark">{group.ages}</span>
                   </h2>
-                  <p className="mt-2.5 text-[15px] leading-relaxed text-ink-soft">{group.line}</p>
+                  <p className="mt-2.5 text-[15px] leading-relaxed text-ink-soft">{group.cardLine}</p>
                   <ul className="mt-4 flex flex-wrap gap-2" aria-label="Common reasons families come">
-                    {group.concerns.map((concern) => (
+                    {group.cardConcerns.map((concern) => (
                       <li key={concern} className="rounded-full bg-offwhite/60 px-3 py-1 text-[13px] text-ink-soft">
                         {concern}
                       </li>
                     ))}
                   </ul>
                   <Link
-                    href={group.article.href}
+                    href={`/who-we-serve/${group.slug}`}
                     className="group mt-4 inline-flex items-center gap-1.5 py-2 text-sm font-semibold text-rust-dark hover:text-terracotta"
                   >
-                    {group.article.label}
+                    Learn more about {group.agesLabel}
                     <Icon
                       icon={IconArrowRight}
                       size="sm"

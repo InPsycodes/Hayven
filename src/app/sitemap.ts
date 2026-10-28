@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { AGE_GROUPS } from "@/content/marketing/age-groups";
 import { getRealLearningArticles } from "@/lib/learning/queries";
 import { getRealVerifiedTherapists } from "@/lib/therapist/queries";
 import { SITE_URL } from "@/lib/seo/metadata";
@@ -9,6 +10,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: SITE_URL, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/who-we-serve`, changeFrequency: "monthly", priority: 0.8 },
+    ...AGE_GROUPS.map((group) => ({
+      url: `${SITE_URL}/who-we-serve/${group.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
     { url: `${SITE_URL}/learn`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/search`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/needs-assessment`, changeFrequency: "monthly", priority: 0.7 },
