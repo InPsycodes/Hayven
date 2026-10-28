@@ -15,18 +15,22 @@ import { refundOutcome } from "@/lib/payments/flutterwave-shared";
  */
 export async function finalizeRefundByTransaction(
   status: string | undefined,
-  transactionId: string | undefined
+  transactionId: string | undefined,
+  /** Flutterwave's refund id, matched first: a refund's own TransactionId can be an internal id that differs from the charge's transaction id we stored (seen on a live test-mode refund, 2026-10-28). */
+  refundId?: string
 ): Promise<void> {
-  if (!transactionId) return;
+  if (!transactionId && !refundId) return;
   const outcome = refundOutcome(status);
   if (outcome === "pending") return;
   const admin = createAdminClient();
 
-  const { data: payment } = await admin
-    .from("payments")
-    .select("id, booking_id, payer_id, status, bookings(children(first_name), refund_amount)")
-    .eq("gateway_transaction_id", transactionId)
-    .maybeSingle();
+  const select = "id, booking_id, payer_id, status, bookings(children(first_name), refund_amount)";
+  let payment = refundId
+    ? (await admin.from("payments").select(select).eq("refund_gateway_id", refundId).maybeSingle()).data
+    : null;
+  if (!payment && transactionId) {
+    payment = (await admin.from("payments").select(select).eq("gateway_transaction_id", transactionId).maybeSingle()).data;
+  }
   if (!payment || !payment.booking_id) return;
 
   if (outcome === "processed") {

@@ -177,7 +177,7 @@ export async function reconcilePayments(): Promise<ReconciliationResult> {
   for (const p of refunding ?? []) {
     try {
       const refund = await getRefund(p.refund_gateway_id as string);
-      await finalizeRefundByTransaction(refund.status, p.gateway_transaction_id as string);
+      await finalizeRefundByTransaction(refund.status, p.gateway_transaction_id as string, refund.id);
       if (refundOutcome(refund.status) === "processed") result.refundsSettled += 1;
     } catch (err) {
       console.error("Reconciliation: getRefund failed", p.refund_gateway_id, err);

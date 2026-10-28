@@ -163,15 +163,22 @@ export async function createRefund(transactionId: string, amountNaira?: number):
   return { id: String(json.data.id), status: json.data.status };
 }
 
-/** GET /refunds/{id}: a refund's current state, for refunds still processing. */
+/**
+ * GET /refunds?id={id}: a refund's current state, for refunds still processing.
+ * Not GET /refunds/{id}: that returns the refund bare, with its own refund
+ * status ("processing") where every other endpoint has status "success", so
+ * call() rejected it. The list form keeps the usual envelope (checked against
+ * a live test-mode refund, 2026-10-28).
+ */
 export async function getRefund(refundId: string): Promise<FlwRefund> {
-  const json = await call<{ id: number | string; status: string }>(
-    `/refunds/${encodeURIComponent(refundId)}`,
+  const json = await call<{ id: number | string; status: string }[]>(
+    `/refunds?id=${encodeURIComponent(refundId)}`,
     undefined,
     "Couldn't check the refund."
   );
-  if (!json.data) throw new Error("Couldn't check the refund.");
-  return { id: String(json.data.id), status: json.data.status };
+  const refund = json.data?.find((r) => String(r.id) === refundId);
+  if (!refund) throw new Error("Couldn't check the refund.");
+  return { id: String(refund.id), status: refund.status };
 }
 
 // --- Banks and transfers (payouts) -----------------------------------------

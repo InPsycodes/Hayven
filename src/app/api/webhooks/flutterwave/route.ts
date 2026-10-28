@@ -75,7 +75,8 @@ export async function POST(req: NextRequest) {
       const transactionId = body.TransactionId;
       await finalizeRefundByTransaction(
         typeof body.status === "string" ? body.status : undefined,
-        transactionId !== undefined && transactionId !== null ? String(transactionId) : undefined
+        transactionId !== undefined && transactionId !== null ? String(transactionId) : undefined,
+        body.id !== undefined && body.id !== null ? String(body.id) : undefined
       );
     }
   } catch (err) {
