@@ -26,7 +26,7 @@ interface SearchPageProps {
 
 const DEFAULT_TITLE = "Find a Verified Child Therapist in Nigeria";
 const DEFAULT_DESCRIPTION =
-  "Browse admin-verified speech, occupational, and ABA therapists for children across Nigeria. Filter by specialty, location, session type, and availability.";
+  "Browse admin-verified psychologists and speech, occupational, and ABA therapists for children across Nigeria. Filter by specialty, location, session type, and availability.";
 
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
   const params = await searchParams;

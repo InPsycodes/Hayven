@@ -5,5 +5,5 @@
  */
 export const HERO_STAT = {
   eyebrow: "Admin-verified therapists",
-  line: "Speech, occupational, ABA and developmental support",
+  line: "Psychology, speech, occupational, ABA and developmental support",
 };

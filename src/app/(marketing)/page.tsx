@@ -19,7 +19,7 @@ import { canonicalFor } from "@/lib/seo/metadata";
 
 const TITLE = "Hayven: A calmer path to the right care for your child";
 const DESCRIPTION =
-  "Hayven connects Nigerian families with verified speech, occupational and ABA therapists, from your first intake form to booking, dashboards and everyday progress.";
+  "Hayven connects Nigerian families with verified psychologists and speech, occupational and ABA therapists, from your first intake form to booking, dashboards and everyday progress.";
 
 export const metadata: Metadata = {
   title: TITLE,

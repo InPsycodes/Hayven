@@ -54,9 +54,9 @@ export function Hero() {
               className="max-w-lg text-[0.75rem] text-canvas-white/85 sm:text-lg"
               style={{ textShadow: TEXT_SHADOW }}
             >
-              Hayven connects Nigerian families with verified speech, occupational and ABA
-              therapists, from your first intake form to booking, dashboards and everyday
-              progress.
+              Hayven connects Nigerian families with verified psychologists and speech,
+              occupational and ABA therapists, from your first intake form to booking,
+              dashboards and everyday progress.
             </p>
 
             <Link

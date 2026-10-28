@@ -17,7 +17,7 @@ export function getOrganizationSchema() {
     url: SITE_URL,
     logo: `${SITE_URL}/images/logo-full.png`,
     description:
-      "Hayven connects Nigerian families with verified speech, occupational, and ABA therapists for children.",
+      "Hayven connects Nigerian families with verified psychologists and speech, occupational, and ABA therapists for children.",
     email: "hayvenmind@gmail.com",
     telephone: "+2348122832137",
     address: {
