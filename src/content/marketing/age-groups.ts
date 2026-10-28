@@ -22,7 +22,7 @@ import {
 } from "@tabler/icons-react";
 
 import earlyYearsImage from "../../../public/images/about-family-session.webp";
-import youngChildImage from "../../../public/images/quote-breather-mother-child.webp";
+import youngChildImage from "../../../public/images/who-we-serve-young-children.jpg";
 
 /**
  * The Who We Serve age groups: the cards on /who-we-serve and one landing
@@ -176,7 +176,11 @@ export const AGE_GROUPS: AgeGroup[] = [
       },
     ],
     article: { slug: "signs-of-autism-early-childhood", title: "Early signs of autism, explained without the jargon" },
-    image: { src: youngChildImage, alt: "A young boy building a block tower with his mother", position: "78% 55%" },
+    image: {
+      src: youngChildImage,
+      alt: "A laughing mother holding her young daughter, who leans in for a kiss",
+      position: "55% 35%",
+    },
     fallbackIcon: IconMessageCircleHeart,
   },
   {
