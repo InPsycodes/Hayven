@@ -128,7 +128,7 @@ export async function initiateFlutterwavePayment(
  * flutterwave) is the backstop if the browser closes before this runs.
  */
 export async function finalizeFromTransaction(transactionId: string): Promise<void> {
-  if (!/^d+$/.test(transactionId)) return;
+  if (!/^\d+$/.test(transactionId)) return;
   try {
     await confirmFlutterwavePayment(transactionId);
   } catch {
