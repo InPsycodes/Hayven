@@ -257,7 +257,10 @@ export async function getTransfer(transferId: string): Promise<TransferResult> {
  * hash nothing is accepted.
  */
 export function verifyWebhookHash(header: string | null): boolean {
-  const expected = process.env.FLUTTERWAVE_WEBHOOK_HASH;
+  // Trimmed: a newline or space picked up when pasting the value into a
+  // hosting dashboard would otherwise reject every genuine delivery.
+  const expected = process.env.FLUTTERWAVE_WEBHOOK_HASH?.trim();
+  header = header?.trim() ?? null;
   if (!expected || !header) return false;
   const a = Buffer.from(header);
   const b = Buffer.from(expected);
