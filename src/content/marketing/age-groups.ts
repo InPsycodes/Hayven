@@ -23,6 +23,7 @@ import {
 
 import earlyYearsImage from "../../../public/images/about-family-session.webp";
 import youngChildImage from "../../../public/images/who-we-serve-young-children.jpg";
+import schoolAgeImage from "../../../public/images/who-we-serve-school-age.jpg";
 
 /**
  * The Who We Serve age groups: the cards on /who-we-serve and one landing
@@ -75,7 +76,14 @@ export interface AgeGroup {
   concerns: AgeConcern[];
   article: { slug: string; title: string };
   /** Real photography where the site has it; the rest get a brand-toned stand-in until photos are sourced. */
-  image?: { src: StaticImageData; alt: string; position: string };
+  image?: {
+    src: StaticImageData;
+    alt: string;
+    /** Focal point, as CSS object-position; also the centre of any zoom. */
+    position: string;
+    /** Zooms the small round crop on /who-we-serve when the photo is a wide scene. */
+    cardZoom?: number;
+  };
   fallbackIcon: TablerIcon;
   /** Shows the call-112 notice: parents of teenagers are the likeliest to arrive mid-crisis. */
   showEmergencyNotice?: boolean;
@@ -226,6 +234,12 @@ export const AGE_GROUPS: AgeGroup[] = [
       },
     ],
     article: { slug: "adhd-or-just-a-lot-of-energy", title: "Is it ADHD, or is my child just a lot of energy?" },
+    image: {
+      src: schoolAgeImage,
+      alt: "A smiling mother hugging her daughter as they sit together on the living room floor",
+      position: "54% 45%",
+      cardZoom: 1.7,
+    },
     fallbackIcon: IconSchool,
   },
   {

@@ -10,11 +10,14 @@ export function AgeGroupPortrait({
   sizes,
   className,
   priority,
+  zoom,
 }: {
   group: AgeGroup;
   sizes: string;
   className?: string;
   priority?: boolean;
+  /** Scales the photo up around its focal point, for small crops where a wide scene would leave faces tiny. */
+  zoom?: number;
 }) {
   return (
     <div className={cn("relative shrink-0 overflow-hidden", className)}>
@@ -27,7 +30,10 @@ export function AgeGroupPortrait({
           priority={priority}
           sizes={sizes}
           className="photo-treatment object-cover"
-          style={{ objectPosition: group.image.position }}
+          style={{
+            objectPosition: group.image.position,
+            ...(zoom ? { transform: `scale(${zoom})`, transformOrigin: group.image.position } : {}),
+          }}
         />
       ) : (
         <div

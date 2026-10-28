@@ -86,7 +86,12 @@ export default function WhoWeServePage() {
           {AGE_GROUPS.map((group, index) => (
             <Reveal key={group.title} delayMs={index * 60}>
               <article className="flex h-full flex-col gap-6 rounded-2xl bg-canvas-white p-6 sm:flex-row sm:items-center sm:p-8">
-                <AgeGroupPortrait group={group} sizes="144px" className="size-28 rounded-full sm:size-36" />
+                <AgeGroupPortrait
+                  group={group}
+                  sizes="288px"
+                  zoom={group.image?.cardZoom}
+                  className="size-28 rounded-full sm:size-36"
+                />
                 <div className="min-w-0 flex-1">
                   <h2 className="font-serif text-2xl text-charcoal">
                     {group.title} <span className="text-rust-dark">{group.ages}</span>
