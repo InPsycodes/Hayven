@@ -6,11 +6,13 @@ import { LogoutButton } from "@/components/shared/logout-button";
 import { Card } from "@/components/ui/card";
 import { ProfileForm } from "@/components/shared/profile-form";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
+import { ChangePasswordSection } from "@/components/shared/change-password-section";
 import { PushNotificationsToggle } from "@/components/shared/push-notifications-toggle";
 import { EmailPreferenceToggles } from "@/components/shared/email-preference-toggles";
 import { getSession } from "@/lib/auth/session";
 import { getRealChildrenForParent } from "@/lib/parent/queries";
 import { getRealAccountInfo, getRealPendingDeletionRequest } from "@/lib/account/queries";
+import { hasPasswordSignIn } from "@/lib/auth/password";
 import { getMyEmailPreferences } from "@/lib/notifications/preferences-server";
 import { ageFromDob } from "@/data/format";
 
@@ -18,11 +20,12 @@ export default async function ParentProfilePage() {
   const session = await getSession();
   if (!session || session.role !== "parent") redirect("/login");
 
-  const [account, children, pendingDeletionRequest, emailPrefs] = await Promise.all([
+  const [account, children, pendingDeletionRequest, emailPrefs, hasPassword] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealChildrenForParent(session.userId),
     getRealPendingDeletionRequest(session.userId),
     getMyEmailPreferences(),
+    hasPasswordSignIn(),
   ]);
 
   return (
@@ -33,6 +36,7 @@ export default async function ParentProfilePage() {
           initialFullName={account?.fullName ?? session.name}
           initialPhone={account?.phone ?? null}
         />
+        <ChangePasswordSection hasPassword={hasPassword} />
 
         <Card className="p-5">
           <div className="mb-1 flex items-center justify-between">

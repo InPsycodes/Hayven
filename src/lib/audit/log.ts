@@ -48,6 +48,7 @@ export type AuditAction =
   | "account.suspend"
   | "account.reactivate"
   | "account.reset_password"
+  | "account.change_password"
   | "account.purge_personal_data"
   | "account.offboard"
   | "account.grant_supervisor"

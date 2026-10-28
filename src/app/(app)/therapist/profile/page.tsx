@@ -14,11 +14,13 @@ import { TherapistInsuranceCard } from "@/components/therapist/insurance-card";
 import { EmailPreferenceToggles } from "@/components/shared/email-preference-toggles";
 import { PushNotificationsToggle } from "@/components/shared/push-notifications-toggle";
 import { DeleteAccountSection } from "@/components/shared/delete-account-section";
+import { ChangePasswordSection } from "@/components/shared/change-password-section";
 import { IncompleteProfileNotice } from "@/components/shared/incomplete-profile-notice";
 import { SupervisorAccessSection } from "@/components/therapist/supervisor-access-section";
 import { getSession } from "@/lib/auth/session";
 import { getRealTherapistProfileByUserId, getMySupervisorRequestStatus } from "@/lib/therapist/queries";
 import { getRealAccountInfo, getRealPendingDeletionRequest } from "@/lib/account/queries";
+import { hasPasswordSignIn } from "@/lib/auth/password";
 import { getMyEmailPreferences } from "@/lib/notifications/preferences-server";
 import { getBankDetails } from "@/lib/payouts/queries";
 import { getCurrentInsurance } from "@/lib/therapist/agreement";
@@ -47,7 +49,7 @@ export default async function TherapistProfilePage({ searchParams }: { searchPar
   const { tab: rawTab } = await searchParams;
   const tab: Tab = rawTab === "account" ? "account" : "practice";
 
-  const [account, pendingDeletionRequest, supervisorRequest, emailPrefs, bankDetails, insurance, clinic, banks] = await Promise.all([
+  const [account, pendingDeletionRequest, supervisorRequest, emailPrefs, bankDetails, insurance, clinic, banks, hasPassword] = await Promise.all([
     getRealAccountInfo(session.userId),
     getRealPendingDeletionRequest(session.userId),
     getMySupervisorRequestStatus(session.userId),
@@ -56,6 +58,7 @@ export default async function TherapistProfilePage({ searchParams }: { searchPar
     getCurrentInsurance(therapist.id),
     getTherapistClinic(therapist.id),
     getBanks(),
+    hasPasswordSignIn(),
   ]);
 
   const verification = VERIFICATION_LABEL[therapist.verificationStatus] ?? {
@@ -147,6 +150,7 @@ export default async function TherapistProfilePage({ searchParams }: { searchPar
           <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
             <div className="flex min-w-0 flex-col gap-4">
               <ProfileForm initialFullName={account?.fullName ?? session.name} initialPhone={account?.phone ?? null} />
+              <ChangePasswordSection hasPassword={hasPassword} />
               <PushNotificationsToggle description="Get alerted on this device for new messages, and when a session is about to start or a client reports a problem." />
               <Card className="p-5">
                 <h2 className="font-heading text-base text-charcoal">Notification emails</h2>

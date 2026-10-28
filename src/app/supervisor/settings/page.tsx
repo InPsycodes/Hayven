@@ -6,6 +6,8 @@ import { LogoutButton } from "@/components/shared/logout-button";
 import { PushNotificationsToggle } from "@/components/shared/push-notifications-toggle";
 import { Card } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
+import { hasPasswordSignIn } from "@/lib/auth/password";
+import { ChangePasswordSection } from "@/components/shared/change-password-section";
 import { getMyEmailPreferences } from "@/lib/notifications/preferences-server";
 
 export default async function SupervisorSettingsPage() {
@@ -14,7 +16,7 @@ export default async function SupervisorSettingsPage() {
     redirect("/login");
   }
 
-  const emailPrefs = await getMyEmailPreferences();
+  const [emailPrefs, hasPassword] = await Promise.all([getMyEmailPreferences(), hasPasswordSignIn()]);
 
   return (
     <div>
@@ -33,6 +35,7 @@ export default async function SupervisorSettingsPage() {
           </p>
           <EmailPreferenceToggles initial={emailPrefs} />
         </Card>
+        <ChangePasswordSection hasPassword={hasPassword} />
         <LogoutButton className="text-muted-foreground hover:text-charcoal" />
       </div>
     </div>

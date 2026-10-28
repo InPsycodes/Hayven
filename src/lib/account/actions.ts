@@ -47,6 +47,7 @@ export async function updateAccountProfile(_prevState: FormState, formData: Form
   revalidatePath("/parent");
   revalidatePath("/therapist/profile");
   revalidatePath("/therapist");
+  revalidatePath("/admin", "layout");
   return {};
 }
 

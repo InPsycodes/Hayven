@@ -20,6 +20,7 @@ import {
   IconStethoscope,
   IconShieldHeart,
   IconLayoutDashboard,
+  IconSettings,
 } from "@tabler/icons-react";
 
 import { Icon } from "@/components/ui/icon";
@@ -51,6 +52,7 @@ const ADMIN_NAV = [
   { group: "Content", label: "Learning", href: "/admin/learning", icon: IconBooks },
   { group: "System", label: "Metrics", href: "/admin/metrics", icon: IconChartBar },
   { group: "System", label: "Audit log", href: "/admin/audit-log", icon: IconHistory },
+  { group: "System", label: "Settings", href: "/admin/settings", icon: IconSettings },
 ];
 
 export function AdminSidebar({
