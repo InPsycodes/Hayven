@@ -15,6 +15,7 @@ import type { UserRole } from "@/data/types";
 
 const LINKS = [
   { label: "Home", href: "/" },
+  { label: "Who we serve", href: "/who-we-serve" },
   { label: "Find a therapist", href: "/search" },
   { label: "Learning Center", href: "/learn" },
   { label: "About Us", href: "/about" },

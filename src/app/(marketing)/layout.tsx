@@ -7,6 +7,7 @@ import { safeJsonLdStringify } from "@/lib/seo/json-ld";
 import { getSession } from "@/lib/auth/session";
 
 const EXPLORE_LINKS = [
+  { label: "Who we serve", href: "/who-we-serve" },
   { label: "Find a therapist", href: "/search" },
   { label: "Learning Center", href: "/learn" },
   { label: "For therapists", href: "/for-therapists" },
