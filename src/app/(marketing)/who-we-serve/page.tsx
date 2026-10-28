@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { IconArrowRight, IconBook2, IconChartLine, IconHome, IconMessages } from "@tabler/icons-react";
 
 import { AgeGroupPortrait } from "@/components/marketing/age-group-portrait";
 import { Reveal } from "@/components/marketing/reveal";
 import { Icon } from "@/components/ui/icon";
-import { AGE_GROUPS } from "@/content/marketing/age-groups";
+import {
+  AGE_GROUPS,
+  PROFESSIONALS,
+  professionalSearchHref,
+  type Professional,
+} from "@/content/marketing/age-groups";
 import { canonicalFor } from "@/lib/seo/metadata";
+
+import familyImage from "../../../../public/images/hero-family.jpg";
 
 export const metadata: Metadata = {
   title: "Who We Serve",
@@ -38,27 +46,38 @@ const PARENT_SUPPORT = [
   },
 ];
 
-const WHO_HELPS = [
-  { notice: "Few words, unclear speech, stuttering", who: "Speech therapist" },
-  { notice: "Trouble with handwriting, dressing, or noise and textures", who: "Occupational therapist" },
-  { notice: "Behaviour that is hard to manage, or social skills after an autism diagnosis", who: "ABA therapist" },
-  { notice: "Worry, low mood, attention or learning concerns, or you want an assessment", who: "Psychologist" },
+const WHO_HELPS: { notice: string; who: Professional }[] = [
+  { notice: "Few words, unclear speech, stuttering", who: "speech" },
+  { notice: "Trouble with handwriting, dressing, or noise and textures", who: "occupational" },
+  { notice: "Behaviour that is hard to manage, or social skills after an autism diagnosis", who: "aba" },
+  { notice: "Worry, low mood, attention or learning concerns, or you want an assessment", who: "psychologist" },
 ];
 
 export default function WhoWeServePage() {
   return (
     <div className="flex flex-col bg-offwhite">
-      <section className="px-6 pt-20 pb-10 md:px-10 md:pt-28">
-        <div className="mx-auto max-w-6xl">
-          <span className="eyebrow text-rust-dark">Who we serve</span>
-          <h1 className="mt-4 max-w-4xl font-serif text-[2.1rem] leading-[1.08] text-charcoal sm:text-5xl lg:text-[4rem]">
-            For every child, and the family around them.
-          </h1>
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg">
-            From a baby&apos;s first milestones to the pressures of the teenage years, Hayven connects
-            Nigerian families with verified psychologists and speech, occupational and ABA therapists
-            who work with children at every stage.
-          </p>
+      <section className="px-6 pt-20 pb-12 md:px-10 md:pt-28 md:pb-16">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.15fr_0.85fr] md:gap-14">
+          <div>
+            <span className="eyebrow text-rust-dark">Who we serve</span>
+            <h1 className="mt-4 font-serif text-[2.1rem] leading-[1.08] text-charcoal sm:text-5xl lg:text-[3.75rem]">
+              For every child, and the family around them.
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">
+              From a baby&apos;s first milestones to the pressures of the teenage years, Hayven connects
+              Nigerian families with verified psychologists and speech, occupational and ABA therapists
+              who work with children at every stage.
+            </p>
+          </div>
+          <Image
+            src={familyImage}
+            alt="A mother holding her sleeping baby close at home"
+            placeholder="blur"
+            priority
+            sizes="(min-width: 768px) 40vw, 100vw"
+            className="photo-treatment aspect-[4/3] w-full rounded-3xl object-cover md:aspect-[4/5]"
+            style={{ objectPosition: "62% 40%" }}
+          />
         </div>
       </section>
 
@@ -139,7 +158,17 @@ export default function WhoWeServePage() {
                 <p className="text-sm text-ink-soft">If you notice</p>
                 <p className="mt-1 text-base font-semibold leading-snug text-charcoal">{row.notice}</p>
                 <p className="mt-5 text-sm text-ink-soft">Who helps</p>
-                <p className="mt-1 font-serif text-xl text-rust-dark">{row.who}</p>
+                <Link
+                  href={professionalSearchHref(row.who)}
+                  className="group mt-1 inline-block font-serif text-xl text-rust-dark hover:text-terracotta"
+                >
+                  {PROFESSIONALS[row.who].label}
+                  <Icon
+                    icon={IconArrowRight}
+                    size="sm"
+                    className="ml-1.5 inline align-[-1px] transition-transform duration-200 ease-out group-hover:translate-x-0.5"
+                  />
+                </Link>
               </li>
             ))}
           </ul>

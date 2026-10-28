@@ -1,5 +1,25 @@
 import type { StaticImageData } from "next/image";
-import { IconMessageCircleHeart, IconSchool, type Icon as TablerIcon } from "@tabler/icons-react";
+import {
+  IconBook,
+  IconBottle,
+  IconCloudRain,
+  IconCloudStorm,
+  IconEar,
+  IconMessageCircle,
+  IconMessageCircleHeart,
+  IconMessages,
+  IconMoodNervous,
+  IconMoon,
+  IconPencil,
+  IconPuzzle,
+  IconSchool,
+  IconSparkles,
+  IconTarget,
+  IconUsers,
+  IconVolume,
+  IconWalk,
+  type Icon as TablerIcon,
+} from "@tabler/icons-react";
 
 import earlyYearsImage from "../../../public/images/about-family-session.webp";
 import youngChildImage from "../../../public/images/quote-breather-mother-child.webp";
@@ -10,10 +30,34 @@ import youngChildImage from "../../../public/images/quote-breather-mother-child.
  * Dr. Abike, 28 Oct 2026). The concerns and "who helps" lines are clinical
  * claims still awaiting her review -- change them here, not in the pages.
  */
+
+export type Professional = "psychologist" | "speech" | "occupational" | "aba";
+
+/**
+ * Each professional links to a free-text search rather than the specialty
+ * filter: psychology is two specialties in the database (Developmental and
+ * Clinical, and the filter takes one), and there is no ABA specialty at all,
+ * so "ABA" matches therapists who mention it in their bio.
+ */
+export const PROFESSIONALS: Record<Professional, { label: string; searchQuery: string }> = {
+  psychologist: { label: "Psychologist", searchQuery: "Psychology" },
+  speech: { label: "Speech therapist", searchQuery: "Speech" },
+  occupational: { label: "Occupational therapist", searchQuery: "Occupational" },
+  aba: { label: "ABA therapist", searchQuery: "ABA" },
+};
+
+export function professionalSearchHref(professional: Professional): string {
+  return `/search?query=${encodeURIComponent(PROFESSIONALS[professional].searchQuery)}`;
+}
+
 export interface AgeConcern {
   title: string;
   detail: string;
-  whoHelps: string;
+  icon: TablerIcon;
+  /** Who usually helps, in order; shown joined with "or". */
+  helpers: Professional[];
+  /** Optional words after the helpers, e.g. "for an assessment". */
+  helperNote?: string;
 }
 
 export interface AgeGroup {
@@ -52,27 +96,32 @@ export const AGE_GROUPS: AgeGroup[] = [
       {
         title: "Late babbling or first words",
         detail: "Not babbling by about 12 months, or very few words by 18 months.",
-        whoHelps: "Speech therapist",
+        icon: IconMessageCircle,
+        helpers: ["speech"],
       },
       {
         title: "Not responding to name or sounds",
         detail: "Little eye contact, smiling back or reaction when called.",
-        whoHelps: "Psychologist",
+        icon: IconEar,
+        helpers: ["psychologist"],
       },
       {
         title: "Feeding difficulties",
         detail: "Trouble sucking, chewing or moving to solid food.",
-        whoHelps: "Speech or occupational therapist",
+        icon: IconBottle,
+        helpers: ["speech", "occupational"],
       },
       {
         title: "Late sitting, crawling or walking",
         detail: "Or unusual stiffness or floppiness.",
-        whoHelps: "Occupational therapist",
+        icon: IconWalk,
+        helpers: ["occupational"],
       },
       {
         title: "Hard to soothe",
         detail: "Very unsettled sleep or crying that wears the family down.",
-        whoHelps: "Psychologist",
+        icon: IconMoon,
+        helpers: ["psychologist"],
       },
     ],
     article: { slug: "child-not-talking-as-much", title: "My child isn't talking as much as others their age" },
@@ -97,27 +146,33 @@ export const AGE_GROUPS: AgeGroup[] = [
       {
         title: "Speech that is hard to understand",
         detail: "Few words for their age, sounds that come out wrong, or stuttering that is not easing.",
-        whoHelps: "Speech therapist",
+        icon: IconMessages,
+        helpers: ["speech"],
       },
       {
         title: "Big feelings and meltdowns",
         detail: "Tantrums that are frequent, long or intense, and hard to calm.",
-        whoHelps: "Psychologist or ABA therapist",
+        icon: IconCloudStorm,
+        helpers: ["psychologist", "aba"],
       },
       {
         title: "Play and making friends",
         detail: "Prefers to play alone, finds sharing or taking turns very hard.",
-        whoHelps: "Psychologist",
+        icon: IconUsers,
+        helpers: ["psychologist"],
       },
       {
         title: "Possible signs of autism",
         detail: "Repetitive play, strong need for routine, or little eye contact.",
-        whoHelps: "Psychologist for an assessment",
+        icon: IconPuzzle,
+        helpers: ["psychologist"],
+        helperNote: "for an assessment",
       },
       {
         title: "Sensory sensitivities",
         detail: "Strong reactions to noise, clothing, textures or certain foods.",
-        whoHelps: "Occupational therapist",
+        icon: IconVolume,
+        helpers: ["occupational"],
       },
     ],
     article: { slug: "signs-of-autism-early-childhood", title: "Early signs of autism, explained without the jargon" },
@@ -138,27 +193,32 @@ export const AGE_GROUPS: AgeGroup[] = [
       {
         title: "Attention and focus",
         detail: "Easily distracted, restless, or unfinished work at home and school.",
-        whoHelps: "Psychologist",
+        icon: IconTarget,
+        helpers: ["psychologist"],
       },
       {
         title: "Reading and learning",
         detail: "Reading, spelling or maths much harder than for classmates.",
-        whoHelps: "Psychologist",
+        icon: IconBook,
+        helpers: ["psychologist"],
       },
       {
         title: "Making and keeping friends",
         detail: "Left out, misreads social cues, or conflict with other children.",
-        whoHelps: "Psychologist",
+        icon: IconUsers,
+        helpers: ["psychologist"],
       },
       {
         title: "Worry and fears",
         detail: "Stomach aches before school, avoiding new things, or many fears.",
-        whoHelps: "Psychologist",
+        icon: IconMoodNervous,
+        helpers: ["psychologist"],
       },
       {
         title: "Handwriting and coordination",
         detail: "Messy or tiring handwriting, clumsy, finds sport hard.",
-        whoHelps: "Occupational therapist",
+        icon: IconPencil,
+        helpers: ["occupational"],
       },
     ],
     article: { slug: "adhd-or-just-a-lot-of-energy", title: "Is it ADHD, or is my child just a lot of energy?" },
@@ -178,27 +238,32 @@ export const AGE_GROUPS: AgeGroup[] = [
       {
         title: "Anxiety and worry",
         detail: "Constant worry, panic, or avoiding school and people.",
-        whoHelps: "Psychologist",
+        icon: IconMoodNervous,
+        helpers: ["psychologist"],
       },
       {
         title: "Low mood",
         detail: "Withdrawn, irritable, losing interest, or changes in sleep and appetite.",
-        whoHelps: "Psychologist",
+        icon: IconCloudRain,
+        helpers: ["psychologist"],
       },
       {
         title: "Exam and school pressure",
         detail: "Stress around WAEC, NECO and JAMB, or falling behind.",
-        whoHelps: "Psychologist",
+        icon: IconSchool,
+        helpers: ["psychologist"],
       },
       {
         title: "Autism and ADHD in the teen years",
         detail: "Support with independence, organisation and friendships.",
-        whoHelps: "Psychologist or ABA therapist",
+        icon: IconPuzzle,
+        helpers: ["psychologist", "aba"],
       },
       {
         title: "Confidence and self-esteem",
         detail: "Harsh on themselves, body image worries, or peer pressure.",
-        whoHelps: "Psychologist",
+        icon: IconSparkles,
+        helpers: ["psychologist"],
       },
     ],
     article: { slug: "talking-to-your-child-about-therapy", title: "How to talk to your child about starting therapy" },

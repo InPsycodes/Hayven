@@ -4,7 +4,7 @@ import { IconAlertTriangle, IconArrowLeft, IconArrowRight } from "@tabler/icons-
 import { AgeGroupPortrait } from "@/components/marketing/age-group-portrait";
 import { Reveal } from "@/components/marketing/reveal";
 import { Icon } from "@/components/ui/icon";
-import type { AgeGroup } from "@/content/marketing/age-groups";
+import { PROFESSIONALS, professionalSearchHref, type AgeGroup } from "@/content/marketing/age-groups";
 import { EMERGENCY_NUMBER } from "@/content/safeguarding";
 
 // The body of /who-we-serve/[slug]; the route file only resolves the group
@@ -56,11 +56,17 @@ export function AgeGroupPage({ group, supportHref }: { group: AgeGroup; supportH
                 </Link>
               </div>
             </div>
+            {/* Without a photo, a big gradient block read as a missing image:
+                the stand-in shrinks to a circle and drops out on phones. */}
             <AgeGroupPortrait
               group={group}
               priority
               sizes="(min-width: 768px) 45vw, 100vw"
-              className="aspect-[4/3] w-full rounded-3xl"
+              className={
+                group.image
+                  ? "aspect-[4/3] w-full rounded-3xl"
+                  : "hidden aspect-square w-full max-w-[300px] justify-self-center rounded-full md:block"
+              }
             />
           </div>
         </div>
@@ -91,10 +97,25 @@ export function AgeGroupPage({ group, supportHref }: { group: AgeGroup; supportH
             {group.concerns.map((concern, index) => (
               <li key={concern.title}>
                 <Reveal delayMs={index * 50} className="h-full rounded-2xl bg-canvas-white p-6">
-                  <h3 className="text-lg font-semibold text-charcoal">{concern.title}</h3>
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-offwhite/60 text-rust-dark">
+                    <Icon icon={concern.icon} size="md" />
+                  </span>
+                  <h3 className="mt-4 text-lg font-semibold text-charcoal">{concern.title}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{concern.detail}</p>
                   <p className="mt-4 text-[13px] text-ink-soft">
-                    Usually helps: <span className="font-semibold text-rust-dark">{concern.whoHelps}</span>
+                    Usually helps:{" "}
+                    {concern.helpers.map((helper, i) => (
+                      <span key={helper}>
+                        {i > 0 && " or "}
+                        <Link
+                          href={professionalSearchHref(helper)}
+                          className="font-semibold text-rust-dark underline decoration-rust-dark/30 underline-offset-2 hover:text-terracotta hover:decoration-terracotta"
+                        >
+                          {i === 0 ? PROFESSIONALS[helper].label : PROFESSIONALS[helper].label.toLowerCase()}
+                        </Link>
+                      </span>
+                    ))}
+                    {concern.helperNote && ` ${concern.helperNote}`}
                   </p>
                 </Reveal>
               </li>
