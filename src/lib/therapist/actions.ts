@@ -620,8 +620,14 @@ export async function updateBankDetails(_prevState: FormState, formData: FormDat
     return { error: err instanceof Error ? err.message : "Couldn't verify that account." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  // Service role on purpose: authenticated has no UPDATE grant on the bank
+  // columns (0045's column allowlist; 0085 hides them from SELECT too), so
+  // a user-scoped write is refused with "permission denied". That grant must
+  // stay closed or a therapist could write an unresolved account straight
+  // through the API; this action is the only gate, and it only ever targets
+  // the caller's own row.
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("therapist_profiles")
     .update({
       bank_code: bankCode,
