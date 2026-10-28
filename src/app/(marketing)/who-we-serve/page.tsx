@@ -37,7 +37,8 @@ interface AgeGroup {
   fallbackIcon: TablerIcon;
 }
 
-// Ages 13-17 and each group's concerns pending Dr. Abike's clinical review.
+// Hayven serves ages 0-18 (confirmed by Dr. Abike, 28 Oct 2026). Each
+// group's concerns still await her clinical review.
 const AGE_GROUPS: AgeGroup[] = [
   {
     title: "Babies and toddlers",
@@ -71,7 +72,7 @@ const AGE_GROUPS: AgeGroup[] = [
   },
   {
     title: "Teenagers",
-    ages: "13–17",
+    ages: "13–18",
     line: "Steady support through the changes of adolescence, with a psychologist who listens.",
     concerns: ["Worry and low mood", "Autism and ADHD support", "School pressure"],
     article: { href: "/learn/talking-to-your-child-about-therapy", label: "Talking to your child about therapy" },
