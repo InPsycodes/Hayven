@@ -24,6 +24,7 @@ import {
 import earlyYearsImage from "../../../public/images/about-family-session.webp";
 import youngChildImage from "../../../public/images/who-we-serve-young-children.jpg";
 import schoolAgeImage from "../../../public/images/who-we-serve-school-age.jpg";
+import teenagersImage from "../../../public/images/who-we-serve-teenagers.jpg";
 
 /**
  * The Who We Serve age groups: the cards on /who-we-serve and one landing
@@ -285,6 +286,12 @@ export const AGE_GROUPS: AgeGroup[] = [
       },
     ],
     article: { slug: "talking-to-your-child-about-therapy", title: "How to talk to your child about starting therapy" },
+    image: {
+      src: teenagersImage,
+      alt: "A teenage girl laughing as her mother hugs her from behind on the sofa",
+      position: "64% 40%",
+      cardZoom: 1.25,
+    },
     fallbackIcon: IconMessageCircleHeart,
     showEmergencyNotice: true,
   },
