@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { IconArrowRight, IconBook2, IconChartLine, IconHome, IconMessages } from "@tabler/icons-react";
 
 import { AgeGroupPortrait } from "@/components/marketing/age-group-portrait";
 import { Reveal } from "@/components/marketing/reveal";
+import { WhoWeServeHero } from "@/components/marketing/who-we-serve-hero";
 import { Icon } from "@/components/ui/icon";
 import {
   AGE_GROUPS,
@@ -13,8 +13,6 @@ import {
   type Professional,
 } from "@/content/marketing/age-groups";
 import { canonicalFor } from "@/lib/seo/metadata";
-
-import familyImage from "../../../../public/images/hero-family.jpg";
 
 export const metadata: Metadata = {
   title: "Who We Serve",
@@ -56,32 +54,9 @@ const WHO_HELPS: { notice: string; who: Professional }[] = [
 export default function WhoWeServePage() {
   return (
     <div className="flex flex-col bg-offwhite">
-      <section className="px-6 pt-20 pb-12 md:px-10 md:pt-28 md:pb-16">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.15fr_0.85fr] md:gap-14">
-          <div>
-            <span className="eyebrow text-rust-dark">Who we serve</span>
-            <h1 className="mt-4 font-serif text-[2.1rem] leading-[1.08] text-charcoal sm:text-5xl lg:text-[3.75rem]">
-              For every child, and the family around them.
-            </h1>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">
-              From a baby&apos;s first milestones to the pressures of the teenage years, Hayven connects
-              Nigerian families with verified psychologists and speech, occupational and ABA therapists
-              who work with children at every stage.
-            </p>
-          </div>
-          <Image
-            src={familyImage}
-            alt="A mother holding her sleeping baby close at home"
-            placeholder="blur"
-            priority
-            sizes="(min-width: 768px) 40vw, 100vw"
-            className="photo-treatment aspect-[4/3] w-full rounded-3xl object-cover md:aspect-[4/5]"
-            style={{ objectPosition: "62% 40%" }}
-          />
-        </div>
-      </section>
+      <WhoWeServeHero />
 
-      <section aria-label="Age groups" className="px-6 pb-16 md:px-10 md:pb-20">
+      <section aria-label="Age groups" className="px-6 pt-8 pb-16 md:px-10 md:pt-10 md:pb-20">
         <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-2 md:gap-6">
           {AGE_GROUPS.map((group, index) => (
             <Reveal key={group.title} delayMs={index * 60}>
