@@ -21,7 +21,7 @@ import {
   type Icon as TablerIcon,
 } from "@tabler/icons-react";
 
-import earlyYearsImage from "../../../public/images/about-family-session.webp";
+import earlyYearsImage from "../../../public/images/who-we-serve-babies-and-toddlers.jpg";
 import youngChildImage from "../../../public/images/who-we-serve-young-children.jpg";
 import schoolAgeImage from "../../../public/images/who-we-serve-school-age.jpg";
 import teenagersImage from "../../../public/images/who-we-serve-teenagers.jpg";
@@ -136,8 +136,9 @@ export const AGE_GROUPS: AgeGroup[] = [
     article: { slug: "child-not-talking-as-much", title: "My child isn't talking as much as others their age" },
     image: {
       src: earlyYearsImage,
-      alt: "A toddler stacking cups during a session with her mother and a clinician",
-      position: "60% 50%",
+      alt: "A mother holding her newborn baby close, foreheads touching",
+      position: "52% 34%",
+      cardZoom: 1.4,
     },
     fallbackIcon: IconMessageCircleHeart,
   },
