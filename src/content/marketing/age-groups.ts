@@ -73,6 +73,8 @@ export interface AgeGroup {
   /** Three short tags on the /who-we-serve card. */
   cardConcerns: string[];
   headline: string;
+  /** The handwritten note beside the header photo, one entry per line. */
+  note: string[];
   intro: string;
   concerns: AgeConcern[];
   article: { slug: string; title: string };
@@ -99,6 +101,7 @@ export const AGE_GROUPS: AgeGroup[] = [
     cardLine: "Notice early, act early. Help with late babbling, feeding, movement and the milestones that worry you.",
     cardConcerns: ["Late talking", "Feeding and eating", "Sitting, crawling, walking"],
     headline: "Small steps, early support.",
+    note: ["Every small", "step counts."],
     intro:
       "The first two years shape so much. If something about your baby's development worries you, you do not have to wait and see.",
     concerns: [
@@ -150,6 +153,7 @@ export const AGE_GROUPS: AgeGroup[] = [
     cardLine: "Ready for school and for friends. Support with speech, play, big feelings and getting through the day.",
     cardConcerns: ["Speech and talking", "Big feelings and behaviour", "Play and social skills"],
     headline: "Growing into big feelings and new words.",
+    note: ["Big feelings,", "gentle help."],
     intro:
       "These years bring talking, playing and making friends. When any of it feels harder than it should, a verified professional can help you understand why and what to do next.",
     concerns: [
@@ -189,7 +193,7 @@ export const AGE_GROUPS: AgeGroup[] = [
     image: {
       src: youngChildImage,
       alt: "A laughing mother holding her young daughter, who leans in for a kiss",
-      position: "55% 35%",
+      position: "66% 35%",
     },
     fallbackIcon: IconMessageCircleHeart,
   },
@@ -201,6 +205,7 @@ export const AGE_GROUPS: AgeGroup[] = [
     cardLine: "Help them learn, focus and fit in, at home and in the classroom.",
     cardConcerns: ["Attention and focus", "Reading and learning", "Making friends"],
     headline: "Helping them thrive in and out of the classroom.",
+    note: ["Growing in", "confidence."],
     intro:
       "School asks a lot of children: focus, reading, friendships, sitting still. If your child is struggling, the right support can make each day easier for them and for you.",
     concerns: [
@@ -252,6 +257,7 @@ export const AGE_GROUPS: AgeGroup[] = [
     cardLine: "Steady support through the changes of adolescence, with a psychologist who listens.",
     cardConcerns: ["Worry and low mood", "Autism and ADHD support", "School pressure"],
     headline: "Someone in their corner through the teenage years.",
+    note: ["Heard and", "supported."],
     intro:
       "Adolescence brings exams, changing friendships and big questions about who they are. A psychologist can give your teenager a safe place to talk, and give you guidance too.",
     concerns: [

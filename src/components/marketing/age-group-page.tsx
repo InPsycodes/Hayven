@@ -3,6 +3,13 @@ import { IconAlertTriangle, IconArrowLeft, IconArrowRight } from "@tabler/icons-
 
 import { AgeGroupPortrait } from "@/components/marketing/age-group-portrait";
 import { Reveal } from "@/components/marketing/reveal";
+import {
+  HeroBand,
+  HeroEyebrow,
+  ReassurancePoints,
+  TiltedPhoto,
+  UnderlinedHeadline,
+} from "@/components/marketing/who-we-serve-hero";
 import { Icon } from "@/components/ui/icon";
 import { PROFESSIONALS, professionalSearchHref, type AgeGroup } from "@/content/marketing/age-groups";
 import { EMERGENCY_NUMBER } from "@/content/safeguarding";
@@ -23,54 +30,56 @@ const STEPS = [
 export function AgeGroupPage({ group, supportHref }: { group: AgeGroup; supportHref: string }) {
   return (
     <div className="flex flex-col bg-offwhite">
-      <section className="px-6 pt-14 pb-16 md:px-10 md:pt-20 md:pb-20">
-        <div className="mx-auto max-w-6xl">
-          <Link
-            href="/who-we-serve"
-            className="inline-flex items-center gap-1.5 py-2 text-sm font-semibold text-rust-dark hover:text-terracotta"
-          >
-            <Icon icon={IconArrowLeft} size="sm" />
-            Who we serve
-          </Link>
-          <div className="mt-6 grid items-center gap-10 md:grid-cols-[1.1fr_0.9fr] md:gap-14">
-            <div>
-              <span className="eyebrow text-rust-dark">
-                {group.title}, {group.agesLabel}
-              </span>
-              <h1 className="mt-4 font-serif text-[2.1rem] leading-[1.08] text-charcoal sm:text-5xl lg:text-[3.5rem]">
-                {group.headline}
-              </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">{group.intro}</p>
-              <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
-                <Link
-                  href={supportHref}
-                  className="rounded-full bg-terracotta px-7 py-3.5 text-sm font-semibold text-canvas-white transition-colors hover:bg-rust-dark"
-                >
-                  Get support now
-                </Link>
-                <Link
-                  href="/needs-assessment"
-                  className="py-2 text-sm font-semibold text-rust-dark hover:text-terracotta"
-                >
-                  Not sure where to start? Take the quiz
-                </Link>
-              </div>
+      <HeroBand
+        copy={
+          <>
+            <Link
+              href="/who-we-serve"
+              className="mb-5 inline-flex items-center gap-1.5 py-2 text-sm font-semibold text-rust-dark hover:text-terracotta"
+            >
+              <Icon icon={IconArrowLeft} size="sm" />
+              Who we serve
+            </Link>
+            <HeroEyebrow>
+              {group.title}, {group.agesLabel}
+            </HeroEyebrow>
+            <UnderlinedHeadline text={group.headline} className="mt-6 lg:text-[3.6rem]" />
+            <p className="mt-8 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">{group.intro}</p>
+            <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <Link
+                href={supportHref}
+                className="rounded-full bg-terracotta px-7 py-3.5 text-sm font-semibold text-canvas-white transition-colors hover:bg-rust-dark"
+              >
+                Get support now
+              </Link>
+              <Link href="/needs-assessment" className="py-2 text-sm font-semibold text-rust-dark hover:text-terracotta">
+                Not sure where to start? Take the quiz
+              </Link>
             </div>
-            {/* Without a photo, a big gradient block read as a missing image:
-                the stand-in shrinks to a circle and drops out on phones. */}
+            <ReassurancePoints className="mt-10" />
+          </>
+        }
+        photo={
+          group.image ? (
+            <TiltedPhoto note={group.note}>
+              <AgeGroupPortrait
+                group={group}
+                priority
+                sizes="(min-width: 768px) 45vw, 100vw"
+                className="aspect-[4/3] w-full md:aspect-[5/6]"
+              />
+            </TiltedPhoto>
+          ) : (
+            // No photo yet: a small round stand-in rather than a big empty block, hidden on phones.
             <AgeGroupPortrait
               group={group}
-              priority
-              sizes="(min-width: 768px) 45vw, 100vw"
-              className={
-                group.image
-                  ? "aspect-[4/3] w-full rounded-3xl"
-                  : "hidden aspect-square w-full max-w-[300px] justify-self-center rounded-full md:block"
-              }
+              sizes="300px"
+              className="hidden aspect-square w-full max-w-[300px] justify-self-center rounded-full md:block"
             />
-          </div>
-        </div>
-      </section>
+          )
+        }
+      />
+      <div aria-hidden className="h-8 md:h-12" />
 
       {group.showEmergencyNotice && (
         <section aria-label="In an emergency" className="px-6 pb-12 md:px-10">
