@@ -7,7 +7,6 @@ import {
   HeroBand,
   HeroEyebrow,
   ReassurancePoints,
-  HeroPhoto,
   UnderlinedHeadline,
 } from "@/components/marketing/who-we-serve-hero";
 import { Icon } from "@/components/ui/icon";
@@ -59,24 +58,12 @@ export function AgeGroupPage({ group, supportHref }: { group: AgeGroup; supportH
             <ReassurancePoints className="mt-10" />
           </>
         }
+        note={group.note}
         photo={
+          // No photo yet: the band shows the copy on plain cream.
           group.image ? (
-            <HeroPhoto note={group.note}>
-              <AgeGroupPortrait
-                group={group}
-                priority
-                sizes="(min-width: 768px) 45vw, 100vw"
-                className="aspect-[4/3] w-full md:aspect-[5/6]"
-              />
-            </HeroPhoto>
-          ) : (
-            // No photo yet: a small round stand-in rather than a big empty block, hidden on phones.
-            <AgeGroupPortrait
-              group={group}
-              sizes="300px"
-              className="hidden aspect-square w-full max-w-[300px] justify-self-center rounded-full md:block"
-            />
-          )
+            <AgeGroupPortrait group={group} priority sizes="(min-width: 768px) 60vw, 100vw" className="absolute inset-0" />
+          ) : undefined
         }
       />
       <div aria-hidden className="h-8 md:h-12" />
