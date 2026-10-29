@@ -9,7 +9,7 @@ import familyImage from "../../../public/images/hero-family.jpg";
 
 // The cream-band header shared by /who-we-serve and each age group page:
 // eyebrow with a lead line, a brush underline, reassurance points, and a
-// tilted photo over soft shapes with a handwritten note.
+// photo set into a soft warm glow with a handwritten note.
 
 // Self-hosted by next/font like the site's other faces, so the CSP's
 // font-src 'self' still holds. Only used for the handwritten notes.
@@ -111,27 +111,37 @@ export function ReassurancePoints({ className }: { className?: string }) {
   );
 }
 
-/** A photo tilted over a terracotta blob (top left) and a cream one (bottom right), with an optional handwritten note beside it on wide screens. */
-export function TiltedPhoto({ children, note }: { children: React.ReactNode; note?: string[] }) {
+/**
+ * The header photo, made to sit in the cream band rather than on top of it:
+ * a blurred warm glow behind it instead of hard-edged shapes, no tilt, a
+ * wide faint warm shadow with a hairline edge, and a light terracotta wash
+ * so photos shot in different light (black and white, dark rooms) read as
+ * one set. Optional handwritten note beside it on wide screens.
+ */
+export function HeroPhoto({ children, note }: { children: React.ReactNode; note?: string[] }) {
   return (
     <div className="relative mx-auto w-full max-w-md md:max-w-none">
       <div
         aria-hidden
-        className="absolute -top-6 -left-6 size-32 rounded-[42%_58%_55%_45%/50%_45%_55%_50%] bg-[#e09a76] sm:size-40"
+        className="absolute -inset-10 rounded-full bg-[radial-gradient(closest-side,rgba(224,154,118,0.38),rgba(241,226,208,0.5)_55%,transparent)] blur-2xl"
       />
-      <div
-        aria-hidden
-        className="absolute -right-8 -bottom-8 size-48 rounded-[55%_45%_40%_60%/50%_60%_40%_50%] bg-[#f1e2d0] sm:size-64"
-      />
-      <div className="relative overflow-hidden rounded-3xl shadow-[0_24px_48px_-28px_rgba(60,35,20,0.45)] md:-rotate-[1.5deg]">
+      <div className="relative overflow-hidden rounded-[28px] shadow-[0_30px_60px_-30px_rgba(124,69,39,0.35)] ring-1 ring-[#7c4527]/10">
         {children}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[#e09a76]/20 mix-blend-soft-light"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,rgba(124,69,39,0.18))]"
+        />
       </div>
       {note && (
         <p
           aria-hidden
           className={cn(
             handwriting.className,
-            "absolute top-16 -right-4 hidden w-28 -rotate-12 text-center text-[1.6rem] leading-[1.05] text-terracotta xl:-right-24 xl:block"
+            "absolute top-16 -right-4 hidden w-28 -rotate-12 text-center text-[1.6rem] leading-[1.05] text-terracotta xl:-right-32 xl:block"
           )}
         >
           {note.map((line, i) => (
@@ -166,7 +176,7 @@ export function WhoWeServeHero() {
         </>
       }
       photo={
-        <TiltedPhoto note={["Healthier minds.", "Brighter futures."]}>
+        <HeroPhoto note={["Healthier minds.", "Brighter futures."]}>
           <Image
             src={familyImage}
             alt="A mother holding her sleeping baby close at home"
@@ -176,7 +186,7 @@ export function WhoWeServeHero() {
             className="photo-treatment aspect-[4/3] w-full object-cover md:aspect-[5/6]"
             style={{ objectPosition: "62% 40%" }}
           />
-        </TiltedPhoto>
+        </HeroPhoto>
       }
     />
   );

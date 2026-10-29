@@ -7,7 +7,7 @@ import {
   HeroBand,
   HeroEyebrow,
   ReassurancePoints,
-  TiltedPhoto,
+  HeroPhoto,
   UnderlinedHeadline,
 } from "@/components/marketing/who-we-serve-hero";
 import { Icon } from "@/components/ui/icon";
@@ -61,14 +61,14 @@ export function AgeGroupPage({ group, supportHref }: { group: AgeGroup; supportH
         }
         photo={
           group.image ? (
-            <TiltedPhoto note={group.note}>
+            <HeroPhoto note={group.note}>
               <AgeGroupPortrait
                 group={group}
                 priority
                 sizes="(min-width: 768px) 45vw, 100vw"
                 className="aspect-[4/3] w-full md:aspect-[5/6]"
               />
-            </TiltedPhoto>
+            </HeroPhoto>
           ) : (
             // No photo yet: a small round stand-in rather than a big empty block, hidden on phones.
             <AgeGroupPortrait
