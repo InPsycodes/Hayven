@@ -4,6 +4,7 @@ import posthog from "posthog-js";
 import { sendGAEvent } from "@next/third-parties/google";
 
 import { sanitizeProps, type AnalyticsEvent } from "./events";
+import { sanitizePath, sanitizeUrl, scrubCapture } from "./url-privacy";
 
 // Public, safe to ship to the browser (it's a write-only ingest key, not an
 // admin key). When unset -- local dev, or before the pilot's PostHog project
@@ -41,22 +42,13 @@ export function initAnalytics(): void {
     capture_pageleave: true,
     disable_session_recording: true,
     persistence: "localStorage+cookie",
-    // Last line of defence: strip any query string PostHog would otherwise
-    // attach via $current_url / $referrer (discovery search puts the raw
-    // query term in the URL, and a parent could type a child's name there).
-    sanitize_properties: (properties) => {
-      for (const urlKey of ["$current_url", "$referrer", "$referring_domain"]) {
-        const raw = properties[urlKey];
-        if (typeof raw !== "string") continue;
-        try {
-          const u = new URL(raw, window.location.origin);
-          properties[urlKey] = `${u.origin}${u.pathname}`;
-        } catch {
-          delete properties[urlKey];
-        }
-      }
-      return properties;
-    },
+    // Last line of defence on every outgoing event: drop query strings (a
+    // search URL carries what a parent typed, which can be a child's name)
+    // and replace ids in paths (/parent/children/<id>), across the event's
+    // properties AND the person properties PostHog sets once
+    // ($initial_current_url, $initial_referrer), which the old
+    // sanitize_properties hook never saw. See url-privacy.ts.
+    before_send: (capture) => (capture ? scrubCapture(capture, window.location.origin) : capture),
   });
 }
 
@@ -89,9 +81,11 @@ export function capturePageview(): void {
     // for the exact acquisition/Search Console reports this integration
     // exists for.
     try {
+      // Never the raw href: same URL rules as PostHog (no query string,
+      // no ids in the path).
       sendGAEvent("event", "page_view", {
-        page_location: window.location.href,
-        page_path: window.location.pathname,
+        page_location: sanitizeUrl(window.location.href) ?? window.location.origin,
+        page_path: sanitizePath(window.location.pathname),
       });
     } catch {
       // not mounted yet -- see the note in trackEvent.
