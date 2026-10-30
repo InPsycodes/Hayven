@@ -30,6 +30,10 @@ Object.assign(env, {
   VAPID_PRIVATE_KEY: "",
   NEXT_TELEMETRY_DISABLED: "1",
 });
+// The privacy run (E2E_ANALYTICS=1) switches PostHog on with a dummy key so
+// the browser builds real analytics requests; e2e/privacy.spec.ts intercepts
+// every one of them before it leaves the machine.
+if (process.env.E2E_ANALYTICS) env.NEXT_PUBLIC_POSTHOG_KEY = "phc_e2e_dummy_key_not_real";
 delete env.DATABASE_URL;
 
 const shell = process.platform === "win32";

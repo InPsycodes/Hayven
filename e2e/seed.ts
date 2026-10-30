@@ -195,8 +195,18 @@ export async function teardown(): Promise<void> {
     if (error) console.error(`e2e teardown: ${table} ${id}: ${error.message}`);
   }
   for (const id of ids) {
-    const { error } = await admin.auth.admin.deleteUser(id);
-    if (error) console.error(`e2e teardown: auth user ${id}: ${error.message}`);
+    // Retried: a single dropped connection otherwise strands a test user.
+    let lastError = "";
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { error } = await admin.auth.admin.deleteUser(id).catch((e: Error) => ({ error: e }));
+      if (!error) {
+        lastError = "";
+        break;
+      }
+      lastError = error.message;
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
+    if (lastError) console.error(`e2e teardown: auth user ${id}: ${lastError}`);
   }
   unlinkSync(STATE_FILE);
 }

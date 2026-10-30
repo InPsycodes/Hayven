@@ -83,6 +83,29 @@ Production was probed **read-only and logged out only**, using the public anonym
 
 Reads select only the key column, so a pass can't come from a column-level refusal hiding a row-level leak.
 
+## Admin function-level authorisation (30 October)
+
+`test/integration/admin-function-level-auth.integration.test.ts` finds every server action gated on the admin role or safeguarding lead (41) by scanning the source, and calls each directly. **All 41 refuse a signed-in parent and a signed-in therapist for an authorisation reason** (a redirect to `/login` or an auth error, not a validation error on dummy arguments). **A real admin gets past the gate on all 41** (control).
+
+## Browser journeys (30 October)
+
+`npm run test:e2e`: Playwright against a production build wired to staging (analytics, email, Sentry and push switched off). **32 of 32 pass**: public pages on desktop and phone; logged-out redirects; parent sign-in, intake, search, profile and booking up to the payment summary; log-out; each role blocked by URL from other families' children, unassigned children, an unsupervised team's children, and other roles' areas. The login rate limit (5 per email per 15 minutes) was observed working during development.
+
+Observation: `/supervisor/therapists/<id>` returns 200 for a therapist outside the supervisor's team, but shows "0 children": the data query is scoped to the viewer's team. Not a leak; listed as F-11.
+
+## Privacy: analytics (30 to 31 October)
+
+- **Static review.** Every event passes `sanitizeProps`, an allowlist of 12 coarse keys with a 48-character cap. PostHog: autocapture off, session recording off, EU host, proxied via `/ingest`, `sanitize_properties` strips the query string from `$current_url`, `$referrer`, `$referring_domain`. Identify sends the account UUID plus `role` only. Sentry: `sendDefaultPii: false`, EU (Germany) ingest. Google Analytics: code present but **not enabled** on the live site (no tag, and the CSP would block it).
+- **Unit tests** `src/lib/analytics/events.test.ts` (6, pass): names, email, phone, date of birth, concerns, notes, search text, child id and report text are all dropped; objects, arrays, overlong strings and empty values are dropped.
+- **Browser check** `npm run test:privacy` (pass): a parent session with PostHog switched on (dummy key, every request answered locally). PostHog requests carry no child name, email, phone, full name or search text, and **no request goes to any third party** other than Supabase. Limitation: posthog-js would not emit event batches inside an automated browser even with its bot checks spoofed, so event *properties* rest on the unit tests and code review.
+
+| ID | Severity | Confidence | Title | Status |
+|---|---|---|---|---|
+| F-08 | Low | Confirmed (code) | PostHog's `$current_url` keeps the path, which includes internal ids: `/parent/children/<child id>/…`, `/parent/messages/<thread id>`. Pseudonymous, but linkable to a specific child by anyone with database access, contrary to the rule in `events.ts`. | Open: replace UUID path segments with `:id` before sending |
+| F-09 | Low (latent) | Confirmed (code) | If Google Analytics is ever enabled, `capturePageview` sends `page_location: window.location.href`, the full URL including search text, bypassing PostHog's URL cleaning. | Open: send origin plus sanitised path only |
+| F-10 | Medium | Likely | posthog-js records `$initial_current_url` and `$initial_referrer` as person properties via `$set_once`, outside the three keys `sanitize_properties` cleans. A visitor whose first page is `/search?query=…` could have that query stored on their PostHog person. Not observable in an automated browser. | Open: sanitise every URL-valued property (including `$set` and `$set_once`) in a `before_send` hook; check existing PostHog persons in the dashboard |
+| F-11 | Informational | Confirmed | `/supervisor/therapists/<id>` returns 200 (empty) rather than 404 for a therapist outside the viewer's team | Accept, or 404 for consistency |
+
 ## Still to test
 
 Signed-in browser journeys for all four roles (no Playwright suite yet); admin function-level checks through the server actions as a non-admin; booking and payment races in the browser; load and recovery; accessibility; PostHog and Sentry payload verification; the live production RLS policy set compared against migrations (needs read-only production DB access).
