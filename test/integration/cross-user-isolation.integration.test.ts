@@ -188,7 +188,8 @@ const familyRecords: [string, string, () => string][] = [
   ["reports", "id", () => w.reportId],
 ];
 
-async function visibleRows(client: ReturnType<typeof createAnonClient>, table: string, column: string, value: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- signInAs() returns `any` (see helpers.ts) and the anon client has a different generic instantiation; both are plain Supabase clients.
+async function visibleRows(client: any, table: string, column: string, value: string) {
   // Only the key column: several tables hide columns from some roles on
   // purpose (e.g. reports.therapist_body is never readable by parents,
   // 0017), so select("*") would be refused outright even for the owner.
