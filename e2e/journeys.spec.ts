@@ -29,7 +29,9 @@ async function signIn(page: Page, email: string, home: string) {
     const { cookies } = JSON.parse(readFileSync(stateFile, "utf8"));
     await page.context().addCookies(cookies);
     await page.goto(home);
-    await expect(page).not.toHaveURL(/\/login/);
+    // Wait for any redirect (e.g. /admin -> /admin/overview) to settle before
+    // checking the session held, or the URL can still be empty mid-navigation.
+    await page.waitForURL((url) => url.pathname.startsWith(home), { timeout: 30_000 });
     return;
   }
   await page.goto("/login");
@@ -188,11 +190,32 @@ test.describe("supervisor journey", () => {
   });
 });
 
+/**
+ * Admin pages start a client-side navigation of their own shortly after load,
+ * and a test goto() that lands mid-flight is aborted (net::ERR_ABORTED). A
+ * person never moves that fast; settle the page first, and retry once if a
+ * goto is still aborted.
+ */
+async function gotoSettled(page: Page, path: string) {
+  // Admin pages keep polling (queue counts), so "networkidle" may never
+  // come: cap the wait.
+  const settle = () => page.waitForLoadState("networkidle", { timeout: 3000 }).catch(() => {});
+  await settle();
+  try {
+    return await page.goto(path);
+  } catch (err) {
+    if (!String(err).includes("ERR_ABORTED")) throw err;
+    await settle();
+    return page.goto(path);
+  }
+}
+
 test.describe("admin journey", () => {
   test("signs in to the admin overview and opens the main queues", async ({ page }) => {
+    test.setTimeout(120_000); // six pages, each a full server render
     await signIn(page, s.admin.email, "/admin");
     for (const path of ["/admin/overview", "/admin/accounts", "/admin/verification", "/admin/reports", "/admin/audit-log", "/admin/settings"]) {
-      const res = await page.goto(path);
+      const res = await gotoSettled(page, path);
       expect(res?.status(), path).toBe(200);
       await expect(page.locator("h1").first()).toBeVisible();
     }
@@ -200,7 +223,7 @@ test.describe("admin journey", () => {
 
   test("admin sign-in reaches the accounts list with the seeded parent", async ({ page }) => {
     await signIn(page, s.admin.email, "/admin");
-    await page.goto(`/admin/accounts?q=${encodeURIComponent(s.parentA.email)}`);
+    await gotoSettled(page, `/admin/accounts?q=${encodeURIComponent(s.parentA.email)}`);
     await expect(page.getByText(s.parentA.email).first()).toBeVisible();
   });
 });
