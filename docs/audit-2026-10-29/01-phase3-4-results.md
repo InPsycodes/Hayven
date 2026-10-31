@@ -113,6 +113,39 @@ Observation: `/supervisor/therapists/<id>` returns 200 for a therapist outside t
 | F-12 | **High** | Confirmed | **No working database backup.** Production is on the Supabase Free plan (owner confirmed 31 October): no managed backups, no point-in-time recovery. The fallback in `SECURITY.md` (`npx supabase db dump`, "no separate Postgres tools needed") fails without Docker (`LegacyDockerRunError`, reproduced). `storage-backup.yml` covers only Storage objects and is skipped until its secrets exist. Loss or corruption of the database today could be unrecoverable: children's records, sessions, reports, payments. | Mitigated in code, open for the owner. `.github/workflows/db-backup.yml` takes an encrypted nightly `pg_dump` to R2 (runs once its three secrets are set). Restore rehearsed on staging: dump, wipe, restore, fingerprint identical, integration suite 121/121 on the restored database (`docs/backup-restore-drill.md`). Owner: set the secrets, then upgrade to Pro and enable PITR. |
 | F-13 | Low | Confirmed | A network error during the booking slot hold was shown to parents as "This slot was just booked by someone else", sending them to pick another time when a retry would do. If the hold update is applied but its response is lost, the slot also stays marked booked with no booking, and nothing releases it. | Message fixed (a request error now says "please try again" and is logged). Stuck slot: open, low impact; a nightly sweep releasing `is_booked` slots with no booking would close it |
 
+## Restored database: full re-test (31 October)
+
+After the restore rehearsal, on the restored staging database:
+
+- Integration suite: **121 of 121 passed**. Two earlier runs failed 14 and 11 tests at random; every failure was `fetch failed` while creating or signing in test users. A probe showed the cause: about 1% of new connections from the test machine to Supabase time out at the 10-second connect stage when many open at once (0 of 150 sequential requests failed; 4 of 300 at 50 in parallel). The suite now retries only connect-stage errors, where the server never received the request, so nothing can be applied twice.
+- Browser journeys: **32 of 32 passed**.
+
+## Accessibility (31 October)
+
+New `e2e/a11y.spec.ts` runs axe-core (WCAG 2.1 A and AA rules) on 21 pages across the public site and the parent, booking, therapist, supervisor and admin areas, and fails on serious or critical violations.
+
+| ID | Severity | Confidence | Title | Status |
+|---|---|---|---|---|
+| F-14 | Medium | Confirmed | Text below WCAG AA contrast on 6 of the first 14 pages checked, mostly in the dark dashboards: faint labels at 3.9:1, accent text at 4.49:1, white text on terracotta buttons, chips and message bubbles at 3.5:1 (needs 4.5:1). A second pass found the same white-on-terracotta problem on the caseload and children pages. | **Fixed** (1d316bb): faint and accent colours adjusted just enough to pass on every dashboard surface; a separate fill colour for solid buttons under white text (unchanged on the light public site, deeper terracotta in the dashboards); all 21 pages now report no violations at any level |
+| F-15 | Low | Confirmed | The home page's illustrative dashboard mock had a fake sidebar marked up as a real `<nav>`, announced to screen readers as navigation, and a scroll area unreachable by keyboard | **Fixed**: the mock is hidden from assistive tech; its heading and copy describe it |
+
+Automated rules catch roughly a third of real barriers. A manual keyboard and screen-reader pass of sign-up, booking and the intake form is still worth doing before launch.
+
+## Load test (31 October, staging)
+
+`npm run test:load` (k6, `e2e/load/`). Synthetic users only; staging is the same Free-plan compute as production. Three and a half minutes, ramping to 20 anonymous visitors (therapist discovery, a therapist's open slots, the Learning Center) and 10 signed-in parents (own children, bookings, reports) at once.
+
+| Measure | Result | Threshold |
+|---|---|---|
+| Requests | 24,551 at about 116 per second | |
+| Response time, 95th percentile | 193 ms anonymous, 190 ms signed-in | under 1,500 ms: pass |
+| Failed requests | 0.05% (13), all connection failures on the test machine's link (0 ms responses), no server errors | under 1%: pass |
+| A parent receiving the other family's child | 0 times | 0: pass |
+
+The database comfortably handles this load. It does not test the Next.js server on Vercel, Flutterwave or email; a pilot-sized launch is far below these numbers.
+
+**Slow admin pages.** Timed against the production build on this machine: a public page 0.1 s, the parent dashboard 1.1 to 1.2 s, admin pages normally 1.4 to 2.4 s to first byte. About a third of admin loads took 12 to 14 s: the same 10-second connection stall, more likely on admin pages because the overview alone opens about 20 database queries at once. Nothing points to slow queries. Re-measure on production (Vercel request logs) before optimising; if it shows there too, folding the overview counts into a single database function would cut the connections.
+
 ## Still to test
 
-Signed-in browser journeys for all four roles (no Playwright suite yet); admin function-level checks through the server actions as a non-admin; booking and payment races in the browser; load and recovery; accessibility; PostHog and Sentry payload verification; the live production RLS policy set compared against migrations (needs read-only production DB access).
+Booking and payment edge cases in the browser (card declined, abandoned checkout, webhook arriving before the redirect); manual keyboard and screen-reader pass; the live production RLS policy set compared against migrations (needs read-only production DB access); integration tests in CI (needs staging secrets in GitHub).
