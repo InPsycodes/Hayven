@@ -13,9 +13,11 @@ declare global {
 declare const self: ServiceWorkerGlobalScope;
 
 // Everything behind a login: the four role dashboards, the login-gated help
-// centre, the therapist onboarding steps, and the whole booking flow.
+// centre, the therapist onboarding steps, the Google sign-up finish step
+// (name, phone), the whole booking flow -- plus the two pages that carry a
+// personal token in the URL (unsubscribe, password reset). Audit F-04.
 const AUTHED_PATH =
-  /^\/(parent|therapist|admin|supervisor|book|help|signup\/(credentials|profile|complete))(\/|$)/;
+  /^\/(parent|therapist|admin|supervisor|book|help|signup\/(credentials|profile|complete|finish)|unsubscribe|reset-password)(\/|$)/;
 
 // The Serwist default cache uses NetworkFirst (24h cache, 10s network
 // timeout) for page HTML, RSC payloads, and same-origin /api/* responses.

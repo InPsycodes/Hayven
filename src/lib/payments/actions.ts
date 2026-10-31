@@ -1,5 +1,7 @@
 "use server";
 
+import { headers } from "next/headers";
+
 import { getSession } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPaymentLink, isFlutterwaveConfigured } from "@/lib/payments/flutterwave";
@@ -129,6 +131,14 @@ export async function initiateFlutterwavePayment(
  */
 export async function finalizeFromTransaction(transactionId: string): Promise<void> {
   if (!/^\d+$/.test(transactionId)) return;
+  // Public and session-less, so throttled per client IP: without this it
+  // could be used to make the server call Flutterwave's verify API in bulk
+  // (audit F-02). A real parent triggers it once or twice per payment, and a
+  // throttled call costs nothing -- the webhook still confirms the booking.
+  // Vercel sets x-forwarded-for itself, so it can't be spoofed past the edge.
+  const forwarded = (await headers()).get("x-forwarded-for") ?? "";
+  const ip = forwarded.split(",")[0]?.trim() || "unknown";
+  if (!(await checkRateLimit(`payment-finalize:${ip}`, 20, 10 * 60))) return;
   try {
     await confirmFlutterwavePayment(transactionId);
   } catch {
