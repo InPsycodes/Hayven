@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAuditEvent } from "@/lib/audit/log";
-import { notifyParentReportPublished } from "@/lib/reports/actions";
+import { notifyParentReportPublished } from "@/lib/reports/notify";
 import { captureServer } from "@/lib/analytics/server";
 import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import { flagPublishedReportForSafeguarding } from "@/lib/safeguarding/alerts";

@@ -13,7 +13,7 @@ import { isValidDomainBand } from "@/lib/reports/phrase-domains";
 import { revalidateDiscoveryCache } from "@/lib/therapist/discovery";
 import { releaseBookingEarnings } from "@/lib/payouts/earnings";
 import { purgeAccountPersonalData } from "@/lib/account/purge";
-import { cancelBookingsForDepartedTherapist } from "@/lib/booking/actions";
+import { cancelBookingsForDepartedTherapist } from "@/lib/booking/departed-therapist";
 
 export type VerificationDecision = "approved" | "rejected" | "needs_more_info";
 const VERIFICATION_DECISIONS: readonly VerificationDecision[] = ["approved", "rejected", "needs_more_info"];
