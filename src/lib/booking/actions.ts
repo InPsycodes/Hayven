@@ -143,7 +143,15 @@ export async function createPendingBooking(input: {
     .eq("is_booked", false)
     .select("id")
     .maybeSingle();
-  if (holdError || !heldSlot) {
+  // A request error is not a lost race: telling the parent someone else took
+  // the slot sends them hunting for another time when a retry would do. The
+  // slot is not released here -- the update may have landed before the
+  // response was lost, and if it didn't, the slot may be someone else's hold.
+  if (holdError) {
+    console.error("createPendingBooking: slot hold failed", holdError.message);
+    return { ok: false, error: "We couldn't reserve that time just now. Please try again." };
+  }
+  if (!heldSlot) {
     return { ok: false, error: "This slot was just booked by someone else. Please pick another time." };
   }
 
