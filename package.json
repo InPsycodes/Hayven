@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:integration": "vitest run -c vitest.integration.config.ts",
     "test:e2e": "playwright test",
-    "test:privacy": "node e2e/run-privacy.mjs"
+    "test:privacy": "node e2e/run-privacy.mjs",
+    "test:load": "node e2e/load/run-load.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.3.4",
@@ -38,6 +39,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
