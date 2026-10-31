@@ -208,7 +208,7 @@ export function BookingTimeForm({
                 className={cn(
                   "rounded-sm border px-3.5 py-2 text-sm transition-colors",
                   slotId === slot.id
-                    ? "border-terracotta bg-terracotta text-white"
+                    ? "border-terracotta bg-terracotta-fill text-white"
                     : "border-border text-charcoal hover:border-charcoal/40"
                 )}
               >

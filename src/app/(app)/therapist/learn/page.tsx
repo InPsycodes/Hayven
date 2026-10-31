@@ -76,7 +76,7 @@ export default async function TherapistLearnPage() {
                 </div>
                 <Link
                   href={`/therapist/learn/${overview.resume.courseSlug}?lesson=${overview.resume.lessonNumber}`}
-                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-terracotta px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-terracotta-fill px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
                 >
                   <IconPlayerPlayFilled size={14} />
                   Resume

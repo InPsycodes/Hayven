@@ -182,7 +182,7 @@ function ChecklistRow({ checked, label }: { checked: boolean; label: string }) {
       <span
         className={cn(
           "flex size-4 shrink-0 items-center justify-center rounded-[3px]",
-          checked ? "bg-terracotta text-white" : "border border-border"
+          checked ? "bg-terracotta-fill text-white" : "border border-border"
         )}
       >
         {checked && <IconCheck size={11} stroke={3} />}

@@ -205,7 +205,7 @@ export function Pricing() {
             <div className="p-5 pt-4">
               <Link
                 href="/search"
-                className="group flex items-center justify-center gap-2 rounded-full bg-terracotta py-3 text-[12.5px] font-semibold text-white transition-colors hover:bg-rust-dark"
+                className="group flex items-center justify-center gap-2 rounded-full bg-terracotta-fill py-3 text-[12.5px] font-semibold text-white transition-colors hover:bg-rust-dark"
               >
                 Find a therapist
                 <IconArrowRight

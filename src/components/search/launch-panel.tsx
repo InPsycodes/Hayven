@@ -47,7 +47,7 @@ export function LaunchPanel({ specialty }: { specialty?: string }) {
             <button
               type="submit"
               disabled={isPending}
-              className="h-11 shrink-0 rounded-lg bg-terracotta px-5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark disabled:opacity-60"
+              className="h-11 shrink-0 rounded-lg bg-terracotta-fill px-5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark disabled:opacity-60"
             >
               {isPending ? "Saving..." : "Tell me when"}
             </button>

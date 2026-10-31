@@ -51,6 +51,7 @@
 
   /* Raw brand tokens, for direct use (bg-terracotta, text-charcoal, etc.) */
   --color-terracotta: var(--terracotta);
+  --color-terracotta-fill: var(--terracotta-fill);
   --color-rust-dark: var(--rust-dark);
   --color-rust-light: var(--rust-light);
   --color-charcoal: var(--charcoal);
@@ -78,6 +79,8 @@
   --color-care-ink-faint: var(--care-ink-faint);
   --color-care-accent: var(--care-accent);
   --color-care-accent-deep: var(--care-accent-deep);
+  --color-care-accent-bright: var(--care-accent-bright);
+  --color-care-sage-bright: var(--care-sage-bright);
   --color-care-sage: var(--care-sage);
   --color-care-green: var(--care-green);
   --color-care-amber: var(--care-amber);
@@ -94,6 +97,10 @@
 :root {
   /* Brand palette -- source of truth */
   --terracotta: #9c5934;
+  /* Solid fill under white text (buttons, badges, initials). Same as
+     --terracotta on light pages; the care theme swaps in a darker one,
+     because its --terracotta is lightened for text on dark. */
+  --terracotta-fill: var(--terracotta);
   --rust-dark: #7c4527; /* primary button hover only */
   --rust-light: #b8734c; /* accent on dark backgrounds */
   --charcoal: #1a1a1a;
@@ -126,10 +133,16 @@
   --care-line: color-mix(in oklch, #ede4d3, transparent 90%);
   --care-ink: #ede4d3;
   --care-ink-soft: #b8ac97;
-  --care-ink-faint: #8a7d68;
-  --care-accent: #c9743f;
+  /* Contrast-checked (WCAG AA, 4.5:1) on every care surface up to --care-raised;
+     audit 2026-10-31. *-bright is for text on a 15% tint of its own colour
+     (status pills, initials), where the base colour falls short. White text
+     on a solid fill uses --care-accent-deep, not --care-accent. */
+  --care-ink-faint: #9d917c;
+  --care-accent: #ce7f4c;
+  --care-accent-bright: #d68e5e;
   --care-accent-deep: #a95c30;
   --care-sage: #8b9a6b;
+  --care-sage-bright: #97a578;
   --care-green: #7f9560;
   --care-amber: #cf9450;
 
@@ -207,7 +220,7 @@
   --card-foreground: var(--care-ink);
   --popover: var(--care-surface);
   --popover-foreground: var(--care-ink);
-  --primary: var(--care-accent);
+  --primary: var(--care-accent-deep); /* white text on it: 4.9:1 */
   --primary-foreground: #ffffff;
   --secondary: var(--care-raised);
   --secondary-foreground: var(--care-ink);
@@ -229,6 +242,7 @@
   --inset: var(--care-raised);
   --ivory: var(--care-raised);
   --terracotta: var(--care-accent);
+  --terracotta-fill: var(--care-accent-deep);
   --rust-dark: var(--care-accent-deep);
   --rust-light: var(--care-accent);
 

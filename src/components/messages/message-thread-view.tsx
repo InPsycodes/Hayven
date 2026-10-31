@@ -115,7 +115,7 @@ export function MessageThreadView({
         >
           <IconArrowLeft size={20} />
         </Link>
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-care-accent text-xs font-semibold text-white">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-care-accent-deep text-xs font-semibold text-white">
           {initialsFromName(counterpartName)}
         </span>
         <div className="min-w-0">
@@ -146,7 +146,7 @@ export function MessageThreadView({
                   className={cn(
                     "relative max-w-[80%] px-3 py-1.5 text-[14px] leading-relaxed",
                     isOwn
-                      ? "bg-care-accent text-white"
+                      ? "bg-care-accent-deep text-white"
                       : "border border-care-line/60 bg-care-surface text-care-ink",
                     // rounded bubble; the corner nearest the "tail" squares off
                     // only on the last message of a run
@@ -195,7 +195,7 @@ export function MessageThreadView({
           type="submit"
           disabled={isPending || !draft.trim()}
           aria-label="Send message"
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-care-accent text-white transition-opacity disabled:opacity-40"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-care-accent-deep text-white transition-opacity disabled:opacity-40"
         >
           <IconSend size={17} stroke={2} />
         </button>

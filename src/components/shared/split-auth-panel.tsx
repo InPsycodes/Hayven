@@ -64,7 +64,7 @@ export function SplitAuthPanel({
             <blockquote className="font-heading text-[15px] italic leading-relaxed text-offwhite/90">
               &ldquo;{quote.text}&rdquo;
             </blockquote>
-            <figcaption className="mt-2 text-xs text-offwhite/50">{quote.attribution}</figcaption>
+            <figcaption className="mt-2 text-xs text-offwhite/60">{quote.attribution}</figcaption>
           </figure>
         ) : (
           <div aria-hidden className="hidden md:block" />

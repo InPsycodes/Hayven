@@ -96,10 +96,13 @@ const Leaf = (
 
 function Dashboard() {
   const p = PROGRESS_PREVIEW;
+  // A picture of the dashboard, not a working one: hidden from assistive
+  // tech (the section's heading and copy say what it shows), so its fake
+  // sidebar isn't announced as navigation or offered as a scroll stop.
   return (
-    <div className="grid grid-cols-1 overflow-hidden rounded-[18px] border border-black/40 bg-[#1c1813] text-[#ede4d3] shadow-[0_2px_6px_rgba(0,0,0,0.26),0_46px_84px_-38px_rgba(30,22,15,0.5)] sm:grid-cols-[132px_1fr] lg:min-h-[620px]">
+    <div aria-hidden className="grid grid-cols-1 overflow-hidden rounded-[18px] border border-black/40 bg-[#1c1813] text-[#ede4d3] shadow-[0_2px_6px_rgba(0,0,0,0.26),0_46px_84px_-38px_rgba(30,22,15,0.5)] sm:grid-cols-[132px_1fr] lg:min-h-[620px]">
       {/* sidebar */}
-      <nav className="flex gap-1 overflow-x-auto border-b border-white/[0.09] p-[11px] sm:flex-col sm:gap-[3px] sm:overflow-visible sm:border-r sm:border-b-0 sm:px-[11px] sm:py-[15px]">
+      <div className="flex gap-1 overflow-x-auto border-b border-white/[0.09] p-[11px] sm:flex-col sm:gap-[3px] sm:overflow-visible sm:border-r sm:border-b-0 sm:px-[11px] sm:py-[15px]">
         <span className="hidden items-center gap-1.5 px-[7px] pt-1 pb-[13px] text-[9.5px] font-bold tracking-[0.12em] sm:flex">
           <HayvenMark className="size-3 text-[#b0693c]" />
           HAYVEN
@@ -119,7 +122,7 @@ function Dashboard() {
             </span>
           );
         })}
-      </nav>
+      </div>
 
       {/* main */}
       <div className="flex min-w-0 flex-col p-[18px]">
@@ -303,7 +306,7 @@ export function DashboardPreview() {
             </p>
             <Link
               href="/parent"
-              className="mt-7 inline-flex items-center gap-2 rounded-full bg-terracotta px-[26px] py-[15px] text-[15px] font-semibold text-white transition-colors hover:bg-rust-dark"
+              className="mt-7 inline-flex items-center gap-2 rounded-full bg-terracotta-fill px-[26px] py-[15px] text-[15px] font-semibold text-white transition-colors hover:bg-rust-dark"
             >
               Explore the parent dashboard
               <IconArrowRight size={15} stroke={2.2} />

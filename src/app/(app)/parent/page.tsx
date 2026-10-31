@@ -290,9 +290,9 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
                   <span
                     className={
                       g.status === "met"
-                        ? "shrink-0 rounded-full bg-care-sage/15 px-2 py-0.5 text-[10.5px] font-semibold text-care-sage"
+                        ? "shrink-0 rounded-full bg-care-sage/15 px-2 py-0.5 text-[10.5px] font-semibold text-care-sage-bright"
                         : g.status === "active"
-                          ? "shrink-0 rounded-full bg-care-accent/15 px-2 py-0.5 text-[10.5px] font-semibold text-care-accent"
+                          ? "shrink-0 rounded-full bg-care-accent/15 px-2 py-0.5 text-[10.5px] font-semibold text-care-accent-bright"
                           : "shrink-0 rounded-full bg-care-ink-faint/15 px-2 py-0.5 text-[10.5px] font-semibold text-care-ink-faint"
                     }
                   >

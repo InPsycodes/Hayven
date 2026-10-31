@@ -83,7 +83,7 @@ function SolidNav({ pathname, session }: { pathname: string; session?: NavSessio
             href={roleHomePath(session.role)}
             className="flex items-center gap-2.5 rounded-full border border-white/20 bg-white/10 py-1.5 pl-1.5 pr-4 text-sm text-offwhite transition-colors hover:bg-white/20"
           >
-            <span className="flex size-7 items-center justify-center rounded-full bg-terracotta text-[11px] font-medium text-white">
+            <span className="flex size-7 items-center justify-center rounded-full bg-terracotta-fill text-[11px] font-medium text-white">
               {initialsFromName(session.name)}
             </span>
             Dashboard
@@ -167,7 +167,7 @@ function HeroNav({ session }: { session?: NavSession | null }) {
               scrolled ? "bg-charcoal text-canvas-white hover:bg-charcoal/85" : "bg-canvas-white text-charcoal hover:bg-canvas-white/85"
             )}
           >
-            <span className="flex size-7 items-center justify-center rounded-full bg-terracotta text-[11px] font-medium text-white">
+            <span className="flex size-7 items-center justify-center rounded-full bg-terracotta-fill text-[11px] font-medium text-white">
               {initialsFromName(session.name)}
             </span>
             Dashboard
@@ -187,7 +187,7 @@ function HeroNav({ session }: { session?: NavSession | null }) {
               href="/signup"
               className={cn(
                 // Same label and colour as the inner-page nav's Sign up button.
-                "hidden rounded-full bg-terracotta px-5 py-2.5 text-sm font-medium text-white transition-colors duration-[350ms] ease-in-out hover:bg-rust-dark sm:inline-block"
+                "hidden rounded-full bg-terracotta-fill px-5 py-2.5 text-sm font-medium text-white transition-colors duration-[350ms] ease-in-out hover:bg-rust-dark sm:inline-block"
               )}
             >
               Sign up

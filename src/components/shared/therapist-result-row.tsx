@@ -136,7 +136,7 @@ export function TherapistResultRow({ therapist }: { therapist: DiscoveryTherapis
           </span>
           <span className="text-[10px] text-canvas-white/50">per session</span>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-lg bg-terracotta px-4 py-2 text-xs font-semibold whitespace-nowrap text-white transition-colors group-hover:bg-rust-dark">
+        <span className="inline-flex items-center gap-1.5 rounded-lg bg-terracotta-fill px-4 py-2 text-xs font-semibold whitespace-nowrap text-white transition-colors group-hover:bg-rust-dark">
           View profile
           <IconArrowRight
             size={12}

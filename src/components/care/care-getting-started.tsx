@@ -70,7 +70,7 @@ export function CareGettingStarted({
                 className={cn(
                   "flex size-7 shrink-0 items-center justify-center rounded-full border font-mono text-[11px]",
                   step.state === "done" && "border-care-sage bg-care-sage text-white",
-                  step.state === "current" && "border-care-accent bg-care-accent text-white",
+                  step.state === "current" && "border-care-accent-deep bg-care-accent-deep text-white",
                   step.state === "waiting" && "border-care-amber/60 text-care-amber",
                   step.state === "todo" && "border-care-line text-care-ink-faint"
                 )}

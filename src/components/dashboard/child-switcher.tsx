@@ -42,7 +42,7 @@ export function ChildSwitcher({ kids, activeId }: { kids: SwitcherChild[]; activ
             <span
               className={cn(
                 "flex size-6 items-center justify-center rounded-full text-[10px] font-bold",
-                active ? "bg-care-accent text-white" : "bg-care-raised text-care-ink-soft"
+                active ? "bg-care-accent-deep text-white" : "bg-care-raised text-care-ink-soft"
               )}
             >
               {initialsFromName(child.firstName)}

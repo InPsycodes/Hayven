@@ -21,7 +21,7 @@ export function WeeklyAvailabilityGrid() {
             }
             className={cn(
               "flex flex-col items-center gap-1.5 rounded-sm px-1 py-3 text-[11px] font-medium transition-colors",
-              available[i] ? "bg-terracotta text-white" : "bg-paper text-charcoal/60"
+              available[i] ? "bg-terracotta-fill text-white" : "bg-paper text-charcoal/60"
             )}
           >
             {day}

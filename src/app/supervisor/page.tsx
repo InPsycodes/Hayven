@@ -114,7 +114,7 @@ export default async function SupervisorTeamPage() {
                   className={
                     t.childCount === 0
                       ? "flex size-8 shrink-0 items-center justify-center rounded-full bg-care-amber/15 text-[10px] font-bold text-care-amber"
-                      : "flex size-8 shrink-0 items-center justify-center rounded-full bg-care-accent/15 text-[10px] font-bold text-care-accent"
+                      : "flex size-8 shrink-0 items-center justify-center rounded-full bg-care-accent/15 text-[10px] font-bold text-care-accent-bright"
                   }
                 >
                   {initialsFromName(t.name)}

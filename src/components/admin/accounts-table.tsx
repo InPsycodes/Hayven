@@ -348,7 +348,7 @@ export function AccountsTable({
               Previous
             </Link>
           ) : (
-            <span className={pagerOff}>Previous</span>
+            <span aria-disabled="true" className={pagerOff}>Previous</span>
           )}
           <span className="text-xs text-muted-foreground">
             Page {page} of {totalPages}
@@ -358,7 +358,7 @@ export function AccountsTable({
               Next
             </Link>
           ) : (
-            <span className={pagerOff}>Next</span>
+            <span aria-disabled="true" className={pagerOff}>Next</span>
           )}
         </nav>
       )}

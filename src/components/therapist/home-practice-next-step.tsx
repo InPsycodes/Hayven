@@ -57,7 +57,7 @@ export function HomePracticeNextStepButtons({
             className={cn(
               "rounded-sm border px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50",
               selected === c.step
-                ? "border-terracotta bg-terracotta text-white"
+                ? "border-terracotta bg-terracotta-fill text-white"
                 : "border-border text-charcoal hover:border-charcoal/40"
             )}
           >

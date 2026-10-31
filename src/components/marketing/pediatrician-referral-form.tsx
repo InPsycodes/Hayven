@@ -158,7 +158,7 @@ export function PediatricianReferralForm() {
                 className={cn(
                   "rounded-full border px-3 py-1.5 text-sm transition-colors",
                   on
-                    ? "border-terracotta bg-terracotta text-white"
+                    ? "border-terracotta bg-terracotta-fill text-white"
                     : "border-charcoal/15 bg-canvas-white text-ink-soft hover:border-charcoal/30"
                 )}
               >

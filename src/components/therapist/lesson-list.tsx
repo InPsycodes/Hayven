@@ -98,7 +98,7 @@ function LessonRow({
               type="button"
               onClick={toggle}
               disabled={isPending}
-              className="inline-flex items-center gap-1.5 rounded-full bg-terracotta px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-rust-dark disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-full bg-terracotta-fill px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-rust-dark disabled:opacity-50"
             >
               <IconCircleCheck size={13} stroke={2} />
               {complete ? "Mark incomplete" : "Mark complete"}

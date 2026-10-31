@@ -11,7 +11,7 @@ const chipVariants = cva(
       variant: {
         outline: "border-border bg-transparent text-foreground",
         filled: "border-transparent bg-charcoal text-white",
-        accent: "border-transparent bg-terracotta text-white",
+        accent: "border-transparent bg-terracotta-fill text-white",
         tan: "border-transparent bg-paper text-charcoal",
         // Darker than the base terracotta token: the tinted background here
         // reads lighter than a solid surface, so the base tone falls short

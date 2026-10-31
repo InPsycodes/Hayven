@@ -46,7 +46,7 @@ export function NotificationBell({ notifications }: { notifications: RealNotific
       >
         <IconBell size={20} stroke={1.75} />
         {unreadCount > 0 && (
-          <span className="pop-in absolute -top-1 -right-1 flex size-3.5 items-center justify-center rounded-full bg-terracotta text-[9px] font-semibold text-white">
+          <span className="pop-in absolute -top-1 -right-1 flex size-3.5 items-center justify-center rounded-full bg-terracotta-fill text-[9px] font-semibold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}

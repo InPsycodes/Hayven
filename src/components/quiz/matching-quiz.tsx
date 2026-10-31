@@ -352,7 +352,7 @@ function Footer({
           "inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors",
           nextDisabled
             ? "cursor-not-allowed bg-charcoal/10 text-ink-soft"
-            : "bg-terracotta text-white hover:bg-rust-dark"
+            : "bg-terracotta-fill text-white hover:bg-rust-dark"
         )}
       >
         {nextLabel}
@@ -414,7 +414,7 @@ function ResultsStep({
               <button
                 type="button"
                 onClick={onWiden}
-                className="inline-flex items-center gap-2 rounded-lg bg-terracotta px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
+                className="inline-flex items-center gap-2 rounded-lg bg-terracotta-fill px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
               >
                 Remove the budget limit
               </button>
@@ -475,7 +475,7 @@ function ResultsStep({
             <button
               type="button"
               onClick={onSeeMatches}
-              className="inline-flex items-center gap-2 rounded-lg bg-terracotta px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
+              className="inline-flex items-center gap-2 rounded-lg bg-terracotta-fill px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rust-dark"
             >
               See {preview.count === 1 ? "the match" : `all ${preview.count} matches`}
               <IconArrowRight size={15} stroke={2} />

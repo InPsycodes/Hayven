@@ -169,7 +169,7 @@ export function WeekScheduleGrid({
                       <div
                         className={cn(
                           "flex h-full flex-col justify-center rounded-sm px-2 py-1 text-[11px] leading-tight",
-                          state === "next" && "bg-terracotta text-white",
+                          state === "next" && "bg-terracotta-fill text-white",
                           state === "booked" && "bg-paper text-charcoal",
                           state === "pending" && "bg-amber/10 text-amber-text ring-1 ring-inset ring-amber/30",
                           state === "blocked" && "bg-charcoal/20 text-charcoal/60"

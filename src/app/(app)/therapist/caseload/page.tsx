@@ -45,7 +45,7 @@ export default async function TherapistCaseloadPage() {
                   </Link>
                   <Link
                     href={`/therapist/children/${child.id}/sessions/new`}
-                    className="rounded-full bg-terracotta px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-terracotta/90"
+                    className="rounded-full bg-terracotta-fill px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-terracotta-fill/90"
                   >
                     Log a session
                   </Link>

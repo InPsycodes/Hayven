@@ -39,7 +39,7 @@ export function BookingPanel({
 
       {sessionTypes.length > 1 && (
         <div>
-          <span className="label-micro mb-2 block text-offwhite/50">Session type</span>
+          <span className="label-micro mb-2 block text-offwhite/60">Session type</span>
           <div className="flex gap-2">
             {sessionTypes.map((type) => (
               <button
@@ -61,7 +61,7 @@ export function BookingPanel({
       )}
 
       <div>
-        <span className="label-micro mb-2 block text-offwhite/50">Next available</span>
+        <span className="label-micro mb-2 block text-offwhite/60">Next available</span>
         <div className="flex flex-col gap-1.5">
           {nextSlots.length === 0 && (
             <p className="text-sm text-offwhite/60">No open slots for this session type.</p>

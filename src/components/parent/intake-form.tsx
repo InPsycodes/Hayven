@@ -285,7 +285,7 @@ function FieldControl({
                 onClick={() => onChange(on ? "" : opt.value)}
                 className={cn(
                   "rounded-md px-3 py-1.5 text-[13px] transition-colors pointer-coarse:min-h-11",
-                  on ? "bg-care-accent font-medium text-white" : "text-care-ink-soft hover:text-care-ink"
+                  on ? "bg-care-accent-deep font-medium text-white" : "text-care-ink-soft hover:text-care-ink"
                 )}
               >
                 {opt.label}

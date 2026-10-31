@@ -35,7 +35,7 @@ export async function DashboardHeader({
         <div className="text-foreground [&_button]:text-foreground/80 [&_button:hover]:text-foreground">
           <NotificationBell notifications={notifications} />
         </div>
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-terracotta text-[11px] font-medium text-white md:size-9">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-terracotta-fill text-[11px] font-medium text-white md:size-9">
           {initialsFromName(session.name)}
         </div>
       </div>

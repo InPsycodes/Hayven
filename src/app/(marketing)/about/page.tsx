@@ -142,7 +142,7 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-10 flex items-center gap-3.5 border-t border-charcoal/10 pt-6">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-terracotta font-serif text-sm font-semibold text-white">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-terracotta-fill font-serif text-sm font-semibold text-white">
               AY
             </span>
             <div>
