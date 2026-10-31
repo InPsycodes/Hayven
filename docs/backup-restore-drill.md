@@ -116,3 +116,32 @@ DPO sign-off: ____________________  Date: ____________
 6. Expect some duplicate emails and push notifications from jobs that re-run.
 7. Tell affected users what happened and what to re-do (for example a booking made
    just before the incident), and write it up for the DPIA review.
+
+## Restoring from a nightly dump (until PITR is enabled)
+
+Rehearsed end to end on the staging project on 31 October 2026 (audit F-12): backup, wipe of the `public` schema, restore, then the integration suite against the restored database.
+
+| Step | Staging result |
+|---|---|
+| `pg_dump` of `public` (custom format) | 34 seconds, 392 KB, 58 tables, 168 policies |
+| Wipe (`drop schema public cascade`) | Dropped 58 tables and the `auth.users` sign-up trigger |
+| `pg_restore` | 2 minutes 15 seconds, 0 errors |
+| Recreate the sign-up trigger | 1 statement |
+| Compare with the pre-backup fingerprint | Tables, all row counts, policies, functions, triggers, view, RLS, anon grants and auth users identical |
+| Integration suite against the restored database | 121 of 121 passed (RLS isolation, sign-up trigger, reports, payments, purges). Two earlier runs had failures that were all connection timeouts from the test machine, not the database; the suite now retries those |
+
+To restore production from a nightly backup made by `.github/workflows/db-backup.yml`:
+
+1. Freeze writes first (see the steps above). Install the PostgreSQL client tools (Windows: `scoop install postgresql`).
+2. Download the chosen `database/hayven-db-<time>.tar.gz.gpg` from the R2 bucket and decrypt it with the backup passphrase:
+   `gpg --decrypt hayven-db-<time>.tar.gz.gpg > backup.tar.gz`, then `tar -xzf backup.tar.gz`.
+3. Restore into the target project, using its **Session pooler** connection string:
+   - Into the **damaged project** (sign-in accounts still there): first `drop schema public cascade;` in the SQL editor, then
+     `pg_restore --dbname="<url>" --no-owner public.dump`
+   - Into a **new, empty project**: restore the sign-in accounts first, because `public.users` points at them:
+     `pg_restore --dbname="<url>" --data-only auth.dump`, then `drop schema public cascade;` and the `public.dump` restore above. **Not yet rehearsed**: rehearse it on a throwaway project before relying on it.
+4. **Recreate the objects outside `public`.** A `public` dump does not contain them, and a wipe deletes them: run `cross-schema.sql` from the backup (today it holds the `auth.users` trigger that creates a profile for each new sign-up; without it nobody can register).
+5. Storage files (credentials, avatars) are not in this dump; restore them from the R2 copy made by `storage-backup.yml`.
+6. Check: row counts look right, a test sign-up gets a profile, a parent and a therapist can each sign in and see only their own records. Then carry on from step 5 of the restore checklist above (reconcile money).
+
+What the nightly backup does not cover: anything written after it was taken (up to a day of bookings, notes and payments), and Supabase settings outside the database (Auth providers, email templates, storage bucket configuration). Point-in-time recovery on the Pro plan closes the first gap.

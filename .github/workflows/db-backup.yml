@@ -1,0 +1,104 @@
+name: Database backup
+
+# Nightly encrypted pg_dump of the PRODUCTION database to Cloudflare R2.
+# Audit 2026-10-29, F-12: production is on the Supabase Free plan (no managed
+# backups, no point-in-time recovery), and the manual `supabase db dump` in
+# SECURITY.md needs Docker. This is the interim safety net until the project
+# moves to Pro with PITR -- keep it running after that too, as an off-site copy.
+#
+# The method was rehearsed on staging on 31 October 2026: dump, wipe, restore,
+# then the integration suite passed against the restored database. Restore
+# steps: docs/backup-restore-drill.md ("Restoring from a nightly dump").
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   DB_BACKUP_DATABASE_URL   production session-pooler connection string
+#   DB_BACKUP_PASSPHRASE     long random passphrase; store it in a password
+#                            manager too -- without it the backups are useless
+#   STORAGE_BACKUP_R2_*      the same R2 bucket and keys as storage-backup.yml
+# Until DB_BACKUP_DATABASE_URL is set, every run is skipped, not failed.
+
+on:
+  schedule:
+    - cron: "30 1 * * *" # 01:30 UTC daily, before the storage backup
+  workflow_dispatch: {}
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DB_BACKUP_DATABASE_URL }}
+      PASSPHRASE: ${{ secrets.DB_BACKUP_PASSPHRASE }}
+      R2_BUCKET: ${{ secrets.STORAGE_BACKUP_R2_BUCKET }}
+      R2_ENDPOINT: ${{ secrets.STORAGE_BACKUP_R2_ENDPOINT }}
+      R2_ACCESS_KEY_ID: ${{ secrets.STORAGE_BACKUP_R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.STORAGE_BACKUP_R2_SECRET_ACCESS_KEY }}
+    steps:
+      # `secrets` can't be used in `if:` (see storage-backup.yml), so check the
+      # job-scoped env in a shell step and gate later steps on its output.
+      - name: Check secrets configured
+        id: check
+        run: |
+          if [ -n "$DATABASE_URL" ] && [ -n "$PASSPHRASE" ] && [ -n "$R2_BUCKET" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Database backup secrets not configured yet -- skipping this run (audit F-12)."
+          fi
+
+      - name: Install PostgreSQL 17 client and rclone
+        if: steps.check.outputs.configured == 'true'
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17 rclone
+
+      - name: Dump, encrypt
+        if: steps.check.outputs.configured == 'true'
+        run: |
+          set -euo pipefail
+          STAMP=$(date -u +%Y-%m-%dT%H%MZ)
+          mkdir -p out
+          # The public schema: tables, data, policies, functions, grants.
+          /usr/lib/postgresql/17/bin/pg_dump "$DATABASE_URL" --schema=public --format=custom --no-owner --file=out/public.dump
+          # Sign-in accounts live in Supabase's auth schema, which public.users
+          # references; a restore into a NEW project needs them first.
+          /usr/lib/postgresql/17/bin/pg_dump "$DATABASE_URL" --data-only --format=custom \
+            --table=auth.users --table=auth.identities --file=out/auth.dump
+          # Objects outside public that depend on it and would be lost with it
+          # (the auth.users sign-up trigger) -- a public-schema dump omits them.
+          /usr/lib/postgresql/17/bin/psql "$DATABASE_URL" -At -c "
+            select pg_get_triggerdef(t.oid) || ';'
+            from pg_trigger t
+            join pg_class c on c.oid = t.tgrelid join pg_namespace n on n.oid = c.relnamespace
+            join pg_proc p on p.oid = t.tgfoid join pg_namespace pn on pn.oid = p.pronamespace
+            where n.nspname <> 'public' and pn.nspname = 'public' and not t.tgisinternal" > out/cross-schema.sql
+          /usr/lib/postgresql/17/bin/pg_restore --list out/public.dump > out/contents.txt
+          tar -C out -czf "hayven-db-$STAMP.tar.gz" public.dump auth.dump cross-schema.sql contents.txt
+          # Children's clinical data: never leaves the runner unencrypted.
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+            --symmetric --cipher-algo AES256 -o "hayven-db-$STAMP.tar.gz.gpg" "hayven-db-$STAMP.tar.gz"
+          rm -rf out "hayven-db-$STAMP.tar.gz"
+          echo "FILE=hayven-db-$STAMP.tar.gz.gpg" >> "$GITHUB_ENV"
+          ls -la hayven-db-*.gpg
+
+      - name: Upload to R2 and prune
+        if: steps.check.outputs.configured == 'true'
+        run: |
+          mkdir -p ~/.config/rclone
+          cat <<EOF > ~/.config/rclone/rclone.conf
+          [r2]
+          type = s3
+          provider = Cloudflare
+          endpoint = $R2_ENDPOINT
+          access_key_id = $R2_ACCESS_KEY_ID
+          secret_access_key = $R2_SECRET_ACCESS_KEY
+          EOF
+          rclone copy "$FILE" "r2:$R2_BUCKET/database/" --s3-no-check-bucket --retries 5 -v
+          # Keep 35 days of nightly backups.
+          rclone delete "r2:$R2_BUCKET/database/" --min-age 35d --s3-no-check-bucket -v

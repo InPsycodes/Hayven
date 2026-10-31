@@ -75,11 +75,13 @@ Internal notification: **[who on the team needs to know immediately — fill in]
 - Restore any suspended accounts once safe.
 - If data was altered (not just read), restore from backup. **Confirmed gap (as of this writing): the Supabase project is on the Free plan, which does not include managed backups or point-in-time recovery.** Until upgraded to Pro (or higher) and PITR is enabled, the only recovery path is a manually-run `pg_dump` snapshot — see "Manual backup snapshots" below. If no recent manual dump exists, altered/lost data may not be recoverable at all. Treat upgrading the plan and enabling PITR as a prerequisite for handling any real (non-test) user data, not a nice-to-have.
 
-**Manual backup snapshots (until PITR is enabled):** From Supabase Dashboard → Project Settings → Database, copy the connection string (the "URI" one, not the pooler). Then, with just Node.js already installed (no separate Postgres tools needed):
+**Backups until PITR is enabled:** the scheduled `.github/workflows/db-backup.yml` takes an encrypted nightly `pg_dump` of production to R2 once its secrets are set. Restore steps are in `docs/backup-restore-drill.md` ("Restoring from a nightly dump"); the method was rehearsed end to end on staging on 31 October 2026.
+
+For a manual snapshot, install the PostgreSQL client tools (Windows: `scoop install postgresql`), copy the **Session pooler** connection string from Supabase (Connect → Direct), and run:
 ```
-npx supabase@latest db dump --db-url "postgresql://postgres:[YOUR-PASSWORD]@[YOUR-HOST]:5432/postgres" -f hayven-backup-2026-08-16.sql
+pg_dump "postgresql://postgres.<ref>:<password>@<pooler-host>:5432/postgres" --schema=public --format=custom --no-owner --file=hayven-backup-YYYY-MM-DD.dump
 ```
-(swap in today's date in the filename each time). Store the resulting file somewhere outside Supabase itself — a separate cloud drive, never this repo, since it contains real data. To restore, run the resulting `.sql` file against a fresh database with `psql` or the Supabase SQL editor. Run this on a real cadence (weekly, at minimum) until proper backups are in place — a six-month-old manual dump is not a recovery plan. (If you have Postgres client tools installed already, `pg_dump` against the same connection string works too and is equivalent.)
+Store the file outside Supabase, encrypted, never in this repo: it contains children's clinical data. Note: `npx supabase db dump`, recommended here previously, needs Docker Desktop and fails without it (audit 2026-10-29, F-12).
 
 ### 7. Post-incident review
 

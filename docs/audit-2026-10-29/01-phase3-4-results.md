@@ -106,6 +106,13 @@ Observation: `/supervisor/therapists/<id>` returns 200 for a therapist outside t
 | F-10 | Medium | Likely | posthog-js records `$initial_current_url` and `$initial_referrer` as person properties via `$set_once`, outside the three keys `sanitize_properties` cleans. A visitor whose first page is `/search?query=…` could have that query stored on their PostHog person. Not observable in an automated browser. | Open: sanitise every URL-valued property (including `$set` and `$set_once`) in a `before_send` hook; check existing PostHog persons in the dashboard |
 | F-11 | Informational | Confirmed | `/supervisor/therapists/<id>` returns 200 (empty) rather than 404 for a therapist outside the viewer's team | Accept, or 404 for consistency |
 
+## Backups and recovery (31 October)
+
+| ID | Severity | Confidence | Title | Status |
+|---|---|---|---|---|
+| F-12 | **High** | Confirmed | **No working database backup.** Production is on the Supabase Free plan (owner confirmed 31 October): no managed backups, no point-in-time recovery. The fallback in `SECURITY.md` (`npx supabase db dump`, "no separate Postgres tools needed") fails without Docker (`LegacyDockerRunError`, reproduced). `storage-backup.yml` covers only Storage objects and is skipped until its secrets exist. Loss or corruption of the database today could be unrecoverable: children's records, sessions, reports, payments. | Mitigated in code, open for the owner. `.github/workflows/db-backup.yml` takes an encrypted nightly `pg_dump` to R2 (runs once its three secrets are set). Restore rehearsed on staging: dump, wipe, restore, fingerprint identical, integration suite 121/121 on the restored database (`docs/backup-restore-drill.md`). Owner: set the secrets, then upgrade to Pro and enable PITR. |
+| F-13 | Low | Confirmed | A network error during the booking slot hold was shown to parents as "This slot was just booked by someone else", sending them to pick another time when a retry would do. If the hold update is applied but its response is lost, the slot also stays marked booked with no booking, and nothing releases it. | Message fixed (a request error now says "please try again" and is logged). Stuck slot: open, low impact; a nightly sweep releasing `is_booked` slots with no booking would close it |
+
 ## Still to test
 
 Signed-in browser journeys for all four roles (no Playwright suite yet); admin function-level checks through the server actions as a non-admin; booking and payment races in the browser; load and recovery; accessibility; PostHog and Sentry payload verification; the live production RLS policy set compared against migrations (needs read-only production DB access).
