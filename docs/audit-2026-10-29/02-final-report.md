@@ -17,7 +17,7 @@ The evidence rests on testing the access rules directly, not on reading code. On
 
 ## Soon after (owner)
 
-3. Run `security-fingerprint.sql` in the **production** SQL Editor and compare it with the staging values below. A match proves production's policies, grants and privileged functions are exactly what the code defines; this audit could not check that directly without database access.
+3. ~~Run `security-fingerprint.sql` on production~~ Done 1 November (see "Production compared with the code" below). Apply migration 0114 in the production SQL Editor, then re-run the fingerprint: table grants should read 142 and column grants 1024.
 4. Add the staging secrets so integration tests run on every push: `INTEGRATION_SUPABASE_URL`, `INTEGRATION_SUPABASE_ANON_KEY`, `INTEGRATION_SUPABASE_SERVICE_ROLE_KEY` (staging project values, never production).
 5. A short manual screen-reader pass (NVDA on Windows, VoiceOver on a phone) of sign-up, booking and the intake form.
 6. Check existing PostHog persons for query strings recorded before the F-10 fix, and delete any.
@@ -62,7 +62,13 @@ The evidence rests on testing the access rules directly, not on reading code. On
 
 ## Known gaps and residual risks
 
-- **Production's live policies were not compared with the code** (needs the fingerprint run above). Staging values to compare against:
+- **Production compared with the code (1 November).** The owner ran the fingerprint and `security-diff.sql` on production:
+  - Policies (174), row-level security (58 tables) and triggers (9) are identical to staging.
+  - All 17 privileged functions have identical code; the hashes differed only because production stores Windows line endings (pasted into the SQL Editor). Hashing staging's code with CRLF endings reproduces every production hash.
+  - Production additionally grants TRUNCATE, REFERENCES and TRIGGER (anon on the 9 public tables, authenticated on all 52), left over from Supabase's old "grant all" default. Not reachable through the API, but TRUNCATE ignores RLS. Migration 0114 revokes them (tested on staging). Nothing that staging grants is missing from production.
+  - One extra function, `rls_auto_enable()` (Supabase's automatic-RLS event trigger), executable by app roles; 0114 closes that too.
+
+  Staging values to compare against:
 
   | Part | Items | Fingerprint |
   |---|---|---|
