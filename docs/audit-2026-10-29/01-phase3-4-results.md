@@ -44,19 +44,19 @@ Production was probed **read-only and logged out only**, using the public anonym
 - **API routes:** cron jobs check `Authorization: Bearer $CRON_SECRET` with a constant-time comparison. The seed endpoint is admin-only. The PDF route re-checks authorship, supervision or parenthood. The Flutterwave webhook verifies its secret hash (constant-time, whitespace-trimmed).
 - **PWA cache:** all signed-in areas and `/api/*` are network-only; only public pages and assets are cached.
 
-## Findings register (so far)
+## Findings register (phases 3 and 4)
 
 | ID | Severity | Confidence | Title | Status |
 |---|---|---|---|---|
-| F-01 | Low | Confirmed | `notifyParentReportPublished` and `cancelBookingsForDepartedTherapist` are internal helpers exported from `"use server"` files, so they are publicly callable endpoints. Not exploitable today: both need a live database client as the first argument, which a browser cannot send, so calls fail before doing anything. | Open: move them to a server-only module |
-| F-02 | Low | Confirmed | `finalizeFromTransaction` (public, no rate limit) makes the server call Flutterwave's verify API for any numeric ID. It cannot fake a payment (Flutterwave re-verification, idempotent finalise) but can be used to make bulk outbound API calls. | Open: add a per-IP or per-session rate limit |
+| F-01 | Low | Confirmed | `notifyParentReportPublished` and `cancelBookingsForDepartedTherapist` are internal helpers exported from `"use server"` files, so they are publicly callable endpoints. Not exploitable today: both need a live database client as the first argument, which a browser cannot send, so calls fail before doing anything. | **Fixed** (65c29cf): moved to server-only modules |
+| F-02 | Low | Confirmed | `finalizeFromTransaction` (public, no rate limit) makes the server call Flutterwave's verify API for any numeric ID. It cannot fake a payment (Flutterwave re-verification, idempotent finalise) but can be used to make bulk outbound API calls. | **Fixed** (944088b): 20 per IP per 10 minutes |
 | F-03 | Informational | Confirmed | Unsubscribe tokens are HMAC-signed and compared in constant time, but never expire. This is common for email links, and the token only toggles email preferences. | Accept or add an expiry |
-| F-04 | Low | Confirmed | Two pages carrying personal input or tokens are not on the service worker's never-cache list: `/signup/finish` (phone and terms) and `/unsubscribe?t=…` (personal token in the URL). They could be served from cache on a shared device. | Open: add both to `AUTHED_PATH` |
+| F-04 | Low | Confirmed | Two pages carrying personal input or tokens are not on the service worker's never-cache list: `/signup/finish` (phone and terms) and `/unsubscribe?t=…` (personal token in the URL). They could be served from cache on a shared device. | **Fixed** (944088b): both network-only, with `/reset-password` |
 | F-05 | Informational | Confirmed | Anonymous visitors can see `is_booked` on availability slots, revealing when a listed therapist has sessions. No family data. | Accept, or expose free slots only |
 | F-06 | Informational | Unconfirmed | Two requests to `/` minutes after a deploy lacked CSP, X-Frame-Options and HSTS. Nine later requests and ten other pages all had them. Likely a deployment switchover. | Recheck after future deploys |
 | F-07 | Low (hardening) | Confirmed | Migration `0003` grants SELECT to the **anonymous** role and full CRUD to `authenticated` on every public table, so row-level security is the only barrier. It holds today (P3-01), but one future table created without RLS would be exposed instantly. | **Fixed**: migration 0113 revokes anon from every table except the eight public ones, applied to production 31 October and re-probed with the anon key (only those eight and the discovery view readable; `children`, `payments`, `payment_webhook_events` denied; storage closed; home, search, Learn and a therapist profile load). CI guard in `supabase/migrations.test.ts` checks RLS and anon grants on every new table |
 
-**No Critical, High or Medium findings so far.** This rests on read-only, logged-out testing and static review only. Signed-in, cross-account and write-path testing has not been done yet and needs staging.
+Signed-in, cross-account and write-path testing followed on staging (below). The final verdict and the full register are in `02-final-report.md`.
 
 ## Phase 5 (started 30 October): staging and cross-account tests
 
@@ -101,9 +101,9 @@ Observation: `/supervisor/therapists/<id>` returns 200 for a therapist outside t
 
 | ID | Severity | Confidence | Title | Status |
 |---|---|---|---|---|
-| F-08 | Low | Confirmed (code) | PostHog's `$current_url` keeps the path, which includes internal ids: `/parent/children/<child id>/…`, `/parent/messages/<thread id>`. Pseudonymous, but linkable to a specific child by anyone with database access, contrary to the rule in `events.ts`. | Open: replace UUID path segments with `:id` before sending |
-| F-09 | Low (latent) | Confirmed (code) | If Google Analytics is ever enabled, `capturePageview` sends `page_location: window.location.href`, the full URL including search text, bypassing PostHog's URL cleaning. | Open: send origin plus sanitised path only |
-| F-10 | Medium | Likely | posthog-js records `$initial_current_url` and `$initial_referrer` as person properties via `$set_once`, outside the three keys `sanitize_properties` cleans. A visitor whose first page is `/search?query=…` could have that query stored on their PostHog person. Not observable in an automated browser. | Open: sanitise every URL-valued property (including `$set` and `$set_once`) in a `before_send` hook; check existing PostHog persons in the dashboard |
+| F-08 | Low | Confirmed (code) | PostHog's `$current_url` keeps the path, which includes internal ids: `/parent/children/<child id>/…`, `/parent/messages/<thread id>`. Pseudonymous, but linkable to a specific child by anyone with database access, contrary to the rule in `events.ts`. | **Fixed** (e922ead): ids replaced with `:id` in every URL sent |
+| F-09 | Low (latent) | Confirmed (code) | If Google Analytics is ever enabled, `capturePageview` sends `page_location: window.location.href`, the full URL including search text, bypassing PostHog's URL cleaning. | **Fixed** (e922ead): sanitised URL only |
+| F-10 | Medium | Likely | posthog-js records `$initial_current_url` and `$initial_referrer` as person properties via `$set_once`, outside the three keys `sanitize_properties` cleans. A visitor whose first page is `/search?query=…` could have that query stored on their PostHog person. Not observable in an automated browser. | **Fixed** (e922ead): a `before_send` hook cleans every URL-valued property, `$set` and `$set_once` included. Owner: check existing PostHog persons for old query strings |
 | F-11 | Informational | Confirmed | `/supervisor/therapists/<id>` returns 200 (empty) rather than 404 for a therapist outside the viewer's team | Accept, or 404 for consistency |
 
 ## Backups and recovery (31 October)
@@ -146,6 +146,6 @@ The database comfortably handles this load. It does not test the Next.js server 
 
 **Slow admin pages.** Timed against the production build on this machine: a public page 0.1 s, the parent dashboard 1.1 to 1.2 s, admin pages normally 1.4 to 2.4 s to first byte. About a third of admin loads took 12 to 14 s: the same 10-second connection stall, more likely on admin pages because the overview alone opens about 20 database queries at once. Nothing points to slow queries. Re-measure on production (Vercel request logs) before optimising; if it shows there too, folding the overview counts into a single database function would cut the connections.
 
-## Still to test
+## Completed 1 November
 
-Booking and payment edge cases in the browser (card declined, abandoned checkout, webhook arriving before the redirect); manual keyboard and screen-reader pass; the live production RLS policy set compared against migrations (needs read-only production DB access); integration tests in CI (needs staging secrets in GitHub).
+Payment edge cases (11 integration tests, plus the live webhook rejecting unsigned requests), keyboard-only checks (16), the CI workflow fix (F-16), the zod patch (F-17) and a read-only security fingerprint for comparing production with staging. Results, the full register and the verdict: `02-final-report.md`.
