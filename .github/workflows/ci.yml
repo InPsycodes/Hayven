@@ -59,32 +59,50 @@ jobs:
   # Runs against a real (throwaway, non-production) Supabase project --
   # test/integration/env.ts hard-fails unless the URL matches project ref
   # sfvwfbgrfmqaaakbepll (hayven_load_test), so these secrets must point at
-  # that exact project once it's restored (AUD-11, external audit
-  # 2026-10-08). Until INTEGRATION_SUPABASE_URL is added under
-  # Settings -> Secrets and variables -> Actions, this job is skipped (not
-  # failed) so CI stays green in the meantime.
+  # that exact project (AUD-11, external audit 2026-10-08). Until
+  # INTEGRATION_SUPABASE_URL is added under Settings -> Secrets and
+  # variables -> Actions, every step after the check is skipped, so CI stays
+  # green in the meantime.
+  #
+  # The gate is a shell step, not a job-level `if: secrets.X != ''`: GitHub
+  # rejects the `secrets` context in `if:` ("Unrecognized named-value"),
+  # which invalidates the whole workflow file -- the verify job included
+  # (audit 2026-11-01; same pattern as storage-backup.yml).
   integration-tests:
     runs-on: ubuntu-latest
-    if: ${{ secrets.INTEGRATION_SUPABASE_URL != '' }}
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.INTEGRATION_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.INTEGRATION_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.INTEGRATION_SUPABASE_SERVICE_ROLE_KEY }}
     steps:
+      - name: Check secrets configured
+        id: check
+        run: |
+          if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Integration test secrets not configured yet -- skipping (AUD-11)."
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.check.outputs.configured == 'true'
 
       - uses: actions/setup-node@v4
+        if: steps.check.outputs.configured == 'true'
         with:
           node-version: 22
           cache: npm
 
       - run: npm ci
+        if: steps.check.outputs.configured == 'true'
 
       # env.ts reads credentials from a .env.test file on disk (gitignored
       # locally), not process.env directly -- write one from the job-level
       # secrets above so the existing loader finds what it expects, without
       # changing that file's hard-coded-project-ref safety check.
       - name: Write .env.test from secrets
+        if: steps.check.outputs.configured == 'true'
         run: |
           cat <<EOF > .env.test
           NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
@@ -93,4 +111,5 @@ jobs:
           EOF
 
       - name: Integration tests
+        if: steps.check.outputs.configured == 'true'
         run: npm run test:integration
