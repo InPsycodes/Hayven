@@ -28,10 +28,7 @@ concurrency:
 
 jobs:
   backup:
-    # Pinned, not ubuntu-latest: the PostgreSQL apt repository (PGDG) only
-    # serves Ubuntu releases it supports, and ubuntu-latest moved to 26 on
-    # 19 October 2026, which broke the client install.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DB_BACKUP_DATABASE_URL }}
       PASSPHRASE: ${{ secrets.DB_BACKUP_PASSPHRASE }}
